@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/blocs/auth/auth_cubit.dart';
 import '../../../../config/constants.dart';
 import '../../../../config/theme.dart';
 
@@ -56,12 +58,47 @@ class _SplashPageState extends State<SplashPage>
     // Start animation
     _controller.forward();
 
-    // Navigate after animation completes
-    Future.delayed(const Duration(milliseconds: 2500), () {
-      if (mounted) {
-        context.go(AppConstants.welcome);
+    _startNavigationSequence();
+  }
+
+  Future<void> _startNavigationSequence() async {
+    // 1. Kick off auth check
+    await context.read<AuthCubit>().checkAuthStatus();
+
+    // 2. Wait for animation to finish (at least 2 seconds)
+    await Future.delayed(const Duration(milliseconds: 2000));
+
+    // 3. Keep checking for 3 seconds if auth is still loading
+    bool navigated = false;
+    for (int i = 0; i < 30; i++) {
+      if (!mounted) return;
+      
+      final state = context.read<AuthCubit>().state;
+      if (state is! AuthLoading && state is! AuthInitial) {
+        _handleNavigation(state);
+        navigated = true;
+        break;
       }
-    });
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
+
+    // 4. Fallback if still stuck (likely unauthenticated or error)
+    if (!navigated && mounted) {
+      _handleNavigation(context.read<AuthCubit>().state);
+    }
+  }
+
+  void _handleNavigation(AuthState state) {
+    if (!mounted) return;
+
+    if (state is Authenticated) {
+      context.go(AppConstants.home);
+    } else if (state is OtpVerified) {
+      context.go(AppConstants.personalDetails);
+    } else {
+      // For Initial, Loading (timeout), Error or Unauthenticated
+      context.go(AppConstants.welcome);
+    }
   }
 
   @override
@@ -72,59 +109,57 @@ class _SplashPageState extends State<SplashPage>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: KhaataTheme.primaryBlue,
-      body: Center(
-        child: AnimatedBuilder(
-          animation: _controller,
-          builder: (context, child) {
-            return FadeTransition(
-              opacity: _fadeAnimation,
-              child: SlideTransition(
-                position: _slideAnimation,
-                child: ScaleTransition(
-                  scale: _scaleAnimation,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Just the text "Khaata" with elegant styling
-                      Text(
-                        'Khaata',
-                        style: TextStyle(
-                          fontSize: 48.sp,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                          letterSpacing: 2.w,
-                          shadows: [
-                            Shadow(
-                              color: Colors.black.withOpacity(0.2),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(height: 12.h),
-                      // Tagline with delayed fade
-                      AnimatedOpacity(
-                        opacity: _controller.value > 0.5 ? 1.0 : 0.0,
-                        duration: const Duration(milliseconds: 500),
-                        child: Text(
-                          'Digital Loan Agreements',
+    return BlocListener<AuthCubit, AuthState>(
+      listener: (context, state) {
+        // If animation is already done and a final state arrives, navigate immediately
+        if (_controller.isCompleted) {
+          _handleNavigation(state);
+        }
+      },
+      child: Scaffold(
+        backgroundColor: KhaataTheme.primaryBlue,
+        body: Center(
+          child: AnimatedBuilder(
+            animation: _controller,
+            builder: (context, child) {
+              return FadeTransition(
+                opacity: _fadeAnimation,
+                child: SlideTransition(
+                  position: _slideAnimation,
+                  child: ScaleTransition(
+                    scale: _scaleAnimation,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Khaata',
                           style: TextStyle(
-                            fontSize: 14.sp,
-                            color: Colors.white70,
-                            fontWeight: FontWeight.w400,
-                            letterSpacing: 0.5.w,
+                            fontSize: 48.sp,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                            letterSpacing: 2.w,
                           ),
                         ),
-                      ),
-                    ],
+                        SizedBox(height: 12.h),
+                        AnimatedOpacity(
+                          opacity: _controller.value > 0.5 ? 1.0 : 0.0,
+                          duration: const Duration(milliseconds: 500),
+                          child: Text(
+                            'Digital Loan Agreements',
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              color: Colors.white70,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
     );

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../config/theme.dart';
 import '../../../../core/utils/validators.dart';
-import '../widgets/animated_text_field.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -35,7 +35,7 @@ class _SignupPageState extends State<SignupPage>
   void initState() {
     super.initState();
     _animationController = AnimationController(
-      duration: Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 500),
       vsync: this,
     );
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
@@ -44,16 +44,47 @@ class _SignupPageState extends State<SignupPage>
     _animationController.forward();
   }
 
+  @override
+  void dispose() {
+    _animationController.dispose();
+    _pageController.dispose();
+    _phoneController.dispose();
+    _otpController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _emailController.dispose();
+    _panController.dispose();
+    _aadharController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
   void _nextStep() {
     if (_validateCurrentStep()) {
       _animationController.reverse().then((_) {
         setState(() => _currentStep++);
         _pageController.nextPage(
-          duration: Duration(milliseconds: 400),
+          duration: const Duration(milliseconds: 400),
           curve: Curves.easeInOut,
         );
         _animationController.forward();
       });
+    }
+  }
+
+  void _previousStep() {
+    if (_currentStep > 0) {
+      _animationController.reverse().then((_) {
+        setState(() => _currentStep--);
+        _pageController.previousPage(
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeInOut,
+        );
+        _animationController.forward();
+      });
+    } else {
+      context.pop();
     }
   }
 
@@ -77,6 +108,21 @@ class _SignupPageState extends State<SignupPage>
     }
   }
 
+  void _completeSignup() {
+    final userData = {
+      'phone': _phoneController.text,
+      'firstName': _firstNameController.text,
+      'lastName': _lastNameController.text,
+      'email': _emailController.text,
+      'pan': _panController.text.toUpperCase(),
+      'aadhar': _aadharController.text.replaceAll(' ', ''),
+      'password': _passwordController.text,
+    };
+
+    // TODO: Send to backend
+    context.go('/home');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -86,12 +132,7 @@ class _SignupPageState extends State<SignupPage>
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: KhaataTheme.textDark),
-          onPressed: () => _currentStep == 0
-              ? context.pop()
-              : _pageController.previousPage(
-            duration: Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-          ),
+          onPressed: _previousStep,
         ),
         title: Text(
           'Create Account',
@@ -109,10 +150,10 @@ class _SignupPageState extends State<SignupPage>
           Expanded(
             child: PageView(
               controller: _pageController,
-              physics: NeverScrollableScrollPhysics(),
+              physics: const NeverScrollableScrollPhysics(),
               children: [
                 _PhoneStep(controller: _phoneController, onNext: _nextStep),
-                _OTPStep(controller: _otpController, onNext: _nextStep),
+                _OtpStep(controller: _otpController, onNext: _nextStep),
                 _PersonalStep(
                   firstName: _firstNameController,
                   lastName: _lastNameController,
@@ -136,20 +177,167 @@ class _SignupPageState extends State<SignupPage>
       ),
     );
   }
+}
 
-  void _completeSignup() {
-    // Collect all data and send to backend
-    final userData = {
-      'phone': _phoneController.text,
-      'firstName': _firstNameController.text,
-      'lastName': _lastNameController.text,
-      'email': _emailController.text,
-      'pan': _panController.text.toUpperCase(),
-      'aadhar': _aadharController.text.replaceAll(' ', ''),
-      'password': _passwordController.text,
-    };
+// Step Indicator Widget
+class _StepIndicator extends StatelessWidget {
+  final int currentStep;
+  final int totalSteps;
 
-    context.go('/home');
+  const _StepIndicator({
+    required this.currentStep,
+    required this.totalSteps,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
+      child: Row(
+        children: List.generate(totalSteps, (index) {
+          return Expanded(
+            child: Container(
+              height: 4.h,
+              margin: EdgeInsets.only(right: index < totalSteps - 1 ? 8.w : 0),
+              decoration: BoxDecoration(
+                color: index <= currentStep
+                    ? KhaataTheme.primaryBlue
+                    : Colors.grey[300],
+                borderRadius: BorderRadius.circular(2.r),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+}
+
+// Animated Text Field Widget
+class _AnimatedTextField extends StatefulWidget {
+  final String label;
+  final String hint;
+  final TextEditingController controller;
+  final TextInputType? keyboardType;
+  final bool obscureText;
+  final Widget? prefix;
+  final Widget? suffix;
+  final String? Function(String?)? validator;
+  final int? maxLength;
+  final TextCapitalization textCapitalization;
+  final List<TextInputFormatter>? inputFormatters;
+
+  const _AnimatedTextField({
+    required this.label,
+    required this.hint,
+    required this.controller,
+    this.keyboardType,
+    this.obscureText = false,
+    this.prefix,
+    this.suffix,
+    this.validator,
+    this.maxLength,
+    this.textCapitalization = TextCapitalization.none,
+    this.inputFormatters,
+  });
+
+  @override
+  State<_AnimatedTextField> createState() => _AnimatedTextFieldState();
+}
+
+class _AnimatedTextFieldState extends State<_AnimatedTextField> {
+  bool _hasError = false;
+  String? _errorText;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          widget.label,
+          style: TextStyle(
+            fontSize: 14.sp,
+            fontWeight: FontWeight.w600,
+            color: KhaataTheme.textDark,
+          ),
+        ),
+        SizedBox(height: 8.h),
+        TextFormField(
+          controller: widget.controller,
+          keyboardType: widget.keyboardType,
+          obscureText: widget.obscureText,
+          maxLength: widget.maxLength,
+          textCapitalization: widget.textCapitalization,
+          inputFormatters: widget.inputFormatters,
+          validator: (value) {
+            if (widget.validator != null) {
+              _errorText = widget.validator!(value);
+              _hasError = _errorText != null;
+            }
+            return _errorText;
+          },
+          onChanged: (value) {
+            if (_hasError) {
+              setState(() {
+                _hasError = false;
+                _errorText = null;
+              });
+            }
+          },
+          decoration: InputDecoration(
+            hintText: widget.hint,
+            prefixIcon: widget.prefix != null
+                ? Padding(
+              padding: EdgeInsets.only(left: 16.w),
+              child: widget.prefix,
+            )
+                : null,
+            suffixIcon: widget.suffix,
+            filled: true,
+            fillColor: Colors.grey[100],
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.r),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.r),
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.r),
+              borderSide: BorderSide(
+                color: KhaataTheme.primaryBlue,
+                width: 2,
+              ),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.r),
+              borderSide: BorderSide(
+                color: KhaataTheme.dangerRed,
+                width: 2,
+              ),
+            ),
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: 16.w,
+              vertical: 16.h,
+            ),
+            counterText: '',
+          ),
+        ),
+        if (_hasError && _errorText != null)
+          Padding(
+            padding: EdgeInsets.only(top: 4.h, left: 4.w),
+            child: Text(
+              _errorText!,
+              style: TextStyle(
+                color: KhaataTheme.dangerRed,
+                fontSize: 12.sp,
+              ),
+            ),
+          ),
+      ],
+    );
   }
 }
 
@@ -162,7 +350,7 @@ class _PhoneStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return SingleChildScrollView(
       padding: EdgeInsets.all(24.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -183,7 +371,7 @@ class _PhoneStep extends StatelessWidget {
             ),
           ),
           SizedBox(height: 32.h),
-          AnimatedTextField(
+          _AnimatedTextField(
             label: 'Mobile Number',
             hint: '10-digit number',
             controller: controller,
@@ -210,7 +398,190 @@ class _PhoneStep extends StatelessWidget {
   }
 }
 
-// Step 3: KYC (PAN + Aadhar)
+// Step 2: OTP
+class _OtpStep extends StatefulWidget {
+  final TextEditingController controller;
+  final VoidCallback onNext;
+
+  const _OtpStep({required this.controller, required this.onNext});
+
+  @override
+  State<_OtpStep> createState() => _OtpStepState();
+}
+
+class _OtpStepState extends State<_OtpStep> {
+  int _resendTimer = 30;
+  bool _canResend = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _startTimer();
+  }
+
+  void _startTimer() {
+    Future.delayed(const Duration(seconds: 1), () {
+      if (mounted) {
+        setState(() {
+          if (_resendTimer > 0) {
+            _resendTimer--;
+            _startTimer();
+          } else {
+            _canResend = true;
+          }
+        });
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(24.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Enter OTP',
+            style: TextStyle(
+              fontSize: 24.sp,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            'Enter the 6-digit code sent to your mobile',
+            style: TextStyle(
+              fontSize: 14.sp,
+              color: KhaataTheme.textGrey,
+            ),
+          ),
+          SizedBox(height: 32.h),
+          _AnimatedTextField(
+            label: 'OTP',
+            hint: '6-digit OTP',
+            controller: widget.controller,
+            keyboardType: TextInputType.number,
+            maxLength: 6,
+            validator: (value) => value?.length != 6 ? 'Enter 6-digit OTP' : null,
+          ),
+          SizedBox(height: 16.h),
+          if (_canResend)
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _resendTimer = 30;
+                  _canResend = false;
+                });
+                _startTimer();
+              },
+              child: Text(
+                'Resend OTP',
+                style: TextStyle(color: KhaataTheme.primaryBlue),
+              ),
+            )
+          else
+            Text(
+              'Resend in $_resendTimer seconds',
+              style: TextStyle(color: KhaataTheme.textGrey),
+            ),
+          SizedBox(height: 24.h),
+          ElevatedButton(
+            onPressed: widget.onNext,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: KhaataTheme.primaryBlue,
+              minimumSize: Size(double.infinity, 56.h),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+            ),
+            child: Text('Verify', style: TextStyle(fontSize: 16.sp)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Step 3: Personal Details
+class _PersonalStep extends StatelessWidget {
+  final TextEditingController firstName;
+  final TextEditingController lastName;
+  final TextEditingController email;
+  final VoidCallback onNext;
+
+  const _PersonalStep({
+    required this.firstName,
+    required this.lastName,
+    required this.email,
+    required this.onNext,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(24.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Personal Details',
+            style: TextStyle(
+              fontSize: 24.sp,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            'Tell us about yourself',
+            style: TextStyle(
+              fontSize: 14.sp,
+              color: KhaataTheme.textGrey,
+            ),
+          ),
+          SizedBox(height: 32.h),
+          _AnimatedTextField(
+            label: 'First Name',
+            hint: 'Enter first name',
+            controller: firstName,
+            textCapitalization: TextCapitalization.words,
+            validator: (value) => value!.isEmpty ? 'First name required' : null,
+          ),
+          SizedBox(height: 16.h),
+          _AnimatedTextField(
+            label: 'Last Name',
+            hint: 'Enter last name',
+            controller: lastName,
+            textCapitalization: TextCapitalization.words,
+            validator: (value) => value!.isEmpty ? 'Last name required' : null,
+          ),
+          SizedBox(height: 16.h),
+          _AnimatedTextField(
+            label: 'Email',
+            hint: 'Enter email address',
+            controller: email,
+            keyboardType: TextInputType.emailAddress,
+            validator: Validators.validateEmail,
+          ),
+          SizedBox(height: 24.h),
+          ElevatedButton(
+            onPressed: onNext,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: KhaataTheme.primaryBlue,
+              minimumSize: Size(double.infinity, 56.h),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+            ),
+            child: Text('Continue', style: TextStyle(fontSize: 16.sp)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Step 4: KYC (PAN + Aadhar)
 class _KYCStep extends StatelessWidget {
   final TextEditingController pan;
   final TextEditingController aadhar;
@@ -224,7 +595,7 @@ class _KYCStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return SingleChildScrollView(
       padding: EdgeInsets.all(24.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -245,7 +616,7 @@ class _KYCStep extends StatelessWidget {
             ),
           ),
           SizedBox(height: 32.h),
-          AnimatedTextField(
+          _AnimatedTextField(
             label: 'PAN Number',
             hint: 'ABCDE1234F',
             controller: pan,
@@ -253,13 +624,13 @@ class _KYCStep extends StatelessWidget {
             maxLength: 10,
             validator: Validators.validatePAN,
           ),
-          SizedBox(height: 20.h),
-          AnimatedTextField(
+          SizedBox(height: 16.h),
+          _AnimatedTextField(
             label: 'Aadhar Number',
             hint: '1234 5678 9012',
             controller: aadhar,
             keyboardType: TextInputType.number,
-            maxLength: 14, // With spaces
+            maxLength: 14,
             validator: Validators.validateAadhar,
           ),
           SizedBox(height: 8.h),
@@ -325,7 +696,7 @@ class _PasswordStepState extends State<_PasswordStep> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return SingleChildScrollView(
       padding: EdgeInsets.all(24.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -346,7 +717,7 @@ class _PasswordStepState extends State<_PasswordStep> {
             ),
           ),
           SizedBox(height: 32.h),
-          AnimatedTextField(
+          _AnimatedTextField(
             label: 'Password',
             hint: 'Min 8 chars, include A-Z, a-z, 0-9, @#\$%',
             controller: widget.password,
@@ -358,7 +729,7 @@ class _PasswordStepState extends State<_PasswordStep> {
             validator: Validators.validatePassword,
           ),
           SizedBox(height: 16.h),
-          AnimatedTextField(
+          _AnimatedTextField(
             label: 'Confirm Password',
             hint: 'Re-enter password',
             controller: widget.confirm,
@@ -372,8 +743,7 @@ class _PasswordStepState extends State<_PasswordStep> {
               return null;
             },
           ),
-          SizedBox(height: 24.h),
-          // Password Requirements
+          SizedBox(height: 16.h),
           _PasswordRequirements(controller: widget.password),
           SizedBox(height: 24.h),
           ElevatedButton(
@@ -408,10 +778,10 @@ class _PasswordRequirements extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _Requirement(text: 'At least 8 characters', valid: text.length >= 8),
-            _Requirement(text: 'One uppercase letter (A-Z)', valid: RegExp(r'[A-Z]').hasMatch(text)),
-            _Requirement(text: 'One lowercase letter (a-z)', valid: RegExp(r'[a-z]').hasMatch(text)),
+            _Requirement(text: 'One uppercase (A-Z)', valid: RegExp(r'[A-Z]').hasMatch(text)),
+            _Requirement(text: 'One lowercase (a-z)', valid: RegExp(r'[a-z]').hasMatch(text)),
             _Requirement(text: 'One number (0-9)', valid: RegExp(r'[0-9]').hasMatch(text)),
-            _Requirement(text: 'One special character (@\$!%*?&)', valid: RegExp(r'[@$!%*?&]').hasMatch(text)),
+            _Requirement(text: 'One special char', valid: RegExp(r'[@$!%*?&]').hasMatch(text)),
           ],
         );
       },
@@ -428,21 +798,20 @@ class _Requirement extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(bottom: 8.h),
+      padding: EdgeInsets.only(bottom: 4.h),
       child: Row(
         children: [
           Icon(
             valid ? Icons.check_circle : Icons.circle_outlined,
-            size: 16.sp,
+            size: 14.sp,
             color: valid ? KhaataTheme.accentGreen : Colors.grey,
           ),
           SizedBox(width: 8.w),
           Text(
             text,
             style: TextStyle(
-              fontSize: 12.sp,
+              fontSize: 11.sp,
               color: valid ? KhaataTheme.accentGreen : Colors.grey,
-              fontWeight: valid ? FontWeight.w600 : FontWeight.normal,
             ),
           ),
         ],

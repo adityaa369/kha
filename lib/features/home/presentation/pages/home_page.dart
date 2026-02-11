@@ -5,10 +5,14 @@ import 'package:go_router/go_router.dart';
 import '../../../../config/theme.dart';
 import '../../../../core/blocs/navigation/navigation_cubit.dart';
 import '../../../../core/widgets/gauge_chart.dart';
-import '../../../profile/presentation/pages/profile_page.dart';
-import '../../../loans/presentation/pages/my_loans_page.dart';
 import '../../../loans/presentation/pages/loans_given_page.dart';
 import '../../../insights/presentation/pages/insights_page.dart';
+import '../../../../core/blocs/auth/auth_cubit.dart';
+import '../../../../core/blocs/loans/loan_cubit.dart';
+import '../../../../core/blocs/credit_score/credit_score_cubit.dart';
+import '../../../../core/blocs/loans/loan_state.dart';
+import '../../../../core/blocs/credit_score/credit_score_state.dart';
+import '../../../loans/presentation/pages/my_loans_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -27,7 +31,9 @@ class _HomeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currentIndex = context.watch<NavigationCubit>().state;
+    final currentIndex = context.select<NavigationCubit, int>(
+          (cubit) => cubit.state,
+    );
 
     return Scaffold(
       backgroundColor: KhaataTheme.backgroundGrey,
@@ -90,7 +96,9 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isSelected = context.watch<NavigationCubit>().state == index;
+    final isSelected = context.select<NavigationCubit, bool>(
+          (cubit) => cubit.state == index,
+    );
 
     return GestureDetector(
       onTap: () => context.read<NavigationCubit>().changeTab(index),
@@ -139,21 +147,28 @@ class HomeContent extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'Hello, Aditya!',
-                        style: TextStyle(
-                          fontSize: 22.sp,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                      GestureDetector(
+                        onTap: () => context.push('/profile'),
+                        child: BlocBuilder<AuthCubit, AuthState>(
+                          builder: (context, state) {
+                            String name = 'Aditya';
+                            if (state is Authenticated) {
+                              name = state.user.firstName;
+                            }
+                            return Text(
+                              'Hello, $name!',
+                              style: TextStyle(
+                                fontSize: 22.sp,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            );
+                          },
                         ),
                       ),
                       GestureDetector(
                         onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) => const ProfilePage()),
-                          );
+                          context.push('/profile');
                         },
                         child: Container(
                           padding: EdgeInsets.all(6.w),
@@ -171,28 +186,49 @@ class HomeContent extends StatelessWidget {
                     ],
                   ),
                   SizedBox(height: 20.h),
-                  // Score Cards Row
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _ScoreCard(
-                          title: 'CIBIL',
-                          score: 763,
-                          status: 'Good',
-                          daysLeft: 16,
-                        ),
+            // Score Cards Row
+            BlocBuilder<CreditScoreCubit, CreditScoreState>(
+              builder: (context, state) {
+                if (state is CreditScoreInitial) {
+                  final authState = context.read<AuthCubit>().state;
+                  if (authState is Authenticated) {
+                    context.read<CreditScoreCubit>().fetchAndStreamCreditScore(authState.user.id);
+                  }
+                }
+                
+                int cibil = 0;
+                int experian = 0;
+                String status = 'Processing';
+                
+                if (state is CreditScoreLoaded) {
+                  cibil = state.cibilScore;
+                  experian = state.experianScore;
+                  status = state.status;
+                }
+
+                return Row(
+                  children: [
+                    Expanded(
+                      child: _ScoreCard(
+                        title: 'CIBIL',
+                        score: cibil,
+                        status: status,
+                        daysLeft: 16,
                       ),
-                      SizedBox(width: 12.w),
-                      Expanded(
-                        child: _ScoreCard(
-                          title: 'experian',
-                          score: 764,
-                          status: 'Good',
-                          daysLeft: 32,
-                        ),
+                    ),
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: _ScoreCard(
+                        title: 'experian',
+                        score: experian,
+                        status: status,
+                        daysLeft: 32,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
+                );
+              },
+            ),
                 ],
               ),
             ),
@@ -264,18 +300,6 @@ class HomeContent extends StatelessWidget {
             ),
           ),
 
-          // Offers Section - FIXED LAYOUT
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.w),
-            child: Text(
-              'Exciting offers for you!',
-              style: TextStyle(
-                fontSize: 16.sp,
-                fontWeight: FontWeight.w700,
-                color: KhaataTheme.textDark,
-              ),
-            ),
-          ),
           // Loan Types Section - Horizontal Scroll Cards
           SizedBox(height: 24.h),
           Padding(
@@ -292,7 +316,7 @@ class HomeContent extends StatelessWidget {
                   ),
                 ),
                 TextButton(
-                  onPressed: () {},
+                  onPressed: () => context.read<NavigationCubit>().changeTab(3),
                   child: Text(
                     'View All',
                     style: TextStyle(
@@ -489,7 +513,6 @@ class _ScoreCard extends StatelessWidget {
   }
 }
 
-
 class _LoanTypeCard extends StatelessWidget {
   final String title;
   final String subtitle;
@@ -512,7 +535,7 @@ class _LoanTypeCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 200.w, // Fixed width for horizontal scroll
+        width: 200.w,
         padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(
           color: Colors.white,

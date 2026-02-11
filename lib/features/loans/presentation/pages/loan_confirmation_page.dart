@@ -1,9 +1,15 @@
+import 'dart:async';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import 'dart:async';
 import '../../../../config/constants.dart';
 import '../../../../config/theme.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/blocs/auth/auth_cubit.dart';
+import '../../../../core/blocs/loans/loan_cubit.dart';
+import '../../../../core/blocs/loans/loan_state.dart';
 import '../../../../core/widgets/buttons.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 
@@ -18,6 +24,7 @@ class LoanConfirmationPage extends StatefulWidget {
 
 class _LoanConfirmationPageState extends State<LoanConfirmationPage> {
   final TextEditingController _otpController = TextEditingController();
+  StreamController<ErrorAnimationType>? _errorController;
   int _resendTimer = 30;
   bool _canResend = false;
   bool _isLoading = false;
@@ -26,36 +33,54 @@ class _LoanConfirmationPageState extends State<LoanConfirmationPage> {
   @override
   void initState() {
     super.initState();
+    _errorController = StreamController<ErrorAnimationType>.broadcast();
     _startResendTimer();
   }
 
+  @override
+  void dispose() {
+    _otpController.dispose();
+    _errorController?.close();
+    super.dispose();
+  }
+
   void _startResendTimer() {
+    if (!mounted) return;
     setState(() {
       _canResend = false;
       _resendTimer = 30;
     });
-    Future.delayed(Duration(seconds: 1), _tickTimer);
+    Future.delayed(const Duration(seconds: 1), _tickTimer);
   }
 
   void _tickTimer() {
-    if (mounted) {
+    if (!mounted) return;
+    if (_resendTimer > 0) {
       setState(() {
         _resendTimer--;
-        if (_resendTimer <= 0) {
-          _canResend = true;
-        } else {
-          Future.delayed(Duration(seconds: 1), _tickTimer);
-        }
+      });
+      Future.delayed(const Duration(seconds: 1), _tickTimer);
+    } else {
+      setState(() {
+        _canResend = true;
       });
     }
   }
 
-  void _verifyOtp() {
+  void _verifyOtp() async {
     if (_currentOtp.length == 6) {
+      if (!mounted) return;
       setState(() => _isLoading = true);
 
-      // Simulate API verification
-      Future.delayed(Duration(seconds: 2), () {
+      try {
+        final authState = context.read<AuthCubit>().state;
+        if (authState is Authenticated) {
+          await context.read<LoanCubit>().createLoan(widget.loanData, authState.user.id);
+        } else {
+          throw 'User not authenticated';
+        }
+        
+        if (!mounted) return;
         setState(() => _isLoading = false);
 
         // Show success dialog
@@ -91,7 +116,7 @@ class _LoanConfirmationPageState extends State<LoanConfirmationPage> {
                 ),
                 SizedBox(height: 8.h),
                 Text(
-                  'Loan agreement has been established with ${widget.loanData['borrowerName']}',
+                  'Loan agreement has been established with ${widget.loanData['borrower_name']}',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 14.sp,
@@ -110,7 +135,13 @@ class _LoanConfirmationPageState extends State<LoanConfirmationPage> {
             ),
           ),
         );
-      });
+      } catch (e) {
+        if (!mounted) return;
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to confirm agreement: $e')),
+        );
+      }
     }
   }
 
@@ -172,7 +203,7 @@ class _LoanConfirmationPageState extends State<LoanConfirmationPage> {
                     ),
                     SizedBox(height: 4.h),
                     Text(
-                      'to ${widget.loanData['borrowerName']}',
+                      'to ${widget.loanData['borrower_name']}',
                       style: TextStyle(
                         fontSize: 16.sp,
                         fontWeight: FontWeight.w600,
@@ -213,7 +244,7 @@ class _LoanConfirmationPageState extends State<LoanConfirmationPage> {
               ),
               SizedBox(height: 4.h),
               Text(
-                '+91 ${widget.loanData['mobile']}',
+                '+91 ${widget.loanData['borrower_phone']}',
                 style: TextStyle(
                   fontSize: 16.sp,
                   fontWeight: FontWeight.bold,
@@ -228,6 +259,7 @@ class _LoanConfirmationPageState extends State<LoanConfirmationPage> {
                 controller: _otpController,
                 keyboardType: TextInputType.number,
                 autoFocus: true,
+                errorAnimationController: _errorController,
                 pinTheme: PinTheme(
                   shape: PinCodeFieldShape.box,
                   borderRadius: BorderRadius.circular(12.r),

@@ -1,7 +1,14 @@
+import 'dart:async';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../config/theme.dart';
 import '../../../../core/widgets/gauge_chart.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/blocs/credit_score/credit_score_cubit.dart';
+import '../../../../core/blocs/credit_score/credit_score_state.dart';
 
 class InsightsPage extends StatelessWidget {
   const InsightsPage({super.key});
@@ -77,90 +84,106 @@ class InsightsPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Score Display Card
-                  Container(
-                    padding: EdgeInsets.all(20.w),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16.r),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.04),
-                          blurRadius: 8,
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Your Credit Score',
-                              style: TextStyle(
-                                fontSize: 16.sp,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  'Powered by',
-                                  style: TextStyle(
-                                    fontSize: 9.sp,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                                Text(
-                                  'CIBIL',
-                                  style: TextStyle(
-                                    fontSize: 14.sp,
-                                    color: KhaataTheme.secondaryBlue,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
+                  BlocBuilder<CreditScoreCubit, CreditScoreState>(
+                    builder: (context, state) {
+                      int cibil = 0;
+                      int experian = 0;
+                      String status = 'Processing';
+                      
+                      if (state is CreditScoreLoaded) {
+                        cibil = state.cibilScore;
+                        experian = state.experianScore;
+                        status = state.status;
+                      }
+
+                      return Container(
+                        padding: EdgeInsets.all(20.w),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16.r),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.04),
+                              blurRadius: 8,
                             ),
                           ],
                         ),
-                        SizedBox(height: 20.h),
+                        child: Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Your Credit Score',
+                                  style: TextStyle(
+                                    fontSize: 16.sp,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      'Powered by',
+                                      style: TextStyle(
+                                        fontSize: 9.sp,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                    Text(
+                                      'CIBIL',
+                                      style: TextStyle(
+                                        fontSize: 14.sp,
+                                        color: KhaataTheme.secondaryBlue,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 20.h),
 
-                        // GAUGE
-                        CreditScoreGauge(score: 763, size: 140),
+                            // GAUGE
+                            CreditScoreGauge(score: cibil, size: 140),
 
-                        // Min-Max labels
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 20.w),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                '300',
-                                style: TextStyle(
-                                  fontSize: 11.sp,
-                                  color: Colors.grey,
-                                ),
+                            // Min-Max labels
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 20.w),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                   Text(
+                                    '300',
+                                    style: TextStyle(
+                                      fontSize: 11.sp,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                  Text(
+                                    status,
+                                    style: TextStyle(
+                                      fontSize: 14.sp,
+                                      color: status == 'Excellent' || status == 'Good' 
+                                          ? KhaataTheme.accentGreen 
+                                          : (status == 'Fair' ? KhaataTheme.warningYellow : KhaataTheme.dangerRed),
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                   Text(
+                                    '900',
+                                    style: TextStyle(
+                                      fontSize: 11.sp,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              Text(
-                                'Good',
-                                style: TextStyle(
-                                  fontSize: 14.sp,
-                                  color: KhaataTheme.accentGreen,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              Text(
-                                '900',
-                                style: TextStyle(
-                                  fontSize: 11.sp,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
 
                   SizedBox(height: 16.h),

@@ -1,6 +1,14 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
+
 import '../../../../config/theme.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/blocs/auth/auth_cubit.dart';
+import '../../../../core/blocs/loans/loan_cubit.dart';
+import '../../../../core/blocs/loans/loan_state.dart';
+import '../../../../data/models/loan_model.dart';
 
 class LoansGivenPage extends StatelessWidget {
   const LoansGivenPage({super.key});
@@ -42,7 +50,7 @@ class LoansGivenPage extends StatelessWidget {
                     ),
                     child: IconButton(
                       icon: Icon(Icons.add, color: KhaataTheme.primaryBlue, size: 22.sp),
-                      onPressed: () {},
+                      onPressed: () => context.push('/create-loan?type=personal'),
                     ),
                   ),
                 ],
@@ -51,67 +59,108 @@ class LoansGivenPage extends StatelessWidget {
           ),
 
           // Stats Row - Like My Loans
-          Container(
-            color: Colors.white,
-            padding: EdgeInsets.symmetric(vertical: 16.h),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _StatBox(
-                    label: 'Total Lent',
-                    amount: '₹ 1,50,000',
-                    icon: Icons.arrow_upward,
-                    color: KhaataTheme.accentGreen,
-                  ),
+          BlocBuilder<LoanCubit, LoanState>(
+            builder: (context, state) {
+              double totalLent = 0;
+              double totalPending = 0;
+              
+              if (state is LoansLoaded) {
+                for (var loan in state.givenLoans) {
+                  totalLent += loan.amount;
+                  totalPending += loan.remainingAmount;
+                }
+              }
+
+              return Container(
+                color: Colors.white,
+                padding: EdgeInsets.symmetric(vertical: 16.h),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _StatBox(
+                        label: 'Total Lent',
+                        amount: '₹ ${_formatCurrency(totalLent)}',
+                        icon: Icons.arrow_upward,
+                        color: KhaataTheme.accentGreen,
+                      ),
+                    ),
+                    Container(width: 1.w, height: 40.h, color: Colors.grey[200]),
+                    Expanded(
+                      child: _StatBox(
+                        label: 'Pending',
+                        amount: '₹ ${_formatCurrency(totalPending)}',
+                        icon: Icons.arrow_downward,
+                        color: KhaataTheme.warningYellow,
+                      ),
+                    ),
+                  ],
                 ),
-                Container(width: 1.w, height: 40.h, color: Colors.grey[200]),
-                Expanded(
-                  child: _StatBox(
-                    label: 'Pending',
-                    amount: '₹ 45,000',
-                    icon: Icons.arrow_downward,
-                    color: KhaataTheme.warningYellow,
-                  ),
-                ),
-              ],
-            ),
+              );
+            },
           ),
 
           // Loan List
           Expanded(
-            child: ListView(
-              padding: EdgeInsets.all(16.w),
-              children: [
-                _GivenLoanCard(
-                  name: 'Rahul Sharma',
-                  amount: '₹ 50,000',
-                  date: '15 Jan 2024',
-                  status: 'On Track',
-                  statusColor: KhaataTheme.accentGreen,
-                  progress: 0.6,
-                  initials: 'R',
-                ),
-                SizedBox(height: 12.h),
-                _GivenLoanCard(
-                  name: 'Priya Patel',
-                  amount: '₹ 25,000',
-                  date: '20 Jan 2024',
-                  status: 'Due Soon',
-                  statusColor: KhaataTheme.warningYellow,
-                  progress: 0.3,
-                  initials: 'P',
-                ),
-                SizedBox(height: 12.h),
-                _GivenLoanCard(
-                  name: 'Amit Kumar',
-                  amount: '₹ 30,000',
-                  date: '01 Feb 2024',
-                  status: 'Overdue',
-                  statusColor: KhaataTheme.dangerRed,
-                  progress: 0.8,
-                  initials: 'A',
-                ),
-              ],
+            child: BlocBuilder<LoanCubit, LoanState>(
+              builder: (context, state) {
+                if (state is LoanInitial) {
+                  final authState = context.read<AuthCubit>().state;
+                  if (authState is Authenticated) {
+                    context.read<LoanCubit>().fetchLoans(authState.user.id);
+                  }
+                  return const Center(child: CircularProgressIndicator());
+                }
+                
+                if (state is LoanLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (state is LoanError) {
+                  return Center(child: Text(state.message));
+                }
+
+                if (state is LoansLoaded) {
+                  if (state.givenLoans.isEmpty) {
+                    return Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.handshake_outlined, size: 64.sp, color: Colors.grey[300]),
+                        SizedBox(height: 16.h),
+                        Text(
+                          'No loans given yet',
+                          style: TextStyle(color: Colors.grey, fontSize: 16.sp),
+                        ),
+                      ],
+                    );
+                  }
+
+                  return ListView.builder(
+                    padding: EdgeInsets.all(16.w),
+                    itemCount: state.givenLoans.length,
+                    itemBuilder: (context, index) {
+                      final loan = state.givenLoans[index];
+                      // Format date for the UI
+                      final dateStr = '${loan.startDate.day} ${_getMonthName(loan.startDate.month)} ${loan.startDate.year}';
+                      
+                      return Column(
+                        children: [
+                          _GivenLoanCard(
+                            name: loan.borrowerName,
+                            amount: loan.displayAmount,
+                            date: dateStr,
+                            status: loan.statusDisplay,
+                            statusColor: loan.statusColor,
+                            progress: loan.progress,
+                            initials: loan.initials ?? loan.borrowerName[0].toUpperCase(),
+                          ),
+                          SizedBox(height: 12.h),
+                        ],
+                      );
+                    },
+                  );
+                }
+                return const SizedBox();
+              },
             ),
           ),
         ],
@@ -352,4 +401,29 @@ class _GivenLoanCard extends StatelessWidget {
       ),
     );
   }
+}
+
+String _formatCurrency(double amount) {
+  return amount.toStringAsFixed(0).replaceAllMapped(
+    RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+    (Match m) => '${m[1]},',
+  );
+}
+
+String _getMonthName(int month) {
+  const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec'
+  ];
+  return months[month - 1];
 }

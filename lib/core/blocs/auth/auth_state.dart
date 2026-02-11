@@ -21,9 +21,41 @@ class OtpSent extends AuthState {
   List<Object?> get props => [phone];
 }
 
-class PinSetupRequired extends AuthState {}
+class OtpVerified extends AuthState {
+  final String phone;
+  const OtpVerified({required this.phone});
 
-class Authenticated extends AuthState {}
+  @override
+  List<Object?> get props => [phone];
+}
+
+class PersonalDetailsSaved extends AuthState {
+  final UserModel user;
+  const PersonalDetailsSaved({required this.user});
+
+  @override
+  List<Object?> get props => [user];
+}
+
+class PanDetailsSaved extends AuthState {
+  final UserModel user;
+  const PanDetailsSaved({required this.user});
+
+  @override
+  List<Object?> get props => [user];
+}
+
+class CreditScoreProcessed extends AuthState {
+  const CreditScoreProcessed();
+}
+
+class Authenticated extends AuthState {
+  final UserModel user;
+  const Authenticated({required this.user});
+
+  @override
+  List<Object?> get props => [user];
+}
 
 class AuthError extends AuthState {
   final String message;

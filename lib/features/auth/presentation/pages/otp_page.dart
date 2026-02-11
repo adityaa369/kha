@@ -2,13 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/blocs/auth/auth_cubit.dart';
 import 'dart:async';
 import '../../../../config/constants.dart';
 import '../../../../config/theme.dart';
 import '../../../../core/widgets/buttons.dart';
 
 class OtpPage extends StatefulWidget {
-  const OtpPage({super.key});
+  final String phone;
+  const OtpPage({super.key, required this.phone});
 
   @override
   State<OtpPage> createState() => _OtpPageState();
@@ -38,44 +41,33 @@ class _OtpPageState extends State<OtpPage> {
   }
 
   void _startResendTimer() {
+    if (!mounted) return;
     setState(() {
       _canResend = false;
       _resendTimer = 30;
       _hasError = false;
     });
 
-    Future.delayed(Duration(seconds: 1), _tickTimer);
+    Future.delayed(const Duration(seconds: 1), _tickTimer);
   }
 
   void _tickTimer() {
-    if (mounted && _resendTimer > 0) { // ADD: && _resendTimer > 0 check
+    if (!mounted) return;
+    if (_resendTimer > 0) {
       setState(() {
         _resendTimer--;
-        if (_resendTimer <= 0) {
-          _canResend = true;
-        } else {
-          Future.delayed(Duration(seconds: 1), _tickTimer);
-        }
+      });
+      Future.delayed(const Duration(seconds: 1), _tickTimer);
+    } else {
+      setState(() {
+        _canResend = true;
       });
     }
   }
 
   void _verifyOtp() {
     if (_currentOtp.length == 6) {
-      setState(() => _isLoading = true);
-
-      // Simulate API verification
-      Future.delayed(Duration(seconds: 2), () {
-        setState(() => _isLoading = false);
-
-        // Mock validation - in real app, verify with backend
-        if (_currentOtp == '000000') {
-          setState(() => _hasError = true);
-          _errorController?.add(ErrorAnimationType.shake);
-        } else {
-          context.push(AppConstants.personalDetails);
-        }
-      });
+      context.read<AuthCubit>().verifyOtp(widget.phone, _currentOtp);
     }
   }
 
@@ -135,9 +127,9 @@ class _OtpPageState extends State<OtpPage> {
                     height: 1.5,
                   ),
                   children: [
-                    TextSpan(text: 'Enter the 6-digit code sent to\n'),
+                    const TextSpan(text: 'Enter the 6-digit code sent to\n'),
                     TextSpan(
-                      text: '+91 98765 43210',
+                      text: '+91 ${widget.phone}',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: KhaataTheme.textDark,
@@ -173,7 +165,7 @@ class _OtpPageState extends State<OtpPage> {
                   errorBorderColor: KhaataTheme.dangerRed,
                 ),
                 cursorColor: KhaataTheme.primaryBlue,
-                animationDuration: Duration(milliseconds: 300),
+                animationDuration: const Duration(milliseconds: 300),
                 textStyle: TextStyle(
                   fontSize: 20.sp,
                   fontWeight: FontWeight.bold,
@@ -218,6 +210,7 @@ class _OtpPageState extends State<OtpPage> {
                   ? TextButton(
                 onPressed: () {
                   _otpController.clear();
+                  context.read<AuthCubit>().sendOtp(widget.phone);
                   _startResendTimer();
                 },
                 child: Text(
@@ -240,10 +233,29 @@ class _OtpPageState extends State<OtpPage> {
               SizedBox(height: 40.h),
 
               // Verify Button
-              PrimaryButton(
-                text: 'Verify',
-                isLoading: _isLoading,
-                onPressed: _currentOtp.length == 6 ? _verifyOtp : null,
+              BlocConsumer<AuthCubit, AuthState>(
+                listener: (context, state) {
+                  if (state is Authenticated) {
+                    context.go(AppConstants.home);
+                  } else if (state is OtpVerified) {
+                    context.push(AppConstants.personalDetails);
+                  } else if (state is AuthError) {
+                    setState(() {
+                      _hasError = true;
+                      _errorController?.add(ErrorAnimationType.shake);
+                    });
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(state.message)),
+                    );
+                  }
+                },
+                builder: (context, state) {
+                  return PrimaryButton(
+                    text: 'Verify',
+                    isLoading: state is AuthLoading,
+                    onPressed: _currentOtp.length == 6 ? _verifyOtp : null,
+                  );
+                },
               ),
 
               SizedBox(height: 24.h),
@@ -285,7 +297,7 @@ class _OtpPageState extends State<OtpPage> {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: KhaataTheme.primaryBlue,
                               ),
-                              child: Text('Got it'),
+                              child: const Text('Got it'),
                             ),
                           ),
                         ],

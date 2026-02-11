@@ -2,6 +2,8 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/blocs/auth/auth_cubit.dart';
 import '../../../../config/constants.dart';
 import '../../../../config/theme.dart';
 import '../../../../core/widgets/buttons.dart';
@@ -18,6 +20,12 @@ class _LoginPageState extends State<LoginPage> {
   bool _termsAccepted = false;
   bool _cibilAccepted = false;
   bool _experianAccepted = false;
+
+  @override
+  void dispose() {
+    _mobileController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -170,11 +178,28 @@ class _LoginPageState extends State<LoginPage> {
 
             SizedBox(height: 40.h),
 
-            PrimaryButton(
-              text: 'Get OTP',
-              onPressed: (_termsAccepted && _cibilAccepted && _experianAccepted && _mobileController.text.length == 10)
-                  ? () => context.push(AppConstants.otp)
-                  : null,
+            BlocConsumer<AuthCubit, AuthState>(
+              listener: (context, state) {
+                if (state is OtpSent) {
+                  context.push(AppConstants.otp, extra: _mobileController.text);
+                } else if (state is AuthError) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(state.message)),
+                  );
+                }
+              },
+              builder: (context, state) {
+                return PrimaryButton(
+                  text: 'Get OTP',
+                  isLoading: state is AuthLoading,
+                  onPressed: (_termsAccepted &&
+                          _cibilAccepted &&
+                          _experianAccepted &&
+                          _mobileController.text.length == 10)
+                      ? () => context.read<AuthCubit>().sendOtp(_mobileController.text)
+                      : null,
+                );
+              },
             ),
           ],
         ),

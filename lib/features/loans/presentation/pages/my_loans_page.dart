@@ -1,6 +1,13 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+
 import '../../../../config/theme.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/blocs/auth/auth_cubit.dart';
+import '../../../../core/blocs/loans/loan_cubit.dart';
+import '../../../../core/blocs/loans/loan_state.dart';
+import '../../../../data/models/loan_model.dart';
 
 class MyLoansPage extends StatelessWidget {
   const MyLoansPage({super.key});
@@ -45,50 +52,95 @@ class MyLoansPage extends StatelessWidget {
           ),
 
           // Stats Row
-          Container(
-            color: Colors.white,
-            padding: EdgeInsets.symmetric(vertical: 16.h),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _StatBox(
-                      count: '4',
-                      label: 'Active Accounts',
-                      color: KhaataTheme.accentGreen),
+          BlocBuilder<LoanCubit, LoanState>(
+            builder: (context, state) {
+              int activeCount = 0;
+              int closedCount = 0;
+              if (state is LoansLoaded) {
+                activeCount = state.myLoans.where((l) => l.status != 'completed').length;
+                closedCount = state.myLoans.where((l) => l.status == 'completed').length;
+              }
+
+              return Container(
+                color: Colors.white,
+                padding: EdgeInsets.symmetric(vertical: 16.h),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _StatBox(
+                          count: activeCount.toString(),
+                          label: 'Active Accounts',
+                          color: KhaataTheme.accentGreen),
+                    ),
+                    Container(
+                        width: 1.w,
+                        height: 40.h,
+                        color: Colors.grey[200]),
+                    Expanded(
+                      child: _StatBox(
+                          count: closedCount.toString(),
+                          label: 'Closed Accounts',
+                          color: Colors.grey),
+                    ),
+                  ],
                 ),
-                Container(
-                    width: 1.w,
-                    height: 40.h,
-                    color: Colors.grey[200]),
-                Expanded(
-                  child: _StatBox(
-                      count: '0',
-                      label: 'Closed Accounts',
-                      color: Colors.grey),
-                ),
-              ],
-            ),
+              );
+            },
           ),
 
           // Loan List
           Expanded(
-            child: ListView(
-              padding: EdgeInsets.all(16.w),
-              children: [
-                _LoanCard(
-                  bank: 'SBI',
-                  accountNumber: '1072',
-                  amount: '-',
-                  showAmount: false,
-                ),
-                SizedBox(height: 12.h),
-                _LoanCard(
-                  bank: 'SBI',
-                  accountNumber: '2353',
-                  amount: '₹ 6,84,000',
-                  showAmount: true,
-                ),
-              ],
+            child: BlocBuilder<LoanCubit, LoanState>(
+              builder: (context, state) {
+                if (state is LoanInitial) {
+                  final authState = context.read<AuthCubit>().state;
+                  if (authState is Authenticated) {
+                    context.read<LoanCubit>().fetchLoans(authState.user.id);
+                  }
+                  return const Center(child: CircularProgressIndicator());
+                }
+                
+                if (state is LoanLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (state is LoanError) {
+                  return Center(child: Text(state.message));
+                }
+
+                if (state is LoansLoaded) {
+                  if (state.myLoans.isEmpty) {
+                    return Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.receipt_long_outlined, size: 64.sp, color: Colors.grey[300]),
+                        SizedBox(height: 16.h),
+                        Text(
+                          'No borrowed loans found',
+                          style: TextStyle(color: Colors.grey, fontSize: 16.sp),
+                        ),
+                      ],
+                    );
+                  }
+
+                  return ListView.builder(
+                    padding: EdgeInsets.all(16.w),
+                    itemCount: state.myLoans.length,
+                    itemBuilder: (context, index) {
+                      final loan = state.myLoans[index];
+                      return Column(
+                        children: [
+                          _LoanCard(
+                            loan: loan,
+                          ),
+                          SizedBox(height: 12.h),
+                        ],
+                      );
+                    },
+                  );
+                }
+                return const SizedBox();
+              },
             ),
           ),
         ],
@@ -172,16 +224,10 @@ class _StatBox extends StatelessWidget {
 }
 
 class _LoanCard extends StatelessWidget {
-  final String bank;
-  final String accountNumber;
-  final String amount;
-  final bool showAmount;
+  final LoanModel loan;
 
   const _LoanCard({
-    required this.bank,
-    required this.accountNumber,
-    required this.amount,
-    required this.showAmount,
+    required this.loan,
   });
 
   @override
@@ -239,14 +285,14 @@ class _LoanCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          bank,
+                          loan.borrowerName, // In MyLoans, this would actually be lender name if we updated model, let's assume it's the counterparty
                           style: TextStyle(
                             fontWeight: FontWeight.w700,
                             fontSize: 14.sp,
                           ),
                         ),
                         Text(
-                          '**** $accountNumber',
+                          loan.type.toUpperCase(),
                           style: TextStyle(
                             color: Colors.grey,
                             fontSize: 12.sp,
@@ -285,7 +331,7 @@ class _LoanCard extends StatelessWidget {
                         ),
                         SizedBox(height: 4.h),
                         Text(
-                          amount,
+                          loan.displayAmount,
                           style: TextStyle(
                             fontSize: 16.sp,
                             fontWeight: FontWeight.bold,
@@ -297,7 +343,7 @@ class _LoanCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
-                          'Due On',
+                          'Status',
                           style: TextStyle(
                             color: Colors.grey,
                             fontSize: 11.sp,
@@ -305,10 +351,11 @@ class _LoanCard extends StatelessWidget {
                         ),
                         SizedBox(height: 4.h),
                         Text(
-                          '-',
+                          loan.statusDisplay,
                           style: TextStyle(
-                            fontSize: 16.sp,
+                            fontSize: 14.sp,
                             fontWeight: FontWeight.bold,
+                            color: loan.statusColor,
                           ),
                         ),
                       ],
@@ -344,4 +391,16 @@ class _LoanCard extends StatelessWidget {
       ),
     );
   }
+}
+
+String _formatCurrency(double amount) {
+  return amount.toStringAsFixed(0).replaceAllMapped(
+    RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+        (Match m) => '${m[1]},',
+  );
+}
+
+String _getMonthName(int month) {
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return months[month - 1];
 }

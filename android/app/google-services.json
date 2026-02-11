@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1015021526856",
+    "project_id": "khaata-69a30",
+    "storage_bucket": "khaata-69a30.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1015021526856:android:bc56a89fc59888a91a5d7d",
+        "android_client_info": {
+          "package_name": "com.example.khatha"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC7raBL2PB2QHWpwIUUjKapuW9RhRlFQHI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

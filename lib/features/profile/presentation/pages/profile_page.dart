@@ -1,8 +1,12 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../../config/constants.dart';
 import '../../../../config/theme.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/blocs/auth/auth_cubit.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -28,7 +32,7 @@ class ProfilePage extends StatelessWidget {
                 children: [
                   IconButton(
                     icon: Icon(Icons.arrow_back, color: Colors.white, size: 22.sp),
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () => context.pop(),
                   ),
                   Expanded(
                     child: Text(
@@ -64,35 +68,47 @@ class ProfilePage extends StatelessWidget {
                           ),
                         ],
                       ),
-                      child: Column(
-                        children: [
-                          Container(
-                            width: 72.w,
-                            height: 72.w,
-                            decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              borderRadius: BorderRadius.circular(16.r),
-                            ),
-                            child: Center(
-                              child: Text(
-                                'AA',
-                                style: TextStyle(
-                                  fontSize: 28.sp,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.grey[400],
+                      child: BlocBuilder<AuthCubit, AuthState>(
+                        builder: (context, state) {
+                          String initials = 'AA';
+                          String fullName = 'Aditya Amruthaluri';
+                          
+                          if (state is Authenticated) {
+                            initials = state.user.initials;
+                            fullName = state.user.displayName;
+                          }
+
+                          return Column(
+                            children: [
+                              Container(
+                                width: 72.w,
+                                height: 72.w,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[200],
+                                  borderRadius: BorderRadius.circular(16.r),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    initials,
+                                    style: TextStyle(
+                                      fontSize: 28.sp,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.grey[400],
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ),
-                          ),
-                          SizedBox(height: 12.h),
-                          Text(
-                            'Aditya Amruthaluri',
-                            style: TextStyle(
-                              fontSize: 18.sp,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
+                              SizedBox(height: 12.h),
+                              Text(
+                                fullName,
+                                style: TextStyle(
+                                  fontSize: 18.sp,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          );
+                        },
                       ),
                     ),
 
@@ -154,7 +170,12 @@ class ProfilePage extends StatelessWidget {
 
                     // Logout
                     TextButton.icon(
-                      onPressed: () => context.go(AppConstants.welcome),
+                      onPressed: () async {
+                        await context.read<AuthCubit>().logout();
+                        if (context.mounted) {
+                          context.go(AppConstants.welcome);
+                        }
+                      },
                       icon: Icon(
                         Icons.logout,
                         color: KhaataTheme.primaryBlue,

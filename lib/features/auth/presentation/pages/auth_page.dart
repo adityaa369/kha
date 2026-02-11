@@ -3,7 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../config/theme.dart';
 import '../../../../core/utils/validators.dart';
-import '../widgets/sliding_toggle.dart';
+
 
 class AuthPage extends StatefulWidget {
   const AuthPage({super.key});

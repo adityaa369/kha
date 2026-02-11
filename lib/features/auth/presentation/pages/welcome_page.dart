@@ -85,7 +85,7 @@ class WelcomePage extends StatelessWidget {
               const Spacer(),
               PrimaryButton(
                 text: 'Get Started',
-                onPressed: () => context.push(AppConstants.login),
+                onPressed: () => context.go(AppConstants.home),
               ),
               SizedBox(height: 40.h),
             ],

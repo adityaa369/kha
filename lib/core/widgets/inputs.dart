@@ -64,3 +64,4 @@ class PanInputFormatter extends TextInputFormatter {
     );
   }
 }
+

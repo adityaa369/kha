@@ -98,27 +98,30 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
 
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
-      // Validate all fields filled
-      if (_borrowerNameController.text.isEmpty ||
-          _mobileController.text.isEmpty ||
-          _amountController.text.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Please fill all required fields')),
-        );
-        return;
-      }
-
-      // Navigate to OTP confirmation
+      // Navigate to OTP confirmation with full loan data
       context.push(
         '/loan-confirmation',
         extra: {
-          'borrowerName': _borrowerNameController.text,
-          'mobile': _mobileController.text,
-          'amount': _amountController.text,
-          'loanType': widget.loanType,
+          'borrower_name': _borrowerNameController.text,
+          'borrower_phone': _mobileController.text,
+          'borrower_aadhar': _aadharController.text,
+          'borrower_address': _addressController.text,
+          'amount': double.tryParse(_amountController.text) ?? 0.0,
+          'interest_rate': double.tryParse(_interestController.text) ?? 0.0,
+          'duration_months': _calculateMonths(),
+          'start_date': _startDate.toIso8601String(),
+          'type': widget.loanType,
         },
       );
     }
+  }
+
+  int _calculateMonths() {
+    int val = int.tryParse(_durationController.text) ?? 0;
+    if (_durationType == 'Years') {
+      return val * 12;
+    }
+    return val;
   }
 
   @override

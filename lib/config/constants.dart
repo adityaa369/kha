@@ -16,29 +16,17 @@ class AppConstants {
   static const String insights = '/insights';
   static const String profile = '/profile';
 
-  // Mock Data for UI
-  static const Map<String, dynamic> mockCreditScore = {
-    'cibil': 763,
-    'experian': 764,
-    'status': 'Good',
-    'nextUpdateCibil': 16,
-    'nextUpdateExperian': 32,
-  };
+  // API Configurations
+  static const String baseUrl = 'http://10.0.2.2:5000/api'; 
+  
+  // Table Names
+  static const String usersTable = 'users';
+  static const String loansTable = 'loans';
+  static const String loansGivenTable = 'loans_given';
+  static const String creditScoresTable = 'credit_scores';
+  static const String loanAgreementsTable = 'loan_agreements';
 
-  static const List<Map<String, dynamic>> mockLoans = [
-    {
-      'lender': 'SBI',
-      'accountNumber': '1072',
-      'amount': null,
-      'type': 'Credit Card',
-      'status': 'active',
-    },
-    {
-      'lender': 'SBI',
-      'accountNumber': '2353',
-      'amount': 684000,
-      'type': 'Personal Loan',
-      'status': 'active',
-    },
-  ];
+  // Supabase Storage Buckets
+  static const String profileImagesBucket = 'profile-images';
+  static const String loanDocumentsBucket = 'loan-documents';
 }
