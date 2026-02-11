@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: khatha-backend
+    env: docker
+    plan: free
+    region: singapore
+    dockerFilePath: Dockerfile
+    dockerContext: .
+    envVars:
+      - key: PORT
+        value: 10000
+      - fromGroup: khatha-secrets
