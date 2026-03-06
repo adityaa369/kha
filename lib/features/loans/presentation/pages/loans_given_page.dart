@@ -9,6 +9,7 @@ import '../../../../core/blocs/auth/auth_cubit.dart';
 import '../../../../core/blocs/loans/loan_cubit.dart';
 import '../../../../core/blocs/loans/loan_state.dart';
 import '../../../../data/models/loan_model.dart';
+import '../../../../core/widgets/buttons.dart';
 
 class LoansGivenPage extends StatelessWidget {
   const LoansGivenPage({super.key});
@@ -106,7 +107,7 @@ class LoansGivenPage extends StatelessWidget {
                 if (state is LoanInitial) {
                   final authState = context.read<AuthCubit>().state;
                   if (authState is Authenticated) {
-                    context.read<LoanCubit>().fetchLoans(authState.user.id);
+                    context.read<LoanCubit>().fetchLoans();
                   }
                   return const Center(child: CircularProgressIndicator());
                 }
@@ -145,13 +146,15 @@ class LoansGivenPage extends StatelessWidget {
                       return Column(
                         children: [
                           _GivenLoanCard(
-                            name: loan.borrowerName,
+                            name: loan.displayCounterpartyName,
                             amount: loan.displayAmount,
                             date: dateStr,
                             status: loan.statusDisplay,
                             statusColor: loan.statusColor,
                             progress: loan.progress,
                             initials: loan.initials ?? loan.borrowerName[0].toUpperCase(),
+                            emi: loan.emi != null ? '₹ ${_formatCurrency(loan.emi!)} /mo' : null,
+                            totalPayable: loan.totalPayable != null ? '₹ ${_formatCurrency(loan.totalPayable!)}' : null,
                           ),
                           SizedBox(height: 12.h),
                         ],
@@ -219,6 +222,8 @@ class _GivenLoanCard extends StatelessWidget {
   final Color statusColor;
   final double progress;
   final String initials;
+  final String? emi;
+  final String? totalPayable;
 
   const _GivenLoanCard({
     required this.name,
@@ -228,6 +233,8 @@ class _GivenLoanCard extends StatelessWidget {
     required this.statusColor,
     required this.progress,
     required this.initials,
+    this.emi,
+    this.totalPayable,
   });
 
   @override
@@ -354,7 +361,22 @@ class _GivenLoanCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                          title: const Text('Reminder Sent'),
+                          content: const Text('A payment reminder has been sent to the borrower.'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => context.pop(),
+                              child: const Text('OK'),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
                     style: OutlinedButton.styleFrom(
                       foregroundColor: KhaataTheme.primaryBlue,
                       side: BorderSide(color: KhaataTheme.primaryBlue),
@@ -375,7 +397,47 @@ class _GivenLoanCard extends StatelessWidget {
                 SizedBox(width: 10.w),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      showModalBottomSheet(
+                        context: context,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
+                        ),
+                        builder: (context) => Container(
+                          padding: EdgeInsets.all(20.w),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Loan Details',
+                                style: TextStyle(
+                                  fontSize: 18.sp,
+                                  fontWeight: FontWeight.bold,
+                                  color: KhaataTheme.primaryBlue,
+                                ),
+                              ),
+                              SizedBox(height: 16.h),
+                              _DetailRow(label: 'Borrower', value: name),
+                              _DetailRow(label: 'Amount', value: amount),
+                              _DetailRow(label: 'Date', value: date),
+                              _DetailRow(label: 'Status', value: status),
+                              _DetailRow(label: 'Repaid', value: '${(progress * 100).toInt()}%'),
+                              if (emi != null) _DetailRow(label: 'Monthly EMI', value: emi!),
+                              if (totalPayable != null) _DetailRow(label: 'Total Payable', value: totalPayable!),
+                              SizedBox(height: 20.h),
+                              SizedBox(
+                                width: double.infinity,
+                                child: PrimaryButton(
+                                  text: 'Close',
+                                  onPressed: () => context.pop(),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: KhaataTheme.primaryBlue,
                       foregroundColor: Colors.white,
@@ -426,4 +488,25 @@ String _getMonthName(int month) {
     'Dec'
   ];
   return months[month - 1];
+}
+
+class _DetailRow extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _DetailRow({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 8.h),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: TextStyle(color: Colors.grey, fontSize: 14.sp)),
+          Text(value, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14.sp)),
+        ],
+      ),
+    );
+  }
 }

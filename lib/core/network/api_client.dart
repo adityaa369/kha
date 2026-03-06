@@ -1,12 +1,15 @@
 import 'package:dio/dio.dart';
+import 'package:dio_smart_retry/dio_smart_retry.dart';
+import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 import '../utils/secure_storage.dart';
 import '../../config/constants.dart';
+import 'exceptions.dart';
 
 class ApiClient {
   final Dio _dio = Dio(BaseOptions(
     baseUrl: AppConstants.baseUrl,
-    connectTimeout: const Duration(seconds: 10),
-    receiveTimeout: const Duration(seconds: 10),
+    connectTimeout: const Duration(seconds: 30),
+    receiveTimeout: const Duration(seconds: 30),
   ));
 
   ApiClient() {
@@ -19,11 +22,54 @@ class ApiClient {
         return handler.next(options);
       },
       onError: (DioException e, handler) {
+        DioException myException = e;
+        
         if (e.response?.statusCode == 401) {
-          // Handle unauthorized (e.g., logout or token refresh)
+          myException = e.copyWith(error: AuthException('Please login again'));
+        } else {
+          switch (e.type) {
+            case DioExceptionType.connectionTimeout:
+            case DioExceptionType.sendTimeout:
+            case DioExceptionType.receiveTimeout:
+            case DioExceptionType.connectionError:
+              myException = e.copyWith(error: NetworkException());
+              break;
+            case DioExceptionType.badResponse:
+              final msg = e.response?.data?['message'];
+              if (e.response?.statusCode == 500) {
+                myException = e.copyWith(error: ServerException(msg ?? 'Internal Server Error'));
+              } else if (e.response?.statusCode == 400 || e.response?.statusCode == 404) {
+                myException = e.copyWith(error: BadRequestException(msg ?? 'Invalid request'));
+              }
+              break;
+            default:
+              break;
+          }
         }
-        return handler.next(e);
+        
+        return handler.next(myException);
       },
+    ));
+
+    _dio.interceptors.add(RetryInterceptor(
+      dio: _dio,
+      logPrint: print,
+      retries: 3,
+      retryDelays: const [
+        Duration(seconds: 1),
+        Duration(seconds: 2),
+        Duration(seconds: 3),
+      ],
+    ));
+
+    _dio.interceptors.add(PrettyDioLogger(
+      requestHeader: true,
+      requestBody: true,
+      responseBody: true,
+      responseHeader: false,
+      error: true,
+      compact: true,
+      maxWidth: 90,
     ));
   }
 

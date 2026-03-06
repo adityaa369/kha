@@ -18,8 +18,6 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final _mobileController = TextEditingController();
   bool _termsAccepted = false;
-  bool _cibilAccepted = false;
-  bool _experianAccepted = false;
 
   @override
   void dispose() {
@@ -119,62 +117,6 @@ class _LoginPageState extends State<LoginPage> {
               linkText: 'Terms and Conditions, Privacy Policy',
               onLinkTap: () {},
             ),
-            CheckboxTile(
-              value: _cibilAccepted,
-              onChanged: (v) => setState(() => _cibilAccepted = v!),
-              title: 'I agree to T&C of ',
-              linkText: 'TUCIBIL',
-              subtitle: ' and consent to share Credit Information',
-              onLinkTap: () {},
-            ),
-            CheckboxTile(
-              value: _experianAccepted,
-              onChanged: (v) => setState(() => _experianAccepted = v!),
-              title: 'I agree to T&C of ',
-              linkText: 'Experian',
-              subtitle: ' and consent to share Credit Information',
-              onLinkTap: () {},
-            ),
-
-            SizedBox(height: 32.h),
-
-            // Powered by logos
-            Center(
-              child: Column(
-                children: [
-                  Text(
-                    'Score Powered by',
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                      color: KhaataTheme.textGrey,
-                    ),
-                  ),
-                  SizedBox(height: 12.h),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'CIBIL',
-                        style: TextStyle(
-                          fontSize: 20.sp,
-                          fontWeight: FontWeight.bold,
-                          color: KhaataTheme.secondaryBlue,
-                        ),
-                      ),
-                      SizedBox(width: 20.w),
-                      Text(
-                        'experian.',
-                        style: TextStyle(
-                          fontSize: 20.sp,
-                          fontWeight: FontWeight.bold,
-                          color: KhaataTheme.primaryBlue,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
 
             SizedBox(height: 40.h),
 
@@ -193,8 +135,6 @@ class _LoginPageState extends State<LoginPage> {
                   text: 'Get OTP',
                   isLoading: state is AuthLoading,
                   onPressed: (_termsAccepted &&
-                          _cibilAccepted &&
-                          _experianAccepted &&
                           _mobileController.text.length == 10)
                       ? () => context.read<AuthCubit>().sendOtp(_mobileController.text)
                       : null,

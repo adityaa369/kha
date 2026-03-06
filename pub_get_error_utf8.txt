@@ -1,0 +1,40 @@
+﻿Resolving dependencies...
+flutter : Because 
+khatha depends on 
+sendotp_flutter_sdk 
+^0.0.3 which doesn't 
+match any versions, 
+version solving 
+failed.
+At line:1 char:1
++ flutter pub get > 
+pub_get_error.txt 
+2>&1; cat 
+pub_get_error.txt
++ ~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo   
+           : NotSpe  
+  cified: (Because   
+  khatha ...solvi    
+ng failed.:Strin    
+g) [], RemoteExc    
+eption
+    + FullyQualified 
+   ErrorId : Native  
+  CommandError
+ 
+
+
+You can try the 
+following suggestion 
+to make the pubspec 
+resolve:
+* Consider 
+downgrading your 
+constraint on 
+sendotp_flutter_sdk: 
+flutter pub add sendo
+tp_flutter_sdk:^0.0.2
+Failed to update 
+packages.

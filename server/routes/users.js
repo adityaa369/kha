@@ -45,4 +45,34 @@ router.put('/profile', async (req, res) => {
     }
 });
 
+// @desc    Check if user exists by phone
+// @route   POST /api/users/check-phone
+// @access  Private
+router.post('/check-phone', async (req, res) => {
+    try {
+        const { phone } = req.body;
+        if (!phone) {
+            return res.status(400).json({ success: false, message: 'Phone number required' });
+        }
+
+        const user = await User.findOne({ phone });
+
+        if (user) {
+            res.status(200).json({
+                success: true,
+                exists: true,
+                user: {
+                    firstName: user.firstName,
+                    lastName: user.lastName,
+                    id: user.id
+                }
+            });
+        } else {
+            res.status(200).json({ success: true, exists: false });
+        }
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
 module.exports = router;

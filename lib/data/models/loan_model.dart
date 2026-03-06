@@ -6,6 +6,7 @@ class LoanModel extends Equatable {
   final String? lenderId; // For loans given by user
   final String? userId; // For loans taken by user
   final String borrowerName;
+  final String? lenderName;
   final String? initials;
   final double amount;
   final double? interestRate;
@@ -26,6 +27,7 @@ class LoanModel extends Equatable {
     this.lenderId,
     this.userId,
     required this.borrowerName,
+    this.lenderName,
     this.initials,
     required this.amount,
     this.interestRate,
@@ -47,8 +49,9 @@ class LoanModel extends Equatable {
       id: json['_id'] ?? json['id']?.toString() ?? '',
       lenderId: json['lender_id']?.toString() ?? json['lender']?.toString(),
       userId: json['user_id']?.toString() ?? json['borrower']?.toString(),
-      borrowerName: json['borrowerName'] ?? json['borrower_name'] ?? json['lender_name'] ?? '',
-      initials: json['initials'] ?? _generateInitials(json['borrowerName'] ?? json['borrower_name'] ?? ''),
+      borrowerName: json['borrowerName'] ?? json['borrower_name'] ?? '',
+      lenderName: json['lenderName'] ?? json['lender_name'],
+      initials: json['initials'] ?? _generateInitials(json['lenderName'] ?? json['borrowerName'] ?? json['borrower_name'] ?? ''),
       amount: (json['amount'] ?? 0).toDouble(),
       interestRate: json['interestRate']?.toDouble() ?? json['interest_rate']?.toDouble(),
       durationMonths: json['durationMonths'] ?? json['duration_months'],
@@ -108,6 +111,28 @@ class LoanModel extends Equatable {
   }
 
   // Helper getters
+  String get displayCounterpartyName {
+    if (lenderName != null && lenderName!.isNotEmpty) {
+      return lenderName!;
+    }
+    return borrowerName;
+  }
+
+  String get displayType {
+    switch (type) {
+      case 'personal':
+        return 'Hand Credit';
+      case 'business':
+        return 'Business Credit';
+      case 'home':
+        return 'Interest Credit';
+      case 'chitfund':
+        return 'Chit Funds';
+      default:
+        return type.toUpperCase();
+    }
+  }
+
   String get displayAmount {
     if (amount == 0) return '-';
     return '₹ ${_formatNumber(amount)}';
@@ -207,6 +232,7 @@ class LoanModel extends Equatable {
     lenderId,
     userId,
     borrowerName,
+    lenderName,
     amount,
     status,
     progress,

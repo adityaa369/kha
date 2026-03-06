@@ -6,6 +6,8 @@ import '../../../../config/constants.dart';
 import '../../../../config/theme.dart';
 import '../../../../core/widgets/buttons.dart';
 import '../../../../core/widgets/inputs.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/blocs/loans/loan_cubit.dart';
 
 class CreateLoanPage extends StatefulWidget {
   final String loanType;
@@ -45,13 +47,13 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
   String getLoanTypeTitle() {
     switch (widget.loanType) {
       case 'personal':
-        return 'Personal Loan';
+        return 'Hand Credit';
       case 'business':
-        return 'Business Loan';
+        return 'Business Credit';
       case 'home':
-        return 'Home Loan';
+        return 'Interest Credit';
       case 'chitfund':
-        return 'Chit Fund';
+        return 'Chit Funds';
       default:
         return 'New Loan';
     }
@@ -96,24 +98,136 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
     }
   }
 
-  void _submitForm() {
+  void _submitForm() async {
     if (_formKey.currentState!.validate()) {
-      // Navigate to OTP confirmation with full loan data
-      context.push(
-        '/loan-confirmation',
-        extra: {
-          'borrower_name': _borrowerNameController.text,
-          'borrower_phone': _mobileController.text,
-          'borrower_aadhar': _aadharController.text,
-          'borrower_address': _addressController.text,
-          'amount': double.tryParse(_amountController.text) ?? 0.0,
-          'interest_rate': double.tryParse(_interestController.text) ?? 0.0,
-          'duration_months': _calculateMonths(),
-          'start_date': _startDate.toIso8601String(),
-          'type': widget.loanType,
-        },
-      );
+      setState(() => _isLoading = true);
+
+      final phone = _mobileController.text;
+      final cubit = context.read<LoanCubit>();
+
+      // 1. Check if borrower exists
+      final borrower = await cubit.checkBorrower(phone);
+
+      if (borrower == null) {
+        setState(() => _isLoading = false);
+        if (!mounted) return;
+        _showBorrowerNotFoundDialog();
+        return;
+      }
+
+      // 2. Create Loan (Sends OTP to borrower)
+      final loanData = {
+        'borrower_phone': phone,
+        'borrower_name': _borrowerNameController.text,
+        'borrower_aadhar': _aadharController.text,
+        'borrower_address': _addressController.text,
+        'amount': double.tryParse(_amountController.text) ?? 0.0,
+        'interest_rate': widget.loanType == 'home' ? (double.tryParse(_interestController.text) ?? 0.0) : 0.0,
+        'duration_months': _calculateMonths(),
+        'start_date': _startDate.toIso8601String(),
+        'type': widget.loanType,
+      };
+
+      final result = await cubit.createLoan(loanData);
+      
+      setState(() => _isLoading = false);
+
+      if (result != null && mounted) {
+        // 3. Show OTP Verification Dialog
+        final loanId = result['id'];
+        _showOtpVerificationDialog(loanId);
+      }
     }
+  }
+
+  void _showBorrowerNotFoundDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('User Not Found'),
+        content: const Text('This phone number is not registered on Khaata. Please ask the borrower to register first.'),
+        actions: [
+          TextButton(
+            onPressed: () => context.pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showOtpVerificationDialog(String loanId) {
+    final otpController = TextEditingController();
+    bool isVerifying = false;
+    String? errorText;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+            title: const Text('Enter OTP'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'OTP sent to ${_mobileController.text}. Please enter it to activate the loan.',
+                  style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
+                ),
+                SizedBox(height: 16.h),
+                TextField(
+                  controller: otpController,
+                  keyboardType: TextInputType.number,
+                  maxLength: 6,
+                  decoration: InputDecoration(
+                    labelText: 'OTP',
+                    border: const OutlineInputBorder(),
+                    errorText: errorText,
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: isVerifying ? null : () => context.pop(),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: isVerifying
+                    ? null
+                    : () async {
+                        setState(() {
+                          isVerifying = true;
+                          errorText = null;
+                        });
+                        
+                        final success = await context.read<LoanCubit>().verifyLoan(loanId, otpController.text);
+                        
+                        if (success) {
+                          if (!mounted) return;
+                          context.pop(); // Close dialog
+                          context.go(AppConstants.home);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Loan Activated Successfully!', style: TextStyle(color: Colors.white)), backgroundColor: Colors.green),
+                          );
+                        } else {
+                          setState(() {
+                            isVerifying = false;
+                            errorText = 'Invalid OTP';
+                          });
+                        }
+                      },
+                child: isVerifying
+                    ? SizedBox(width: 20.w, height: 20.h, child: const CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : const Text('Verify & Create'),
+              ),
+            ],
+          );
+        }
+      ),
+    );
   }
 
   int _calculateMonths() {
@@ -267,19 +381,22 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
               SizedBox(height: 16.h),
 
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: KhaataTextField(
-                      label: 'Interest Rate (%)',
-                      hint: 'e.g. 12',
-                      controller: _interestController,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-                      ],
+                  if (widget.loanType == 'home') ...[
+                    Expanded(
+                      child: KhaataTextField(
+                        label: 'Interest Rate (%)',
+                        hint: 'e.g. 12',
+                        controller: _interestController,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                        ],
+                      ),
                     ),
-                  ),
-                  SizedBox(width: 16.w),
+                    SizedBox(width: 16.w),
+                  ],
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,

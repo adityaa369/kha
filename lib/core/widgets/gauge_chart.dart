@@ -88,7 +88,7 @@ class _GaugePainter extends CustomPainter {
     }
 
     // Progress arc
-    final progress = (score - 300) / 600; // Normalize 300-900 to 0-1
+    final progress = ((score - 300) / 600).clamp(0.0, 1.0); // Normalize 300-900 to 0-1
     final progressPaint = Paint()
       ..color = scoreColor
       ..style = PaintingStyle.stroke

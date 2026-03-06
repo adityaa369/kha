@@ -27,61 +27,14 @@ class WelcomePage extends StatelessWidget {
               ),
               SizedBox(height: 8.h),
               Text(
-                AppConstants.appName,
+                'Hand Loan Credit', // Updated text
+                textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.displayLarge?.copyWith(
                   color: KhaataTheme.primaryBlue,
-                  fontSize: 40.sp,
-                ),
-              ),
-              SizedBox(height: 12.h),
-              Container(
-                width: 40.w,
-                height: 4.h,
-                decoration: BoxDecoration(
-                  color: KhaataTheme.primaryBlue,
-                  borderRadius: BorderRadius.circular(2.r),
+                  fontSize: 36.sp, // Slightly smaller to fit
                 ),
               ),
               SizedBox(height: 60.h),
-              Row(
-                children: [
-                  Expanded(
-                    child: _FeatureCard(
-                      icon: Icons.handshake_rounded,
-                      title: 'Digital Loan Agreements',
-                      color: KhaataTheme.primaryBlue,
-                    ),
-                  ),
-                  SizedBox(width: 16.w),
-                  Expanded(
-                    child: _FeatureCard(
-                      icon: Icons.verified_user_rounded,
-                      title: 'Legally Binding & Secure',
-                      color: KhaataTheme.accentGreen,
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 16.h),
-              Row(
-                children: [
-                  Expanded(
-                    child: _FeatureCard(
-                      icon: Icons.track_changes_rounded,
-                      title: 'Track Repayments',
-                      color: KhaataTheme.warningYellow,
-                    ),
-                  ),
-                  SizedBox(width: 16.w),
-                  Expanded(
-                    child: _FeatureCard(
-                      icon: Icons.notifications_active_rounded,
-                      title: 'Timely Reminders',
-                      color: KhaataTheme.secondaryBlue,
-                    ),
-                  ),
-                ],
-              ),
               const Spacer(),
               PrimaryButton(
                 text: 'Get Started',

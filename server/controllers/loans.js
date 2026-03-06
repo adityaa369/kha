@@ -8,29 +8,49 @@ const { sendOtp } = require('../utils/otpProvider');
 // @access  Private (Lender)
 exports.createLoan = async (req, res) => {
     try {
-        const {
-            borrowerPhone,
-            borrowerName,
-            borrowerAadhar,
-            borrowerAddress,
+        let {
+            borrower_phone,
+            borrower_name,
+            borrower_aadhar,
+            borrower_address,
             amount,
-            interestRate,
-            durationMonths,
-            loanType
+            interest_rate,
+            duration_months,
+            type
         } = req.body;
 
-        // Check if borrower exists in system
-        let borrower = await User.findOne({ phone: borrowerPhone });
+        // Sanitize phone: strip 91 or +91
+        const borrowerPhone = borrower_phone.toString().replace(/^\+?91/, '');
+        const borrowerName = borrower_name;
+        const borrowerAadhar = borrower_aadhar;
+        const borrowerAddress = borrower_address;
+        const interestRate = interest_rate;
+        const durationMonths = duration_months;
+        const loanType = type || 'personal';
 
-        // Even if borrower doesn't exist, we create the loan record
-        // Borrower will link to it when they register with this phone
+        if (borrowerPhone === req.user.phone) {
+            return res.status(400).json({
+                success: false,
+                message: 'You cannot give a loan to yourself'
+            });
+        }
+
+        // Check if borrower exists in system (STRICT CHECK)
+        let borrower = await User.findOne({ phone: borrowerPhone });
+        if (!borrower) {
+            console.error(`[Loans] Borrower ${borrowerPhone} not found in system.`);
+            return res.status(404).json({
+                success: false,
+                message: 'Borrower not found. Please ask the user to register first.'
+            });
+        }
 
         // Generate OTP for loan agreement (sent to borrower)
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
         const loan = await Loan.create({
             lender: req.user.id,
-            borrower: borrower ? borrower.id : null,
+            borrower: borrower.id,
             borrowerName,
             borrowerPhone,
             borrowerAadhar,
@@ -44,13 +64,29 @@ exports.createLoan = async (req, res) => {
         });
 
         // Send OTP to borrower
-        await sendOtp(borrowerPhone, otp);
+        console.log(`[Loans] Sending Agreement OTP ${otp} to borrower ${borrowerPhone}...`);
+        const sendResult = await sendOtp(borrowerPhone, otp);
+
+        const loanResponse = loan.toObject();
+        delete loanResponse.otp;
+
+        if (!sendResult.success) {
+            console.error('[Loans] MSG91 Sending Failed!', sendResult.error || sendResult.message);
+            // Delete the loan to prevent orphan unverified loans from failing SMS
+            await Loan.findByIdAndDelete(loan._id);
+            return res.status(500).json({
+                success: false,
+                message: `Failed to send SMS to borrower. MSG91 Error: ${sendResult.error || sendResult.message || 'Unknown configuration error'}`
+            });
+        }
 
         res.status(201).json({
             success: true,
-            loan
+            message: 'Loan agreement created. OTP sent to borrower.',
+            loan: loanResponse
         });
     } catch (err) {
+        console.error('[Loans] createLoan Error:', err.message);
         res.status(500).json({
             success: false,
             message: err.message
@@ -75,8 +111,30 @@ exports.getGivenLoans = async (req, res) => {
 // @access  Private
 exports.getTakenLoans = async (req, res) => {
     try {
-        const loans = await Loan.find({ borrowerPhone: req.user.phone });
-        res.status(200).json({ success: true, loans });
+        // Sanitize phone for query consistency
+        const phone = req.user.phone.toString().replace(/^\+?91/, '');
+        const loans = await Loan.find({
+            $or: [
+                { borrowerPhone: phone },
+                { borrower: req.user.id }
+            ],
+            lender: { $ne: req.user.id } // Explicitly exclude loans where I am the lender
+        });
+
+        // Populate lender details manually to avoid changing the Mongoose schema
+        const loansWithLender = [];
+        for (const loan of loans) {
+            const lenderUser = await User.findById(loan.lender);
+            const loanObj = loan.toObject();
+            if (lenderUser) {
+                loanObj.lenderName = `${lenderUser.firstName || ''} ${lenderUser.lastName || ''}`.trim() || 'Unknown Lender';
+            } else {
+                loanObj.lenderName = 'Unknown Lender';
+            }
+            loansWithLender.push(loanObj);
+        }
+
+        res.status(200).json({ success: true, loans: loansWithLender });
     } catch (err) {
         res.status(500).json({ success: false, message: err.message });
     }
@@ -88,23 +146,122 @@ exports.getTakenLoans = async (req, res) => {
 exports.verifyLoan = async (req, res) => {
     try {
         const { otp } = req.body;
+        console.log('\n--- LOAN VERIFICATION DEBUG ---');
+        console.log('Loan ID received:', req.params.id);
+        console.log('OTP received:', otp);
+
+        const currentUserPhone = req.user.phone.toString().replace(/^\+?91/, '');
+        console.log('User attempting verify:', currentUserPhone);
+
         const loan = await Loan.findById(req.params.id);
 
         if (!loan) {
+            console.error(`[Loans] Loan ${req.params.id} not found.`);
             return res.status(404).json({ success: false, message: 'Loan not found' });
         }
 
-        if (loan.otp !== otp) {
+        // Check if current user is involved in the loan
+        const isLender = loan.lender.toString() === req.user.id.toString();
+        const isBorrower = loan.borrowerPhone === currentUserPhone;
+
+        // ALLOW Lender to verify (Lender-driven flow) OR Borrower (Self-verify flow)
+        if (!isLender && !isBorrower) {
+            console.error(`[Loans] SECURITY ALERT: User ${req.user.id} is neither Lender nor Borrower.`);
+            return res.status(403).json({ success: false, message: 'Not authorized to verify this loan.' });
+        }
+
+        console.log(`[Loans] Verification allowed for User ${req.user.id} (Is Lender: ${isLender}, Is Borrower: ${isBorrower})`);
+
+        // If the current user is the borrower, ensure their phone matches the loan's borrowerPhone
+        // This check is crucial for borrower-initiated verification to prevent one borrower from verifying another's loan.
+        // For lender-initiated verification, this check is bypassed as the lender is not the borrower.
+        if (isBorrower && loan.borrowerPhone !== currentUserPhone) {
+            console.error(`[Loans] PHONE MISMATCH: Loan intended for ${loan.borrowerPhone}, but ${currentUserPhone} is trying to verify.`);
+            return res.status(403).json({ success: false, message: 'This loan was not issued to this phone number.' });
+        }
+
+        console.log(`[DEBUG] DB Stored OTP: "${loan.otp}"`);
+        console.log(`[DEBUG] Received OTP: "${otp}"`);
+
+        if (loan.otp?.toString().trim() !== otp?.toString().trim()) {
+            console.error(`[DEBUG] OTP MISMATCH for loan ${loan._id}`);
             return res.status(400).json({ success: false, message: 'Invalid OTP' });
         }
 
         loan.status = 'active';
         loan.isOtpVerified = true;
         loan.startDate = Date.now();
-        loan.borrower = req.user.id; // Link the borrower ID
+        loan.activatedAt = Date.now();
+        loan.borrower = req.user.id; // Link the borrower's actual user ID
+
+        // Calculate EMI, Total Payable, and Dates
+        if (loan.durationMonths && loan.durationMonths > 0) {
+            const startDate = new Date(loan.startDate);
+
+            // Set end date based on duration
+            const endDate = new Date(startDate);
+            endDate.setMonth(endDate.getMonth() + loan.durationMonths);
+            loan.endDate = endDate;
+
+            // Set next due date to next month
+            const nextDueDate = new Date(startDate);
+            nextDueDate.setMonth(nextDueDate.getMonth() + 1);
+            loan.nextDueDate = nextDueDate;
+
+            if (loan.interestRate > 0) {
+                const P = loan.amount;
+                const r = loan.interestRate / 100 / 12; // Monthly rate
+                const n = loan.durationMonths;
+
+                const emi = P * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1);
+                loan.emiAmount = emi;
+                loan.totalPayable = emi * n;
+            } else {
+                loan.emiAmount = loan.amount / loan.durationMonths;
+                loan.totalPayable = loan.amount;
+            }
+        } else {
+            loan.totalPayable = loan.amount;
+        }
+
+        console.log(`[DEBUG] Match! Activating Loan ${loan._id}`);
         await loan.save();
+        console.log('--- END DEBUG ---\n');
 
         res.status(200).json({ success: true, loan });
+    } catch (err) {
+        console.error('[Loans] verifyLoan Error:', err.message);
+        res.status(500).json({ success: false, message: err.message });
+    }
+};
+
+// @desc    Resend loan agreement OTP
+// @route   POST /api/loans/:id/resend-otp
+// @access  Private
+exports.resendLoanOtp = async (req, res) => {
+    try {
+        const loan = await Loan.findById(req.params.id);
+
+        if (!loan) {
+            return res.status(404).json({ success: false, message: 'Loan not found' });
+        }
+
+        // Generate NEW OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        loan.otp = otp;
+        await loan.save();
+
+        // Send OTP to borrower
+        const sendResult = await sendOtp(loan.borrowerPhone, otp);
+
+        if (!sendResult.success) {
+            return res.status(500).json({
+                success: false,
+                message: `Failed to resend SMS. MSG91 Error: ${sendResult.error || sendResult.message}`
+            });
+        }
+
+        res.status(200).json({ success: true, message: 'OTP resent successfully' });
     } catch (err) {
         res.status(500).json({ success: false, message: err.message });
     }
@@ -145,26 +302,59 @@ exports.updateProgress = async (req, res) => {
 
 // Helper to update credit score
 async function updateCreditScore(userId) {
-    const loans = await Loan.find({ borrower: userId, status: { $in: ['active', 'completed'] } });
+    const loans = await Loan.find({ borrower: userId, status: { $in: ['active', 'completed', 'overdue', 'defaulted'] } });
 
     if (loans.length === 0) return;
 
     let scorePoints = 0;
+    let totalLoanAmount = 0;
+    const now = new Date();
+
     loans.forEach(loan => {
+        const weight = Math.log10(loan.amount + 10); // Higher amount loans have slightly higher impact
+        totalLoanAmount += loan.amount;
+
         if (loan.status === 'completed') {
-            scorePoints += 100;
-        } else {
-            scorePoints += (loan.progress * 50);
+            scorePoints += (100 * weight); // Full points for completion
+
+            // Bonus for completing before end date
+            if (loan.endDate && loan.updatedAt && new Date(loan.updatedAt) < loan.endDate) {
+                scorePoints += (10 * weight);
+            }
+        } else if (loan.status === 'active') {
+            scorePoints += (loan.progress * 50 * weight); // Partial points based on progress
+
+            // Penalize or reward based on real-time due dates
+            if (loan.nextDueDate) {
+                const daysUntilDue = (loan.nextDueDate - now) / (1000 * 60 * 60 * 24);
+
+                if (daysUntilDue < 0) {
+                    // Late payment penalty (max 30 points)
+                    const daysLate = Math.abs(daysUntilDue);
+                    scorePoints -= (Math.min(daysLate, 30) * 1 * weight);
+                } else if (daysUntilDue > 15 && loan.progress > 0) {
+                    // Making progress early gives small bonus
+                    scorePoints += (5 * weight);
+                }
+            }
+        } else if (loan.status === 'overdue') {
+            scorePoints -= (30 * weight); // Penalty for being overdue
+        } else if (loan.status === 'defaulted') {
+            scorePoints -= (100 * weight); // Heavy penalty for default
         }
     });
 
-    // Simple algorithm: base 300 + points, max 900
-    const newScore = Math.min(300 + Math.floor(scorePoints), 900);
+    // Normalize the score based on the total loan amount weight
+    const averageWeight = totalLoanAmount > 0 ? (scorePoints / Math.log10(totalLoanAmount + 10)) : 0;
+
+    // Base score is 400. Max achievable score goes up to 900.
+    const calculatedScore = 400 + Math.floor(averageWeight);
+    const newScore = Math.max(300, Math.min(calculatedScore, 900));
 
     let status = 'Good';
-    if (newScore < 500) status = 'Poor';
-    else if (newScore < 700) status = 'Fair';
-    else if (newScore < 800) status = 'Good';
+    if (newScore < 550) status = 'Poor';
+    else if (newScore < 650) status = 'Fair';
+    else if (newScore < 750) status = 'Good';
     else status = 'Excellent';
 
     await CreditScore.findOneAndUpdate(

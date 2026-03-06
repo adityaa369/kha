@@ -6,53 +6,51 @@ import '../../network/api_client.dart';
 class CreditScoreCubit extends Cubit<CreditScoreState> {
   CreditScoreCubit() : super(CreditScoreInitial());
 
-  final _supabase = Supabase.instance.client;
-  StreamSubscription? _scoreSubscription;
+  final _api = ApiClient();
+  
+  void clear() {
+    emit(CreditScoreInitial());
+  }
 
-  Future<void> fetchAndStreamCreditScore(String userId) async {
-    emit(CreditScoreLoading());
-    try {
-      // Initial fetch
-      final response = await _supabase
-          .from(AppConstants.creditScoresTable)
-          .select()
-          .eq('user_id', userId)
-          .maybeSingle();
-
-      if (response != null) {
-        emit(CreditScoreLoaded(
-          cibilScore: response['cibil_score'] ?? 0,
-          experianScore: response['experian_score'] ?? 0,
-          status: response['status'] ?? 'N/A',
-        ));
-      } else {
-        emit(const CreditScoreLoaded(cibilScore: 0, experianScore: 0, status: 'N/A'));
-      }
-
-      // Stream listener for updates
-      _scoreSubscription?.cancel();
-      _scoreSubscription = _supabase
-          .from(AppConstants.creditScoresTable)
-          .stream(primaryKey: ['id'])
-          .eq('user_id', userId)
-          .listen((data) {
-        if (data.isNotEmpty) {
-          final score = data.first;
-          emit(CreditScoreLoaded(
-            cibilScore: score['cibil_score'] ?? 0,
-            experianScore: score['experian_score'] ?? 0,
-            status: score['status'] ?? 'N/A',
-          ));
-        }
-      });
-    } catch (e) {
-      emit(CreditScoreError('Failed to load credit score: $e'));
+  void resetError() {
+    if (state is CreditScoreError) {
+      emit(CreditScoreInitial());
     }
   }
 
-  @override
-  Future<void> close() {
-    _scoreSubscription?.cancel();
-    return super.close();
+  Future<void> fetchCreditScore() async {
+    resetError();
+    emit(CreditScoreLoading());
+    try {
+      final scoreResponse = await _api.get('/credit-score');
+      final insightsResponse = await _api.get('/credit-score/insights');
+
+      int cibil = 0;
+      int experian = 0;
+      String status = 'N/A';
+      Map<String, dynamic>? insights;
+
+      if (scoreResponse.data['success'] == true) {
+        final score = scoreResponse.data['score'];
+        if (score != null) {
+          cibil = score['cibilScore'] ?? 0;
+          experian = score['experianScore'] ?? 0;
+          status = score['status'] ?? 'N/A';
+        }
+      }
+
+      if (insightsResponse.data['success'] == true) {
+        insights = insightsResponse.data['insights'];
+      }
+
+      emit(CreditScoreLoaded(
+        cibilScore: cibil,
+        experianScore: experian,
+        status: status,
+        insights: insights,
+      ));
+    } catch (e) {
+      emit(CreditScoreError('Failed to load credit score: $e'));
+    }
   }
 }

@@ -57,6 +57,22 @@ class Authenticated extends AuthState {
   List<Object?> get props => [user];
 }
 
+class RegistrationOtpSent extends AuthState {
+  final String phone;
+  const RegistrationOtpSent({required this.phone});
+
+  @override
+  List<Object?> get props => [phone];
+}
+
+class RegistrationOtpVerified extends AuthState {
+  final String phone;
+  const RegistrationOtpVerified({required this.phone});
+
+  @override
+  List<Object?> get props => [phone];
+}
+
 class AuthError extends AuthState {
   final String message;
   const AuthError(this.message);

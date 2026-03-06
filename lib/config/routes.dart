@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/blocs/auth/auth_cubit.dart';
 import '../features/auth/presentation/pages/login_page.dart';
 import '../features/auth/presentation/pages/otp_page.dart';
 import '../features/auth/presentation/pages/pan_details_page.dart';
 import '../features/auth/presentation/pages/personal_details_page.dart';
+import '../features/auth/presentation/pages/registration_otp_page.dart';
 import '../features/auth/presentation/pages/welcome_page.dart';
 import '../features/auth/presentation/pages/processing_page.dart';
 import '../features/home/presentation/pages/home_page.dart';
@@ -24,7 +24,8 @@ final router = GoRouter(
   initialLocation: AppConstants.splash,
   redirect: (context, state) {
     final authState = context.read<AuthCubit>().state;
-    final isLoggedIn = authState is Authenticated;
+    final isLoggedIn = authState is Authenticated || authState is OtpVerified;
+    final isFullyRegistered = authState is Authenticated;
 
     final isAuthRoute = [
       AppConstants.login,
@@ -48,10 +49,14 @@ final router = GoRouter(
       return AppConstants.login;
     }
 
-    // If logged in and on basic auth routes (login/otp), go home
-    // But allow them to stay on onboarding routes if they are in the middle of it
-    if (isLoggedIn && (state.uri.path == AppConstants.login || state.uri.path == AppConstants.otp)) {
-      return AppConstants.home;
+    // If logged in but profile incomplete, force onboarding
+    if (isLoggedIn && !isFullyRegistered && !isOnboardingRoute) {
+      return AppConstants.personalDetails;
+    }
+
+    // If logged in and on basic auth routes, go to dashboard or onboarding
+    if (isLoggedIn && isAuthRoute) {
+      return isFullyRegistered ? AppConstants.home : AppConstants.personalDetails;
     }
 
     return null;
@@ -69,6 +74,13 @@ final router = GoRouter(
     ),
     GoRoute(path: AppConstants.personalDetails, builder: (context, state) => const PersonalDetailsPage()),
     GoRoute(path: AppConstants.panDetails, builder: (context, state) => const PanDetailsPage()),
+    GoRoute(
+      path: AppConstants.registrationOtp,
+      builder: (context, state) {
+        final phone = state.extra as String? ?? '';
+        return RegistrationOtpPage(phone: phone);
+      },
+    ),
     GoRoute(
       path: '/create-loan',
       builder: (context, state) {

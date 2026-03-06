@@ -1,25 +1,22 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:sendotp_flutter_sdk/sendotp_flutter_sdk.dart';
 import '../../../data/models/user_model.dart';
 import '../../network/api_client.dart';
 import '../../utils/secure_storage.dart';
+import '../../../config/constants.dart';
 
 part 'auth_state.dart';
 
 class AuthCubit extends Cubit<AuthState> {
-  AuthCubit() : super(AuthInitial()) {
-    // Initialize MSG91 SDK
-    OTPWidget.initializeWidget(
-      '36626b70594e353337323033', // widgetId
-      '493750T09QOxt0g698cb47bP1', // authToken
-    );
-  }
+  final ApiClient _api;
 
-  final _api = ApiClient();
+  AuthCubit({ApiClient? api}) 
+      : _api = api ?? ApiClient(),
+        super(AuthInitial());
   UserModel? _currentUser;
-  String? _requestId;
+  // Removed _reqId as we don't use SDK anymore
 
   UserModel? get currentUser => _currentUser;
 
@@ -30,21 +27,34 @@ class AuthCubit extends Cubit<AuthState> {
       final userDataJson = await SecureStorage.getUserData();
 
       if (token != null && userDataJson != null) {
+        // Load cached user immediately
+        _currentUser = UserModel.fromJson(jsonDecode(userDataJson));
+        
+        // Verify with backend
         try {
           final response = await _api.get('/users/profile');
           if (response.data['success'] == true) {
             _currentUser = UserModel.fromJson(response.data['user']);
             await SecureStorage.saveUserData(jsonEncode(_currentUser!.toFullJson()));
-            emit(Authenticated(user: _currentUser!));
+            
+            if (_currentUser!.firstName.isNotEmpty) {
+              emit(Authenticated(user: _currentUser!));
+            } else {
+              await logout();
+            }
           } else {
-            await logout();
+            // Token invalid or other backend rejection
+             await logout();
           }
         } catch (e) {
-          if (e.toString().contains('401')) {
-            await logout();
+          // NETWORK ERROR or Server Down
+          // Do NOT logout. Allow offline usage with cached data.
+          if (_currentUser != null && _currentUser!.firstName.isNotEmpty) {
+             emit(Authenticated(user: _currentUser!));
           } else {
-            _currentUser = UserModel.fromJson(jsonDecode(userDataJson));
-            emit(Authenticated(user: _currentUser!));
+             // If we really can't confirm user, maybe stay in Loading or fallback
+             // But for now, let's allow it if we have cache.
+             emit(Authenticated(user: _currentUser!));
           }
         }
       } else {
@@ -55,79 +65,79 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  // Send OTP via MSG91 SDK
+  // Send OTP via Backend (Bypassing SDK)
   Future<void> sendOtp(String phone) async {
     emit(AuthLoading());
     try {
-      // MSG91 requires country code but without '+'
-      final identifier = '91$phone'; 
-      final data = {'identifier': identifier};
-      
-      final response = await OTPWidget.sendOTP(data);
-      final responseData = jsonDecode(response.toString());
+      final response = await _api.post('/auth/send-otp', data: {
+        'phone': phone,
+      });
 
-      if (responseData['type'] == 'success') {
-        _requestId = responseData['message']; // MSG91 message field contains reqId usually
+      if (response.data['success'] == true) {
         emit(OtpSent(phone: phone));
       } else {
-        emit(AuthError(responseData['message'] ?? 'Failed to send OTP'));
+        emit(AuthError(response.data['message'] ?? 'Failed to send OTP'));
       }
     } catch (e) {
       emit(AuthError('Failed to send OTP: $e'));
     }
   }
 
-  // Verify OTP via MSG91 SDK and then verify with Backend
+  // Verify OTP via Backend
   Future<void> verifyOtp(String phone, String otp) async {
     emit(AuthLoading());
     try {
-      if (_requestId == null) {
-        emit(const AuthError('Request ID not found. Please resend OTP.'));
-        return;
-      }
-
-      final data = {
-        'reqId': _requestId,
+      final response = await _api.post('/auth/verify-otp', data: {
+        'phone': phone,
         'otp': otp,
-      };
+      });
 
-      final response = await OTPWidget.verifyOTP(data);
-      final responseData = jsonDecode(response.toString());
+      if (response.data['success'] == true) {
+        final token = response.data['token'];
+        final isNewUser = response.data['isNewUser'] ?? false;
+        final userJson = response.data['user'];
 
-      if (responseData['type'] == 'success') {
-        // Verification on client successful, now get access token and verify with backend
-        final accessToken = responseData['message']; // MSG91 returns access token in message field on success
+        await SecureStorage.saveToken(token);
+        _currentUser = UserModel.fromJson(userJson);
+        await SecureStorage.saveUserData(jsonEncode(_currentUser!.toFullJson()));
 
-        final backendResponse = await _api.post('/auth/verify-token', data: {
-          'accessToken': accessToken,
-        });
-
-        if (backendResponse.data['success'] == true) {
-          final token = backendResponse.data['token'];
-          final isNewUser = backendResponse.data['isNewUser'] ?? false;
-          final userJson = backendResponse.data['user'];
-
-          await SecureStorage.saveToken(token);
-          _currentUser = UserModel.fromJson(userJson);
-          await SecureStorage.saveUserData(jsonEncode(_currentUser!.toFullJson()));
-
-          if (isNewUser || _currentUser!.firstName.isEmpty) {
-            emit(OtpVerified(phone: phone));
-          } else {
-            emit(Authenticated(user: _currentUser!));
-          }
+        if (isNewUser || _currentUser!.firstName.isEmpty) {
+          emit(OtpVerified(phone: phone));
         } else {
-          emit(AuthError(backendResponse.data['message'] ?? 'Backend verification failed'));
+          emit(Authenticated(user: _currentUser!));
         }
       } else {
-        emit(AuthError(responseData['message'] ?? 'Invalid OTP'));
+        emit(AuthError(response.data['message'] ?? 'Invalid OTP'));
       }
     } catch (e) {
       emit(AuthError('Verification failed: $e'));
     }
   }
 
-  // Save personal details locally (before registration)
+  // Send OTP for registration completion (Second OTP)
+  Future<void> sendRegistrationOtp() async {
+    if (_currentUser == null) {
+      emit(const AuthError('User data missing for registration OTP'));
+      return;
+    }
+    
+    emit(AuthLoading());
+    try {
+      final phone = _currentUser!.phone;
+      final response = await _api.post('/auth/send-otp', data: {
+        'phone': phone,
+      });
+      
+      if (response.data['success'] == true) {
+        emit(RegistrationOtpSent(phone: phone));
+      } else {
+        emit(AuthError(response.data['message'] ?? 'Failed to send secondary OTP'));
+      }
+    } catch (e) {
+      emit(AuthError('Failed to send secondary OTP: $e'));
+    }
+  }
+  // Save personal details to backend immediately
   Future<void> savePersonalDetails({
     required String firstName,
     required String lastName,
@@ -136,19 +146,54 @@ class AuthCubit extends Cubit<AuthState> {
   }) async {
     emit(AuthLoading());
     try {
+      // Optimistic update
       _currentUser = _currentUser?.copyWith(
         firstName: firstName,
         lastName: lastName,
         phone: phone,
         email: email,
       );
-      emit(PersonalDetailsSaved(user: _currentUser!));
+
+      final response = await _api.post('/auth/register', data: {
+        'firstName': firstName,
+        'lastName': lastName,
+        'email': email,
+        'phone': phone,
+      });
+
+      if (response.data['success'] == true) {
+        _currentUser = UserModel.fromJson(response.data['user']);
+        await SecureStorage.saveUserData(jsonEncode(_currentUser!.toFullJson()));
+        emit(PersonalDetailsSaved(user: _currentUser!));
+      } else {
+        emit(AuthError(response.data['message'] ?? 'Failed to save details'));
+      }
     } catch (e) {
       emit(AuthError('Failed to save details: $e'));
     }
   }
 
-  // Save PAN details locally (before registration)
+  // Verify secondary OTP for registration completion
+  Future<void> verifyRegistrationOtp(String otp) async {
+    emit(AuthLoading());
+    try {
+      final phone = _currentUser!.phone;
+      final response = await _api.post('/auth/verify-otp', data: {
+        'phone': phone,
+        'otp': otp,
+      });
+
+      if (response.data['success'] == true) {
+        emit(RegistrationOtpVerified(phone: phone));
+      } else {
+        emit(AuthError(response.data['message'] ?? 'Invalid secondary OTP'));
+      }
+    } catch (e) {
+      emit(AuthError('Secondary verification failed: $e'));
+    }
+  }
+
+  // Save PAN details to backend immediately
   Future<void> savePanDetails({
     required String pan,
     required String aadhar,
@@ -163,7 +208,21 @@ class AuthCubit extends Cubit<AuthState> {
         dob: dob,
         gender: gender,
       );
-      emit(PanDetailsSaved(user: _currentUser!));
+
+      final response = await _api.post('/auth/register', data: {
+        'pan': pan,
+        'aadhar': aadhar,
+        'dob': dob,
+        'gender': gender,
+      });
+
+      if (response.data['success'] == true) {
+        _currentUser = UserModel.fromJson(response.data['user']);
+        await SecureStorage.saveUserData(jsonEncode(_currentUser!.toFullJson()));
+        emit(PanDetailsSaved(user: _currentUser!));
+      } else {
+        emit(AuthError(response.data['message'] ?? 'Failed to save PAN details'));
+      }
     } catch (e) {
       emit(AuthError('Failed to save PAN details: $e'));
     }
@@ -202,5 +261,12 @@ class AuthCubit extends Cubit<AuthState> {
     } catch (e) {
       emit(AuthError('Logout failed: $e'));
     }
+  }
+
+  // Placeholder for credit score processing (simulated for flow consistency)
+  Future<void> processCreditScore() async {
+    // In Node.js backend, credit score record is created during auth verification or profile completion
+    // We just wait a bit to simulate processing for UI experience
+    await Future.delayed(const Duration(seconds: 2));
   }
 }

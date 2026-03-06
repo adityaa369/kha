@@ -15,15 +15,17 @@ class CreditScoreLoaded extends CreditScoreState {
   final int cibilScore;
   final int experianScore;
   final String status;
+  final Map<String, dynamic>? insights;
 
   const CreditScoreLoaded({
     required this.cibilScore,
     required this.experianScore,
     required this.status,
+    this.insights,
   });
 
   @override
-  List<Object?> get props => [cibilScore, experianScore, status];
+  List<Object?> get props => [cibilScore, experianScore, status, insights];
 }
 
 class CreditScoreError extends CreditScoreState {

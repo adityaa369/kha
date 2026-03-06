@@ -73,68 +73,68 @@ class _LoanConfirmationPageState extends State<LoanConfirmationPage> {
       setState(() => _isLoading = true);
 
       try {
-        final authState = context.read<AuthCubit>().state;
-        if (authState is Authenticated) {
-          await context.read<LoanCubit>().createLoan(widget.loanData, authState.user.id);
-        } else {
-          throw 'User not authenticated';
-        }
+        final loanId = widget.loanData['loan_id'];
+        if (loanId == null) throw 'Missing loan ID';
+
+        final success = await context.read<LoanCubit>().verifyLoan(loanId, _currentOtp);
         
         if (!mounted) return;
         setState(() => _isLoading = false);
 
-        // Show success dialog
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16.r),
+        if (success) {
+          // Show success dialog
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16.r),
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(16.w),
+                    decoration: BoxDecoration(
+                      color: KhaataTheme.accentGreen.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.check_circle,
+                      color: KhaataTheme.accentGreen,
+                      size: 48.sp,
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+                  Text(
+                    'Agreement Confirmed!',
+                    style: TextStyle(
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  Text(
+                    'Loan agreement has been established with ${widget.loanData['borrower_name']}',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      color: KhaataTheme.textGrey,
+                    ),
+                  ),
+                  SizedBox(height: 24.h),
+                  PrimaryButton(
+                    text: 'View Agreement',
+                    onPressed: () {
+                      context.pop();
+                      context.go(AppConstants.home);
+                    },
+                  ),
+                ],
+              ),
             ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: EdgeInsets.all(16.w),
-                  decoration: BoxDecoration(
-                    color: KhaataTheme.accentGreen.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.check_circle,
-                    color: KhaataTheme.accentGreen,
-                    size: 48.sp,
-                  ),
-                ),
-                SizedBox(height: 16.h),
-                Text(
-                  'Agreement Confirmed!',
-                  style: TextStyle(
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(height: 8.h),
-                Text(
-                  'Loan agreement has been established with ${widget.loanData['borrower_name']}',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    color: KhaataTheme.textGrey,
-                  ),
-                ),
-                SizedBox(height: 24.h),
-                PrimaryButton(
-                  text: 'View Agreement',
-                  onPressed: () {
-                    context.pop();
-                    context.go(AppConstants.home);
-                  },
-                ),
-              ],
-            ),
-          ),
-        );
+          );
+        }
       } catch (e) {
         if (!mounted) return;
         setState(() => _isLoading = false);
@@ -288,7 +288,11 @@ class _LoanConfirmationPageState extends State<LoanConfirmationPage> {
               // Resend Section
               _canResend
                   ? TextButton(
-                onPressed: () {
+                onPressed: () async {
+                  final loanId = widget.loanData['loan_id'];
+                  if (loanId != null) {
+                    await context.read<LoanCubit>().resendOtp(loanId);
+                  }
                   _otpController.clear();
                   _startResendTimer();
                 },

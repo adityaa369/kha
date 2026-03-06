@@ -9,6 +9,8 @@ import '../../../../core/widgets/gauge_chart.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/blocs/credit_score/credit_score_cubit.dart';
 import '../../../../core/blocs/credit_score/credit_score_state.dart';
+import '../../../../core/blocs/loans/loan_cubit.dart';
+import '../../../../core/blocs/loans/loan_state.dart';
 
 class InsightsPage extends StatelessWidget {
   const InsightsPage({super.key});
@@ -35,41 +37,6 @@ class InsightsPage extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                       color: Colors.white,
                     ),
-                  ),
-                  SizedBox(height: 16.h),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          padding: EdgeInsets.symmetric(vertical: 10.h),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(8.r),
-                          ),
-                          child: Text(
-                            'CIBIL',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: KhaataTheme.primaryBlue,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 13.sp,
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 16.w),
-                      Expanded(
-                        child: Text(
-                          'EXPERIAN',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13.sp,
-                          ),
-                        ),
-                      ),
-                    ],
                   ),
                   SizedBox(height: 16.h),
                 ],
@@ -111,34 +78,15 @@ class InsightsPage extends StatelessWidget {
                         child: Column(
                           children: [
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  'Your Credit Score',
+                                  'Credit Score',
                                   style: TextStyle(
-                                    fontSize: 16.sp,
+                                    fontSize: 18.sp,
                                     fontWeight: FontWeight.w700,
+                                    color: KhaataTheme.primaryBlue,
                                   ),
-                                ),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      'Powered by',
-                                      style: TextStyle(
-                                        fontSize: 9.sp,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                    Text(
-                                      'CIBIL',
-                                      style: TextStyle(
-                                        fontSize: 14.sp,
-                                        color: KhaataTheme.secondaryBlue,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
                                 ),
                               ],
                             ),
@@ -254,51 +202,77 @@ class InsightsPage extends StatelessWidget {
                   ),
                   SizedBox(height: 16.h),
 
-                  GridView.count(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 12.h,
-                    crossAxisSpacing: 12.w,
-                    childAspectRatio: 0.85,
-                    children: [
-                      _FactorCard(
-                        title: 'Payments',
-                        subtitle: 'High Impact',
-                        value: '100%',
-                        detailLabel: 'Timely payments',
-                        valueColor: KhaataTheme.accentGreen,
-                        isGood: true,
-                        icon: Icons.access_time,
-                      ),
-                      _FactorCard(
-                        title: 'Limit',
-                        subtitle: 'High Impact',
-                        value: '76%',
-                        detailLabel: 'Credit limit used',
-                        valueColor: KhaataTheme.dangerRed,
-                        isGood: false,
-                        icon: Icons.show_chart,
-                      ),
-                      _FactorCard(
-                        title: 'Age',
-                        subtitle: 'Medium Impact',
-                        value: '2.5 yrs',
-                        detailLabel: 'Account age',
-                        valueColor: KhaataTheme.textDark,
-                        isGood: null,
-                        icon: Icons.calendar_today,
-                      ),
-                      _FactorCard(
-                        title: 'Accounts',
-                        subtitle: 'Low Impact',
-                        value: '4',
-                        detailLabel: 'Total accounts',
-                        valueColor: KhaataTheme.textDark,
-                        isGood: null,
-                        icon: Icons.account_balance_wallet,
-                      ),
-                    ],
+                  BlocBuilder<LoanCubit, LoanState>(
+                    builder: (context, loanState) {
+                      String startPayment = '₹ 0';
+                      String totalAccounts = '0';
+                      String age = '0 days';
+                      
+                      if (loanState is LoansLoaded) {
+                        // Calculate typical monthly payments (Mock logic: sum of amount/duration)
+                        double monthlyPayment = 0;
+                        for (var loan in loanState.myLoans) {
+                          if (loan.status == 'active' && loan.durationMonths != null && loan.durationMonths! > 0) {
+                            monthlyPayment += (loan.amount / loan.durationMonths!);
+                          }
+                        }
+                        startPayment = '₹ ${(monthlyPayment).toStringAsFixed(0)}';
+                        
+                        // Total Accounts
+                        totalAccounts = (loanState.myLoans.length + loanState.givenLoans.length).toString();
+                        
+                        // Age (Mocking account age or using oldest loan date if available)
+                        // In a real app, this would come from Auth User creation date
+                        age = '45 days'; 
+                      }
+
+                      return GridView.count(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        crossAxisCount: 2,
+                        mainAxisSpacing: 12.h,
+                        crossAxisSpacing: 12.w,
+                        childAspectRatio: 0.85,
+                        children: [
+                          _FactorCard(
+                            title: 'Payments',
+                            subtitle: 'High Impact',
+                            value: startPayment,
+                            detailLabel: 'Timely payments',
+                            valueColor: KhaataTheme.textGrey,
+                            isGood: true,
+                            icon: Icons.access_time,
+                          ),
+                          _FactorCard(
+                            title: 'Limit',
+                            subtitle: 'High Impact',
+                            value: '₹ 5,00,000', // Static as requested (Not Required)
+                            detailLabel: 'Credit limit available',
+                            valueColor: KhaataTheme.textGrey,
+                            isGood: true,
+                            icon: Icons.show_chart,
+                          ),
+                          _FactorCard(
+                            title: 'Age',
+                            subtitle: 'Medium Impact',
+                            value: age,
+                            detailLabel: 'Account age',
+                            valueColor: KhaataTheme.textDark,
+                            isGood: true,
+                            icon: Icons.calendar_today,
+                          ),
+                          _FactorCard(
+                            title: 'Accounts',
+                            subtitle: 'Low Impact',
+                            value: totalAccounts,
+                            detailLabel: 'Total accounts',
+                            valueColor: KhaataTheme.textDark,
+                            isGood: true,
+                            icon: Icons.account_balance_wallet,
+                          ),
+                        ],
+                      );
+                    }
                   ),
                 ],
               ),

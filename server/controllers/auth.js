@@ -13,13 +13,17 @@ exports.verifyToken = async (req, res) => {
         return res.status(400).json({ success: false, message: 'Please provide an access token' });
     }
 
+    console.log(`[Auth] Verifying Access Token: ${accessToken.substring(0, 10)}...`);
     const result = await verifyAccessToken(accessToken);
 
-    if (!result.success) {
+    if (!result.success || !result.mobile) {
+        console.error('[Auth] MSG91 Verification failed:', result.message || 'Mobile undefined');
         return res.status(400).json({ success: false, message: result.message || 'Verification failed' });
     }
 
-    const phone = result.mobile;
+    // Strip '91' if it starts with it (MSG91 standard for India)
+    const phone = result.mobile.toString().replace(/^91/, '');
+    console.log(`[Auth] Verified Token for phone: ${phone}`);
 
     // Check if user exists
     let user = await User.findOne({ phone });
@@ -27,6 +31,7 @@ exports.verifyToken = async (req, res) => {
 
     if (!user) {
         // Create initial user
+        console.log(`[Auth] Creating new user for phone: ${phone}`);
         const id = `user_${Date.now()}`;
         user = await User.create({
             id,
@@ -49,7 +54,7 @@ exports.verifyToken = async (req, res) => {
     res.status(200).json({
         success: true,
         token,
-        isNewUser,
+        isNewUser: isNewUser || !user.firstName,
         user
     });
 };
@@ -120,24 +125,23 @@ exports.verifyOtp = async (req, res) => {
     });
 };
 
-// @desc    Complete Registration (Profile Details)
+// @desc    Update Profile Details (Incremental)
 // @route   POST /api/auth/register
 // @access  Private
 exports.register = async (req, res) => {
-    const { firstName, lastName, email, pan, aadhar, dob, gender } = req.body;
+    const allowedFields = ['firstName', 'lastName', 'email', 'pan', 'aadhar', 'dob', 'gender'];
+    const updates = {};
+
+    allowedFields.forEach(field => {
+        if (req.body[field] !== undefined) {
+            updates[field] = req.body[field];
+        }
+    });
 
     try {
         const user = await User.findOneAndUpdate(
             { id: req.user.id },
-            {
-                firstName,
-                lastName,
-                email,
-                pan,
-                aadhar,
-                dob,
-                gender
-            },
+            { $set: updates },
             { new: true, runValidators: true }
         );
 

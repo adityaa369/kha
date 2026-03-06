@@ -4,6 +4,7 @@ const {
     getGivenLoans,
     getTakenLoans,
     verifyLoan,
+    resendLoanOtp,
     updateProgress
 } = require('../controllers/loans');
 const { protect } = require('../middleware/auth');
@@ -16,6 +17,7 @@ router.post('/', createLoan);
 router.get('/given', getGivenLoans);
 router.get('/taken', getTakenLoans);
 router.post('/:id/verify', verifyLoan);
+router.post('/:id/resend-otp', resendLoanOtp);
 router.patch('/:id/progress', updateProgress);
 
 module.exports = router;

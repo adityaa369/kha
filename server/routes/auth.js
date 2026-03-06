@@ -1,3 +1,4 @@
+const express = require('express');
 const { sendOtp, verifyOtp, verifyToken, register, getMe } = require('../controllers/auth');
 const { protect } = require('../middleware/auth');
 

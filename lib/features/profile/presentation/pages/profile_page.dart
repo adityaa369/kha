@@ -7,6 +7,8 @@ import '../../../../config/constants.dart';
 import '../../../../config/theme.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/blocs/auth/auth_cubit.dart';
+import '../../../../core/blocs/loans/loan_cubit.dart';
+import '../../../../core/blocs/credit_score/credit_score_cubit.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -132,28 +134,45 @@ class ProfilePage extends StatelessWidget {
                             icon: Icons.person_outline,
                             title: 'Personal Details',
                             subtitle: 'Email, Gender, Pan, DOB, Address',
-                            onTap: () {},
+                            onTap: () => _showComingSoon(context, 'Personal Details'),
+                          ),
+                          Divider(height: 1, indent: 56.w, color: Colors.grey[200]),
+                          _MenuTile(
+                            icon: Icons.account_balance_outlined,
+                            title: 'Bank Account',
+                            subtitle: 'Manage your linked bank accounts',
+                            onTap: () => _showComingSoon(context, 'Bank Account Manager'),
                           ),
                           Divider(height: 1, indent: 56.w, color: Colors.grey[200]),
                           _MenuTile(
                             icon: Icons.description_outlined,
                             title: 'Legal Information',
                             subtitle: 'Terms and Conditions',
-                            onTap: () {},
+                            onTap: () => _showComingSoon(context, 'Legal Documents'),
+                          ),
+                          Divider(height: 1, indent: 56.w, color: Colors.grey[200]),
+                          _MenuTile(
+                            icon: Icons.notifications_none,
+                            title: 'Notifications',
+                            subtitle: 'Manage your notification preferences',
+                            onTap: () => _showComingSoon(context, 'Notification Settings'),
                           ),
                           Divider(height: 1, indent: 56.w, color: Colors.grey[200]),
                           _MenuTile(
                             icon: Icons.share_outlined,
                             title: 'Share App',
                             subtitle: 'Refer us to a friend',
-                            onTap: () {},
+                            onTap: () {
+                               // Implement Share functionality or show dialog
+                               _showComingSoon(context, 'Share App');
+                            },
                           ),
                           Divider(height: 1, indent: 56.w, color: Colors.grey[200]),
                           _MenuTile(
                             icon: Icons.chat_bubble_outline,
                             title: 'Alerts on WhatsApp',
                             subtitle: 'Keep up with all important updates',
-                            onTap: () {},
+                            onTap: () => _showComingSoon(context, 'WhatsApp Alerts'),
                           ),
                           Divider(height: 1, indent: 56.w, color: Colors.grey[200]),
                           _MenuTile(
@@ -161,6 +180,15 @@ class ProfilePage extends StatelessWidget {
                             title: 'Account Management',
                             subtitle: 'Modify Khaata App Settings',
                             onTap: () {},
+                          ),
+                          Divider(height: 1, indent: 56.w, color: Colors.grey[200]),
+                          _MenuTile(
+                            icon: Icons.lock_outline,
+                            title: 'Lock App',
+                            subtitle: 'Secure with Biometrics',
+                            onTap: () {
+                               context.go(AppConstants.splash);
+                            },
                           ),
                         ],
                       ),
@@ -170,21 +198,50 @@ class ProfilePage extends StatelessWidget {
 
                     // Logout
                     TextButton.icon(
-                      onPressed: () async {
-                        await context.read<AuthCubit>().logout();
-                        if (context.mounted) {
-                          context.go(AppConstants.welcome);
-                        }
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Logout?'),
+                            content: const Text('This will clear your session and you will need an OTP to login again.\n\nUse "Lock App" if you just want to secure the device.'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => context.pop(),
+                                child: const Text('Cancel'),
+                              ),
+                              TextButton(
+                                onPressed: () async {
+                                  context.pop();
+                                  // Clear all Cubits on logout
+                                  context.read<LoanCubit>().clear();
+                                  if (context.mounted) {
+                                      // Check if provider exists before accessing
+                                      try {
+                                        context.read<CreditScoreCubit>().clear();
+                                      } catch (_) {}
+                                  }
+                                  
+                                  await context.read<AuthCubit>().logout();
+                                  
+                                  if (context.mounted) {
+                                    context.go(AppConstants.welcome);
+                                  }
+                                },
+                                child: const Text('Logout', style: TextStyle(color: Colors.red)),
+                              ),
+                            ],
+                          ),
+                        );
                       },
                       icon: Icon(
                         Icons.logout,
-                        color: KhaataTheme.primaryBlue,
+                        color: Colors.red[400],
                         size: 18.sp,
                       ),
                       label: Text(
                         'Logout',
                         style: TextStyle(
-                          color: KhaataTheme.primaryBlue,
+                          color: Colors.red[400],
                           fontSize: 14.sp,
                           fontWeight: FontWeight.w600,
                         ),
@@ -205,6 +262,15 @@ class ProfilePage extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+  void _showComingSoon(BuildContext context, String feature) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('$feature is coming soon!'),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: KhaataTheme.primaryBlue,
       ),
     );
   }

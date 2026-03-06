@@ -1,3 +1,6 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 class AppConstants {
   static const String appName = 'Khaata';
   static const String tagline = 'Digital Loan Agreements Made Simple';
@@ -9,6 +12,7 @@ class AppConstants {
   static const String otp = '/otp';
   static const String personalDetails = '/personal-details';
   static const String panDetails = '/pan-details';
+  static const String registrationOtp = '/registration-otp';
   static const String processing = '/processing';
   static const String home = '/home';
   static const String myLoans = '/my-loans';
@@ -17,16 +21,15 @@ class AppConstants {
   static const String profile = '/profile';
 
   // API Configurations
-  static const String baseUrl = 'http://10.0.2.2:5000/api'; 
-  
-  // Table Names
-  static const String usersTable = 'users';
-  static const String loansTable = 'loans';
-  static const String loansGivenTable = 'loans_given';
-  static const String creditScoresTable = 'credit_scores';
-  static const String loanAgreementsTable = 'loan_agreements';
+  // Use your computer's local IP for physical devices
+  static const String _localIp = '192.168.1.58'; 
+  static const String _prodUrl = 'https://khataa-backend.onrender.com';
 
-  // Supabase Storage Buckets
-  static const String profileImagesBucket = 'profile-images';
-  static const String loanDocumentsBucket = 'loan-documents';
+  // MSG91 Configurations
+  static const String msg91WidgetId = '36626e6d4150393836303137';
+  static const String msg91AuthToken = '493750AHbH3T8dp69907788P1';
+
+  static String get baseUrl {
+    return dotenv.env['BASE_URL'] ?? '$_prodUrl/api';
+  }
 }

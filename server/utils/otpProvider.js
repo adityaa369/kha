@@ -1,26 +1,66 @@
 const axios = require('axios');
 
 const sendOtp = async (phone, otp) => {
-    // MSG91 API call to send OTP
-    // Placeholder until credentials are provided
-    console.log(`Sending OTP ${otp} to ${phone} via MSG91`);
-
-    if (process.env.MSG91_AUTH_KEY === 'your_msg91_auth_key') {
-        return { success: true, message: 'OTP sent (Simulation)', msg91_response: null };
-    }
-
     try {
-        const response = await axios.get(`https://api.msg91.com/api/v5/otp`, {
-            params: {
-                template_id: process.env.MSG91_TEMPLATE_ID,
-                mobile: `91${phone}`,
-                authkey: process.env.MSG91_AUTH_KEY,
+        // Sanitize: strip any non-digits and leading +91 or 91
+        const cleanPhone = phone.toString().replace(/\D/g, '').replace(/^91/, '');
+        console.log(`[MSG91] Attempting to send OTP ${otp} to 91${cleanPhone}...`);
+
+        const templateId = process.env.MSG91_TEMPLATE_ID;
+        const authkey = process.env.MSG91_AUTH_KEY;
+
+        // control.msg91.com is the recommended endpoint for v5 APIs.
+        // It's safest to pass authkey in headers, and the rest as POST JSON data or query params.
+        const response = await axios.post(
+            'https://control.msg91.com/api/v5/otp',
+            {
+                template_id: templateId,
+                mobile: `91${cleanPhone}`,
                 otp: otp
+            },
+            {
+                headers: {
+                    'authkey': authkey,
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+
+        console.log('[MSG91] Send Response:', JSON.stringify(response.data));
+        return { success: response.data.type === 'success' || response.data.type === 'success ', response: response.data };
+    } catch (error) {
+        const errorData = error.response ? JSON.stringify(error.response.data) : error.message;
+        console.error('[MSG91] Send OTP Error:', errorData);
+        return { success: false, error: errorData };
+    }
+};
+
+const verifyOtp = async (phone, otp) => {
+    try {
+        const cleanPhone = phone.toString().replace(/\D/g, '').replace(/^91/, '');
+        const finalMobile = `91${cleanPhone}`;
+        const payload = {
+            mobile: finalMobile,
+            otp: otp,
+            authkey: process.env.MSG91_AUTH_KEY
+        };
+        console.log(`[MSG91] Attempting to verify OTP ${otp} for ${finalMobile} with payload:`, payload);
+
+        const response = await axios.get(`https://control.msg91.com/api/v5/otp/verify`, {
+            params: {
+                mobile: finalMobile,
+                otp: otp
+            },
+            headers: {
+                'authkey': process.env.MSG91_AUTH_KEY
             }
         });
-        return { success: true, response: response.data };
+        if (response.data.type === 'success' || response.data.type === 'success ') {
+            return { success: true, response: response.data };
+        }
+        return { success: false, message: response.data.message };
     } catch (error) {
-        console.error('MSG91 Send OTP Error:', error.message);
+        console.error('MSG91 Verify OTP Error:', error.message);
         return { success: false, error: error.message };
     }
 };
@@ -37,9 +77,13 @@ const verifyAccessToken = async (accessToken) => {
         });
 
         if (response.data.type === 'success') {
+            const mobile = response.data.mobile_number ||
+                response.data.mobile ||
+                (typeof response.data.message === 'string' && response.data.message.length > 5 ? response.data.message : null);
+
             return {
                 success: true,
-                mobile: response.data.mobile_number,
+                mobile: mobile,
                 response: response.data
             };
         }

@@ -66,160 +66,176 @@ class _PanDetailsPageState extends State<PanDetailsPage> {
           onPressed: () => context.pop(),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(horizontal: 24.w),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Text('Step 2 of 3', style: Theme.of(context).textTheme.bodyMedium),
-                ],
-              ),
-              SizedBox(height: 20.h),
-
-              Center(
-                child: Container(
-                  width: 80.w,
-                  height: 80.h,
-                  decoration: BoxDecoration(
-                    color: KhaataTheme.accentGreen.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20.r),
-                  ),
-                  child: Icon(
-                    Icons.credit_card_rounded,
-                    color: KhaataTheme.accentGreen,
-                    size: 40.sp,
-                  ),
-                ),
-              ),
-              SizedBox(height: 32.h),
-
-              Text(
-                'Enter Your PAN details',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              SizedBox(height: 8.h),
-              Text(
-                'As per your government documents',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              SizedBox(height: 40.h),
-
-              KhaataTextField(
-                label: 'PAN',
-                hint: 'Enter PAN number',
-                controller: _panController,
-                inputFormatters: [PanInputFormatter()],
-                textCapitalization: TextCapitalization.characters,
-                validator: (value) {
-                  if (value!.isEmpty) return 'PAN is required';
-                  if (!RegExp(r'^[A-Z]{5}[0-9]{4}[A-Z]$').hasMatch(value)) {
-                    return 'Invalid PAN format';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 20.h),
-
-              KhaataTextField(
-                label: 'Aadhar Number',
-                hint: 'Enter 12 digit Aadhar number',
-                controller: _aadharController,
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value!.isEmpty) return 'Aadhar is required';
-                  if (value.length != 12 || !RegExp(r'^[0-9]+$').hasMatch(value)) {
-                    return 'Aadhar must be 12 digits';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 20.h),
-              GestureDetector(
-                onTap: () => _selectDate(context),
-                child: AbsorbPointer(
-                  child: KhaataTextField(
-                    label: 'Date of Birth',
-                    hint: 'DD/MM/YYYY',
-                    controller: _dobController,
-                    suffix: Icon(Icons.calendar_today, color: KhaataTheme.primaryBlue, size: 20.sp),
-                    readOnly: true,
-                    validator: (value) => value!.isEmpty ? 'Date of birth is required' : null,
-                  ),
-                ),
-              ),
-              SizedBox(height: 20.h),
-
-              Text('Gender', style: Theme.of(context).textTheme.bodyLarge),
-              SizedBox(height: 12.h),
-              Row(
-                children: [
-                  _GenderButton(
-                    label: 'Male',
-                    isSelected: selectedGender == 'Male',
-                    onTap: () => setState(() => selectedGender = 'Male'),
-                  ),
-                  SizedBox(width: 12.w),
-                  _GenderButton(
-                    label: 'Female',
-                    isSelected: selectedGender == 'Female',
-                    onTap: () => setState(() => selectedGender = 'Female'),
-                  ),
-                  SizedBox(width: 12.w),
-                  _GenderButton(
-                    label: 'Others',
-                    isSelected: selectedGender == 'Others',
-                    onTap: () => setState(() => selectedGender = 'Others'),
-                  ),
-                ],
-              ),
-
-              SizedBox(height: 24.h),
-
-              Container(
-                padding: EdgeInsets.all(16.w),
-                decoration: BoxDecoration(
-                  color: Colors.blue[50],
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                child: Row(
+      body: BlocListener<AuthCubit, AuthState>(
+        listener: (context, state) {
+          if (state is RegistrationOtpSent) {
+            context.push(AppConstants.registrationOtp);
+          } else if (state is AuthError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.message)),
+            );
+          }
+        },
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(horizontal: 24.w),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    Icon(Icons.info_outline, color: KhaataTheme.primaryBlue),
+                    Text('Step 2 of 3', style: Theme.of(context).textTheme.bodyMedium),
+                  ],
+                ),
+                SizedBox(height: 20.h),
+
+                Center(
+                  child: Container(
+                    width: 80.w,
+                    height: 80.h,
+                    decoration: BoxDecoration(
+                      color: KhaataTheme.accentGreen.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20.r),
+                    ),
+                    child: Icon(
+                      Icons.credit_card_rounded,
+                      color: KhaataTheme.accentGreen,
+                      size: 40.sp,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 32.h),
+
+                Text(
+                  'Enter Your PAN details',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                SizedBox(height: 8.h),
+                Text(
+                  'As per your government documents',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                SizedBox(height: 40.h),
+
+                KhaataTextField(
+                  label: 'PAN',
+                  hint: 'Enter PAN number',
+                  controller: _panController,
+                  // inputFormatters: [PanInputFormatter()], // Assuming PanInputFormatter is defined elsewhere
+                  textCapitalization: TextCapitalization.characters,
+                  validator: (value) {
+                    if (value!.isEmpty) return 'PAN is required';
+                    if (!RegExp(r'^[A-Z]{5}[0-9]{4}[A-Z]$').hasMatch(value)) {
+                      return 'Invalid PAN format';
+                    }
+                    return null;
+                  },
+                ),
+                SizedBox(height: 20.h),
+
+                KhaataTextField(
+                  label: 'Aadhar Number',
+                  hint: 'Enter 12 digit Aadhar number',
+                  controller: _aadharController,
+                  keyboardType: TextInputType.number,
+                  validator: (value) {
+                    if (value!.isEmpty) return 'Aadhar is required';
+                    if (value.length != 12 || !RegExp(r'^[0-9]+$').hasMatch(value)) {
+                      return 'Aadhar must be 12 digits';
+                    }
+                    return null;
+                  },
+                ),
+                SizedBox(height: 20.h),
+                GestureDetector(
+                  onTap: () => _selectDate(context),
+                  child: AbsorbPointer(
+                    child: KhaataTextField(
+                      label: 'Date of Birth',
+                      hint: 'DD/MM/YYYY',
+                      controller: _dobController,
+                      suffix: Icon(Icons.calendar_today, color: KhaataTheme.primaryBlue, size: 20.sp),
+                      readOnly: true,
+                      validator: (value) => value!.isEmpty ? 'Date of birth is required' : null,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 20.h),
+
+                Text('Gender', style: Theme.of(context).textTheme.bodyLarge),
+                SizedBox(height: 12.h),
+                Row(
+                  children: [
+                    _GenderButton(
+                      label: 'Male',
+                      isSelected: selectedGender == 'Male',
+                      onTap: () => setState(() => selectedGender = 'Male'),
+                    ),
                     SizedBox(width: 12.w),
-                    Expanded(
-                      child: Text(
-                        'Please enter the valid PAN information as per your government documents',
-                        style: TextStyle(
-                          fontSize: 13.sp,
-                          color: KhaataTheme.primaryBlue,
-                        ),
-                      ),
+                    _GenderButton(
+                      label: 'Female',
+                      isSelected: selectedGender == 'Female',
+                      onTap: () => setState(() => selectedGender = 'Female'),
+                    ),
+                    SizedBox(width: 12.w),
+                    _GenderButton(
+                      label: 'Others',
+                      isSelected: selectedGender == 'Others',
+                      onTap: () => setState(() => selectedGender = 'Others'),
                     ),
                   ],
                 ),
-              ),
 
-              SizedBox(height: 40.h),
+                SizedBox(height: 24.h),
 
-              PrimaryButton(
-                text: 'Continue',
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    context.read<AuthCubit>().savePanDetails(
-                      pan: _panController.text.toUpperCase(),
-                      aadhar: _aadharController.text,
-                      dob: _dobController.text,
-                      gender: selectedGender,
+                Container(
+                  padding: EdgeInsets.all(16.w),
+                  decoration: BoxDecoration(
+                    color: Colors.blue[50],
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.info_outline, color: KhaataTheme.primaryBlue),
+                      SizedBox(width: 12.w),
+                      Expanded(
+                        child: Text(
+                          'Please enter the valid PAN information as per your government documents',
+                          style: TextStyle(
+                            fontSize: 13.sp,
+                            color: KhaataTheme.primaryBlue,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                SizedBox(height: 40.h),
+
+                BlocBuilder<AuthCubit, AuthState>(
+                  builder: (context, state) {
+                    return PrimaryButton(
+                      text: 'Continue',
+                      isLoading: state is AuthLoading,
+                      onPressed: () {
+                        if (_formKey.currentState!.validate()) {
+                          context.read<AuthCubit>().savePanDetails(
+                            pan: _panController.text.toUpperCase(),
+                            aadhar: _aadharController.text,
+                            dob: _dobController.text,
+                            gender: selectedGender,
+                          );
+                          context.read<AuthCubit>().sendRegistrationOtp();
+                        }
+                      },
                     );
-                    context.push(AppConstants.processing);
-                  }
-                },
-              ),
-            ],
+                  },
+                ),
+              ],
+            ),
           ),
         ),
       ),

@@ -101,7 +101,11 @@ class _NavItem extends StatelessWidget {
     );
 
     return GestureDetector(
-      onTap: () => context.read<NavigationCubit>().changeTab(index),
+      onTap: () {
+        context.read<LoanCubit>().resetError();
+        context.read<CreditScoreCubit>().resetError();
+        context.read<NavigationCubit>().changeTab(index);
+      },
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -151,7 +155,7 @@ class HomeContent extends StatelessWidget {
                         onTap: () => context.push('/profile'),
                         child: BlocBuilder<AuthCubit, AuthState>(
                           builder: (context, state) {
-                            String name = 'Aditya';
+                            String name = 'User';
                             if (state is Authenticated) {
                               name = state.user.firstName;
                             }
@@ -192,7 +196,7 @@ class HomeContent extends StatelessWidget {
                 if (state is CreditScoreInitial) {
                   final authState = context.read<AuthCubit>().state;
                   if (authState is Authenticated) {
-                    context.read<CreditScoreCubit>().fetchAndStreamCreditScore(authState.user.id);
+                    context.read<CreditScoreCubit>().fetchCreditScore();
                   }
                 }
                 
@@ -206,26 +210,16 @@ class HomeContent extends StatelessWidget {
                   status = state.status;
                 }
 
-                return Row(
-                  children: [
-                    Expanded(
-                      child: _ScoreCard(
-                        title: 'CIBIL',
-                        score: cibil,
-                        status: status,
-                        daysLeft: 16,
-                      ),
+                return Center(
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: _ScoreCard(
+                      title: 'Credit Score',
+                      score: cibil,
+                      status: status,
+                      daysLeft: 30,
                     ),
-                    SizedBox(width: 12.w),
-                    Expanded(
-                      child: _ScoreCard(
-                        title: 'experian',
-                        score: experian,
-                        status: status,
-                        daysLeft: 32,
-                      ),
-                    ),
-                  ],
+                  ),
                 );
               },
             ),
@@ -234,81 +228,15 @@ class HomeContent extends StatelessWidget {
             ),
           ),
 
-          // Did You Know Card
-          Padding(
-            padding: EdgeInsets.all(16.w),
-            child: Container(
-              padding: EdgeInsets.all(16.w),
-              decoration: BoxDecoration(
-                color: const Color(0xFFE8F4FD),
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.campaign,
-                          color: KhaataTheme.primaryBlue,
-                          size: 22.sp),
-                      SizedBox(width: 8.w),
-                      Text(
-                        'Did You Know?',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 15.sp,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 4.h),
-                  Padding(
-                    padding: EdgeInsets.only(left: 30.w),
-                    child: Text(
-                      'Your credit utilization is 76%',
-                      style: TextStyle(
-                        fontSize: 13.sp,
-                        color: KhaataTheme.textGrey,
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 12.h),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 44.h,
-                    child: ElevatedButton(
-                      onPressed: () {},
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: KhaataTheme.primaryBlue,
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                        ),
-                      ),
-                      child: Text(
-                        'Check For More Info',
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // Loan Types Section - Horizontal Scroll Cards
-          SizedBox(height: 24.h),
+          // Loan Types Section - Vertical List
+          SizedBox(height: 12.h),
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 16.w),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Create Loan Agreement',
+                  'Give Credit Loan', // Updated title
                   style: TextStyle(
                     fontSize: 16.sp,
                     fontWeight: FontWeight.w700,
@@ -329,44 +257,38 @@ class HomeContent extends StatelessWidget {
               ],
             ),
           ),
-          SizedBox(height: 12.h),
-          SizedBox(
-            height: 180.h,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: EdgeInsets.symmetric(horizontal: 16.w),
+          SizedBox(height: 8.h),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.w),
+            child: Column(
               children: [
                 _LoanTypeCard(
-                  title: 'Personal Loan',
-                  subtitle: 'Get a personal loan\nin 2 mins ⚡',
-                  amount: '₹ 7,00,000',
+                  title: 'Hand Credit',
+                  subtitle: 'Get a personal loan in 2 mins ⚡',
                   icon: Icons.account_balance_wallet,
                   color: KhaataTheme.accentGreen,
                   onTap: () => context.push('/create-loan?type=personal'),
                 ),
-                SizedBox(width: 12.w),
+                SizedBox(height: 12.h),
                 _LoanTypeCard(
-                  title: 'Business Loan',
-                  subtitle: 'Grow your business\nquickly 🚀',
-                  amount: '₹ 50,00,000',
+                  title: 'Business Credit',
+                  subtitle: 'Grow your business quickly 🚀',
                   icon: Icons.business_center,
                   color: KhaataTheme.primaryBlue,
                   onTap: () => context.push('/create-loan?type=business'),
                 ),
-                SizedBox(width: 12.w),
+                SizedBox(height: 12.h),
                 _LoanTypeCard(
-                  title: 'Home Loan',
-                  subtitle: 'Buy your dream\nhome 🏠',
-                  amount: '₹ 1,00,00,000',
-                  icon: Icons.home,
+                  title: 'Interest Credit',
+                  subtitle: 'Borrow with clear interest terms 📈',
+                  icon: Icons.percent,
                   color: KhaataTheme.warningYellow,
                   onTap: () => context.push('/create-loan?type=home'),
                 ),
-                SizedBox(width: 12.w),
+                SizedBox(height: 12.h),
                 _LoanTypeCard(
-                  title: 'Chit Fund',
-                  subtitle: 'Save & borrow with\ngroup 🤝',
-                  amount: '₹ 10,00,000',
+                  title: 'Chit Funds',
+                  subtitle: 'Save & borrow with group 🤝',
                   icon: Icons.groups,
                   color: KhaataTheme.secondaryBlue,
                   onTap: () => context.push('/create-loan?type=chitfund'),
@@ -455,8 +377,6 @@ class _ScoreCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isCibil = title.toLowerCase() == 'cibil';
-
     return Container(
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
@@ -471,7 +391,7 @@ class _ScoreCard extends StatelessWidget {
               Text(
                 title,
                 style: TextStyle(
-                  color: isCibil ? KhaataTheme.secondaryBlue : KhaataTheme.primaryBlue,
+                  color: KhaataTheme.primaryBlue,
                   fontWeight: FontWeight.w800,
                   fontSize: 14.sp,
                   letterSpacing: 0.5,
@@ -516,7 +436,6 @@ class _ScoreCard extends StatelessWidget {
 class _LoanTypeCard extends StatelessWidget {
   final String title;
   final String subtitle;
-  final String amount;
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
@@ -524,7 +443,6 @@ class _LoanTypeCard extends StatelessWidget {
   const _LoanTypeCard({
     required this.title,
     required this.subtitle,
-    required this.amount,
     required this.icon,
     required this.color,
     required this.onTap,
@@ -535,7 +453,7 @@ class _LoanTypeCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 200.w,
+        width: double.infinity,
         padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -548,56 +466,39 @@ class _LoanTypeCard extends StatelessWidget {
             ),
           ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                  decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(4.r),
-                  ),
-                  child: Text(
-                    'Quick Process',
-                    style: TextStyle(
-                      fontSize: 9.sp,
-                      color: color,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                Icon(icon, color: color, size: 28.sp),
-              ],
-            ),
-            SizedBox(height: 12.h),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 15.sp,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            SizedBox(height: 4.h),
-            Text(
-              subtitle,
-              style: TextStyle(
-                fontSize: 12.sp,
-                color: KhaataTheme.textGrey,
-                height: 1.3,
-              ),
-            ),
-            const Spacer(),
-            Text(
-              'Up to $amount',
-              style: TextStyle(
-                fontSize: 14.sp,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-            ),
+             Container(
+               padding: EdgeInsets.all(12.w),
+               decoration: BoxDecoration(
+                 color: color.withOpacity(0.1),
+                 shape: BoxShape.circle,
+               ),
+               child: Icon(icon, color: color, size: 24.sp),
+             ),
+             SizedBox(width: 16.w),
+             Expanded(
+               child: Column(
+                 crossAxisAlignment: CrossAxisAlignment.start,
+                 children: [
+                   Text(
+                     title,
+                     style: TextStyle(
+                       fontSize: 15.sp,
+                       fontWeight: FontWeight.w700,
+                     ),
+                   ),
+                   SizedBox(height: 4.h),
+                   Text(
+                     subtitle,
+                     style: TextStyle(
+                       fontSize: 12.sp,
+                       color: KhaataTheme.textGrey,
+                     ),
+                   ),
+                 ],
+               ),
+             ),
           ],
         ),
       ),

@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../config/theme.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -95,7 +96,7 @@ class MyLoansPage extends StatelessWidget {
                 if (state is LoanInitial) {
                   final authState = context.read<AuthCubit>().state;
                   if (authState is Authenticated) {
-                    context.read<LoanCubit>().fetchLoans(authState.user.id);
+                    context.read<LoanCubit>().fetchLoans();
                   }
                   return const Center(child: CircularProgressIndicator());
                 }
@@ -274,10 +275,15 @@ class _LoanCard extends StatelessWidget {
                           ),
                         ],
                       ),
-                      child: Icon(
-                        Icons.account_balance,
-                        color: Colors.blue,
-                        size: 20.sp,
+                      child: Center(
+                        child: Text(
+                          loan.initials ?? 'UL',
+                          style: TextStyle(
+                            color: Colors.blue,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16.sp,
+                          ),
+                        ),
                       ),
                     ),
                     SizedBox(width: 10.w),
@@ -285,7 +291,7 @@ class _LoanCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          loan.borrowerName, // In MyLoans, this would actually be lender name if we updated model, let's assume it's the counterparty
+                          loan.displayCounterpartyName, // Uses Lender's name if available, else borrower Name
                           style: TextStyle(
                             fontWeight: FontWeight.w700,
                             fontSize: 14.sp,
@@ -313,7 +319,7 @@ class _LoanCard extends StatelessWidget {
           ),
           // Body
           Padding(
-            padding: EdgeInsets.all(16.w),
+            padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 24.h),
             child: Column(
               children: [
                 Row(
@@ -363,27 +369,75 @@ class _LoanCard extends StatelessWidget {
                   ],
                 ),
                 SizedBox(height: 12.h),
-                SizedBox(
-                  width: double.infinity,
-                  height: 40.h,
-                  child: OutlinedButton(
-                    onPressed: () {},
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: KhaataTheme.primaryBlue,
-                      side: BorderSide(color: KhaataTheme.primaryBlue),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8.r),
+                if (loan.status == 'pending_otp')
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48.h,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        context.push(
+                          '/loan-confirmation',
+                          extra: {
+                            'loan_id': loan.id,
+                            'amount': loan.amount,
+                            'borrower_name': loan.displayCounterpartyName, 
+                            'borrower_phone': loan.mobile,
+                          },
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: KhaataTheme.primaryBlue,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                        ),
+                      ),
+                      child: Text(
+                        'Verify Agreement',
+                        style: TextStyle(
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
-                    child: Text(
-                      'Set Reminder',
-                      style: TextStyle(
-                        fontSize: 13.sp,
-                        fontWeight: FontWeight.w600,
+                  )
+                else
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48.h,
+                    child: OutlinedButton(
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                            title: const Text('Reminder Set'),
+                            content: const Text('You will be reminded 3 days before the next due date.'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => context.pop(),
+                                child: const Text('OK'),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: KhaataTheme.primaryBlue,
+                        side: BorderSide(color: KhaataTheme.primaryBlue),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                        ),
+                      ),
+                      child: Text(
+                        'Set Reminder',
+                        style: TextStyle(
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),
-                ),
               ],
             ),
           ),

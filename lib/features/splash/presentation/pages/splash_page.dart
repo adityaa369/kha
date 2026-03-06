@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../../core/services/biometric_auth_service.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/blocs/auth/auth_cubit.dart';
@@ -88,16 +89,33 @@ class _SplashPageState extends State<SplashPage>
     }
   }
 
-  void _handleNavigation(AuthState state) {
+  bool _isLocked = false;
+
+  void _handleNavigation(AuthState state) async {
     if (!mounted) return;
 
     if (state is Authenticated) {
-      context.go(AppConstants.home);
+      // Token valid, but require Biometric Unlock
+      setState(() => _isLocked = true);
+      _attemptBiometricUnlock(showFailureMessage: false);
     } else if (state is OtpVerified) {
       context.go(AppConstants.personalDetails);
-    } else {
-      // For Initial, Loading (timeout), Error or Unauthenticated
+    } else if (state is Unauthenticated || state is AuthError) {
       context.go(AppConstants.welcome);
+    }
+  }
+
+  Future<void> _attemptBiometricUnlock({bool showFailureMessage = false}) async {
+    final authenticated = await BiometricAuthService.authenticate();
+    if (authenticated && mounted) {
+      context.go(AppConstants.home);
+    } else if (mounted && showFailureMessage) {
+       ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Authentication failed. Please try again.'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -111,7 +129,6 @@ class _SplashPageState extends State<SplashPage>
   Widget build(BuildContext context) {
     return BlocListener<AuthCubit, AuthState>(
       listener: (context, state) {
-        // If animation is already done and a final state arrives, navigate immediately
         if (_controller.isCompleted) {
           _handleNavigation(state);
         }
@@ -119,49 +136,93 @@ class _SplashPageState extends State<SplashPage>
       child: Scaffold(
         backgroundColor: KhaataTheme.primaryBlue,
         body: Center(
-          child: AnimatedBuilder(
-            animation: _controller,
-            builder: (context, child) {
-              return FadeTransition(
-                opacity: _fadeAnimation,
-                child: SlideTransition(
-                  position: _slideAnimation,
-                  child: ScaleTransition(
-                    scale: _scaleAnimation,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Khaata',
-                          style: TextStyle(
-                            fontSize: 48.sp,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
-                            letterSpacing: 2.w,
-                          ),
-                        ),
-                        SizedBox(height: 12.h),
-                        AnimatedOpacity(
-                          opacity: _controller.value > 0.5 ? 1.0 : 0.0,
-                          duration: const Duration(milliseconds: 500),
-                          child: Text(
-                            'Digital Loan Agreements',
-                            style: TextStyle(
-                              fontSize: 14.sp,
-                              color: Colors.white70,
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                        ),
-                      ],
+          child: _isLocked
+              ? Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.lock_outline, color: Colors.white, size: 60.sp),
+                    SizedBox(height: 20.h),
+                    Text(
+                      'App Locked',
+                      style: TextStyle(
+                        fontSize: 24.sp,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
-                  ),
+                    SizedBox(height: 10.h),
+                    Text(
+                      'Please authenticate to continue',
+                      style: TextStyle(color: Colors.white70, fontSize: 14.sp),
+                    ),
+                    SizedBox(height: 30.h),
+                    ElevatedButton.icon(
+                      onPressed: () => _attemptBiometricUnlock(showFailureMessage: true),
+                      icon: const Icon(Icons.fingerprint),
+                      label: const Text('Unlock'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: KhaataTheme.primaryBlue,
+                        padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 12.h),
+                      ),
+                    ),
+                  ],
+                )
+              : AnimatedBuilder(
+                  animation: _controller,
+                  builder: (context, child) {
+                    return FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: SlideTransition(
+                        position: _slideAnimation,
+                        child: ScaleTransition(
+                          scale: _scaleAnimation,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                                Text(
+                                'Hand Loan Credit',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 32.sp, // Smaller than 48.sp
+                                  fontWeight: FontWeight.w900, // Thicker
+                                  color: Colors.white,
+                                  letterSpacing: 1.w,
+                                ),
+                              ),
+                              SizedBox(height: 12.h),
+                              AnimatedOpacity(
+                                opacity: _controller.value > 0.5 ? 1.0 : 0.0,
+                                duration: const Duration(milliseconds: 500),
+                                child: Text(
+                                  'Digital Loan Agreements',
+                                  style: TextStyle(
+                                    fontSize: 14.sp,
+                                    color: Colors.white70,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
                 ),
-              );
-            },
-          ),
         ),
       ),
     );
   }
+}
+
+class TextUntil extends StatelessWidget {
+    final String text;
+    final TextStyle style;
+    const TextUntil(this.text, {super.key, required this.style});
+    
+    @override
+    Widget build(BuildContext context) {
+      return Text(text, style: style);
+    }
 }
