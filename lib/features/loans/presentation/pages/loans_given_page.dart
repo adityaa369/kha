@@ -128,7 +128,7 @@ class LoansGivenPage extends StatelessWidget {
                         Icon(Icons.handshake_outlined, size: 64.sp, color: Colors.grey[300]),
                         SizedBox(height: 16.h),
                         Text(
-                          'No loans given yet',
+                          'No active accounts',
                           style: TextStyle(color: Colors.grey, fontSize: 16.sp),
                         ),
                       ],

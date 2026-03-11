@@ -5,6 +5,7 @@ import 'package:equatable/equatable.dart';
 import '../../../data/models/user_model.dart';
 import '../../network/api_client.dart';
 import '../../utils/secure_storage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../config/constants.dart';
 
 part 'auth_state.dart';
@@ -16,7 +17,7 @@ class AuthCubit extends Cubit<AuthState> {
       : _api = api ?? ApiClient(),
         super(AuthInitial());
   UserModel? _currentUser;
-  // Removed _reqId as we don't use SDK anymore
+  String? _verificationId;
 
   UserModel? get currentUser => _currentUser;
 
@@ -65,31 +66,69 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  // Send OTP via Backend (Bypassing SDK)
+  // Send OTP via Firebase SDK
   Future<void> sendOtp(String phone) async {
     emit(AuthLoading());
     try {
-      final response = await _api.post('/auth/send-otp', data: {
-        'phone': phone,
-      });
-
-      if (response.data['success'] == true) {
-        emit(OtpSent(phone: phone));
-      } else {
-        emit(AuthError(response.data['message'] ?? 'Failed to send OTP'));
+      // Ensure phone has country code +91
+      String formattedPhone = phone;
+      if (!formattedPhone.startsWith('+')) {
+        if (formattedPhone.startsWith('91')) {
+          formattedPhone = '+$formattedPhone';
+        } else {
+          formattedPhone = '+91$formattedPhone';
+        }
       }
+
+      await FirebaseAuth.instance.verifyPhoneNumber(
+        phoneNumber: formattedPhone,
+        verificationCompleted: (PhoneAuthCredential credential) async {
+         // Auto-resolution (rarely happens if not Play Integrity verified)
+         // We let the user enter OTP manually for consistency
+        },
+        verificationFailed: (FirebaseAuthException e) {
+          emit(AuthError(e.message ?? 'Firebase Verification failed'));
+        },
+        codeSent: (String verificationId, int? resendToken) {
+          _verificationId = verificationId;
+          emit(OtpSent(phone: phone));
+        },
+        codeAutoRetrievalTimeout: (String verificationId) {
+          _verificationId = verificationId;
+        },
+      );
     } catch (e) {
-      emit(AuthError('Failed to send OTP: $e'));
+      emit(AuthError('Failed to initiate Firebase OTP: $e'));
     }
   }
 
-  // Verify OTP via Backend
+  // Verify OTP via Firebase then backend
   Future<void> verifyOtp(String phone, String otp) async {
     emit(AuthLoading());
     try {
+      if (_verificationId == null) {
+        emit(const AuthError('Verification session expired. Please request OTP again.'));
+        return;
+      }
+
+      // 1. Verify with Firebase
+      final credential = PhoneAuthProvider.credential(
+        verificationId: _verificationId!,
+        smsCode: otp,
+      );
+      
+      final UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+      final idToken = await userCredential.user?.getIdToken();
+
+      if (idToken == null) {
+        emit(const AuthError('Failed to get Firebase ID Token'));
+        return;
+      }
+
+      // 2. Send ID token to our backend
       final response = await _api.post('/auth/verify-otp', data: {
+        'idToken': idToken,
         'phone': phone,
-        'otp': otp,
       });
 
       if (response.data['success'] == true) {
@@ -107,14 +146,14 @@ class AuthCubit extends Cubit<AuthState> {
           emit(Authenticated(user: _currentUser!));
         }
       } else {
-        emit(AuthError(response.data['message'] ?? 'Invalid OTP'));
+        emit(AuthError(response.data['message'] ?? 'Invalid backend response'));
       }
     } catch (e) {
       emit(AuthError('Verification failed: $e'));
     }
   }
 
-  // Send OTP for registration completion (Second OTP)
+  // Send OTP for registration completion using Firebase
   Future<void> sendRegistrationOtp() async {
     if (_currentUser == null) {
       emit(const AuthError('User data missing for registration OTP'));
@@ -124,15 +163,29 @@ class AuthCubit extends Cubit<AuthState> {
     emit(AuthLoading());
     try {
       final phone = _currentUser!.phone;
-      final response = await _api.post('/auth/send-otp', data: {
-        'phone': phone,
-      });
-      
-      if (response.data['success'] == true) {
-        emit(RegistrationOtpSent(phone: phone));
-      } else {
-        emit(AuthError(response.data['message'] ?? 'Failed to send secondary OTP'));
+      String formattedPhone = phone;
+      if (!formattedPhone.startsWith('+')) {
+        if (formattedPhone.startsWith('91')) {
+          formattedPhone = '+$formattedPhone';
+        } else {
+          formattedPhone = '+91$formattedPhone';
+        }
       }
+
+      await FirebaseAuth.instance.verifyPhoneNumber(
+        phoneNumber: formattedPhone,
+        verificationCompleted: (PhoneAuthCredential credential) async {},
+        verificationFailed: (FirebaseAuthException e) {
+          emit(AuthError(e.message ?? 'Firebase Verification failed'));
+        },
+        codeSent: (String verificationId, int? resendToken) {
+          _verificationId = verificationId;
+          emit(RegistrationOtpSent(phone: phone));
+        },
+        codeAutoRetrievalTimeout: (String verificationId) {
+          _verificationId = verificationId;
+        },
+      );
     } catch (e) {
       emit(AuthError('Failed to send secondary OTP: $e'));
     }
@@ -173,21 +226,38 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  // Verify secondary OTP for registration completion
+  // Verify secondary OTP with Firebase
   Future<void> verifyRegistrationOtp(String otp) async {
     emit(AuthLoading());
     try {
-      final phone = _currentUser!.phone;
-      final response = await _api.post('/auth/verify-otp', data: {
-        'phone': phone,
-        'otp': otp,
-      });
-
-      if (response.data['success'] == true) {
-        emit(RegistrationOtpVerified(phone: phone));
-      } else {
-        emit(AuthError(response.data['message'] ?? 'Invalid secondary OTP'));
+      if (_verificationId == null) {
+        emit(const AuthError('Verification session expired. Please request OTP again.'));
+        return;
       }
+      
+      final phone = _currentUser!.phone;
+
+      // Verify with Firebase
+      final credential = PhoneAuthProvider.credential(
+        verificationId: _verificationId!,
+        smsCode: otp,
+      );
+      
+      final UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+      final idToken = await userCredential.user?.getIdToken();
+
+      if (idToken == null) {
+        emit(const AuthError('Failed to verify secondary Firebase Token'));
+        return;
+      }
+
+      // For registration completion, we're just verifying they own it to save the full profile.
+      // So no need to call /auth/verify-otp again if it's already verified with Firebase
+      // However, to keep backend state consistent if needed, we proceed.
+      // But looking at the backend, `auth/register` doesn't require an OTP inside the payload anymore, it just expects the jwt Authorization header.
+      // So Firebase passing = valid secondary OTP.
+      
+      emit(RegistrationOtpVerified(phone: phone));
     } catch (e) {
       emit(AuthError('Secondary verification failed: $e'));
     }

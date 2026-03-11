@@ -117,7 +117,7 @@ class MyLoansPage extends StatelessWidget {
                         Icon(Icons.receipt_long_outlined, size: 64.sp, color: Colors.grey[300]),
                         SizedBox(height: 16.h),
                         Text(
-                          'No borrowed loans found',
+                          'No active accounts',
                           style: TextStyle(color: Colors.grey, fontSize: 16.sp),
                         ),
                       ],
