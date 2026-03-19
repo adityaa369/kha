@@ -32,4 +32,18 @@ const verifyFirebaseToken = async (idToken) => {
     }
 };
 
-module.exports = { verifyFirebaseToken };
+/**
+ * Mock sendOtp fallback
+ * Firebase Phone Auth cannot be triggered from the backend to send custom SMS.
+ * To prevent the app from crashing while MSG91 is removed, this mock returns true.
+ */
+const sendOtp = async (phone, otp) => {
+    console.log(`\n=========================================`);
+    console.log(`[MOCK SMS] Firebase cannot send custom backend OTPs.`);
+    console.log(`[MOCK SMS] Please read the real OTP below to test the UI:`);
+    console.log(`[MOCK SMS] OTP for ${phone} is: ${otp}`);
+    console.log(`=========================================\n`);
+    return { success: true };
+};
+
+module.exports = { verifyFirebaseToken, sendOtp };

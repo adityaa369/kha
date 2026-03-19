@@ -10,8 +10,15 @@ import '../../../../core/blocs/loans/loan_cubit.dart';
 import '../../../../core/blocs/loans/loan_state.dart';
 import '../../../../data/models/loan_model.dart';
 
-class MyLoansPage extends StatelessWidget {
+class MyLoansPage extends StatefulWidget {
   const MyLoansPage({super.key});
+
+  @override
+  State<MyLoansPage> createState() => _MyLoansPageState();
+}
+
+class _MyLoansPageState extends State<MyLoansPage> {
+  String _selectedTab = 'All';
 
   @override
   Widget build(BuildContext context) {
@@ -38,14 +45,39 @@ class MyLoansPage extends StatelessWidget {
                     ),
                   ),
                   SizedBox(height: 16.h),
-                  Row(
-                    children: [
-                      _Tab(text: 'All', isSelected: true),
-                      SizedBox(width: 20.w),
-                      _Tab(text: 'Personal Loan', isSelected: false),
-                      SizedBox(width: 20.w),
-                      _Tab(text: 'Consumer Loan', isSelected: false),
-                    ],
+                  // Dynamic Tabs are built inside the BlocBuilder below to access the loans
+                  BlocBuilder<LoanCubit, LoanState>(
+                    builder: (context, state) {
+                      List<String> tabs = ['All'];
+                      if (state is LoansLoaded) {
+                        final types = state.myLoans.map((l) => l.type).toSet().toList();
+                        // Format types to be title case (e.g. "hand_credit" -> "Hand Credit")
+                        final formattedTypes = types.map((t) {
+                          return t.split('_').map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '').join(' ');
+                        }).toList();
+                        tabs.addAll(formattedTypes);
+                      }
+
+                      return SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: tabs.map((tab) {
+                            return Padding(
+                              padding: EdgeInsets.only(right: 20.w),
+                              child: _Tab(
+                                text: tab,
+                                isSelected: _selectedTab == tab,
+                                onTap: () {
+                                  setState(() {
+                                    _selectedTab = tab;
+                                  });
+                                },
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
@@ -58,8 +90,16 @@ class MyLoansPage extends StatelessWidget {
               int activeCount = 0;
               int closedCount = 0;
               if (state is LoansLoaded) {
-                activeCount = state.myLoans.where((l) => l.status != 'completed').length;
-                closedCount = state.myLoans.where((l) => l.status == 'completed').length;
+                 // Filter loans based on selected tab for stats
+                final filteredForStats = _selectedTab == 'All' 
+                    ? state.myLoans 
+                    : state.myLoans.where((l) {
+                        final formattedType = l.type.split('_').map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '').join(' ');
+                        return formattedType == _selectedTab;
+                      }).toList();
+
+                activeCount = filteredForStats.where((l) => l.status != 'completed' && l.status != 'pending_otp' && l.status != 'pending_approval' && l.status != 'rejected').length;
+                closedCount = filteredForStats.where((l) => l.status == 'completed').length;
               }
 
               return Container(
@@ -110,7 +150,14 @@ class MyLoansPage extends StatelessWidget {
                 }
 
                 if (state is LoansLoaded) {
-                  if (state.myLoans.isEmpty) {
+                  final displayedLoans = _selectedTab == 'All' 
+                    ? state.myLoans 
+                    : state.myLoans.where((l) {
+                        final formattedType = l.type.split('_').map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '').join(' ');
+                        return formattedType == _selectedTab;
+                      }).toList();
+
+                  if (displayedLoans.isEmpty) {
                     return Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -126,9 +173,9 @@ class MyLoansPage extends StatelessWidget {
 
                   return ListView.builder(
                     padding: EdgeInsets.all(16.w),
-                    itemCount: state.myLoans.length,
+                    itemCount: displayedLoans.length,
                     itemBuilder: (context, index) {
-                      final loan = state.myLoans[index];
+                      final loan = displayedLoans[index];
                       return Column(
                         children: [
                           _LoanCard(
@@ -153,29 +200,33 @@ class MyLoansPage extends StatelessWidget {
 class _Tab extends StatelessWidget {
   final String text;
   final bool isSelected;
+  final VoidCallback onTap;
 
-  const _Tab({required this.text, required this.isSelected});
+  const _Tab({required this.text, required this.isSelected, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(vertical: 6.h, horizontal: isSelected ? 0 : 0),
-      decoration: BoxDecoration(
-        border: isSelected
-            ? Border(
-          bottom: BorderSide(
-            color: Colors.white,
-            width: 2.w,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 6.h, horizontal: isSelected ? 0 : 0),
+        decoration: BoxDecoration(
+          border: isSelected
+              ? Border(
+            bottom: BorderSide(
+              color: Colors.white,
+              width: 2.w,
+            ),
+          )
+              : null,
+        ),
+        child: Text(
+          text,
+          style: TextStyle(
+            color: isSelected ? Colors.white : Colors.white70,
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+            fontSize: isSelected ? 14.sp : 13.sp,
           ),
-        )
-            : null,
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: isSelected ? Colors.white : Colors.white70,
-          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-          fontSize: isSelected ? 14.sp : 13.sp,
         ),
       ),
     );
@@ -369,20 +420,15 @@ class _LoanCard extends StatelessWidget {
                   ],
                 ),
                 SizedBox(height: 12.h),
-                if (loan.status == 'pending_otp')
+                if (loan.status == 'pending_otp' || loan.status == 'pending_approval')
                   SizedBox(
                     width: double.infinity,
                     height: 48.h,
                     child: ElevatedButton(
                       onPressed: () {
                         context.push(
-                          '/loan-confirmation',
-                          extra: {
-                            'loan_id': loan.id,
-                            'amount': loan.amount,
-                            'borrower_name': loan.displayCounterpartyName, 
-                            'borrower_phone': loan.mobile,
-                          },
+                          '/loan-approval',
+                          extra: loan,
                         );
                       },
                       style: ElevatedButton.styleFrom(
@@ -393,7 +439,7 @@ class _LoanCard extends StatelessWidget {
                         ),
                       ),
                       child: Text(
-                        'Verify Agreement',
+                        'Review Agreement',
                         style: TextStyle(
                           fontSize: 13.sp,
                           fontWeight: FontWeight.w600,

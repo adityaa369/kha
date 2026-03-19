@@ -11,6 +11,7 @@ import '../../../../core/blocs/credit_score/credit_score_cubit.dart';
 import '../../../../core/blocs/credit_score/credit_score_state.dart';
 import '../../../../core/blocs/loans/loan_cubit.dart';
 import '../../../../core/blocs/loans/loan_state.dart';
+import '../../../../core/blocs/auth/auth_cubit.dart';
 
 class InsightsPage extends StatelessWidget {
   const InsightsPage({super.key});
@@ -207,6 +208,7 @@ class InsightsPage extends StatelessWidget {
                       String startPayment = '₹ 0';
                       String totalAccounts = '0';
                       String age = '0 days';
+                      String limit = '₹ 0';
                       
                       if (loanState is LoansLoaded) {
                         // Calculate typical monthly payments (Mock logic: sum of amount/duration)
@@ -221,9 +223,20 @@ class InsightsPage extends StatelessWidget {
                         // Total Accounts
                         totalAccounts = (loanState.myLoans.length + loanState.givenLoans.length).toString();
                         
-                        // Age (Mocking account age or using oldest loan date if available)
-                        // In a real app, this would come from Auth User creation date
-                        age = '45 days'; 
+                      final authState = context.read<AuthCubit>().state;
+                      if (authState is Authenticated && authState.user.createdAt != null) {
+                         age = '${DateTime.now().difference(authState.user.createdAt!).inDays} days';
+                      } else {
+                         age = '0 days';
+                      }
+                      
+                      final creditState = context.read<CreditScoreCubit>().state;
+                      if (creditState is CreditScoreLoaded) {
+                         if (creditState.cibilScore >= 750) limit = '₹ 5,00,000';
+                         else if (creditState.cibilScore >= 650) limit = '₹ 2,00,000';
+                         else if (creditState.cibilScore >= 550) limit = '₹ 50,000';
+                         else if (creditState.cibilScore > 0) limit = '₹ 10,000';
+                      }
                       }
 
                       return GridView.count(
@@ -246,8 +259,8 @@ class InsightsPage extends StatelessWidget {
                           _FactorCard(
                             title: 'Limit',
                             subtitle: 'High Impact',
-                            value: '₹ 5,00,000', // Static as requested (Not Required)
-                            detailLabel: 'Credit limit available',
+                             value: limit,
+                             detailLabel: 'Credit limit available',
                             valueColor: KhaataTheme.textGrey,
                             isGood: true,
                             icon: Icons.show_chart,

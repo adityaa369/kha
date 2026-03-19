@@ -19,6 +19,12 @@ class AppConstants {
   static const String loansGiven = '/loans-given';
   static const String insights = '/insights';
   static const String profile = '/profile';
+  static const String notifications = '/notifications';
+  static const String loanApproval = '/loan-approval';
+  static const String chitInvites = '/chit-invites';
+  static const String myChits = '/my-chits';
+  static const String createChit = '/create-chit';
+  static const String bidAuth = '/bid-authorization';
 
   // API Configurations
   // Use your computer's local IP for physical devices

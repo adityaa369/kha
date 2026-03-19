@@ -68,8 +68,8 @@ class _PanDetailsPageState extends State<PanDetailsPage> {
       ),
       body: BlocListener<AuthCubit, AuthState>(
         listener: (context, state) {
-          if (state is RegistrationOtpSent) {
-            context.push(AppConstants.registrationOtp);
+          if (state is PanDetailsSaved || state is Authenticated) {
+            context.go(AppConstants.processing);
           } else if (state is AuthError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(state.message)),
@@ -228,7 +228,6 @@ class _PanDetailsPageState extends State<PanDetailsPage> {
                             dob: _dobController.text,
                             gender: selectedGender,
                           );
-                          context.read<AuthCubit>().sendRegistrationOtp();
                         }
                       },
                     );

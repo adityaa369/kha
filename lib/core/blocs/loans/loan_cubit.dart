@@ -22,7 +22,9 @@ class LoanCubit extends Cubit<LoanState> {
 
   Future<void> fetchLoans() async {
     resetError();
-    emit(LoanLoading());
+    if (state is! LoansLoaded) {
+      emit(LoanLoading());
+    }
     try {
       // Fetch loans where current user is borrower
       final takenResponse = await _api.get('/loans/taken');
@@ -66,11 +68,11 @@ class LoanCubit extends Cubit<LoanState> {
     }
   }
 
-  // Verify loan via OTP
-  Future<bool> verifyLoan(String loanId, String otp) async {
+  // Verify/Approve loan agreement without OTP
+  Future<bool> verifyLoan(String loanId) async {
     emit(LoanLoading());
     try {
-      final response = await _api.post('/loans/$loanId/verify', data: {'otp': otp});
+      final response = await _api.post('/loans/$loanId/verify', data: {});
 
       if (response.data['success'] == true) {
         // Refresh the lists

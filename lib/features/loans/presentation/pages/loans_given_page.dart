@@ -67,8 +67,10 @@ class LoansGivenPage extends StatelessWidget {
               
               if (state is LoansLoaded) {
                 for (var loan in state.givenLoans) {
-                  totalLent += loan.amount;
-                  totalPending += loan.remainingAmount;
+                  if (loan.status != 'pending_otp' && loan.status != 'pending_approval' && loan.status != 'rejected') {
+                    totalLent += loan.amount;
+                    totalPending += loan.remainingAmount;
+                  }
                 }
               }
 
@@ -331,10 +333,11 @@ class _GivenLoanCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '${(progress * 100).toInt()}% Repaid',
+                      status == 'Pending OTP' ? 'OTP Not Verified' : '${(progress * 100).toInt()}% Repaid',
                       style: TextStyle(
                         fontSize: 11.sp,
-                        color: Colors.grey,
+                        color: status == 'Pending OTP' ? Colors.redAccent : Colors.grey,
+                        fontWeight: status == 'Pending OTP' ? FontWeight.w600 : FontWeight.normal,
                       ),
                     ),
                   ],

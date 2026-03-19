@@ -8,6 +8,7 @@ import '../../../../core/widgets/buttons.dart';
 import '../../../../core/widgets/inputs.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/blocs/loans/loan_cubit.dart';
+import '../../../../core/blocs/loans/loan_state.dart';
 
 class CreateLoanPage extends StatefulWidget {
   final String loanType;
@@ -133,9 +134,25 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
       setState(() => _isLoading = false);
 
       if (result != null && mounted) {
-        // 3. Show OTP Verification Dialog
-        final loanId = result['id'];
-        _showOtpVerificationDialog(loanId);
+        // Show Success and Navigate Back
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Loan agreement sent to borrower for approval.', style: TextStyle(color: Colors.white)),
+            backgroundColor: Colors.green,
+          ),
+        );
+        context.pop();
+      } else if (mounted) {
+        // Show error if failed
+        final state = cubit.state;
+        if (state is LoanError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message, style: const TextStyle(color: Colors.white)),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     }
   }
@@ -152,80 +169,6 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
             child: const Text('OK'),
           ),
         ],
-      ),
-    );
-  }
-
-  void _showOtpVerificationDialog(String loanId) {
-    final otpController = TextEditingController();
-    bool isVerifying = false;
-    String? errorText;
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) {
-          return AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-            title: const Text('Enter OTP'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'OTP sent to ${_mobileController.text}. Please enter it to activate the loan.',
-                  style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
-                ),
-                SizedBox(height: 16.h),
-                TextField(
-                  controller: otpController,
-                  keyboardType: TextInputType.number,
-                  maxLength: 6,
-                  decoration: InputDecoration(
-                    labelText: 'OTP',
-                    border: const OutlineInputBorder(),
-                    errorText: errorText,
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: isVerifying ? null : () => context.pop(),
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: isVerifying
-                    ? null
-                    : () async {
-                        setState(() {
-                          isVerifying = true;
-                          errorText = null;
-                        });
-                        
-                        final success = await context.read<LoanCubit>().verifyLoan(loanId, otpController.text);
-                        
-                        if (success) {
-                          if (!mounted) return;
-                          context.pop(); // Close dialog
-                          context.go(AppConstants.home);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Loan Activated Successfully!', style: TextStyle(color: Colors.white)), backgroundColor: Colors.green),
-                          );
-                        } else {
-                          setState(() {
-                            isVerifying = false;
-                            errorText = 'Invalid OTP';
-                          });
-                        }
-                      },
-                child: isVerifying
-                    ? SizedBox(width: 20.w, height: 20.h, child: const CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : const Text('Verify & Create'),
-              ),
-            ],
-          );
-        }
       ),
     );
   }
@@ -522,7 +465,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
                     SizedBox(width: 12.w),
                     Expanded(
                       child: Text(
-                        'An OTP will be sent to borrower\'s mobile for agreement confirmation.',
+                        'The borrower will receive a notification to verify and approve this agreement.',
                         style: TextStyle(
                           fontSize: 12.sp,
                           color: KhaataTheme.primaryBlue,

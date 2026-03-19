@@ -8,6 +8,8 @@ import 'config/theme.dart';
 import 'core/blocs/auth/auth_cubit.dart';
 import 'core/blocs/loans/loan_cubit.dart';
 import 'core/blocs/credit_score/credit_score_cubit.dart';
+import 'core/blocs/chit_funds/chit_fund_cubit.dart';
+import 'data/repositories/chit_fund_repository.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -47,6 +49,7 @@ class KhaataApp extends StatelessWidget {
         BlocProvider(create: (_) => AuthCubit()..checkAuthStatus()),
         BlocProvider(create: (_) => LoanCubit()),
         BlocProvider(create: (_) => CreditScoreCubit()),
+        BlocProvider(create: (_) => ChitFundCubit(ChitFundRepository())),
       ],
       child: ScreenUtilInit(
         designSize: const Size(375, 812),

@@ -170,22 +170,78 @@ class HomeContent extends StatelessWidget {
                           },
                         ),
                       ),
-                      GestureDetector(
-                        onTap: () {
-                          context.push('/profile');
-                        },
-                        child: Container(
-                          padding: EdgeInsets.all(6.w),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            shape: BoxShape.circle,
+                      Row(
+                        children: [
+                          BlocBuilder<LoanCubit, LoanState>(
+                            builder: (context, state) {
+                              int pendingCount = 0;
+                              if (state is LoansLoaded) {
+                                pendingCount = state.myLoans
+                                    .where((l) => l.status == 'pending_approval')
+                                    .length;
+                              }
+                              return GestureDetector(
+                                onTap: () {
+                                  context.push('/notifications');
+                                },
+                                child: Stack(
+                                  children: [
+                                    Container(
+                                      padding: EdgeInsets.all(6.w),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.2),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(
+                                        Icons.notifications_none,
+                                        color: Colors.white,
+                                        size: 22.sp,
+                                      ),
+                                    ),
+                                    if (pendingCount > 0)
+                                      Positioned(
+                                        right: 0,
+                                        top: 0,
+                                        child: Container(
+                                          padding: EdgeInsets.all(4.w),
+                                          decoration: const BoxDecoration(
+                                            color: Colors.red,
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: Text(
+                                            '$pendingCount',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 10.sp,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              );
+                            },
                           ),
-                          child: Icon(
-                            Icons.person_outline,
-                            color: Colors.white,
-                            size: 22.sp,
+                          SizedBox(width: 12.w),
+                          GestureDetector(
+                            onTap: () {
+                              context.push('/profile');
+                            },
+                            child: Container(
+                              padding: EdgeInsets.all(6.w),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.person_outline,
+                                color: Colors.white,
+                                size: 22.sp,
+                              ),
+                            ),
                           ),
-                        ),
+                        ],
                       ),
                     ],
                   ),
@@ -291,7 +347,23 @@ class HomeContent extends StatelessWidget {
                   subtitle: 'Save & borrow with group 🤝',
                   icon: Icons.groups,
                   color: KhaataTheme.secondaryBlue,
-                  onTap: () => context.push('/create-loan?type=chitfund'),
+                  onTap: () => context.push('/chit-invites'),
+                  trailingAction: TextButton(
+                    onPressed: () => context.push('/create-chit'),
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: Text(
+                      'Create Group',
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        color: KhaataTheme.primaryBlue,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -439,6 +511,7 @@ class _LoanTypeCard extends StatelessWidget {
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
+  final Widget? trailingAction;
 
   const _LoanTypeCard({
     required this.title,
@@ -446,6 +519,7 @@ class _LoanTypeCard extends StatelessWidget {
     required this.icon,
     required this.color,
     required this.onTap,
+    this.trailingAction,
   });
 
   @override
@@ -499,6 +573,7 @@ class _LoanTypeCard extends StatelessWidget {
                  ],
                ),
              ),
+             if (trailingAction != null) trailingAction!,
           ],
         ),
       ),

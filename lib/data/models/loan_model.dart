@@ -157,8 +157,10 @@ class LoanModel extends Equatable {
 
   String get statusDisplay {
     switch (status) {
+      case 'pending_approval':
+        return 'Pending Approval';
       case 'pending_otp':
-        return 'Pending OTP';
+        return 'Pending Setup';
       case 'active':
         return 'On Track';
       case 'due_soon':
@@ -176,8 +178,9 @@ class LoanModel extends Equatable {
 
   Color get statusColor {
     switch (status) {
+      case 'pending_approval':
       case 'pending_otp':
-        return const Color(0xFF6B7280); // Grey
+        return const Color(0xFFF59E0B); // Amber / Orange
       case 'active':
       case 'completed':
         return const Color(0xFF10B981); // Green

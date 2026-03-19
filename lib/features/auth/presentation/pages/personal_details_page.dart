@@ -159,7 +159,6 @@ class _PersonalDetailsPageState extends State<PersonalDetailsPage> {
                       email: _emailController.text,
                       phone: phone,
                     );
-                    context.push(AppConstants.panDetails);
                   }
                 },
               ),

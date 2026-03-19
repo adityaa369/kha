@@ -217,7 +217,7 @@ class AuthCubit extends Cubit<AuthState> {
       if (response.data['success'] == true) {
         _currentUser = UserModel.fromJson(response.data['user']);
         await SecureStorage.saveUserData(jsonEncode(_currentUser!.toFullJson()));
-        emit(PersonalDetailsSaved(user: _currentUser!));
+        emit(Authenticated(user: _currentUser!));
       } else {
         emit(AuthError(response.data['message'] ?? 'Failed to save details'));
       }

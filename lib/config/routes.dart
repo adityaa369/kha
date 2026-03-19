@@ -18,6 +18,13 @@ import '../features/loans/presentation/pages/create_loan_page.dart';
 import '../features/loans/presentation/pages/loan_confirmation_page.dart';
 import '../features/splash/presentation/pages/splash_page.dart';
 import '../features/auth/presentation/pages/auth_choice_page.dart';
+import '../features/chit_funds/presentation/pages/chit_invites_page.dart';
+import '../features/chit_funds/presentation/pages/my_chits_page.dart';
+import '../features/chit_funds/presentation/pages/create_chit_page.dart';
+import '../features/chit_funds/presentation/pages/bid_authorization_page.dart';
+import '../features/home/presentation/pages/notifications_page.dart';
+import '../features/loans/presentation/pages/loan_approval_page.dart';
+import '../data/models/loan_model.dart';
 import 'constants.dart';
 
 final router = GoRouter(
@@ -101,6 +108,18 @@ final router = GoRouter(
     GoRoute(path: AppConstants.loansGiven, builder: (context, state) => const LoansGivenPage()),
     GoRoute(path: AppConstants.insights, builder: (context, state) => const InsightsPage()),
     GoRoute(path: AppConstants.profile, builder: (context, state) => const ProfilePage()),
+    GoRoute(path: AppConstants.notifications, builder: (context, state) => const NotificationsPage()),
+    GoRoute(
+      path: AppConstants.loanApproval,
+      builder: (context, state) {
+        final loan = state.extra as LoanModel;
+        return LoanApprovalPage(loan: loan);
+      },
+    ),
     GoRoute(path: '/auth-choice', builder: (context, state) => const AuthChoicePage()),
+    GoRoute(path: AppConstants.chitInvites, builder: (context, state) => const ChitInvitesPage()),
+    GoRoute(path: AppConstants.myChits, builder: (context, state) => const MyChitsPage()),
+    GoRoute(path: AppConstants.createChit, builder: (context, state) => const CreateChitGroupPage()),
+    GoRoute(path: AppConstants.bidAuth, builder: (context, state) => const BidAuthorizationPage()),
   ],
 );
