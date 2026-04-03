@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../../../../config/theme.dart';
+import '../../../../config/constants.dart';
 import '../../../../core/blocs/chit_funds/chit_fund_cubit.dart';
 import '../../../../core/blocs/chit_funds/chit_fund_state.dart';
 import '../../../../data/models/chit_fund_model.dart';
@@ -42,7 +43,7 @@ class _ChitInvitesPageState extends State<ChitInvitesPage> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Enter the mobile number of the user you want to invite to this group.'),
+            const Text('Enter the mobile number of the user you want to invite to this group.'),
             SizedBox(height: 16.h),
             TextField(
               controller: phoneController,
@@ -90,7 +91,7 @@ class _ChitInvitesPageState extends State<ChitInvitesPage> {
               Navigator.pop(ctx);
               context.read<ChitFundCubit>().respondToInvite(invite.id, 'declined');
             },
-            child: Text('Decline', style: TextStyle(color: Colors.red)),
+            child: const Text('Decline', style: TextStyle(color: Colors.red)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -128,7 +129,7 @@ class _ChitInvitesPageState extends State<ChitInvitesPage> {
       body: BlocConsumer<ChitFundCubit, ChitFundState>(
         listener: (context, state) {
           if (state is ChitFundActionSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message)));
+            context.push(AppConstants.chitSuccess);
           } else if (state is ChitFundError) {
              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${state.message}'), backgroundColor: Colors.red));
           }
@@ -200,7 +201,7 @@ class _ChitInvitesPageState extends State<ChitInvitesPage> {
 
   Widget _buildInvitesList(List<ChitInviteModel> invites) {
     if (invites.isEmpty) {
-       return Center(child: Text("No pending invites.", style: TextStyle(color: KhaataTheme.textGrey)));
+       return const Center(child: Text("No pending invites.", style: TextStyle(color: KhaataTheme.textGrey)));
     }
     return ListView.builder(
       padding: EdgeInsets.all(16.w),
@@ -223,21 +224,30 @@ class _ChitInvitesPageState extends State<ChitInvitesPage> {
 
   Widget _buildOwnedList(List<ChitFundModel> owned) {
     if (owned.isEmpty) {
-       return Center(child: Text("You haven't created any forming groups.", style: TextStyle(color: KhaataTheme.textGrey)));
+       return const Center(child: Text("You haven't created any forming groups.", style: TextStyle(color: KhaataTheme.textGrey)));
     }
     return ListView.builder(
       padding: EdgeInsets.all(16.w),
       itemCount: owned.length,
       itemBuilder: (context, index) {
         final chit = owned[index];
+        final bool isFull = chit.currentSubscribersCount >= chit.totalMonths;
         return _buildCard(
           title: chit.name,
-          badge: 'Forming',
+          badge: isFull ? 'Active/Full' : 'Forming',
           detail1Label: 'Total Value', detail1Val: currencyFormatter.format(chit.totalValue),
           detail2Label: 'Members', detail2Val: '${chit.currentSubscribersCount}/${chit.totalMonths}',
           detail3Label: 'Monthly', detail3Val: currencyFormatter.format(chit.monthlySubscription),
-          actionLabel: 'Invite People',
-          onAction: () => _showInviteDialog(chit),
+          actionLabel: isFull ? 'Manage Group Dashboard' : 'Invite People',
+          onAction: () {
+             if (isFull) {
+                 context.push(AppConstants.chitAdminDashboard, extra: chit.id);
+             } else {
+                 _showInviteDialog(chit);
+             }
+          },
+          secondaryActionLabel: !isFull ? 'View Dashboard' : null,
+          onSecondaryAction: !isFull ? () => context.push(AppConstants.chitAdminDashboard, extra: chit.id) : null,
         );
       },
     );
@@ -251,6 +261,8 @@ class _ChitInvitesPageState extends State<ChitInvitesPage> {
      required String detail3Label, required String detail3Val,
      required String actionLabel,
      required VoidCallback onAction,
+     String? secondaryActionLabel,
+     VoidCallback? onSecondaryAction,
   }) {
     return Container(
       margin: EdgeInsets.only(bottom: 16.h),
@@ -308,26 +320,56 @@ class _ChitInvitesPageState extends State<ChitInvitesPage> {
             ],
           ),
           SizedBox(height: 16.h),
-          SizedBox(
-            width: double.infinity,
-            height: 44.h,
-            child: ElevatedButton(
-              onPressed: onAction,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: KhaataTheme.primaryBlue,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8.r),
+          Row(
+            children: [
+              Expanded(
+                child: SizedBox(
+                  height: 44.h,
+                  child: ElevatedButton(
+                    onPressed: onAction,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: KhaataTheme.primaryBlue,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                    ),
+                    child: Text(
+                      actionLabel,
+                      style: TextStyle(
+                        fontSize: 13.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
                 ),
               ),
-              child: Text(
-                actionLabel,
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w600,
+              if (secondaryActionLabel != null) ...[
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: SizedBox(
+                    height: 44.h,
+                    child: OutlinedButton(
+                      onPressed: onSecondaryAction,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: KhaataTheme.primaryBlue,
+                        side: BorderSide(color: KhaataTheme.primaryBlue),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                        ),
+                      ),
+                      child: Text(
+                        secondaryActionLabel,
+                        style: TextStyle(
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ),
+              ]
+            ],
           )
         ],
       ),

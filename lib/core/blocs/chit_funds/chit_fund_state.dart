@@ -43,3 +43,12 @@ class ChitFundActionSuccess extends ChitFundState {
   @override
   List<Object?> get props => [message];
 }
+
+class ChitAdminDashboardLoaded extends ChitFundState {
+  final Map<String, dynamic> dashboardData;
+  
+  const ChitAdminDashboardLoaded(this.dashboardData);
+
+  @override
+  List<Object?> get props => [dashboardData];
+}

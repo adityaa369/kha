@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AppConstants {
@@ -25,6 +24,9 @@ class AppConstants {
   static const String myChits = '/my-chits';
   static const String createChit = '/create-chit';
   static const String bidAuth = '/bid-authorization';
+  static const String loanSuccess = '/loan-success';
+  static const String chitSuccess = '/chit-success';
+  static const String chitAdminDashboard = '/chit-admin-dashboard';
 
   // API Configurations
   // Use your computer's local IP for physical devices

@@ -71,4 +71,14 @@ class ChitFundCubit extends Cubit<ChitFundState> {
       await loadInvitesAndOwned();
     }
   }
+
+  Future<void> loadAdminDashboard(String chitId) async {
+    try {
+      emit(ChitFundLoading());
+      final data = await _repository.getAdminDashboard(chitId);
+      emit(ChitAdminDashboardLoaded(data));
+    } catch (e) {
+      emit(ChitFundError(e.toString()));
+    }
+  }
 }

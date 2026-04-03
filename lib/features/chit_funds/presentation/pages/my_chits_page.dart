@@ -167,7 +167,7 @@ class _MyChitCard extends StatelessWidget {
     int totalMonths = subData['totalMonths'] ?? 1;
     int completedMonths = subData['completedMonths'] ?? 0;
     
-    double progress = completedMonths / totalMonths;
+    double progress = totalMonths > 0 ? (completedMonths / totalMonths) : 0.0;
 
     return Container(
       margin: EdgeInsets.only(bottom: 16.h),

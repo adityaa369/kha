@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../core/blocs/auth/auth_cubit.dart';
@@ -16,12 +15,15 @@ import '../features/loans/presentation/pages/my_loans_page.dart';
 import '../features/profile/presentation/pages/profile_page.dart';
 import '../features/loans/presentation/pages/create_loan_page.dart';
 import '../features/loans/presentation/pages/loan_confirmation_page.dart';
+import '../features/loans/presentation/pages/loan_success_page.dart';
 import '../features/splash/presentation/pages/splash_page.dart';
 import '../features/auth/presentation/pages/auth_choice_page.dart';
 import '../features/chit_funds/presentation/pages/chit_invites_page.dart';
 import '../features/chit_funds/presentation/pages/my_chits_page.dart';
 import '../features/chit_funds/presentation/pages/create_chit_page.dart';
 import '../features/chit_funds/presentation/pages/bid_authorization_page.dart';
+import '../features/chit_funds/presentation/pages/chit_success_page.dart';
+import '../features/chit_funds/presentation/pages/chit_group_admin_page.dart';
 import '../features/home/presentation/pages/notifications_page.dart';
 import '../features/loans/presentation/pages/loan_approval_page.dart';
 import '../data/models/loan_model.dart';
@@ -31,9 +33,7 @@ final router = GoRouter(
   initialLocation: AppConstants.splash,
   redirect: (context, state) {
     final authState = context.read<AuthCubit>().state;
-    final isLoggedIn = authState is Authenticated || authState is OtpVerified;
-    final isFullyRegistered = authState is Authenticated;
-
+    
     final isAuthRoute = [
       AppConstants.login,
       AppConstants.otp,
@@ -45,25 +45,41 @@ final router = GoRouter(
     final isOnboardingRoute = [
       AppConstants.personalDetails,
       AppConstants.panDetails,
+      AppConstants.registrationOtp,
       AppConstants.processing,
     ].contains(state.uri.path);
 
-    // If on splash, let it handle its own navigation
     if (state.uri.path == AppConstants.splash) return null;
 
-    // If not logged in and trying to access protected routes
-    if (!isLoggedIn && !isAuthRoute && !isOnboardingRoute) {
-      return AppConstants.login;
+    if (authState is Unauthenticated || authState is AuthInitial) {
+      if (!isAuthRoute) return AppConstants.login;
+      return null;
+    }
+    
+    if (authState is OtpVerified || authState is RegistrationOtpVerified || authState is AuthenticatedUnverified) {
+      if (state.uri.path != AppConstants.personalDetails) {
+        return AppConstants.personalDetails;
+      }
+      return null;
+    }
+    
+    if (authState is PersonalDetailsSaved) {
+      if (state.uri.path != AppConstants.panDetails) {
+        return AppConstants.panDetails;
+      }
+      return null;
     }
 
-    // If logged in but profile incomplete, force onboarding
-    if (isLoggedIn && !isFullyRegistered && !isOnboardingRoute) {
-      return AppConstants.personalDetails;
+    if (authState is PanDetailsSaved) {
+      if (state.uri.path != AppConstants.processing) {
+        return AppConstants.processing;
+      }
+      return null;
     }
-
-    // If logged in and on basic auth routes, go to dashboard or onboarding
-    if (isLoggedIn && isAuthRoute) {
-      return isFullyRegistered ? AppConstants.home : AppConstants.personalDetails;
+    
+    if (authState is AuthenticatedFull) {
+      if (isAuthRoute || isOnboardingRoute) return AppConstants.home;
+      return null;
     }
 
     return null;
@@ -116,10 +132,19 @@ final router = GoRouter(
         return LoanApprovalPage(loan: loan);
       },
     ),
+    GoRoute(path: AppConstants.loanSuccess, builder: (context, state) => const LoanSuccessPage()),
     GoRoute(path: '/auth-choice', builder: (context, state) => const AuthChoicePage()),
     GoRoute(path: AppConstants.chitInvites, builder: (context, state) => const ChitInvitesPage()),
     GoRoute(path: AppConstants.myChits, builder: (context, state) => const MyChitsPage()),
     GoRoute(path: AppConstants.createChit, builder: (context, state) => const CreateChitGroupPage()),
     GoRoute(path: AppConstants.bidAuth, builder: (context, state) => const BidAuthorizationPage()),
+    GoRoute(path: AppConstants.chitSuccess, builder: (context, state) => const ChitSuccessPage()),
+    GoRoute(
+      path: AppConstants.chitAdminDashboard,
+      builder: (context, state) {
+        final chitId = state.extra as String;
+        return ChitGroupAdminPage(chitId: chitId);
+      },
+    ),
   ],
 );

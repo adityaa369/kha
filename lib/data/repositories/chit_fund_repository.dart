@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import '../../core/network/api_client.dart';
 import '../models/chit_fund_model.dart';
 import '../models/chit_invite_model.dart';
@@ -62,5 +61,11 @@ class ChitFundRepository {
       data: {'status': status},
     );
     return true;
+  }
+
+  // Get Admin Dashboard (Members & Auctions)
+  Future<Map<String, dynamic>> getAdminDashboard(String chitId) async {
+    final response = await _apiClient.get('/chits/$chitId/admin-dashboard');
+    return response.data;
   }
 }
