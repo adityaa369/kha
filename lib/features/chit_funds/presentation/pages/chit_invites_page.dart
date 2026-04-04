@@ -242,7 +242,7 @@ class _ChitInvitesPageState extends State<ChitInvitesPage> {
           detail1Label: 'Total Value', detail1Val: currencyFormatter.format(chit.totalValue),
           detail2Label: 'Members', detail2Val: '${chit.currentSubscribersCount}/${chit.totalMonths}',
           detail3Label: 'Monthly', detail3Val: currencyFormatter.format(chit.monthlySubscription),
-          actionLabel: isFull ? 'Manage Group Dashboard' : 'Invite People',
+          actionLabel: isFull ? 'Manage Group' : 'Invite Members',
           onAction: () {
              if (isFull) {
                  context.push(AppConstants.chitAdminDashboard, extra: chit.id);
@@ -256,7 +256,7 @@ class _ChitInvitesPageState extends State<ChitInvitesPage> {
               context.read<ChitFundCubit>().deleteChitFund(chit.id);
             }
           },
-          secondaryActionLabel: !isFull ? 'View Dashboard' : null,
+          secondaryActionLabel: !isFull ? 'Dashboard' : null,
           onSecondaryAction: !isFull ? () => context.push(AppConstants.chitAdminDashboard, extra: chit.id) : null,
         );
       },
@@ -358,15 +358,19 @@ class _ChitInvitesPageState extends State<ChitInvitesPage> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: KhaataTheme.primaryBlue,
                       foregroundColor: Colors.white,
+                      padding: EdgeInsets.symmetric(horizontal: 4.w),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8.r),
                       ),
                     ),
-                    child: Text(
-                      actionLabel,
-                      style: TextStyle(
-                        fontSize: 13.sp,
-                        fontWeight: FontWeight.w600,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        actionLabel,
+                        style: TextStyle(
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),
@@ -382,15 +386,19 @@ class _ChitInvitesPageState extends State<ChitInvitesPage> {
                       style: OutlinedButton.styleFrom(
                         foregroundColor: KhaataTheme.primaryBlue,
                         side: BorderSide(color: KhaataTheme.primaryBlue),
+                        padding: EdgeInsets.symmetric(horizontal: 4.w),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8.r),
                         ),
                       ),
-                      child: Text(
-                        secondaryActionLabel,
-                        style: TextStyle(
-                          fontSize: 13.sp,
-                          fontWeight: FontWeight.w600,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          secondaryActionLabel,
+                          style: TextStyle(
+                            fontSize: 13.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),

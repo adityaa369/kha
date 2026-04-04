@@ -33,6 +33,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
 
   DateTime _startDate = DateTime.now();
   String _durationType = 'Months';
+  String? _selectedDocumentName;
   bool _isLoading = false;
 
   @override
@@ -464,7 +465,6 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
               Row(
                 children: [
                   Expanded(
-                    flex: 2,
                     child: KhaataTextField(
                       label: 'Duration',
                       hint: 'e.g. 12',
@@ -476,8 +476,8 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
                     ),
                   ),
                   SizedBox(width: 16.w),
-                  Expanded(
-                    flex: 1,
+                  SizedBox(
+                    width: 110.w,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -551,6 +551,67 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
               ),
 
               SizedBox(height: 24.h),
+
+              // Document Upload UI
+              const _SectionTitle(title: 'Supporting Documents', icon: Icons.attach_file),
+              SizedBox(height: 16.h),
+              GestureDetector(
+                onTap: () {
+                  // TODO: Implement actual file picker hook
+                  setState(() {
+                    _selectedDocumentName = 'agreement_scan.pdf';
+                  });
+                },
+                child: Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.symmetric(vertical: 20.h, horizontal: 16.w),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border.all(
+                      color: _selectedDocumentName != null ? KhaataTheme.accentGreen : KhaataTheme.primaryBlue,
+                      style: BorderStyle.solid,
+                      width: 1.5,
+                    ),
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(
+                        _selectedDocumentName != null ? Icons.check_circle : Icons.cloud_upload_outlined,
+                        color: _selectedDocumentName != null ? KhaataTheme.accentGreen : KhaataTheme.primaryBlue,
+                        size: 32.sp,
+                      ),
+                      SizedBox(height: 8.h),
+                      Text(
+                        _selectedDocumentName ?? 'Tap to Upload Agreement/Proof',
+                        style: TextStyle(
+                          color: _selectedDocumentName != null ? KhaataTheme.accentGreen : KhaataTheme.textDark,
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (_selectedDocumentName == null) ...[
+                        SizedBox(height: 4.h),
+                        Text(
+                          'PDF, JPG, PNG (Max 5MB)',
+                          style: TextStyle(
+                            color: KhaataTheme.textGrey,
+                            fontSize: 12.sp,
+                          ),
+                        ),
+                      ] else ...[
+                        SizedBox(height: 8.h),
+                        GestureDetector(
+                          onTap: () => setState(() => _selectedDocumentName = null),
+                          child: Text('Remove File', style: TextStyle(color: Colors.red, fontSize: 13.sp, fontWeight: FontWeight.normal)),
+                        )
+                      ]
+                    ],
+                  ),
+                ),
+              ),
+
+              SizedBox(height: 32.h),
 
               PrimaryButton(
                 text: 'Send Agreement',
