@@ -9,7 +9,7 @@ import '../../../../core/blocs/chit_funds/chit_fund_cubit.dart';
 import '../../../../core/blocs/chit_funds/chit_fund_state.dart';
 import '../../../../data/models/chit_fund_model.dart';
 import '../../../../data/models/chit_invite_model.dart';
-import '../../../../config/app_constants.dart';
+import '../../../../config/constants.dart';
 import '../../../../core/services/biometric_auth_service.dart';
 
 class ChitInvitesPage extends StatefulWidget {
