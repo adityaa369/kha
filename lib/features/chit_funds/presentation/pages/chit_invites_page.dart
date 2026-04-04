@@ -351,26 +351,24 @@ class _ChitInvitesPageState extends State<ChitInvitesPage> {
           Row(
             children: [
               Expanded(
-                child: SizedBox(
-                  height: 44.h,
-                  child: ElevatedButton(
-                    onPressed: onAction,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: KhaataTheme.primaryBlue,
-                      foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(horizontal: 4.w),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
+                child: ElevatedButton(
+                  onPressed: onAction,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: KhaataTheme.primaryBlue,
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 12.h),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.r),
                     ),
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        actionLabel,
-                        style: TextStyle(
-                          fontSize: 13.sp,
-                          fontWeight: FontWeight.w600,
-                        ),
+                  ),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      actionLabel,
+                      style: TextStyle(
+                        fontSize: 13.sp,
+                        fontWeight: FontWeight.w600,
+                        height: 1.2,
                       ),
                     ),
                   ),
@@ -379,26 +377,24 @@ class _ChitInvitesPageState extends State<ChitInvitesPage> {
               if (secondaryActionLabel != null) ...[
                 SizedBox(width: 12.w),
                 Expanded(
-                  child: SizedBox(
-                    height: 44.h,
-                    child: OutlinedButton(
-                      onPressed: onSecondaryAction,
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: KhaataTheme.primaryBlue,
-                        side: BorderSide(color: KhaataTheme.primaryBlue),
-                        padding: EdgeInsets.symmetric(horizontal: 4.w),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                        ),
+                  child: OutlinedButton(
+                    onPressed: onSecondaryAction,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: KhaataTheme.primaryBlue,
+                      side: BorderSide(color: KhaataTheme.primaryBlue),
+                      padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 12.h),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.r),
                       ),
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(
-                          secondaryActionLabel,
-                          style: TextStyle(
-                            fontSize: 13.sp,
-                            fontWeight: FontWeight.w600,
-                          ),
+                    ),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        secondaryActionLabel,
+                        style: TextStyle(
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.w600,
+                          height: 1.2,
                         ),
                       ),
                     ),

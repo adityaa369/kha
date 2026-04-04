@@ -1,7 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import '../../../../config/theme.dart';
 import '../../../../core/widgets/buttons.dart';
 import '../../../../core/widgets/inputs.dart';
@@ -34,6 +37,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
   DateTime _startDate = DateTime.now();
   String _durationType = 'Months';
   String? _selectedDocumentName;
+  File? _selectedDocumentFile;
   bool _isLoading = false;
 
   @override
@@ -46,6 +50,20 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
     _interestController.dispose();
     _durationController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickDocument() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf', 'jpg', 'png'],
+    );
+
+    if (result != null) {
+      setState(() {
+        _selectedDocumentFile = File(result.files.single.path!);
+        _selectedDocumentName = result.files.single.name;
+      });
+    }
   }
 
   String getLoanTypeTitle() {
@@ -189,7 +207,25 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
       return;
     }
 
-    // 2. Create Loan (Sends OTP to borrower)
+    // 2. Upload Document if exists
+    String? documentUrl;
+    if (_selectedDocumentFile != null) {
+      try {
+        final ref = FirebaseStorage.instance.ref().child('loan_documents/${const Uuid().v4()}_${_selectedDocumentName}');
+        await ref.putFile(_selectedDocumentFile!);
+        documentUrl = await ref.getDownloadURL();
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to upload document: $e')),
+          );
+        }
+        setState(() => _isLoading = false);
+        return;
+      }
+    }
+
+    // 3. Create Loan (Sends OTP to borrower)
     final idempotencyKey = const Uuid().v4();
     
     final loanData = {
@@ -203,6 +239,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
       'duration_months': _calculateMonths(),
       'start_date': _startDate.toIso8601String(),
       'type': widget.loanType,
+      'documentUrl': documentUrl,
     };
 
     final result = await cubit.createLoan(loanData);
@@ -476,8 +513,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
                     ),
                   ),
                   SizedBox(width: 16.w),
-                  SizedBox(
-                    width: 110.w,
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -556,11 +592,18 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
               const _SectionTitle(title: 'Supporting Documents', icon: Icons.attach_file),
               SizedBox(height: 16.h),
               GestureDetector(
-                onTap: () {
-                  // TODO: Implement actual file picker hook
-                  setState(() {
-                    _selectedDocumentName = 'agreement_scan.pdf';
-                  });
+                onTap: () async {
+                  FilePickerResult? result = await FilePicker.platform.pickFiles(
+                    type: FileType.custom,
+                    allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
+                  );
+
+                  if (result != null && result.files.single.path != null) {
+                    setState(() {
+                      _selectedDocumentFile = File(result.files.single.path!);
+                      _selectedDocumentName = result.files.single.name;
+                    });
+                  }
                 },
                 child: Container(
                   width: double.infinity,
@@ -602,7 +645,10 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
                       ] else ...[
                         SizedBox(height: 8.h),
                         GestureDetector(
-                          onTap: () => setState(() => _selectedDocumentName = null),
+                          onTap: () => setState(() {
+                            _selectedDocumentName = null;
+                            _selectedDocumentFile = null;
+                          }),
                           child: Text('Remove File', style: TextStyle(color: Colors.red, fontSize: 13.sp, fontWeight: FontWeight.normal)),
                         )
                       ]
