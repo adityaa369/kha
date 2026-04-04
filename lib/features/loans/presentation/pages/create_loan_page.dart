@@ -53,7 +53,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
   }
 
   Future<void> _pickDocument() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
+    FilePickerResult? result = await FilePicker.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['pdf', 'jpg', 'png'],
     );
@@ -593,7 +593,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
               SizedBox(height: 16.h),
               GestureDetector(
                 onTap: () async {
-                  FilePickerResult? result = await FilePicker.platform.pickFiles(
+                  FilePickerResult? result = await FilePicker.pickFiles(
                     type: FileType.custom,
                     allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
                   );
