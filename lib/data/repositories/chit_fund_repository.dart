@@ -10,7 +10,6 @@ class ChitFundRepository {
     required String name,
     required double totalValue,
     required int totalMonths,
-    required double organizerFeePercent,
   }) async {
     final response = await _apiClient.post(
       '/chits/create',
@@ -18,7 +17,6 @@ class ChitFundRepository {
         'name': name,
         'totalValue': totalValue,
         'totalMonths': totalMonths,
-        'organizerFeePercent': organizerFeePercent,
       },
     );
     return ChitFundModel.fromJson(response.data['chit']);
@@ -67,5 +65,11 @@ class ChitFundRepository {
   Future<Map<String, dynamic>> getAdminDashboard(String chitId) async {
     final response = await _apiClient.get('/chits/$chitId/admin-dashboard');
     return response.data;
+  }
+
+  // Delete Chit Fund
+  Future<bool> deleteChitFund(String chitId) async {
+    await _apiClient.delete('/chits/$chitId');
+    return true;
   }
 }

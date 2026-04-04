@@ -3,9 +3,10 @@ import 'package:dio_smart_retry/dio_smart_retry.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 import '../utils/secure_storage.dart';
 import '../../config/constants.dart';
-import 'exceptions.dart';
+import '../error/failures.dart';
 
 class ApiClient {
+  static void Function()? onUnauthorized;
   final Dio _dio = Dio(BaseOptions(
     baseUrl: AppConstants.baseUrl,
     connectTimeout: const Duration(seconds: 30),
@@ -25,21 +26,22 @@ class ApiClient {
         DioException myException = e;
         
         if (e.response?.statusCode == 401) {
-          myException = e.copyWith(error: AuthException('Please login again'));
+          onUnauthorized?.call();
+          myException = e.copyWith(error: const AuthFailure('Please login again'));
         } else {
           switch (e.type) {
             case DioExceptionType.connectionTimeout:
             case DioExceptionType.sendTimeout:
             case DioExceptionType.receiveTimeout:
             case DioExceptionType.connectionError:
-              myException = e.copyWith(error: NetworkException());
+              myException = e.copyWith(error: const NetworkFailure());
               break;
             case DioExceptionType.badResponse:
               final msg = e.response?.data?['message'];
               if (e.response?.statusCode == 500) {
-                myException = e.copyWith(error: ServerException(msg ?? 'Internal Server Error'));
+                myException = e.copyWith(error: ServerFailure(msg ?? 'Internal Server Error'));
               } else if (e.response?.statusCode == 400 || e.response?.statusCode == 404) {
-                myException = e.copyWith(error: BadRequestException(msg ?? 'Invalid request'));
+                myException = e.copyWith(error: ValidationFailure(msg ?? 'Invalid request'));
               }
               break;
             default:

@@ -5,8 +5,11 @@ import 'package:go_router/go_router.dart';
 import '../../../../config/theme.dart';
 import '../../../../core/widgets/buttons.dart';
 import '../../../../core/blocs/loans/loan_cubit.dart';
+import '../../../../core/blocs/loans/loan_state.dart';
 import '../../../../data/models/loan_model.dart';
 import 'package:intl/intl.dart';
+import '../../../../core/services/biometric_auth_service.dart';
+import '../../../../config/constants.dart';
 
 class LoanApprovalPage extends StatefulWidget {
   final LoanModel loan;
@@ -21,21 +24,26 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
   bool _isApproving = false;
 
   void _approveLoan() async {
+    final authenticated = await BiometricAuthService.authenticate();
+    if (!authenticated) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Biometric signature required to accept loan.', style: TextStyle(color: Colors.white)),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
     setState(() => _isApproving = true);
     
     final success = await context.read<LoanCubit>().verifyLoan(widget.loan.id);
     
     setState(() => _isApproving = false);
     
-    if (success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Agreement Accepted! Loan is now active.', style: TextStyle(color: Colors.white)),
-          backgroundColor: Colors.green,
-        ),
-      );
-      context.pop(); // Go back to notifications list or home
-    } else if (mounted) {
+    if (!success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Failed to accept agreement. Try again.', style: TextStyle(color: Colors.white)),
@@ -47,7 +55,13 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return BlocListener<LoanCubit, LoanState>(
+      listener: (context, state) {
+        if (state is LoanVerificationSuccess) {
+          context.go(AppConstants.loanSuccess);
+        }
+      },
+      child: Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('Review Agreement'),
@@ -199,6 +213,7 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
           ],
         ),
       ),
+    ),
     );
   }
 }

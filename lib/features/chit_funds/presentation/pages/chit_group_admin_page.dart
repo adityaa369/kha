@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../config/theme.dart';
+import '../../../../core/services/biometric_auth_service.dart';
 import '../../../../core/blocs/chit_funds/chit_fund_cubit.dart';
 import '../../../../core/blocs/chit_funds/chit_fund_state.dart';
 
@@ -51,6 +52,42 @@ class _ChitGroupAdminPageState extends State<ChitGroupAdminPage> {
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => context.pop(),
         ),
+        actions: [
+          BlocBuilder<ChitFundCubit, ChitFundState>(
+            builder: (context, state) {
+              if (state is ChitAdminDashboardLoaded && state.dashboardData['chitDetails']?['isOwner'] == true) {
+                return PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_vert, color: Colors.white),
+                  onSelected: (value) async {
+                    if (value == 'delete') {
+                      final authenticated = await BiometricAuthService.authenticate();
+                      if (!authenticated) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Biometric auth required to delete group', style: TextStyle(color: Colors.white)), backgroundColor: Colors.red)
+                          );
+                        }
+                        return;
+                      }
+                      
+                      if (context.mounted) {
+                        context.read<ChitFundCubit>().deleteChitFund(widget.chitId);
+                        context.pop();
+                      }
+                    }
+                  },
+                  itemBuilder: (BuildContext context) => [
+                    const PopupMenuItem<String>(
+                      value: 'delete',
+                      child: Text('Delete Group', style: TextStyle(color: Colors.red)),
+                    ),
+                  ],
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
+        ],
       ),
       body: BlocBuilder<ChitFundCubit, ChitFundState>(
         builder: (context, state) {
@@ -67,24 +104,36 @@ class _ChitGroupAdminPageState extends State<ChitGroupAdminPage> {
           final List members = data['members'] ?? [];
           final List auctions = data['auctionTimeline'] ?? [];
 
-          return Column(
-            children: [
-              // Custom Tab Bar
-              Container(
-                color: KhaataTheme.primaryBlue,
-                child: Row(
-                  children: [
-                    _buildTab(0, 'Members Planner (${members.length})'),
-                    _buildTab(1, 'Auction History'),
-                  ],
+          return SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 8.h),
+                  child: Text(
+                    'Group Members',
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.bold,
+                      color: KhaataTheme.textDark,
+                    ),
+                  ),
                 ),
-              ),
-              Expanded(
-                child: _selectedIndex == 0
-                    ? _buildMembersTracker(members, chitDetails)
-                    : _buildAuctionTimeline(auctions, chitDetails),
-              ),
-            ],
+                _buildMembersTracker(members, chitDetails),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 8.h),
+                  child: Text(
+                    'Auction Timeline',
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.bold,
+                      color: KhaataTheme.textDark,
+                    ),
+                  ),
+                ),
+                _buildAuctionTimeline(auctions, chitDetails),
+              ],
+            ),
           );
         },
       ),
@@ -170,11 +219,14 @@ class _ChitGroupAdminPageState extends State<ChitGroupAdminPage> {
   }
 
   Widget _buildMembersTracker(List members, Map<String, dynamic> chitDetails) {
+    bool isOwner = chitDetails['isOwner'] == true;
     if (members.isEmpty) {
-      return const Center(child: Text("No members arrived yet."));
+      return const Padding(padding: EdgeInsets.all(16.0), child: Center(child: Text("No members arrived yet.")));
     }
     return ListView.builder(
-      padding: EdgeInsets.all(16.w),
+      physics: const NeverScrollableScrollPhysics(),
+      shrinkWrap: true,
+      padding: EdgeInsets.symmetric(horizontal: 16.w),
       itemCount: members.length,
       itemBuilder: (context, index) {
         final member = members[index];
@@ -182,7 +234,11 @@ class _ChitGroupAdminPageState extends State<ChitGroupAdminPage> {
         final bool hasWon = member['hasWonAuction'] == true;
         
         return InkWell(
-          onTap: () => _showMemberPaymentDetails(member, chitDetails),
+          onTap: () {
+            if (isOwner) {
+              _showMemberPaymentDetails(member, chitDetails);
+            }
+          },
           child: Container(
             margin: EdgeInsets.only(bottom: 12.h),
             padding: EdgeInsets.all(16.w),
@@ -226,7 +282,7 @@ class _ChitGroupAdminPageState extends State<ChitGroupAdminPage> {
                     ],
                   ),
                 ),
-                Icon(Icons.chevron_right, color: KhaataTheme.textGrey)
+                if (isOwner) Icon(Icons.chevron_right, color: KhaataTheme.textGrey)
               ],
             ),
           ),
@@ -272,10 +328,12 @@ class _ChitGroupAdminPageState extends State<ChitGroupAdminPage> {
 
   Widget _buildAuctionTimeline(List auctions, Map<String, dynamic> chitDetails) {
     if (auctions.isEmpty) {
-      return const Center(child: Text("Detailed Timeline preparing..."));
+      return const Padding(padding: EdgeInsets.all(16.0), child: Center(child: Text("Detailed Timeline preparing...")));
     }
     return ListView.builder(
-      padding: EdgeInsets.all(16.w),
+      physics: const NeverScrollableScrollPhysics(),
+      shrinkWrap: true,
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
       itemCount: auctions.length,
       itemBuilder: (context, index) {
         final auction = auctions[index];

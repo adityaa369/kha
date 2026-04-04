@@ -49,9 +49,17 @@ class CreditScoreProcessed extends AuthState {
   const CreditScoreProcessed();
 }
 
-class Authenticated extends AuthState {
+class AuthenticatedUnverified extends AuthState {
   final UserModel user;
-  const Authenticated({required this.user});
+  const AuthenticatedUnverified({required this.user});
+
+  @override
+  List<Object?> get props => [user];
+}
+
+class AuthenticatedFull extends AuthState {
+  final UserModel user;
+  const AuthenticatedFull({required this.user});
 
   @override
   List<Object?> get props => [user];

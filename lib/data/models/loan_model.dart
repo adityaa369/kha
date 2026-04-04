@@ -229,6 +229,50 @@ class LoanModel extends Equatable {
     return endDate!.difference(DateTime.now()).inDays;
   }
 
+  LoanModel copyWith({
+    String? id,
+    String? lenderId,
+    String? userId,
+    String? borrowerName,
+    String? lenderName,
+    String? initials,
+    double? amount,
+    double? interestRate,
+    int? durationMonths,
+    String? status,
+    double? progress,
+    DateTime? startDate,
+    DateTime? endDate,
+    DateTime? activatedAt,
+    String? type,
+    String? mobile,
+    String? aadhar,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return LoanModel(
+      id: id ?? this.id,
+      lenderId: lenderId ?? this.lenderId,
+      userId: userId ?? this.userId,
+      borrowerName: borrowerName ?? this.borrowerName,
+      lenderName: lenderName ?? this.lenderName,
+      initials: initials ?? this.initials,
+      amount: amount ?? this.amount,
+      interestRate: interestRate ?? this.interestRate,
+      durationMonths: durationMonths ?? this.durationMonths,
+      status: status ?? this.status,
+      progress: progress ?? this.progress,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+      activatedAt: activatedAt ?? this.activatedAt,
+      type: type ?? this.type,
+      mobile: mobile ?? this.mobile,
+      aadhar: aadhar ?? this.aadhar,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
   @override
   List<Object?> get props => [
     id,

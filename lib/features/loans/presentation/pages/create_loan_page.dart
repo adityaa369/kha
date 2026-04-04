@@ -2,13 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../config/constants.dart';
 import '../../../../config/theme.dart';
 import '../../../../core/widgets/buttons.dart';
 import '../../../../core/widgets/inputs.dart';
+import 'dart:math';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/blocs/loans/loan_cubit.dart';
 import '../../../../core/blocs/loans/loan_state.dart';
+import 'package:uuid/uuid.dart';
+import '../../../../core/services/biometric_auth_service.dart';
 
 class CreateLoanPage extends StatefulWidget {
   final String loanType;
@@ -47,11 +49,11 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
 
   String getLoanTypeTitle() {
     switch (widget.loanType) {
-      case 'personal':
+      case 'hand_credit':
         return 'Hand Credit';
-      case 'business':
+      case 'business_credit':
         return 'Business Credit';
-      case 'home':
+      case 'interest_credit':
         return 'Interest Credit';
       case 'chitfund':
         return 'Chit Funds';
@@ -62,11 +64,11 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
 
   IconData getLoanTypeIcon() {
     switch (widget.loanType) {
-      case 'personal':
+      case 'hand_credit':
         return Icons.account_balance_wallet;
-      case 'business':
+      case 'business_credit':
         return Icons.business_center;
-      case 'home':
+      case 'interest_credit':
         return Icons.home;
       case 'chitfund':
         return Icons.groups;
@@ -84,7 +86,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
+            colorScheme: const ColorScheme.light(
               primary: KhaataTheme.primaryBlue,
             ),
           ),
@@ -101,58 +103,130 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
 
   void _submitForm() async {
     if (_formKey.currentState!.validate()) {
-      setState(() => _isLoading = true);
+      FocusScope.of(context).unfocus();
+      _showPreviewDialog();
+    }
+  }
 
-      final phone = _mobileController.text;
-      final cubit = context.read<LoanCubit>();
+  void _showPreviewDialog() {
+    final amount = double.tryParse(_amountController.text) ?? 0.0;
+    final rate = widget.loanType == 'interest_credit' ? (double.tryParse(_interestController.text) ?? 0.0) : 0.0;
+    final months = _calculateMonths();
+    
+    // Calculate simple interest assuming rate is Annual (APR)
+    final totalInterest = widget.loanType == 'interest_credit' ? (amount * rate * (months / 12)) / 100 : 0.0;
+    final totalAmount = amount + totalInterest;
 
-      // 1. Check if borrower exists
-      final borrower = await cubit.checkBorrower(phone);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Loan Summary', style: TextStyle(color: KhaataTheme.primaryBlue, fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Borrower: ${_borrowerNameController.text}'),
+            SizedBox(height: 8.h),
+            Text('Principal: ₹${amount.toStringAsFixed(2)}'),
+            if (widget.loanType == 'interest_credit') ...[
+              SizedBox(height: 8.h),
+              Text('Interest Rate: $rate% (Annual)'),
+              SizedBox(height: 8.h),
+              Text('Total Interest: ₹${totalInterest.toStringAsFixed(2)}'),
+            ],
+            SizedBox(height: 8.h),
+            Text('Duration: $months Months'),
+            Divider(height: 24.h),
+            Text('Total Repayment: ₹${totalAmount.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold)),
+            Text('EMI: ₹${(totalAmount / (months > 0 ? months : 1)).toStringAsFixed(2)}/month', style: TextStyle(color: KhaataTheme.textGrey, fontSize: 12.sp)),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => context.pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: KhaataTheme.primaryBlue),
+            onPressed: () {
+              context.pop();
+              _processLoanCreation();
+            },
+            child: const Text('Confirm & Send', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
 
-      if (borrower == null) {
-        setState(() => _isLoading = false);
-        if (!mounted) return;
-        _showBorrowerNotFoundDialog();
-        return;
-      }
-
-      // 2. Create Loan (Sends OTP to borrower)
-      final loanData = {
-        'borrower_phone': phone,
-        'borrower_name': _borrowerNameController.text,
-        'borrower_aadhar': _aadharController.text,
-        'borrower_address': _addressController.text,
-        'amount': double.tryParse(_amountController.text) ?? 0.0,
-        'interest_rate': widget.loanType == 'home' ? (double.tryParse(_interestController.text) ?? 0.0) : 0.0,
-        'duration_months': _calculateMonths(),
-        'start_date': _startDate.toIso8601String(),
-        'type': widget.loanType,
-      };
-
-      final result = await cubit.createLoan(loanData);
-      
-      setState(() => _isLoading = false);
-
-      if (result != null && mounted) {
-        // Show Success and Navigate Back
+  void _processLoanCreation() async {
+    final authenticated = await BiometricAuthService.authenticate();
+    if (!authenticated) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Loan agreement sent to borrower for approval.', style: TextStyle(color: Colors.white)),
-            backgroundColor: Colors.green,
+            content: Text('Biometric signature required to create agreement.', style: TextStyle(color: Colors.white)),
+            backgroundColor: Colors.red,
           ),
         );
-        context.pop();
-      } else if (mounted) {
-        // Show error if failed
-        final state = cubit.state;
-        if (state is LoanError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message, style: const TextStyle(color: Colors.white)),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
+      }
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    final phone = _mobileController.text;
+    final cubit = context.read<LoanCubit>();
+
+    // 1. Check if borrower exists
+    final borrower = await cubit.checkBorrower(phone);
+
+    if (borrower == null) {
+      setState(() => _isLoading = false);
+      if (!mounted) return;
+      _showBorrowerNotFoundDialog();
+      return;
+    }
+
+    // 2. Create Loan (Sends OTP to borrower)
+    final idempotencyKey = const Uuid().v4();
+    
+    final loanData = {
+      'idempotency_key': idempotencyKey,
+      'borrower_phone': phone,
+      'borrower_name': _borrowerNameController.text,
+      'borrower_aadhar': _aadharController.text,
+      'borrower_address': _addressController.text,
+      'amount': double.tryParse(_amountController.text) ?? 0.0,
+      'interest_rate': widget.loanType == 'interest_credit' ? (double.tryParse(_interestController.text) ?? 0.0) : 0.0,
+      'duration_months': _calculateMonths(),
+      'start_date': _startDate.toIso8601String(),
+      'type': widget.loanType,
+    };
+
+    final result = await cubit.createLoan(loanData);
+    
+    setState(() => _isLoading = false);
+
+    if (result != null && mounted) {
+      // Show Success and Navigate Back
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Loan agreement sent to borrower for approval.', style: TextStyle(color: Colors.white)),
+          backgroundColor: Colors.green,
+        ),
+      );
+      context.pop();
+    } else if (mounted) {
+      // Show error if failed
+      final state = cubit.state;
+      if (state is LoanError) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(state.message, style: const TextStyle(color: Colors.white)),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
@@ -189,7 +263,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: KhaataTheme.textDark),
+          icon: const Icon(Icons.arrow_back, color: KhaataTheme.textDark),
           onPressed: () => context.pop(),
         ),
         title: Text(
@@ -264,7 +338,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
               SizedBox(height: 24.h),
 
               // Borrower Details Section
-              _SectionTitle(title: 'Borrower Details', icon: Icons.person),
+              const _SectionTitle(title: 'Borrower Details', icon: Icons.person),
               SizedBox(height: 16.h),
 
               KhaataTextField(
@@ -309,7 +383,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
               SizedBox(height: 24.h),
 
               // Loan Details Section
-              _SectionTitle(title: 'Loan Terms', icon: Icons.description),
+              const _SectionTitle(title: 'Loan Terms', icon: Icons.description),
               SizedBox(height: 16.h),
 
               KhaataTextField(
@@ -326,7 +400,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (widget.loanType == 'home') ...[
+                  if (widget.loanType == 'interest_credit') ...[
                     Expanded(
                       child: KhaataTextField(
                         label: 'Interest Rate (%)',

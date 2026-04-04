@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
@@ -17,8 +16,30 @@ class MyLoansPage extends StatefulWidget {
   State<MyLoansPage> createState() => _MyLoansPageState();
 }
 
-class _MyLoansPageState extends State<MyLoansPage> {
-  String _selectedTab = 'All';
+class _MyLoansPageState extends State<MyLoansPage> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  final List<String> _tabs = [
+    'All',
+    'Hand Credit',
+    'Business Credit',
+    'Interest Credit',
+    'Chit Funds'
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: _tabs.length, vsync: this);
+    _tabController.addListener(() {
+      setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +51,7 @@ class _MyLoansPageState extends State<MyLoansPage> {
           Container(
             width: double.infinity,
             color: KhaataTheme.primaryBlue,
-            padding: EdgeInsets.fromLTRB(16.w, 20.h, 16.w, 16.h),
+            padding: EdgeInsets.fromLTRB(16.w, 20.h, 16.w, 0),
             child: SafeArea(
               bottom: false,
               child: Column(
@@ -45,39 +66,23 @@ class _MyLoansPageState extends State<MyLoansPage> {
                     ),
                   ),
                   SizedBox(height: 16.h),
-                  // Dynamic Tabs are built inside the BlocBuilder below to access the loans
-                  BlocBuilder<LoanCubit, LoanState>(
-                    builder: (context, state) {
-                      List<String> tabs = ['All'];
-                      if (state is LoansLoaded) {
-                        final types = state.myLoans.map((l) => l.type).toSet().toList();
-                        // Format types to be title case (e.g. "hand_credit" -> "Hand Credit")
-                        final formattedTypes = types.map((t) {
-                          return t.split('_').map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '').join(' ');
-                        }).toList();
-                        tabs.addAll(formattedTypes);
-                      }
-
-                      return SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: tabs.map((tab) {
-                            return Padding(
-                              padding: EdgeInsets.only(right: 20.w),
-                              child: _Tab(
-                                text: tab,
-                                isSelected: _selectedTab == tab,
-                                onTap: () {
-                                  setState(() {
-                                    _selectedTab = tab;
-                                  });
-                                },
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                      );
-                    },
+                  TabBar(
+                    controller: _tabController,
+                    isScrollable: true,
+                    indicatorColor: Colors.white,
+                    indicatorWeight: 3.h,
+                    labelColor: Colors.white,
+                    unselectedLabelColor: Colors.white70,
+                    dividerColor: Colors.transparent,
+                    labelStyle: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14.sp,
+                    ),
+                    unselectedLabelStyle: TextStyle(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 13.sp,
+                    ),
+                    tabs: _tabs.map((tab) => Tab(text: tab)).toList(),
                   ),
                 ],
               ),
@@ -90,12 +95,12 @@ class _MyLoansPageState extends State<MyLoansPage> {
               int activeCount = 0;
               int closedCount = 0;
               if (state is LoansLoaded) {
-                 // Filter loans based on selected tab for stats
-                final filteredForStats = _selectedTab == 'All' 
+                 final selectedTabName = _tabs[_tabController.index];
+                 final filteredForStats = selectedTabName == 'All' 
                     ? state.myLoans 
                     : state.myLoans.where((l) {
                         final formattedType = l.type.split('_').map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '').join(' ');
-                        return formattedType == _selectedTab;
+                        return formattedType == selectedTabName;
                       }).toList();
 
                 activeCount = filteredForStats.where((l) => l.status != 'completed' && l.status != 'pending_otp' && l.status != 'pending_approval' && l.status != 'rejected').length;
@@ -135,7 +140,7 @@ class _MyLoansPageState extends State<MyLoansPage> {
               builder: (context, state) {
                 if (state is LoanInitial) {
                   final authState = context.read<AuthCubit>().state;
-                  if (authState is Authenticated) {
+                  if (authState is AuthenticatedFull) {
                     context.read<LoanCubit>().fetchLoans();
                   }
                   return const Center(child: CircularProgressIndicator());
@@ -150,41 +155,60 @@ class _MyLoansPageState extends State<MyLoansPage> {
                 }
 
                 if (state is LoansLoaded) {
-                  final displayedLoans = _selectedTab == 'All' 
-                    ? state.myLoans 
-                    : state.myLoans.where((l) {
-                        final formattedType = l.type.split('_').map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '').join(' ');
-                        return formattedType == _selectedTab;
-                      }).toList();
+                  return TabBarView(
+                    controller: _tabController,
+                    children: _tabs.map((tabName) {
+                      final displayedLoans = tabName == 'All' 
+                        ? state.myLoans 
+                        : state.myLoans.where((l) {
+                            final formattedType = l.type.split('_').map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '').join(' ');
+                            return formattedType == tabName;
+                          }).toList();
 
-                  if (displayedLoans.isEmpty) {
-                    return Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.receipt_long_outlined, size: 64.sp, color: Colors.grey[300]),
-                        SizedBox(height: 16.h),
-                        Text(
-                          'No active accounts',
-                          style: TextStyle(color: Colors.grey, fontSize: 16.sp),
-                        ),
-                      ],
-                    );
-                  }
-
-                  return ListView.builder(
-                    padding: EdgeInsets.all(16.w),
-                    itemCount: displayedLoans.length,
-                    itemBuilder: (context, index) {
-                      final loan = displayedLoans[index];
-                      return Column(
-                        children: [
-                          _LoanCard(
-                            loan: loan,
+                      if (displayedLoans.isEmpty) {
+                        return RefreshIndicator(
+                          color: KhaataTheme.primaryBlue,
+                          onRefresh: () async {
+                            await context.read<LoanCubit>().fetchLoans();
+                          },
+                          child: ListView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            children: [
+                              SizedBox(height: 100.h),
+                              Icon(Icons.receipt_long_outlined, size: 64.sp, color: Colors.grey[300]),
+                              SizedBox(height: 16.h),
+                              Center(
+                                child: Text(
+                                  'No active accounts',
+                                  style: TextStyle(color: Colors.grey, fontSize: 16.sp),
+                                ),
+                              ),
+                            ],
                           ),
-                          SizedBox(height: 12.h),
-                        ],
+                        );
+                      }
+
+                      return RefreshIndicator(
+                        color: KhaataTheme.primaryBlue,
+                        onRefresh: () async {
+                          await context.read<LoanCubit>().fetchLoans();
+                        },
+                        child: ListView.builder(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: EdgeInsets.all(16.w),
+                          itemCount: displayedLoans.length,
+                          itemBuilder: (context, index) {
+                            final loan = displayedLoans[index];
+                            return Column(
+                              children: [
+                                _LoanCard(loan: loan),
+                                SizedBox(height: 12.h),
+                              ],
+                            );
+                          },
+                        ),
                       );
-                    },
+                    }).toList(),
                   );
                 }
                 return const SizedBox();
@@ -192,42 +216,6 @@ class _MyLoansPageState extends State<MyLoansPage> {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _Tab extends StatelessWidget {
-  final String text;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _Tab({required this.text, required this.isSelected, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(vertical: 6.h, horizontal: isSelected ? 0 : 0),
-        decoration: BoxDecoration(
-          border: isSelected
-              ? Border(
-            bottom: BorderSide(
-              color: Colors.white,
-              width: 2.w,
-            ),
-          )
-              : null,
-        ),
-        child: Text(
-          text,
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.white70,
-            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-            fontSize: isSelected ? 14.sp : 13.sp,
-          ),
-        ),
       ),
     );
   }
@@ -470,7 +458,7 @@ class _LoanCard extends StatelessWidget {
                       },
                       style: OutlinedButton.styleFrom(
                         foregroundColor: KhaataTheme.primaryBlue,
-                        side: BorderSide(color: KhaataTheme.primaryBlue),
+                        side: const BorderSide(color: KhaataTheme.primaryBlue),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8.r),
                         ),

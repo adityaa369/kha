@@ -1,0 +1,125 @@
+﻿Analyzing khatha...                                             
+
+warning - Unused import: 'package:flutter/material.dart' - lib\config\routes.dart:1:8 - unused_import
+   info - 'background' is deprecated and shouldn't be used. Use surface instead. This feature was deprecated after v3.18.0-0.1.pre - lib\config\theme.dart:33:9 - deprecated_member_use
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\pages\auth_choice_page.dart:14:21 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\pages\auth_choice_page.dart:15:21 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\features\auth\presentation\pages\auth_choice_page.dart:18:21 - prefer_const_literals_to_create_immutables
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\auth\presentation\pages\auth_choice_page.dart:36:45 - deprecated_member_use
+warning - The value of the field '_slideAnimation' isn't used - lib\features\auth\presentation\pages\auth_page.dart:19:26 - unused_field
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\pages\auth_page.dart:38:17 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\pages\auth_page.dart:68:21 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\pages\auth_page.dart:69:21 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\features\auth\presentation\pages\auth_page.dart:72:21 - prefer_const_literals_to_create_immutables
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\pages\auth_page.dart:74:15 - prefer_const_constructors
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\auth\presentation\pages\auth_page.dart:92:45 - deprecated_member_use
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\pages\auth_page.dart:94:33 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\pages\auth_page.dart:131:33 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\pages\auth_page.dart:146:30 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\pages\auth_page.dart:152:30 - prefer_const_constructors
+   info - Constructors for public widgets should have a named 'key' parameter - lib\features\auth\presentation\pages\auth_page.dart:178:9 - use_key_in_widget_constructors
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\auth\presentation\pages\auth_page.dart:189:29 - deprecated_member_use
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\pages\auth_page.dart:196:23 - prefer_const_constructors
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\auth\presentation\pages\auth_page.dart:207:41 - deprecated_member_use
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\pages\auth_page.dart:408:23 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\pages\auth_page.dart:409:24 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\pages\auth_page.dart:411:26 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\pages\auth_page.dart:522:28 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\pages\auth_page.dart:670:16 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\pages\auth_page.dart:809:27 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\pages\auth_page.dart:816:27 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\pages\login_page.dart:38:17 - prefer_const_constructors
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\auth\presentation\pages\login_page.dart:53:50 - deprecated_member_use
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\pages\login_page.dart:252:30 - prefer_const_constructors
+   info - The private field _isLoading could be 'final' - lib\features\auth\presentation\pages\otp_page.dart:25:8 - prefer_final_fields
+warning - The value of the field '_isLoading' isn't used - lib\features\auth\presentation\pages\otp_page.dart:25:8 - unused_field
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\pages\otp_page.dart:82:17 - prefer_const_constructors
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\auth\presentation\pages\otp_page.dart:100:47 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\auth\presentation\pages\otp_page.dart:101:49 - deprecated_member_use
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\pages\otp_page.dart:133:30 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\pages\pan_details_page.dart:42:26 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\pages\pan_details_page.dart:65:17 - prefer_const_constructors
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\auth\presentation\pages\pan_details_page.dart:89:52 - deprecated_member_use
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\pages\pan_details_page.dart:191:21 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\pages\personal_details_page.dart:40:17 - prefer_const_constructors
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\auth\presentation\pages\personal_details_page.dart:65:52 - deprecated_member_use
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\pages\personal_details_page.dart:127:21 - prefer_const_constructors
+warning - The value of the field '_fadeAnimation' isn't used - lib\features\auth\presentation\pages\signup_page.dart:32:26 - unused_field
+warning - The value of the local variable 'userData' isn't used - lib\features\auth\presentation\pages\signup_page.dart:112:11 - unused_local_variable
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\pages\signup_page.dart:134:17 - prefer_const_constructors
+warning - A value for optional parameter 'inputFormatters' isn't ever given - lib\features\auth\presentation\pages\signup_page.dart:241:10 - unused_element_parameter
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\pages\signup_page.dart:309:27 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\pages\signup_page.dart:316:27 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\pages\signup_page.dart:478:22 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\pages\signup_page.dart:480:24 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\pages\signup_page.dart:486:22 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\pages\welcome_page.dart:48:19 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\pages\welcome_page.dart:49:28 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\pages\welcome_page.dart:56:19 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\pages\welcome_page.dart:57:28 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\pages\welcome_page.dart:68:19 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\pages\welcome_page.dart:69:28 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\pages\welcome_page.dart:76:19 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\auth\presentation\pages\welcome_page.dart:77:28 - prefer_const_constructors
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\auth\presentation\pages\welcome_page.dart:115:22 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\auth\presentation\pages\welcome_page.dart:123:28 - deprecated_member_use
+warning - Unused import: '../../../../core/blocs/loans/loan_cubit.dart' - lib\features\home\presentation\pages\home_page.dart:11:8 - unused_import
+warning - Unused import: '../../../../core/blocs/loans/loan_state.dart' - lib\features\home\presentation\pages\home_page.dart:13:8 - unused_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\pages\home_page.dart:54:35 - deprecated_member_use
+   info - Use 'const' with the constructor to improve performance - lib\features\home\presentation\pages\home_page.dart:63:20 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\features\home\presentation\pages\home_page.dart:65:25 - prefer_const_literals_to_create_immutables
+   info - Use 'const' with the constructor to improve performance - lib\features\home\presentation\pages\home_page.dart:66:17 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\home\presentation\pages\home_page.dart:67:17 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\home\presentation\pages\home_page.dart:71:17 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\home\presentation\pages\home_page.dart:73:17 - prefer_const_constructors
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\pages\home_page.dart:176:49 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\pages\home_page.dart:397:41 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\pages\home_page.dart:542:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\pages\home_page.dart:557:34 - deprecated_member_use
+warning - Unused import: 'dart:async' - lib\features\insights\presentation\pages\insights_page.dart:1:8 - unused_import
+   info - The import of 'package:flutter/cupertino.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\features\insights\presentation\pages\insights_page.dart:3:8 - unnecessary_import
+warning - Unused import: 'package:go_router/go_router.dart' - lib\features\insights\presentation\pages\insights_page.dart:6:8 - unused_import
+warning - The value of the local variable 'experian' isn't used - lib\features\insights\presentation\pages\insights_page.dart:90:27 - unused_local_variable
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\insights\presentation\pages\insights_page.dart:106:51 - deprecated_member_use
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\features\insights\presentation\pages\insights_page.dart:264:31 - prefer_const_literals_to_create_immutables
+   info - Use 'const' with the constructor to improve performance - lib\features\insights\presentation\pages\insights_page.dart:265:23 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\insights\presentation\pages\insights_page.dart:274:23 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\insights\presentation\pages\insights_page.dart:283:23 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\insights\presentation\pages\insights_page.dart:292:23 - prefer_const_constructors
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\insights\presentation\pages\insights_page.dart:384:35 - deprecated_member_use
+warning - Unused import: '../../../../config/constants.dart' - lib\features\loans\presentation\pages\create_loan_page.dart:5:8 - unused_import
+   info - The private field _isLoading could be 'final' - lib\features\loans\presentation\pages\create_loan_page.dart:31:8 - prefer_final_fields
+   info - Use 'const' with the constructor to improve performance - lib\features\loans\presentation\pages\create_loan_page.dart:84:26 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\loans\presentation\pages\create_loan_page.dart:135:17 - prefer_const_constructors
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\loans\presentation\pages\create_loan_page.dart:159:50 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\loans\presentation\pages\create_loan_page.dart:162:52 - deprecated_member_use
+   info - Use 'const' with the constructor to improve performance - lib\features\loans\presentation\pages\create_loan_page.dart:210:15 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\loans\presentation\pages\create_loan_page.dart:255:15 - prefer_const_constructors
+   info - The import of 'package:flutter/cupertino.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\features\loans\presentation\pages\loan_confirmation_page.dart:3:8 - unnecessary_import
+warning - Unused import: '../../../../core/blocs/loans/loan_state.dart' - lib\features\loans\presentation\pages\loan_confirmation_page.dart:11:8 - unused_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\loans\presentation\pages\loan_confirmation_page.dart:94:52 - deprecated_member_use
+   info - Use 'const' with the constructor to improve performance - lib\features\loans\presentation\pages\loan_confirmation_page.dart:150:17 - prefer_const_constructors
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\loans\presentation\pages\loan_confirmation_page.dart:173:50 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\loans\presentation\pages\loan_confirmation_page.dart:176:52 - deprecated_member_use
+   info - The import of 'package:flutter/cupertino.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\features\loans\presentation\pages\loans_given_page.dart:1:8 - unnecessary_import
+warning - Unused import: '../../../../data/models/loan_model.dart' - lib\features\loans\presentation\pages\loans_given_page.dart:10:8 - unused_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\loans\presentation\pages\loans_given_page.dart:45:47 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\loans\presentation\pages\loans_given_page.dart:237:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\loans\presentation\pages\loans_given_page.dart:255:52 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\loans\presentation\pages\loans_given_page.dart:290:40 - deprecated_member_use
+   info - Use 'const' with the constructor to improve performance - lib\features\loans\presentation\pages\loans_given_page.dart:356:29 - prefer_const_constructors
+   info - The import of 'package:flutter/cupertino.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\features\loans\presentation\pages\my_loans_page.dart:1:8 - unnecessary_import
+   info - Use 'const' with the constructor to improve performance - lib\features\loans\presentation\pages\my_loans_page.dart:41:23 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\loans\presentation\pages\my_loans_page.dart:43:23 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\loans\presentation\pages\my_loans_page.dart:45:23 - prefer_const_constructors
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\loans\presentation\pages\my_loans_page.dart:237:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\loans\presentation\pages\my_loans_page.dart:268:49 - deprecated_member_use
+   info - Use 'const' with the constructor to improve performance - lib\features\loans\presentation\pages\my_loans_page.dart:369:29 - prefer_const_constructors
+warning - The declaration '_formatCurrency' isn't referenced - lib\features\loans\presentation\pages\my_loans_page.dart:392:8 - unused_element
+warning - The declaration '_getMonthName' isn't referenced - lib\features\loans\presentation\pages\my_loans_page.dart:399:8 - unused_element
+   info - The import of 'package:flutter/cupertino.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\features\profile\presentation\pages\profile_page.dart:1:8 - unnecessary_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\profile\presentation\pages\profile_page.dart:66:49 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\profile\presentation\pages\profile_page.dart:124:49 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\splash\presentation\pages\splash_page.dart:133:53 - deprecated_member_use
+  error - The name 'MyApp' isn't a class - test\widget_test.dart:16:35 - creation_with_non_type
+

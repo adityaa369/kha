@@ -169,22 +169,26 @@ class _MyChitCard extends StatelessWidget {
     
     double progress = totalMonths > 0 ? (completedMonths / totalMonths) : 0.0;
 
-    return Container(
-      margin: EdgeInsets.only(bottom: 16.h),
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: KhaataTheme.cardWhite,
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: KhaataTheme.borderGrey, width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
+    return InkWell(
+      onTap: () {
+        context.push('/chit-admin', extra: subData['chitId'] ?? subData['_id']);
+      },
+      child: Container(
+        margin: EdgeInsets.only(bottom: 16.h),
+        padding: EdgeInsets.all(16.w),
+        decoration: BoxDecoration(
+          color: KhaataTheme.cardWhite,
+          borderRadius: BorderRadius.circular(16.r),
+          border: Border.all(color: KhaataTheme.borderGrey, width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -348,6 +352,7 @@ class _MyChitCard extends StatelessWidget {
             ],
           )
         ],
+      ),
       ),
     );
   }

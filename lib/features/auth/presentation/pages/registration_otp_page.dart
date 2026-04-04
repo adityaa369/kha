@@ -66,7 +66,7 @@ class _RegistrationOtpPageState extends State<RegistrationOtpPage> {
 
   void _verifyOtp() {
     if (_currentOtp.length == 6) {
-      context.read<AuthCubit>().verifyRegistrationOtp(_currentOtp);
+      context.read<AuthCubit>().verifyOtp(widget.phone, _currentOtp);
     }
   }
 
@@ -78,7 +78,7 @@ class _RegistrationOtpPageState extends State<RegistrationOtpPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: KhaataTheme.textDark),
+          icon: const Icon(Icons.arrow_back, color: KhaataTheme.textDark),
           onPressed: () => context.pop(),
         ),
       ),
@@ -186,10 +186,10 @@ class _RegistrationOtpPageState extends State<RegistrationOtpPage> {
                   ? TextButton(
                 onPressed: () {
                   _otpController.clear();
-                  context.read<AuthCubit>().sendRegistrationOtp();
+                  context.read<AuthCubit>().sendOtp(widget.phone);
                   _startResendTimer();
                 },
-                child: Text('Resend OTP',
+                child: const Text('Resend OTP',
                   style: TextStyle(
                     color: KhaataTheme.primaryBlue,
                     fontWeight: FontWeight.w600,

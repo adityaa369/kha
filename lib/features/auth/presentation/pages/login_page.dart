@@ -33,7 +33,7 @@ class _LoginPageState extends State<LoginPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: KhaataTheme.textDark),
+          icon: const Icon(Icons.arrow_back, color: KhaataTheme.textDark),
           onPressed: () => context.pop(),
         ),
       ),
@@ -189,7 +189,7 @@ class CheckboxTile extends StatelessWidget {
                     TextSpan(text: title),
                     TextSpan(
                       text: linkText,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: KhaataTheme.primaryBlue,
                         fontWeight: FontWeight.w600,
                       ),

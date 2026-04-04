@@ -1,44 +1,71 @@
 import '../models/loan_model.dart';
-import '../services/api_services.dart';
+import '../models/user_model.dart';
+import '../../core/network/api_client.dart';
+import '../../core/error/failures.dart';
+import 'base_repository.dart';
 
-class LoansRepository {
-  Future<List<LoanModel>> getMyLoans() async {
-    try {
-      final response = await ApiService.get('/loans/my');
-      if (response.statusCode == 200) {
-        return (response.data['loans'] as List)
-            .map((json) => LoanModel.fromJson(json))
-            .toList();
-      }
-      throw Exception('Failed to load loans');
-    } catch (e) {
-      throw Exception('Network error: $e');
-    }
-  }
+class LoanRepository extends BaseRepository {
+  final ApiClient _api;
 
-  Future<List<LoanModel>> getLoansGiven() async {
-    try {
-      final response = await ApiService.get('/loans/given');
-      if (response.statusCode == 200) {
-        return (response.data['loans'] as List)
-            .map((json) => LoanModel.fromJson(json))
-            .toList();
-      }
-      throw Exception('Failed to load loans');
-    } catch (e) {
-      throw Exception('Network error: $e');
-    }
+  LoanRepository({ApiClient? api}) : _api = api ?? ApiClient();
+
+  Future<Map<String, List<LoanModel>>> fetchLoans() async {
+    return await handleApiCall(() async {
+      final takenResponse = await _api.get('/loans/taken');
+      final givenResponse = await _api.get('/loans/given');
+
+      final myLoans = (takenResponse.data['loans'] as List)
+          .map((json) => LoanModel.fromJson(json))
+          .toList();
+
+      final givenLoans = (givenResponse.data['loans'] as List)
+          .map((json) => LoanModel.fromJson(json))
+          .toList();
+
+      return {'myLoans': myLoans, 'givenLoans': givenLoans};
+    });
   }
 
   Future<LoanModel> createLoan(Map<String, dynamic> loanData) async {
-    try {
-      final response = await ApiService.post('/loans', data: loanData);
-      if (response.statusCode == 201) {
+    return await handleApiCall(() async {
+      final response = await _api.post('/loans', data: loanData);
+      if (response.data['success'] == true) {
         return LoanModel.fromJson(response.data['loan']);
       }
-      throw Exception('Failed to create loan');
-    } catch (e) {
-      throw Exception('Network error: $e');
-    }
+      throw ServerFailure(response.data['message'] ?? 'Failed to create loan');
+    });
+  }
+
+  Future<bool> verifyLoan(String loanId) async {
+    return await handleApiCall(() async {
+      final response = await _api.post('/loans/$loanId/verify', data: {});
+      if (response.data['success'] == true) return true;
+      throw ServerFailure(response.data['message'] ?? 'Failed to verify loan');
+    });
+  }
+
+  Future<bool> resendOtp(String loanId) async {
+    return await handleApiCall(() async {
+      final response = await _api.post('/loans/$loanId/resend-otp');
+      return response.data['success'] == true;
+    });
+  }
+
+  Future<bool> updateProgress(String loanId, double progress) async {
+    return await handleApiCall(() async {
+      final response = await _api.patch('/loans/$loanId/progress', data: {'progress': progress});
+      if (response.data['success'] == true) return true;
+      throw ServerFailure(response.data['message'] ?? 'Failed to update progress');
+    });
+  }
+
+  Future<UserModel?> checkBorrower(String phone) async {
+    return await handleApiCall(() async {
+      final response = await _api.post('/users/check-phone', data: {'phone': phone});
+      if (response.data['success'] == true && response.data['exists'] == true) {
+        return UserModel.fromJson(response.data['user']);
+      }
+      return null;
+    });
   }
 }

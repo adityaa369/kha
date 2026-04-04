@@ -30,7 +30,6 @@ class KhaataTheme {
         secondary: accentGreen,
         error: dangerRed,
         surface: cardWhite,
-        background: backgroundGrey,
       ),
       textTheme: GoogleFonts.interTextTheme().copyWith(
         displayLarge: GoogleFonts.inter(fontSize: 32.sp, fontWeight: FontWeight.bold, color: textDark),

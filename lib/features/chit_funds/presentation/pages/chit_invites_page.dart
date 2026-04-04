@@ -9,6 +9,8 @@ import '../../../../core/blocs/chit_funds/chit_fund_cubit.dart';
 import '../../../../core/blocs/chit_funds/chit_fund_state.dart';
 import '../../../../data/models/chit_fund_model.dart';
 import '../../../../data/models/chit_invite_model.dart';
+import '../../../../config/app_constants.dart';
+import '../../../../core/services/biometric_auth_service.dart';
 
 class ChitInvitesPage extends StatefulWidget {
   const ChitInvitesPage({super.key});
@@ -40,20 +42,22 @@ class _ChitInvitesPageState extends State<ChitInvitesPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text('Invite to ${chit.name}'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Enter the mobile number of the user you want to invite to this group.'),
-            SizedBox(height: 16.h),
-            TextField(
-              controller: phoneController,
-              keyboardType: TextInputType.phone,
-              decoration: InputDecoration(
-                hintText: '+91 XXXXXXXXXX',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Enter the mobile number of the user you want to invite to this group.'),
+              SizedBox(height: 16.h),
+              TextField(
+                controller: phoneController,
+                keyboardType: TextInputType.phone,
+                decoration: InputDecoration(
+                  hintText: '+91 XXXXXXXXXX',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -246,6 +250,12 @@ class _ChitInvitesPageState extends State<ChitInvitesPage> {
                  _showInviteDialog(chit);
              }
           },
+          onDelete: () async {
+            final auth = await BiometricAuthService.authenticate();
+            if (auth && context.mounted) {
+              context.read<ChitFundCubit>().deleteChitFund(chit.id);
+            }
+          },
           secondaryActionLabel: !isFull ? 'View Dashboard' : null,
           onSecondaryAction: !isFull ? () => context.push(AppConstants.chitAdminDashboard, extra: chit.id) : null,
         );
@@ -263,6 +273,7 @@ class _ChitInvitesPageState extends State<ChitInvitesPage> {
      required VoidCallback onAction,
      String? secondaryActionLabel,
      VoidCallback? onSecondaryAction,
+     VoidCallback? onDelete,
   }) {
     return Container(
       margin: EdgeInsets.only(bottom: 16.h),
@@ -293,20 +304,37 @@ class _ChitInvitesPageState extends State<ChitInvitesPage> {
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                decoration: BoxDecoration(
-                  color: KhaataTheme.primaryBlue.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(4.r),
-                ),
-                child: Text(
-                  badge,
-                  style: TextStyle(
-                    color: KhaataTheme.primaryBlue,
-                    fontSize: 11.sp,
-                    fontWeight: FontWeight.w700,
+              Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                    decoration: BoxDecoration(
+                      color: KhaataTheme.primaryBlue.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                    child: Text(
+                      badge,
+                      style: TextStyle(
+                        color: KhaataTheme.primaryBlue,
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
-                ),
+                  if (onDelete != null)
+                    PopupMenuButton<String>(
+                      icon: const Icon(Icons.more_vert, color: KhaataTheme.textGrey),
+                      onSelected: (val) {
+                        if (val == 'delete') onDelete();
+                      },
+                      itemBuilder: (c) => [
+                        const PopupMenuItem(
+                          value: 'delete',
+                          child: Text('Delete Group', style: TextStyle(color: Colors.red)),
+                        )
+                      ],
+                    ),
+                ],
               ),
             ],
           ),

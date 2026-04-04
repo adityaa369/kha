@@ -16,7 +16,8 @@ exports.createLoan = async (req, res) => {
             amount,
             interest_rate,
             duration_months,
-            type
+            type,
+            transaction_id
         } = req.body;
 
         // Sanitize phone: strip 91 or +91
@@ -33,6 +34,18 @@ exports.createLoan = async (req, res) => {
                 success: false,
                 message: 'You cannot give a loan to yourself'
             });
+        }
+
+        if (transaction_id) {
+            const existingLoan = await Loan.findOne({ transaction_id, lender: req.user.id });
+            if (existingLoan) {
+                console.warn(`[Loans] Idempotency intercepted for transaction ${transaction_id}`);
+                return res.status(200).json({
+                    success: true,
+                    message: 'Loan already created',
+                    loan: existingLoan.toObject()
+                });
+            }
         }
 
         // Check if borrower exists in system (STRICT CHECK)
@@ -72,7 +85,8 @@ exports.createLoan = async (req, res) => {
             interestRate,
             durationMonths,
             loanType,
-            status: 'pending_approval'
+            status: 'pending_approval',
+            transaction_id
         });
 
         const loanResponse = loan.toObject();

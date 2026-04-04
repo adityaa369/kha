@@ -32,7 +32,6 @@ class ChitFundCubit extends Cubit<ChitFundState> {
     required String name,
     required double totalValue,
     required int totalMonths,
-    required double commission,
   }) async {
     try {
       emit(ChitFundLoading());
@@ -40,7 +39,6 @@ class ChitFundCubit extends Cubit<ChitFundState> {
         name: name,
         totalValue: totalValue,
         totalMonths: totalMonths,
-        organizerFeePercent: commission,
       );
       emit(const ChitFundActionSuccess('Chit Group Created Successfully!'));
       await loadInvitesAndOwned();
@@ -77,6 +75,16 @@ class ChitFundCubit extends Cubit<ChitFundState> {
       emit(ChitFundLoading());
       final data = await _repository.getAdminDashboard(chitId);
       emit(ChitAdminDashboardLoaded(data));
+    } catch (e) {
+      emit(ChitFundError(e.toString()));
+    }
+  }
+
+  Future<void> deleteChitFund(String chitId) async {
+    try {
+      await _repository.deleteChitFund(chitId);
+      emit(const ChitFundActionSuccess('Chit group deleted successfully!'));
+      await loadInvitesAndOwned();
     } catch (e) {
       emit(ChitFundError(e.toString()));
     }

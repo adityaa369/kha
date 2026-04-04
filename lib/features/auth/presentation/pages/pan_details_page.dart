@@ -39,7 +39,7 @@ class _PanDetailsPageState extends State<PanDetailsPage> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
+            colorScheme: const ColorScheme.light(
               primary: KhaataTheme.primaryBlue,
             ),
           ),
@@ -62,13 +62,13 @@ class _PanDetailsPageState extends State<PanDetailsPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: KhaataTheme.textDark),
+          icon: const Icon(Icons.arrow_back, color: KhaataTheme.textDark),
           onPressed: () => context.pop(),
         ),
       ),
       body: BlocListener<AuthCubit, AuthState>(
         listener: (context, state) {
-          if (state is PanDetailsSaved || state is Authenticated) {
+          if (state is PanDetailsSaved || state is AuthenticatedFull) {
             context.go(AppConstants.processing);
           } else if (state is AuthError) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -198,7 +198,7 @@ class _PanDetailsPageState extends State<PanDetailsPage> {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.info_outline, color: KhaataTheme.primaryBlue),
+                      const Icon(Icons.info_outline, color: KhaataTheme.primaryBlue),
                       SizedBox(width: 12.w),
                       Expanded(
                         child: Text(

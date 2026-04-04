@@ -1,13 +1,13 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'loan_state.dart';
-import '../../../../data/models/loan_model.dart';
-import '../../network/api_client.dart';
+import '../../../../data/repositories/loan_repository.dart';
+import '../../error/failures.dart';
 
 class LoanCubit extends Cubit<LoanState> {
-  final ApiClient _api;
+  final LoanRepository _repository;
 
-  LoanCubit({ApiClient? api}) 
-      : _api = api ?? ApiClient(),
+  LoanCubit({LoanRepository? repository}) 
+      : _repository = repository ?? LoanRepository(),
         super(LoanInitial());
   
   void clear() {
@@ -26,21 +26,10 @@ class LoanCubit extends Cubit<LoanState> {
       emit(LoanLoading());
     }
     try {
-      // Fetch loans where current user is borrower
-      final takenResponse = await _api.get('/loans/taken');
-
-      // Fetch loans where current user is lender
-      final givenResponse = await _api.get('/loans/given');
-
-      final myLoans = (takenResponse.data['loans'] as List)
-          .map((json) => LoanModel.fromJson(json))
-          .toList();
-
-      final givenLoans = (givenResponse.data['loans'] as List)
-          .map((json) => LoanModel.fromJson(json))
-          .toList();
-
-      emit(LoansLoaded(myLoans: myLoans, givenLoans: givenLoans));
+      final loans = await _repository.fetchLoans();
+      emit(LoansLoaded(myLoans: loans['myLoans']!, givenLoans: loans['givenLoans']!));
+    } on Failure catch (f) {
+      emit(LoanError(f.message));
     } catch (e) {
       emit(LoanError('Failed to fetch loans: $e'));
     }
@@ -49,19 +38,15 @@ class LoanCubit extends Cubit<LoanState> {
   Future<Map<String, dynamic>?> createLoan(Map<String, dynamic> loanData) async {
     emit(LoanLoading());
     try {
-      final response = await _api.post('/loans', data: loanData);
-
-      if (response.data['success'] == true) {
-        final newLoan = LoanModel.fromJson(response.data['loan']);
-        emit(LoanCreated(newLoan));
-        
-        // Refresh the lists
-        await fetchLoans();
-        return {'id': newLoan.id};
-      } else {
-        emit(LoanError(response.data['message'] ?? 'Failed to create loan'));
-        return null;
-      }
+      final newLoan = await _repository.createLoan(loanData);
+      emit(LoanCreated(newLoan));
+      
+      // Refresh the lists
+      await fetchLoans();
+      return {'id': newLoan.id};
+    } on Failure catch (f) {
+      emit(LoanError(f.message));
+      return null;
     } catch (e) {
       emit(LoanError('Failed to create loan: $e'));
       return null;
@@ -72,16 +57,15 @@ class LoanCubit extends Cubit<LoanState> {
   Future<bool> verifyLoan(String loanId) async {
     emit(LoanLoading());
     try {
-      final response = await _api.post('/loans/$loanId/verify', data: {});
-
-      if (response.data['success'] == true) {
-        // Refresh the lists
+      final success = await _repository.verifyLoan(loanId);
+      if (success) {
+        emit(const LoanVerificationSuccess());
         await fetchLoans();
-        return true;
-      } else {
-        emit(LoanError(response.data['message'] ?? 'Failed to verify loan'));
-        return false;
       }
+      return success;
+    } on Failure catch (f) {
+      emit(LoanError(f.message));
+      return false;
     } catch (e) {
       emit(LoanError('Failed to verify loan: $e'));
       return false;
@@ -91,8 +75,7 @@ class LoanCubit extends Cubit<LoanState> {
   // Resend Loan OTP
   Future<bool> resendOtp(String loanId) async {
     try {
-      final response = await _api.post('/loans/$loanId/resend-otp');
-      return response.data['success'] == true;
+      return await _repository.resendOtp(loanId);
     } catch (e) {
       return false;
     }
@@ -101,13 +84,10 @@ class LoanCubit extends Cubit<LoanState> {
   // Update payment progress (Lender)
   Future<void> updateProgress(String loanId, double progress) async {
     try {
-      final response = await _api.patch('/loans/$loanId/progress', data: {'progress': progress});
-      
-      if (response.data['success'] == true) {
-        await fetchLoans();
-      } else {
-        emit(LoanError(response.data['message'] ?? 'Failed to update progress'));
-      }
+      await _repository.updateProgress(loanId, progress);
+      await fetchLoans();
+    } on Failure catch (f) {
+      emit(LoanError(f.message));
     } catch (e) {
       emit(LoanError('Failed to update progress: $e'));
     }
@@ -116,9 +96,9 @@ class LoanCubit extends Cubit<LoanState> {
   // Check if borrower exists
   Future<Map<String, dynamic>?> checkBorrower(String phone) async {
     try {
-      final response = await _api.post('/users/check-phone', data: {'phone': phone});
-      if (response.data['success'] == true && response.data['exists'] == true) {
-        return response.data['user'];
+      final user = await _repository.checkBorrower(phone);
+      if (user != null) {
+        return user.toJson();
       }
       return null;
     } catch (e) {

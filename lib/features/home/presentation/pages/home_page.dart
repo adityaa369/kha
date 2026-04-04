@@ -13,6 +13,8 @@ import '../../../../core/blocs/credit_score/credit_score_cubit.dart';
 import '../../../../core/blocs/loans/loan_state.dart';
 import '../../../../core/blocs/credit_score/credit_score_state.dart';
 import '../../../loans/presentation/pages/my_loans_page.dart';
+import '../../../../core/services/notification_service.dart';
+import 'dart:async';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -26,8 +28,56 @@ class HomePage extends StatelessWidget {
   }
 }
 
-class _HomeView extends StatelessWidget {
+class _HomeView extends StatefulWidget {
   const _HomeView();
+
+  @override
+  State<_HomeView> createState() => _HomeViewState();
+}
+
+class _HomeViewState extends State<_HomeView> {
+  StreamSubscription? _msgSub;
+  StreamSubscription? _authSub;
+
+  @override
+  void initState() {
+    super.initState();
+    _msgSub = NotificationService.onMessageStream.stream.listen((payload) {
+      if (payload['type'] == 'LOAN_ACCEPTED' || payload['type'] == 'LOAN_CREATED') {
+        if (mounted) context.read<LoanCubit>().fetchLoans();
+      }
+    });
+
+    _authSub = context.read<AuthCubit>().stream.listen((authState) {
+       if (authState is AuthenticatedFull) {
+         if (mounted) {
+            if (context.read<LoanCubit>().state is LoanInitial) {
+               context.read<LoanCubit>().fetchLoans();
+            }
+            if (context.read<CreditScoreCubit>().state is CreditScoreInitial) {
+               context.read<CreditScoreCubit>().fetchCreditScore();
+            }
+         }
+       }
+    });
+    
+    // Trigger immediately if already AuthenticatedFull
+    if (context.read<AuthCubit>().state is AuthenticatedFull) {
+         if (context.read<LoanCubit>().state is LoanInitial) {
+            context.read<LoanCubit>().fetchLoans();
+         }
+         if (context.read<CreditScoreCubit>().state is CreditScoreInitial) {
+            context.read<CreditScoreCubit>().fetchCreditScore();
+         }
+    }
+  }
+
+  @override
+  void dispose() {
+    _msgSub?.cancel();
+    _authSub?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,7 +110,7 @@ class _HomeView extends StatelessWidget {
         child: SafeArea(
           child: Padding(
             padding: EdgeInsets.symmetric(vertical: 8.h),
-            child: Row(
+            child: const Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _NavItem(icon: Icons.home_rounded, label: 'Home', index: 0),
@@ -134,8 +184,17 @@ class HomeContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Column(
+    return RefreshIndicator(
+      color: KhaataTheme.primaryBlue,
+      onRefresh: () async {
+        context.read<AuthCubit>().checkAuthStatus();
+        context.read<CreditScoreCubit>().fetchCreditScore();
+        context.read<LoanCubit>().fetchLoans();
+        await Future.delayed(const Duration(milliseconds: 1000));
+      },
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Blue Header with Score Cards
@@ -155,9 +214,11 @@ class HomeContent extends StatelessWidget {
                         onTap: () => context.push('/profile'),
                         child: BlocBuilder<AuthCubit, AuthState>(
                           builder: (context, state) {
-                            String name = 'User';
-                            if (state is Authenticated) {
+                            String name = '';
+                            if (state is AuthenticatedFull) {
                               name = state.user.firstName;
+                            } else {
+                              return const SizedBox.shrink(); // Hide until loaded
                             }
                             return Text(
                               'Hello, $name!',
@@ -251,7 +312,7 @@ class HomeContent extends StatelessWidget {
               builder: (context, state) {
                 if (state is CreditScoreInitial) {
                   final authState = context.read<AuthCubit>().state;
-                  if (authState is Authenticated) {
+                  if (authState is AuthenticatedFull) {
                     context.read<CreditScoreCubit>().fetchCreditScore();
                   }
                 }
@@ -292,7 +353,7 @@ class HomeContent extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Give Credit Loan', // Updated title
+                  'Credit Types',
                   style: TextStyle(
                     fontSize: 16.sp,
                     fontWeight: FontWeight.w700,
@@ -320,31 +381,31 @@ class HomeContent extends StatelessWidget {
               children: [
                 _LoanTypeCard(
                   title: 'Hand Credit',
-                  subtitle: 'Get a personal loan in 2 mins ⚡',
+                  subtitle: 'Get a hand credit with minimal terms applied',
                   icon: Icons.account_balance_wallet,
                   color: KhaataTheme.accentGreen,
-                  onTap: () => context.push('/create-loan?type=personal'),
+                  onTap: () => context.push('/create-loan?type=hand_credit'),
                 ),
                 SizedBox(height: 12.h),
                 _LoanTypeCard(
                   title: 'Business Credit',
-                  subtitle: 'Grow your business quickly 🚀',
+                  subtitle: 'Grow business by taking credit',
                   icon: Icons.business_center,
                   color: KhaataTheme.primaryBlue,
-                  onTap: () => context.push('/create-loan?type=business'),
+                  onTap: () => context.push('/create-loan?type=business_credit'),
                 ),
                 SizedBox(height: 12.h),
                 _LoanTypeCard(
                   title: 'Interest Credit',
-                  subtitle: 'Borrow with clear interest terms 📈',
+                  subtitle: 'Borrow with clear interest terms',
                   icon: Icons.percent,
                   color: KhaataTheme.warningYellow,
-                  onTap: () => context.push('/create-loan?type=home'),
+                  onTap: () => context.push('/create-loan?type=interest_credit'),
                 ),
                 SizedBox(height: 12.h),
                 _LoanTypeCard(
                   title: 'Chit Funds',
-                  subtitle: 'Save & borrow with group 🤝',
+                  subtitle: 'Save & borrow with group',
                   icon: Icons.groups,
                   color: KhaataTheme.secondaryBlue,
                   onTap: () => context.push('/chit-invites'),
@@ -427,8 +488,9 @@ class HomeContent extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(height: 20.h),
+          SizedBox(height: 100.h), // Extra padding to ensure bottom items aren't cut off or obscured
         ],
+      ),
       ),
     );
   }
@@ -497,6 +559,16 @@ class _ScoreCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 10.sp,
               color: KhaataTheme.textGrey,
+            ),
+          ),
+          SizedBox(height: 4.h),
+          Text(
+            'Based on loans taken & timely monthly repayments.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 10.sp,
+              color: KhaataTheme.textGrey,
+              fontStyle: FontStyle.italic,
             ),
           ),
         ],

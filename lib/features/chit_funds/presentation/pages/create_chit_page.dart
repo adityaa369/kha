@@ -17,7 +17,6 @@ class _CreateChitGroupPageState extends State<CreateChitGroupPage> {
   String name = '';
   double totalValue = 0;
   int totalMonths = 0;
-  double commission = 5.0; // Default 5%
 
   @override
   Widget build(BuildContext context) {
@@ -66,27 +65,12 @@ class _CreateChitGroupPageState extends State<CreateChitGroupPage> {
                 onSaved: (val) => totalValue = double.tryParse(val ?? '0') ?? 0,
               ),
               SizedBox(height: 16.h),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildTextField(
-                      label: 'Duration (Months)',
-                      hint: 'e.g. 50',
-                      isNumber: true,
-                      onSaved: (val) => totalMonths = int.tryParse(val ?? '0') ?? 0,
-                    ),
-                  ),
-                  SizedBox(width: 16.w),
-                  Expanded(
-                    child: _buildTextField(
-                      label: 'Commission (%)',
-                      hint: 'e.g. 5',
-                      isNumber: true,
-                      initialValue: '5',
-                      onSaved: (val) => commission = double.tryParse(val ?? '5') ?? 5.0,
-                    ),
-                  ),
-                ],
+              SizedBox(height: 16.h),
+              _buildTextField(
+                label: 'Duration (Months)',
+                hint: 'e.g. 50',
+                isNumber: true,
+                onSaved: (val) => totalMonths = int.tryParse(val ?? '0') ?? 0,
               ),
               SizedBox(height: 32.h),
               SizedBox(
@@ -100,7 +84,6 @@ class _CreateChitGroupPageState extends State<CreateChitGroupPage> {
                         name: name,
                         totalValue: totalValue,
                         totalMonths: totalMonths,
-                        commission: commission,
                       );
                       context.pop();
                     }
@@ -156,11 +139,11 @@ class _CreateChitGroupPageState extends State<CreateChitGroupPage> {
             fillColor: Colors.white,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8.r),
-              borderSide: BorderSide(color: KhaataTheme.borderGrey),
+              borderSide: const BorderSide(color: KhaataTheme.borderGrey),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8.r),
-              borderSide: BorderSide(color: KhaataTheme.borderGrey),
+              borderSide: const BorderSide(color: KhaataTheme.borderGrey),
             ),
           ),
           keyboardType: isNumber ? TextInputType.number : TextInputType.text,

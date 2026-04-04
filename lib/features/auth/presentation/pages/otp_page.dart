@@ -22,7 +22,7 @@ class _OtpPageState extends State<OtpPage> {
   StreamController<ErrorAnimationType>? _errorController;
   int _resendTimer = 30;
   bool _canResend = false;
-  bool _isLoading = false;
+  final bool _isLoading = false;
   bool _hasError = false;
   String _currentOtp = '';
 
@@ -79,7 +79,7 @@ class _OtpPageState extends State<OtpPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: KhaataTheme.textDark),
+          icon: const Icon(Icons.arrow_back, color: KhaataTheme.textDark),
           onPressed: () => context.pop(),
         ),
       ),
@@ -130,7 +130,7 @@ class _OtpPageState extends State<OtpPage> {
                     const TextSpan(text: 'Enter the 6-digit code sent to\n'),
                     TextSpan(
                       text: '+91 ${widget.phone}',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         color: KhaataTheme.textDark,
                       ),
@@ -235,7 +235,7 @@ class _OtpPageState extends State<OtpPage> {
               // Verify Button
               BlocConsumer<AuthCubit, AuthState>(
                 listener: (context, state) {
-                  if (state is Authenticated) {
+                  if (state is AuthenticatedFull || state is AuthenticatedUnverified) {
                     context.go(AppConstants.home);
                   } else if (state is OtpVerified) {
                     context.push(AppConstants.personalDetails);

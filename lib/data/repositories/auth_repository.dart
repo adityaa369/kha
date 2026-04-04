@@ -1,44 +1,47 @@
 import '../models/user_model.dart';
-import '../services/api_services.dart';
+import '../../core/network/api_client.dart';
+import '../../core/error/failures.dart';
+import 'base_repository.dart';
 
-class AuthRepository {
-  Future<void> sendOtp(String phone) async {
-    try {
-      final response = await ApiService.post('/auth/send-otp', data: {
-        'phone': phone,
-      });
-      if (response.statusCode != 200) {
-        throw Exception('Failed to send OTP');
-      }
-    } catch (e) {
-      throw Exception('Network error: $e');
-    }
-  }
+class AuthRepository extends BaseRepository {
+  final ApiClient _api;
 
-  Future<String> verifyOtp(String phone, String otp) async {
-    try {
-      final response = await ApiService.post('/auth/verify-otp', data: {
-        'phone': phone,
-        'otp': otp,
-      });
-      if (response.statusCode == 200) {
-        return response.data['token'];
-      }
-      throw Exception('Invalid OTP');
-    } catch (e) {
-      throw Exception('Verification failed: $e');
-    }
-  }
+  AuthRepository({ApiClient? api}) : _api = api ?? ApiClient();
 
-  Future<UserModel> registerUser(UserModel user) async {
-    try {
-      final response = await ApiService.post('/auth/register', data: user.toJson());
-      if (response.statusCode == 200) {
+  Future<UserModel> getProfile() async {
+    return await handleApiCall(() async {
+      final response = await _api.get('/users/profile');
+      if (response.data['success'] == true) {
         return UserModel.fromJson(response.data['user']);
       }
-      throw Exception('Registration failed');
-    } catch (e) {
-      throw Exception('Registration error: $e');
-    }
+      throw const AuthFailure('Profile fetch failed');
+    });
+  }
+
+  Future<Map<String, dynamic>> verifyOtp(String idToken, String phone) async {
+    return await handleApiCall(() async {
+      final response = await _api.post('/auth/verify-otp', data: {
+        'idToken': idToken,
+        'phone': phone,
+      });
+      if (response.data['success'] == true) {
+        return {
+          'token': response.data['token'],
+          'isNewUser': response.data['isNewUser'] ?? false,
+          'user': UserModel.fromJson(response.data['user']),
+        };
+      }
+      throw AuthFailure(response.data['message'] ?? 'Invalid backend response');
+    });
+  }
+
+  Future<UserModel> registerDetails(Map<String, dynamic> data) async {
+    return await handleApiCall(() async {
+      final response = await _api.post('/auth/register', data: data);
+      if (response.data['success'] == true) {
+        return UserModel.fromJson(response.data['user']);
+      }
+      throw ServerFailure(response.data['message'] ?? 'Registration failed');
+    });
   }
 }

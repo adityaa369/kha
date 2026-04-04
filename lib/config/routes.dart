@@ -16,6 +16,7 @@ import '../features/profile/presentation/pages/profile_page.dart';
 import '../features/loans/presentation/pages/create_loan_page.dart';
 import '../features/loans/presentation/pages/loan_confirmation_page.dart';
 import '../features/loans/presentation/pages/loan_success_page.dart';
+import '../features/loans/presentation/pages/loan_close_success_page.dart';
 import '../features/splash/presentation/pages/splash_page.dart';
 import '../features/auth/presentation/pages/auth_choice_page.dart';
 import '../features/chit_funds/presentation/pages/chit_invites_page.dart';
@@ -133,6 +134,7 @@ final router = GoRouter(
       },
     ),
     GoRoute(path: AppConstants.loanSuccess, builder: (context, state) => const LoanSuccessPage()),
+    GoRoute(path: AppConstants.loanCloseSuccess, builder: (context, state) => const LoanCloseSuccessPage()),
     GoRoute(path: '/auth-choice', builder: (context, state) => const AuthChoicePage()),
     GoRoute(path: AppConstants.chitInvites, builder: (context, state) => const ChitInvitesPage()),
     GoRoute(path: AppConstants.myChits, builder: (context, state) => const MyChitsPage()),

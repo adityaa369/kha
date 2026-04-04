@@ -131,7 +131,7 @@ class _SignupPageState extends State<SignupPage>
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: KhaataTheme.textDark),
+          icon: const Icon(Icons.arrow_back, color: KhaataTheme.textDark),
           onPressed: _previousStep,
         ),
         title: Text(
@@ -238,7 +238,6 @@ class _AnimatedTextField extends StatefulWidget {
     this.validator,
     this.maxLength,
     this.textCapitalization = TextCapitalization.none,
-    this.inputFormatters,
   });
 
   @override
@@ -306,14 +305,14 @@ class _AnimatedTextFieldState extends State<_AnimatedTextField> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(
+              borderSide: const BorderSide(
                 color: KhaataTheme.primaryBlue,
                 width: 2,
               ),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(
+              borderSide: const BorderSide(
                 color: KhaataTheme.dangerRed,
                 width: 2,
               ),
@@ -475,7 +474,7 @@ class _OtpStepState extends State<_OtpStep> {
                 });
                 _startTimer();
               },
-              child: Text(
+              child: const Text(
                 'Resend OTP',
                 style: TextStyle(color: KhaataTheme.primaryBlue),
               ),
@@ -483,7 +482,7 @@ class _OtpStepState extends State<_OtpStep> {
           else
             Text(
               'Resend in $_resendTimer seconds',
-              style: TextStyle(color: KhaataTheme.textGrey),
+              style: const TextStyle(color: KhaataTheme.textGrey),
             ),
           SizedBox(height: 24.h),
           ElevatedButton(

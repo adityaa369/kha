@@ -1,14 +1,13 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../config/theme.dart';
+import '../../../../config/constants.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/blocs/auth/auth_cubit.dart';
 import '../../../../core/blocs/loans/loan_cubit.dart';
 import '../../../../core/blocs/loans/loan_state.dart';
-import '../../../../data/models/loan_model.dart';
 import '../../../../core/widgets/buttons.dart';
 
 class LoansGivenPage extends StatelessWidget {
@@ -108,7 +107,7 @@ class LoansGivenPage extends StatelessWidget {
               builder: (context, state) {
                 if (state is LoanInitial) {
                   final authState = context.read<AuthCubit>().state;
-                  if (authState is Authenticated) {
+                  if (authState is AuthenticatedFull) {
                     context.read<LoanCubit>().fetchLoans();
                   }
                   return const Center(child: CircularProgressIndicator());
@@ -124,21 +123,36 @@ class LoansGivenPage extends StatelessWidget {
 
                 if (state is LoansLoaded) {
                   if (state.givenLoans.isEmpty) {
-                    return Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.handshake_outlined, size: 64.sp, color: Colors.grey[300]),
-                        SizedBox(height: 16.h),
-                        Text(
-                          'No active accounts',
-                          style: TextStyle(color: Colors.grey, fontSize: 16.sp),
-                        ),
-                      ],
+                    return RefreshIndicator(
+                      color: KhaataTheme.primaryBlue,
+                      onRefresh: () async {
+                        await context.read<LoanCubit>().fetchLoans();
+                      },
+                      child: ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        children: [
+                          SizedBox(height: 100.h),
+                          Icon(Icons.handshake_outlined, size: 64.sp, color: Colors.grey[300]),
+                          SizedBox(height: 16.h),
+                          Center(
+                            child: Text(
+                              'No active accounts',
+                              style: TextStyle(color: Colors.grey, fontSize: 16.sp),
+                            ),
+                          ),
+                        ],
+                      ),
                     );
                   }
 
-                  return ListView.builder(
-                    padding: EdgeInsets.all(16.w),
+                  return RefreshIndicator(
+                    color: KhaataTheme.primaryBlue,
+                    onRefresh: () async {
+                      await context.read<LoanCubit>().fetchLoans();
+                    },
+                    child: ListView.builder(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: EdgeInsets.all(16.w),
                     itemCount: state.givenLoans.length,
                     itemBuilder: (context, index) {
                       final loan = state.givenLoans[index];
@@ -155,13 +169,17 @@ class LoansGivenPage extends StatelessWidget {
                             statusColor: loan.statusColor,
                             progress: loan.progress,
                             initials: loan.initials ?? loan.borrowerName[0].toUpperCase(),
-                            emi: loan.emi != null ? '₹ ${_formatCurrency(loan.emi!)} /mo' : null,
                             totalPayable: loan.totalPayable != null ? '₹ ${_formatCurrency(loan.totalPayable!)}' : null,
+                            onCloseLoan: () {
+                              context.read<LoanCubit>().updateProgress(loan.id, 1.0);
+                              context.push(AppConstants.loanCloseSuccess);
+                            },
                           ),
                           SizedBox(height: 12.h),
                         ],
                       );
                     },
+                    ),
                   );
                 }
                 return const SizedBox();
@@ -224,8 +242,8 @@ class _GivenLoanCard extends StatelessWidget {
   final Color statusColor;
   final double progress;
   final String initials;
-  final String? emi;
   final String? totalPayable;
+  final VoidCallback onCloseLoan;
 
   const _GivenLoanCard({
     required this.name,
@@ -235,7 +253,7 @@ class _GivenLoanCard extends StatelessWidget {
     required this.statusColor,
     required this.progress,
     required this.initials,
-    this.emi,
+    required this.onCloseLoan,
     this.totalPayable,
   });
 
@@ -382,7 +400,7 @@ class _GivenLoanCard extends StatelessWidget {
                     },
                     style: OutlinedButton.styleFrom(
                       foregroundColor: KhaataTheme.primaryBlue,
-                      side: BorderSide(color: KhaataTheme.primaryBlue),
+                      side: const BorderSide(color: KhaataTheme.primaryBlue),
                       padding: EdgeInsets.symmetric(vertical: 10.h),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8.r),
@@ -426,14 +444,38 @@ class _GivenLoanCard extends StatelessWidget {
                               _DetailRow(label: 'Date', value: date),
                               _DetailRow(label: 'Status', value: status),
                               _DetailRow(label: 'Repaid', value: '${(progress * 100).toInt()}%'),
-                              if (emi != null) _DetailRow(label: 'Monthly EMI', value: emi!),
                               if (totalPayable != null) _DetailRow(label: 'Total Payable', value: totalPayable!),
                               SizedBox(height: 20.h),
                               SizedBox(
                                 width: double.infinity,
                                 child: PrimaryButton(
-                                  text: 'Close',
+                                  text: 'Close Loan',
+                                  onPressed: () {
+                                    onCloseLoan();
+                                    context.pop();
+                                  },
+                                ),
+                              ),
+                              SizedBox(height: 12.h),
+                              SizedBox(
+                                width: double.infinity,
+                                child: OutlinedButton(
                                   onPressed: () => context.pop(),
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: KhaataTheme.primaryBlue,
+                                    side: BorderSide(color: KhaataTheme.primaryBlue),
+                                    padding: EdgeInsets.symmetric(vertical: 14.h),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8.r),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    'Back',
+                                    style: TextStyle(
+                                      fontSize: 16.sp,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ],

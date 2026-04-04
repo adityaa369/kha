@@ -35,7 +35,7 @@ class _AuthPageState extends State<AuthPage>
   void initState() {
     super.initState();
     _animationController = AnimationController(
-      duration: Duration(milliseconds: 400),
+      duration: const Duration(milliseconds: 400),
       vsync: this,
     );
     _slideAnimation = Tween<double>(begin: 0, end: 1).animate(
@@ -65,7 +65,7 @@ class _AuthPageState extends State<AuthPage>
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -91,7 +91,7 @@ class _AuthPageState extends State<AuthPage>
                       BoxShadow(
                         color: Colors.black.withOpacity(0.2),
                         blurRadius: 20,
-                        offset: Offset(0, 10),
+                        offset: const Offset(0, 10),
                       ),
                     ],
                   ),
@@ -128,7 +128,7 @@ class _AuthPageState extends State<AuthPage>
                   ),
                   child: ClipRect(
                     child: AnimatedSwitcher(
-                      duration: Duration(milliseconds: 400),
+                      duration: const Duration(milliseconds: 400),
                       transitionBuilder: (child, animation) {
                         return FadeTransition(
                           opacity: animation,
@@ -143,13 +143,13 @@ class _AuthPageState extends State<AuthPage>
                       },
                       child: isLogin
                           ? _LoginForm(
-                        key: ValueKey('login'),
+                        key: const ValueKey('login'),
                         phoneController: _loginPhoneController,
                         aadharController: _loginAadharController,
                         passwordController: _loginPasswordController,
                       )
                           : _SignupForm(
-                        key: ValueKey('signup'),
+                        key: const ValueKey('signup'),
                         phoneController: _signupPhoneController,
                         nameController: _signupNameController,
                         emailController: _signupEmailController,
@@ -175,7 +175,7 @@ class SlidingToggle extends StatelessWidget {
   final bool isLogin;
   final VoidCallback onToggle;
 
-  const SlidingToggle({
+  const SlidingToggle({super.key, 
     required this.isLogin,
     required this.onToggle,
   });
@@ -193,7 +193,7 @@ class SlidingToggle extends StatelessWidget {
         children: [
           // Sliding Background
           AnimatedPositioned(
-            duration: Duration(milliseconds: 300),
+            duration: const Duration(milliseconds: 300),
             curve: Curves.easeInOut,
             left: isLogin ? 0 : 140.w,
             child: Container(
@@ -405,8 +405,8 @@ class _LoginFormState extends State<_LoginForm> {
             Center(
               child: TextButton.icon(
                 onPressed: () {},
-                icon: Icon(Icons.fingerprint, color: KhaataTheme.primaryBlue),
-                label: Text(
+                icon: const Icon(Icons.fingerprint, color: KhaataTheme.primaryBlue),
+                label: const Text(
                   'Use Biometric',
                   style: TextStyle(color: KhaataTheme.primaryBlue),
                 ),
@@ -519,7 +519,7 @@ class _SignupFormState extends State<_SignupForm> {
                         borderRadius: BorderRadius.circular(12.r),
                       ),
                     ),
-                    child: Text('Back'),
+                    child: const Text('Back'),
                   ),
                 ),
               if (currentStep > 0) SizedBox(width: 12.w),
@@ -667,7 +667,7 @@ class _SignupFormState extends State<_SignupForm> {
           ],
         );
       default:
-        return SizedBox();
+        return const SizedBox();
     }
   }
 
@@ -806,14 +806,14 @@ class _AnimatedInputFieldState extends State<_AnimatedInputField> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(
+              borderSide: const BorderSide(
                 color: KhaataTheme.primaryBlue,
                 width: 2,
               ),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12.r),
-              borderSide: BorderSide(
+              borderSide: const BorderSide(
                 color: KhaataTheme.dangerRed,
                 width: 2,
               ),

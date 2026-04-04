@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
@@ -72,12 +71,15 @@ class ProfilePage extends StatelessWidget {
                       ),
                       child: BlocBuilder<AuthCubit, AuthState>(
                         builder: (context, state) {
-                          String initials = 'AA';
-                          String fullName = 'Aditya Amruthaluri';
+                          String initials = '';
+                          String fullName = 'Loading...';
                           
-                          if (state is Authenticated) {
+                          if (state is AuthenticatedFull) {
                             initials = state.user.initials;
                             fullName = state.user.displayName;
+                          } else if (state is AuthenticatedUnverified) {
+                            initials = 'U';
+                            fullName = 'Verified User';
                           }
 
                           return Column(
@@ -199,33 +201,33 @@ class ProfilePage extends StatelessWidget {
                     // Logout
                     TextButton.icon(
                       onPressed: () {
+                        // Capture Router from the parent context before opening the dialog
+                        final router = GoRouter.of(context);
+                        final authCubit = context.read<AuthCubit>();
+                        final loanCubit = context.read<LoanCubit>();
+                        final creditCubit = context.read<CreditScoreCubit>();
+                        
                         showDialog(
                           context: context,
-                          builder: (context) => AlertDialog(
+                          builder: (dialogContext) => AlertDialog(
                             title: const Text('Logout?'),
                             content: const Text('This will clear your session and you will need an OTP to login again.\n\nUse "Lock App" if you just want to secure the device.'),
                             actions: [
                               TextButton(
-                                onPressed: () => context.pop(),
+                                onPressed: () => dialogContext.pop(),
                                 child: const Text('Cancel'),
                               ),
                               TextButton(
-                                onPressed: () async {
-                                  context.pop();
-                                  // Clear all Cubits on logout
-                                  context.read<LoanCubit>().clear();
-                                  if (context.mounted) {
-                                      // Check if provider exists before accessing
-                                      try {
-                                        context.read<CreditScoreCubit>().clear();
-                                      } catch (_) {}
-                                  }
+                                onPressed: () {
+                                  dialogContext.pop(); // Close dialog first
                                   
-                                  await context.read<AuthCubit>().logout();
+                                  // Clear safe cubits if possible
+                                  try { loanCubit.clear(); } catch (_) {}
+                                  try { creditCubit.clear(); } catch (_) {}
                                   
-                                  if (context.mounted) {
-                                    context.go(AppConstants.welcome);
-                                  }
+                                  authCubit.logout().then((_) {
+                                    router.go(AppConstants.login);
+                                  });
                                 },
                                 child: const Text('Logout', style: TextStyle(color: Colors.red)),
                               ),

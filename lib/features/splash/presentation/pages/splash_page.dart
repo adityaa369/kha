@@ -94,7 +94,7 @@ class _SplashPageState extends State<SplashPage>
   void _handleNavigation(AuthState state) async {
     if (!mounted) return;
 
-    if (state is Authenticated) {
+    if (state is AuthenticatedFull) {
       // Token valid, but require Biometric Unlock
       setState(() => _isLocked = true);
       _attemptBiometricUnlock(showFailureMessage: false);

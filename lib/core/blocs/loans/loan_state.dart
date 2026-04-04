@@ -42,3 +42,7 @@ class LoanCreated extends LoanState {
   @override
   List<Object?> get props => [loan];
 }
+
+class LoanVerificationSuccess extends LoanState {
+  const LoanVerificationSuccess();
+}
