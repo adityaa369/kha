@@ -844,8 +844,6 @@ class _UserBidFormState extends State<_UserBidForm> {
           'Submit your Bid / Discount',
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp),
         ),
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp),
-        ),
         SizedBox(height: 8.h),
         Row(
           children: [
