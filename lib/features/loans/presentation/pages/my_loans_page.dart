@@ -58,7 +58,7 @@ class _MyLoansPageState extends State<MyLoansPage> with SingleTickerProviderStat
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Manage Your Loans & Cards',
+                    'Manage Your Credits',
                     style: TextStyle(
                       fontSize: 18.sp,
                       fontWeight: FontWeight.w700,

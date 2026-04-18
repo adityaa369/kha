@@ -18,9 +18,6 @@ class ChitGroupAdminPage extends StatefulWidget {
 }
 
 class _ChitGroupAdminPageState extends State<ChitGroupAdminPage> {
-  int _selectedIndex = 0; // 0 = Members Tracker, 1 = Auction Timeline
-
-  @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -36,8 +33,10 @@ class _ChitGroupAdminPageState extends State<ChitGroupAdminPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: KhaataTheme.backgroundGrey,
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        backgroundColor: KhaataTheme.backgroundGrey,
       appBar: AppBar(
         title: Text(
           'Group Dashboard',
@@ -56,17 +55,16 @@ class _ChitGroupAdminPageState extends State<ChitGroupAdminPage> {
              context.pop();
           },
         ),
-        bottom: PreferredSize(
-          preferredSize: Size.fromHeight(60.h),
-          child: Container(
-            color: KhaataTheme.primaryBlue,
-            child: Row(
-              children: [
-                _buildTab(0, "Members"),
-                _buildTab(1, "Auctions"),
-              ],
-            ),
-          ),
+        bottom: TabBar(
+          indicatorColor: Colors.white,
+          indicatorWeight: 3.h,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
+          labelStyle: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.bold),
+          tabs: const [
+             Tab(text: "Members"),
+             Tab(text: "Auctions"),
+          ],
         ),
         actions: [
           BlocBuilder<ChitFundCubit, ChitFundState>(
@@ -131,49 +129,25 @@ class _ChitGroupAdminPageState extends State<ChitGroupAdminPage> {
           final List members = data['members'] ?? [];
           final List auctions = data['auctionTimeline'] ?? [];
 
-          return CustomScrollView(
-            slivers: [
-               SliverToBoxAdapter(
-                 child: SizedBox(height: 16.h),
+          return TabBarView(
+            children: [
+               SingleChildScrollView(
+                 child: Padding(
+                   padding: EdgeInsets.only(top: 16.h),
+                   child: _buildMembersTracker(members, chitDetails),
+                 ),
                ),
-               if (_selectedIndex == 0)
-                  SliverToBoxAdapter(child: _buildMembersTracker(members, chitDetails)),
-               if (_selectedIndex == 1)
-                  SliverToBoxAdapter(child: _buildAuctionTimeline(auctions, members, chitDetails)),
+               SingleChildScrollView(
+                 child: Padding(
+                   padding: EdgeInsets.only(top: 16.h),
+                   child: _buildAuctionTimeline(auctions, members, chitDetails),
+                 ),
+               ),
             ],
           );
         },
       ),
-    );
-  }
-
-  Widget _buildTab(int index, String title) {
-    bool isSelected = _selectedIndex == index;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => setState(() => _selectedIndex = index),
-        child: Container(
-          padding: EdgeInsets.symmetric(vertical: 16.h),
-          decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(
-                color: isSelected ? Colors.white : Colors.transparent,
-                width: 3.h,
-              ),
-            ),
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            title,
-            style: TextStyle(
-              color: isSelected ? Colors.white : Colors.white70,
-              fontSize: 15.sp,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            ),
-          ),
-        ),
-      ),
-    );
+    ));
   }
 
   void _showMemberPaymentDetails(Map<String, dynamic> member, Map<String, dynamic> chitDetails) {
@@ -182,80 +156,84 @@ class _ChitGroupAdminPageState extends State<ChitGroupAdminPage> {
     final Set<int> paidMonthsSet = paidMonthsStr.map((e) => e as int).toSet();
     final userDoc = member['user'] ?? {};
 
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16.r))),
       builder: (ctx) {
-        return Container(
-          padding: EdgeInsets.all(20.w),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-               Text(
-                 'Payment Tracker: ${userDoc['firstName'] ?? 'User'}', 
-                 style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)
-               ),
-               SizedBox(height: 16.h),
-               if (completedMonths == 0 && (chitDetails['status'] ?? '') == 'registration')
-                 const Center(child: Text("Process hasn't started yet")),
-               if (chitDetails['status'] != 'registration')
-                 Flexible(
-                   child: BlocBuilder<ChitFundCubit, ChitFundState>(
-                     builder: (context, state) {
-                       // Find the member's latest data from state
-                       Map<String, dynamic> currentMember = member; // default to passed
-                       if (state is ChitAdminDashboardLoaded) {
-                         final mm = (state.dashboardData['members'] as List?)?.firstWhere(
-                           (m) => m['id'] == member['id'], orElse: () => member
-                         );
-                         if (mm != null) currentMember = mm as Map<String, dynamic>;
-                       }
-                       
-                       final Set<int> currentPaidSet = ((currentMember['paidMonths'] ?? []) as List).map((e) => e as int).toSet();
-
-                       return ListView.builder(
-                         shrinkWrap: true,
-                         itemCount: completedMonths + 1, // Include current active month
-                         itemBuilder: (c, idx) {
-                           int monthNum = idx + 1;
-                           bool isPaid = currentPaidSet.contains(monthNum);
-                           
-                           return ListTile(
-                             leading: Icon(
-                               isPaid ? Icons.check_circle : Icons.cancel, 
-                               color: isPaid ? KhaataTheme.accentGreen : KhaataTheme.dangerRed
-                             ),
-                             title: Text('Month $monthNum Contribution', style: TextStyle(fontWeight: FontWeight.w600)),
-                             subtitle: Text(isPaid ? 'Payment Confirmed' : 'Payment Pending', style: TextStyle(color: isPaid ? KhaataTheme.accentGreen : KhaataTheme.dangerRed)),
-                             trailing: chitDetails['isOwner'] == true ? ElevatedButton(
-                               style: ElevatedButton.styleFrom(
-                                 backgroundColor: isPaid ? KhaataTheme.accentGreen.withOpacity(0.2) : KhaataTheme.primaryBlue,
-                                 elevation: 0,
-                                 padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
-                               ),
-                               onPressed: () {
-                                 context.read<ChitFundCubit>().verifyMonthPayment(
-                                   chitId: chitDetails['id'],
-                                   monthNumber: monthNum,
-                                   subscriberId: currentMember['id'],
-                                   isPaid: !isPaid,
-                                 );
-                               },
-                               child: Text(
-                                 isPaid ? 'PAID' : 'MARK PAID', 
-                                 style: TextStyle(color: isPaid ? KhaataTheme.accentGreen : Colors.white, fontWeight: FontWeight.bold, fontSize: 11.sp)
-                               ),
-                             ) : null,
-                           );
-                         },
-                       );
-                     }
-                   ),
-                 ),
-            ],
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+          title: Text(
+            'Payment Check: ${userDoc['firstName'] ?? 'User'}',
+            style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
           ),
+          content: BlocBuilder<ChitFundCubit, ChitFundState>(
+            builder: (context, state) {
+              if ((chitDetails['status'] ?? '') == 'registration') {
+                return const Text("Group process hasn't started yet");
+              }
+              
+              int currentMonthToPay = completedMonths + 1;
+              Map<String, dynamic> currentMember = member; // default to passed
+              if (state is ChitAdminDashboardLoaded) {
+                final mm = (state.dashboardData['members'] as List?)?.firstWhere(
+                  (m) => m['id'] == member['id'], orElse: () => member
+                );
+                if (mm != null) currentMember = mm as Map<String, dynamic>;
+              }
+              
+              final Set<int> currentPaidSet = ((currentMember['paidMonths'] ?? []) as List).map((e) => e as int).toSet();
+              bool isPaid = currentPaidSet.contains(currentMonthToPay);
+
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Month $currentMonthToPay Status:', style: TextStyle(fontSize: 14.sp, color: KhaataTheme.textGrey)),
+                  SizedBox(height: 12.h),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(isPaid ? Icons.check_circle : Icons.cancel, color: isPaid ? KhaataTheme.accentGreen : KhaataTheme.dangerRed, size: 28.sp),
+                          SizedBox(width: 8.w),
+                          Text(isPaid ? 'Payment Confirmed' : 'Payment Pending', style: TextStyle(color: isPaid ? KhaataTheme.accentGreen : KhaataTheme.dangerRed, fontWeight: FontWeight.bold, fontSize: 14.sp)),
+                        ],
+                      ),
+                    ],
+                  ),
+                  if (chitDetails['isOwner'] == true) ...[
+                    SizedBox(height: 24.h),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 45.h,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: isPaid ? KhaataTheme.accentGreen.withOpacity(0.2) : KhaataTheme.primaryBlue,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                        ),
+                        onPressed: () {
+                          context.read<ChitFundCubit>().verifyMonthPayment(
+                            chitId: chitDetails['id'],
+                            monthNumber: currentMonthToPay,
+                            subscriberId: currentMember['id'],
+                            isPaid: !isPaid,
+                          );
+                        },
+                        child: Text(
+                          isPaid ? 'PAID' : 'MARK PAID', 
+                          style: TextStyle(color: isPaid ? KhaataTheme.accentGreen : Colors.white, fontWeight: FontWeight.bold, fontSize: 13.sp)
+                        ),
+                      ),
+                    ),
+                  ]
+                ],
+              );
+            }
+          ),
+          actions: [
+             TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close'))
+          ],
         );
       }
     );
@@ -318,6 +296,8 @@ class _ChitGroupAdminPageState extends State<ChitGroupAdminPage> {
                       Text(
                         '${user['firstName'] ?? ''} ${user['lastName'] ?? ''}'.trim(),
                         style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       Text(
                         user['phone'] ?? '',
@@ -331,7 +311,12 @@ class _ChitGroupAdminPageState extends State<ChitGroupAdminPage> {
                              color: Colors.amber.withOpacity(0.2),
                              borderRadius: BorderRadius.circular(4.r)
                           ),
-                          child: Text('Took payout in Month ${member['wonMonth']}', style: TextStyle(color: Colors.amber.shade800, fontSize: 11.sp, fontWeight: FontWeight.bold)),
+                          child: Text(
+                            'Took payout in Month ${member['wonMonth']}', 
+                            style: TextStyle(color: Colors.amber.shade800, fontSize: 11.sp, fontWeight: FontWeight.bold),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         )
                     ],
                   ),
@@ -395,8 +380,15 @@ class _ChitGroupAdminPageState extends State<ChitGroupAdminPage> {
      final TextEditingController _bidController = TextEditingController();
      final _formKey = GlobalKey<FormState>();
      
-     // Filter members who haven't won
-     List eligibleMembers = members.where((m) => m['hasWonAuction'] != true).toList();
+     // Filter members who haven't won and ensure unique users for the dropdown
+     final Set<String> uniqueIds = {};
+     final List eligibleMembers = members.where((m) {
+       if (m['hasWonAuction'] == true) return false;
+       final String? uid = m['user']?['id']?.toString();
+       if (uid == null || uniqueIds.contains(uid)) return false;
+       uniqueIds.add(uid);
+       return true;
+     }).toList();
      
      showModalBottomSheet(
         context: context,
@@ -522,6 +514,8 @@ class _ChitGroupAdminPageState extends State<ChitGroupAdminPage> {
                 onTap: () {
                    if (isCompleted) {
                       _showAuctionDetails(auction, chitDetails);
+                   } else if (isActive && isOwner && !isAuctionOpened) {
+                      _showStartAuctionSheet(auction, chitDetails);
                    }
                 },
                 child: Row(
@@ -593,12 +587,6 @@ class _ChitGroupAdminPageState extends State<ChitGroupAdminPage> {
                   ],
                 ),
               ),
-              if (isActive && isOwner && !isAuctionOpened) ...[
-                 SizedBox(height: 16.h),
-                 const Divider(),
-                 SizedBox(height: 8.h),
-                 _OpenAuctionForm(chitDetails: chitDetails, auction: auction),
-              ],
               if (isActive && isOwner && isAuctionOpened) ...[
                  SizedBox(height: 16.h),
                  const Divider(),
@@ -617,7 +605,68 @@ class _ChitGroupAdminPageState extends State<ChitGroupAdminPage> {
       },
     );
   }
+
+  void _showStartAuctionSheet(Map<String, dynamic> auction, Map<String, dynamic> chitDetails) {
+    final TextEditingController amountCtrl = TextEditingController();
+    showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16.r))),
+      builder: (ctx) {
+        return Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+          child: Container(
+            padding: EdgeInsets.all(24.w),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Open Auction: Month ${auction['monthNumber']}', style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)),
+                SizedBox(height: 8.h),
+                Text('Enter the base requested amount for this month. Once opened, a push notification will be sent to all members.', style: TextStyle(color: KhaataTheme.textGrey, fontSize: 13.sp)),
+                SizedBox(height: 24.h),
+                TextField(
+                  controller: amountCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: 'Base Amount',
+                    prefixText: '₹ ',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                  ),
+                ),
+                SizedBox(height: 24.h),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50.h,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      double? amount = double.tryParse(amountCtrl.text);
+                      if (amount != null && amount >= 0) {
+                        Navigator.pop(ctx);
+                        context.read<ChitFundCubit>().openAuctionMonth(
+                          chitId: chitDetails['id'],
+                          monthNumber: auction['monthNumber'],
+                          baseAmount: amount,
+                        );
+                      } else {
+                        ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text('Enter a valid amount')));
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: KhaataTheme.primaryBlue,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                    ),
+                    child: Text('Open Auction & Notify Members', style: TextStyle(color: Colors.white, fontSize: 15.sp, fontWeight: FontWeight.bold)),
+                  ),
+                )
+              ],
+            ),
+          ),
+        );
+      }
+    );
+  }
 }
+
 
 class _DetailRow extends StatelessWidget {
   final String label;
@@ -646,70 +695,6 @@ class _DetailRow extends StatelessWidget {
   }
 }
 
-class _OpenAuctionForm extends StatefulWidget {
-  final Map<String, dynamic> chitDetails;
-  final Map<String, dynamic> auction;
-
-  const _OpenAuctionForm({required this.chitDetails, required this.auction});
-
-  @override
-  State<_OpenAuctionForm> createState() => _OpenAuctionFormState();
-}
-
-class _OpenAuctionFormState extends State<_OpenAuctionForm> {
-  final _amountController = TextEditingController();
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Expanded(
-            child: TextField(
-              controller: _amountController,
-              keyboardType: TextInputType.number,
-              style: TextStyle(fontSize: 14.sp),
-              decoration: InputDecoration(
-                hintText: 'Bid Base Amount (e.g. 10000)',
-                hintStyle: TextStyle(fontSize: 12.sp),
-                prefixText: '₹ ',
-                isDense: true,
-                contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r), borderSide: const BorderSide(color: Colors.grey)),
-              ),
-            ),
-          ),
-          SizedBox(width: 8.w),
-          ElevatedButton(
-            onPressed: () {
-              double? amount = double.tryParse(_amountController.text);
-              if (amount != null && amount >= 0) {
-                // Unfocus keyboard
-                FocusScope.of(context).unfocus();
-                
-                context.read<ChitFundCubit>().openAuctionMonth(
-                  chitId: widget.chitDetails['id'],
-                  monthNumber: widget.auction['monthNumber'],
-                  baseAmount: amount,
-                );
-              } else {
-                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter a valid amount')));
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: KhaataTheme.primaryBlue,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-            ),
-            child: Text('Open Auction', style: TextStyle(color: Colors.white, fontSize: 13.sp, fontWeight: FontWeight.bold)),
-          )
-        ],
-      ),
-    );
-  }
-}
 
 class _ActiveAuctionPanel extends StatefulWidget {
   final Map<String, dynamic> chitDetails;

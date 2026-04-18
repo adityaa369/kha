@@ -188,55 +188,57 @@ class InsightsPage extends StatelessWidget {
                                 builder: (context) {
                                   return Container(
                                     padding: EdgeInsets.all(24.w),
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Icon(Icons.trending_up, color: KhaataTheme.accentGreen, size: 28.sp),
-                                            SizedBox(width: 12.w),
-                                            Text(
-                                              'How to Improve Score',
-                                              style: TextStyle(
-                                                fontSize: 20.sp,
-                                                fontWeight: FontWeight.bold,
-                                                color: KhaataTheme.textDark,
+                                    child: SingleChildScrollView(
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Icon(Icons.trending_up, color: KhaataTheme.accentGreen, size: 28.sp),
+                                              SizedBox(width: 12.w),
+                                              Text(
+                                                'How to Improve Score',
+                                                style: TextStyle(
+                                                  fontSize: 20.sp,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: KhaataTheme.textDark,
+                                                ),
                                               ),
-                                            ),
-                                          ],
-                                        ),
-                                        SizedBox(height: 20.h),
-                                        Text(
-                                          'Here are the most effective ways to build your credit score quickly:',
-                                          style: TextStyle(fontSize: 14.sp, color: Colors.grey[700]),
-                                        ),
-                                        SizedBox(height: 24.h),
-                                        _BuildScoreStep(
-                                          icon: Icons.check_circle,
-                                          title: 'Clear Active Loans',
-                                          description: 'If you have any outstanding active loans, try to clear them as soon as possible. Paying off debt lowers your credit utilization ratio.',
-                                        ),
-                                        SizedBox(height: 16.h),
-                                        _BuildScoreStep(
-                                          icon: Icons.calendar_month,
-                                          title: 'Consistent Payment Dues',
-                                          description: 'Ensure you maintain a consistent track record of paying all your monthly EMIs and dues exactly on time. Consistency is key!',
-                                        ),
-                                        SizedBox(height: 32.h),
-                                        SizedBox(
-                                          width: double.infinity,
-                                          child: ElevatedButton(
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor: KhaataTheme.primaryBlue,
-                                              padding: EdgeInsets.symmetric(vertical: 14.h),
-                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-                                            ),
-                                            onPressed: () => Navigator.pop(context),
-                                            child: Text('Got It', style: TextStyle(fontSize: 16.sp, color: Colors.white)),
+                                            ],
                                           ),
-                                        ),
-                                      ],
+                                          SizedBox(height: 20.h),
+                                          Text(
+                                            'Here are the most effective ways to build your credit score quickly:',
+                                            style: TextStyle(fontSize: 14.sp, color: Colors.grey[700]),
+                                          ),
+                                          SizedBox(height: 24.h),
+                                          _BuildScoreStep(
+                                            icon: Icons.check_circle,
+                                            title: 'Clear Active Loans',
+                                            description: 'If you have any outstanding active loans, try to clear them as soon as possible. Paying off debt lowers your credit utilization ratio.',
+                                          ),
+                                          SizedBox(height: 16.h),
+                                          _BuildScoreStep(
+                                            icon: Icons.calendar_month,
+                                            title: 'Consistent Payment Dues',
+                                            description: 'Ensure you maintain a consistent track record of paying all your monthly EMIs and dues exactly on time. Consistency is key!',
+                                          ),
+                                          SizedBox(height: 32.h),
+                                          SizedBox(
+                                            width: double.infinity,
+                                            child: ElevatedButton(
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: KhaataTheme.primaryBlue,
+                                                padding: EdgeInsets.symmetric(vertical: 14.h),
+                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                                              ),
+                                              onPressed: () => Navigator.pop(context),
+                                              child: Text('Got It', style: TextStyle(fontSize: 16.sp, color: Colors.white)),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   );
                                 },

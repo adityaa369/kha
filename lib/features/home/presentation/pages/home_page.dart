@@ -349,34 +349,6 @@ class HomeContent extends StatelessWidget {
           SizedBox(height: 12.h),
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 16.w),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Credit Types',
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w700,
-                    color: KhaataTheme.textDark,
-                  ),
-                ),
-                TextButton(
-                  onPressed: () => context.read<NavigationCubit>().changeTab(3),
-                  child: Text(
-                    'View All',
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                      color: KhaataTheme.primaryBlue,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: 8.h),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.w),
             child: Column(
               children: [
                 _LoanTypeCard(

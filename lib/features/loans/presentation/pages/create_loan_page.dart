@@ -237,6 +237,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
       'amount': double.tryParse(_amountController.text) ?? 0.0,
       'interest_rate': widget.loanType == 'interest_credit' ? (double.tryParse(_interestController.text) ?? 0.0) : 0.0,
       'duration_months': _calculateMonths(),
+      'duration_type': _durationType,
       'start_date': _startDate.toIso8601String(),
       'type': widget.loanType,
       'documentUrl': documentUrl,
@@ -535,7 +536,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
                             child: DropdownButton<String>(
                               value: _durationType,
                               isExpanded: true,
-                              items: ['Months', 'Years']
+                              items: ['Days', 'Months', 'Years']
                                   .map((e) => DropdownMenuItem(
                                 value: e,
                                 child: Text(e, style: TextStyle(fontSize: 14.sp)),

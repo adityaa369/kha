@@ -37,22 +37,6 @@ class LoansGivenPage extends StatelessWidget {
                       color: Colors.white,
                     ),
                   ),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 8,
-                        ),
-                      ],
-                    ),
-                    child: IconButton(
-                      icon: Icon(Icons.add, color: KhaataTheme.primaryBlue, size: 22.sp),
-                      onPressed: () => context.push('/create-loan?type=personal'),
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -78,15 +62,7 @@ class LoansGivenPage extends StatelessWidget {
                 padding: EdgeInsets.symmetric(vertical: 16.h),
                 child: Row(
                   children: [
-                    Expanded(
-                      child: _StatBox(
-                        label: 'Total Lent',
-                        amount: '₹ ${_formatCurrency(totalLent)}',
-                        icon: Icons.arrow_upward,
-                        color: KhaataTheme.accentGreen,
-                      ),
-                    ),
-                    Container(width: 1.w, height: 40.h, color: Colors.grey[200]),
+
                     Expanded(
                       child: _StatBox(
                         label: 'Pending',

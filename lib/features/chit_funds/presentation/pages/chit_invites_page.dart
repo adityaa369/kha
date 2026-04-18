@@ -296,14 +296,19 @@ class _ChitInvitesPageState extends State<ChitInvitesPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                title,
-                style: TextStyle(
-                  color: KhaataTheme.textDark,
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w700,
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    color: KhaataTheme.textDark,
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
+              SizedBox(width: 8.w),
               Row(
                 children: [
                   Container(
