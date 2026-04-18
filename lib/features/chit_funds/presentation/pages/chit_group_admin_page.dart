@@ -228,8 +228,13 @@ class _ChitGroupAdminPageState extends State<ChitGroupAdminPage> {
                              ),
                              title: Text('Month $monthNum Contribution', style: TextStyle(fontWeight: FontWeight.w600)),
                              subtitle: Text(isPaid ? 'Payment Confirmed' : 'Payment Pending', style: TextStyle(color: isPaid ? KhaataTheme.accentGreen : KhaataTheme.dangerRed)),
-                             trailing: chitDetails['isOwner'] == true ? IconButton(
-                               icon: Icon(Icons.edit, color: KhaataTheme.primaryBlue, size: 20.sp),
+                             trailing: chitDetails['isOwner'] == true ? ElevatedButton(
+                               style: ElevatedButton.styleFrom(
+                                 backgroundColor: isPaid ? KhaataTheme.accentGreen.withOpacity(0.2) : KhaataTheme.primaryBlue,
+                                 elevation: 0,
+                                 padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                               ),
                                onPressed: () {
                                  context.read<ChitFundCubit>().verifyMonthPayment(
                                    chitId: chitDetails['id'],
@@ -238,6 +243,10 @@ class _ChitGroupAdminPageState extends State<ChitGroupAdminPage> {
                                    isPaid: !isPaid,
                                  );
                                },
+                               child: Text(
+                                 isPaid ? 'PAID' : 'MARK PAID', 
+                                 style: TextStyle(color: isPaid ? KhaataTheme.accentGreen : Colors.white, fontWeight: FontWeight.bold, fontSize: 11.sp)
+                               ),
                              ) : null,
                            );
                          },
@@ -652,41 +661,52 @@ class _OpenAuctionFormState extends State<_OpenAuctionForm> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: TextField(
-            controller: _amountController,
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(
-              hintText: 'Base amount (e.g. Due)',
-              prefixText: '₹ ',
-              isDense: true,
-              contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+    return Material(
+      color: Colors.transparent,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _amountController,
+              keyboardType: TextInputType.number,
+              style: TextStyle(fontSize: 14.sp),
+              decoration: InputDecoration(
+                hintText: 'Bid Base Amount (e.g. 10000)',
+                hintStyle: TextStyle(fontSize: 12.sp),
+                prefixText: '₹ ',
+                isDense: true,
+                contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r), borderSide: const BorderSide(color: Colors.grey)),
+              ),
             ),
           ),
-        ),
-        SizedBox(width: 12.w),
-        ElevatedButton(
-          onPressed: () {
-            double? amount = double.tryParse(_amountController.text);
-            if (amount != null && amount > 0) {
-              context.read<ChitFundCubit>().openAuctionMonth(
-                chitId: widget.chitDetails['id'],
-                monthNumber: widget.auction['monthNumber'],
-                baseAmount: amount,
-              );
-            }
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: KhaataTheme.primaryBlue,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
-            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
-          ),
-          child: const Text('Open', style: TextStyle(color: Colors.white)),
-        )
-      ],
+          SizedBox(width: 8.w),
+          ElevatedButton(
+            onPressed: () {
+              double? amount = double.tryParse(_amountController.text);
+              if (amount != null && amount >= 0) {
+                // Unfocus keyboard
+                FocusScope.of(context).unfocus();
+                
+                context.read<ChitFundCubit>().openAuctionMonth(
+                  chitId: widget.chitDetails['id'],
+                  monthNumber: widget.auction['monthNumber'],
+                  baseAmount: amount,
+                );
+              } else {
+                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter a valid amount')));
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: KhaataTheme.primaryBlue,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+            ),
+            child: Text('Open Auction', style: TextStyle(color: Colors.white, fontSize: 13.sp, fontWeight: FontWeight.bold)),
+          )
+        ],
+      ),
     );
   }
 }
