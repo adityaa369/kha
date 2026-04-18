@@ -72,6 +72,54 @@ class LoanCubit extends Cubit<LoanState> {
     }
   }
 
+  // Verify Lender OTP
+  Future<bool> verifyLenderOtp(String loanId, String otp) async {
+    emit(LoanLoading());
+    try {
+      final success = await _repository.verifyLenderOtp(loanId, otp);
+      if (success) {
+        await fetchLoans();
+      }
+      return success;
+    } on Failure catch (f) {
+      emit(LoanError(f.message));
+      return false;
+    } catch (e) {
+      emit(LoanError('Failed to verify OTP: $e'));
+      return false;
+    }
+  }
+
+  // Request Closure OTP
+  Future<bool> requestClosureOtp(String loanId) async {
+    try {
+      return await _repository.requestClosureOtp(loanId);
+    } on Failure catch (f) {
+      emit(LoanError(f.message));
+      return false;
+    } catch (e) {
+      emit(LoanError('Failed to request closure OTP: $e'));
+      return false;
+    }
+  }
+
+  // Close Loan
+  Future<bool> closeLoan(String loanId, String otp) async {
+    try {
+      final success = await _repository.closeLoan(loanId, otp);
+      if (success) {
+        await fetchLoans();
+      }
+      return success;
+    } on Failure catch (f) {
+      emit(LoanError(f.message));
+      return false;
+    } catch (e) {
+      emit(LoanError('Failed to close loan: $e'));
+      return false;
+    }
+  }
+
   // Resend Loan OTP
   Future<bool> resendOtp(String loanId) async {
     try {

@@ -21,6 +21,7 @@ class LoanModel extends Equatable {
   final String? aadhar;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final String? otp;
 
   const LoanModel({
     required this.id,
@@ -42,6 +43,7 @@ class LoanModel extends Equatable {
     this.aadhar,
     this.createdAt,
     this.updatedAt,
+    this.otp,
   });
 
   factory LoanModel.fromJson(Map<String, dynamic> json) {
@@ -73,6 +75,7 @@ class LoanModel extends Equatable {
       updatedAt: json['updated_at'] != null || json['updatedAt'] != null
           ? DateTime.parse(json['updated_at'] ?? json['updatedAt'])
           : null,
+      otp: json['otp']?.toString(),
     );
   }
 
@@ -168,6 +171,7 @@ class LoanModel extends Equatable {
       case 'overdue':
         return 'Overdue';
       case 'completed':
+      case 'closed':
         return 'Completed';
       case 'defaulted':
         return 'Defaulted';
@@ -183,6 +187,7 @@ class LoanModel extends Equatable {
         return const Color(0xFFF59E0B); // Amber / Orange
       case 'active':
       case 'completed':
+      case 'closed':
         return const Color(0xFF10B981); // Green
       case 'due_soon':
         return const Color(0xFFF59E0B); // Yellow

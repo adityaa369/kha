@@ -72,4 +72,62 @@ class ChitFundRepository {
     await _apiClient.delete('/chits/$chitId');
     return true;
   }
+
+  // Finalize Manual Auction
+  Future<Map<String, dynamic>> finalizeAuction({
+    required String chitId,
+    required String winnerUserId,
+    required double bidDiscount,
+  }) async {
+    final response = await _apiClient.post(
+      '/chits/$chitId/finalize-auction',
+      data: {
+        'winnerUserId': winnerUserId,
+        'bidDiscount': bidDiscount,
+      },
+    );
+    return response.data;
+  }
+
+  // Open Auction for a month
+  Future<bool> openAuctionMonth(String chitId, int monthNumber, double baseAmount) async {
+    await _apiClient.post(
+      '/chits/$chitId/auction/open',
+      data: {
+        'monthNumber': monthNumber,
+        'baseAmount': baseAmount,
+      },
+    );
+    return true;
+  }
+
+  // Submit Bid
+  Future<bool> submitBid(String chitId, double bidDiscount) async {
+    await _apiClient.post(
+      '/chits/$chitId/auction/bid',
+      data: {
+        'bidDiscount': bidDiscount,
+      },
+    );
+    return true;
+  }
+
+  // Get Bids for Month
+  Future<List<Map<String, dynamic>>> getAuctionBids(String chitId, int monthNumber) async {
+    final response = await _apiClient.get('/chits/$chitId/auction/$monthNumber/bids');
+    final List data = response.data['bids'] ?? [];
+    return List<Map<String, dynamic>>.from(data);
+  }
+
+  // Verify Month Payment
+  Future<bool> verifyMonthPayment(String chitId, int monthNumber, String subscriberId, bool isPaid) async {
+    await _apiClient.post(
+      '/chits/$chitId/auction/$monthNumber/verify-payment',
+      data: {
+        'subscriberId': subscriberId,
+        'isPaid': isPaid,
+      },
+    );
+    return true;
+  }
 }

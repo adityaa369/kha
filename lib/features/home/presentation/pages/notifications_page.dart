@@ -32,7 +32,7 @@ class NotificationsPage extends StatelessWidget {
           List<LoanModel> pendingLoans = [];
           if (state is LoansLoaded) {
             pendingLoans = state.myLoans
-                .where((l) => l.status == 'pending_approval')
+                .where((l) => l.status == 'pending_approval' || l.status == 'pending_otp')
                 .toList();
           }
 
@@ -79,7 +79,27 @@ class _NotificationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        context.push(AppConstants.loanApproval, extra: loan);
+        if (loan.status == 'pending_otp') {
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+                title: Text('Setup Passcode', style: TextStyle(color: KhaataTheme.textDark, fontWeight: FontWeight.bold)),
+                content: Text(
+                  'A lender is currently setting up a loan for you of ₹${NumberFormat('#,##0').format(loan.amount)}.\n\nProvide them this Secure OTP: ${loan.otp ?? "N/A"}\n\nIt is required to finalize the draft before you can digitally sign it.',
+                  style: TextStyle(fontSize: 14.sp, height: 1.5),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text('OK', style: TextStyle(color: KhaataTheme.primaryBlue)),
+                  )
+                ],
+              ),
+            );
+        } else {
+            context.push(AppConstants.loanApproval, extra: loan);
+        }
       },
       child: Container(
         margin: EdgeInsets.only(bottom: 12.h),
@@ -102,12 +122,12 @@ class _NotificationCard extends StatelessWidget {
               Container(
                 padding: EdgeInsets.all(10.w),
                 decoration: BoxDecoration(
-                  color: KhaataTheme.primaryBlue.withOpacity(0.1),
+                  color: loan.status == 'pending_otp' ? KhaataTheme.warningYellow.withOpacity(0.1) : KhaataTheme.primaryBlue.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  Icons.description_outlined,
-                  color: KhaataTheme.primaryBlue,
+                  loan.status == 'pending_otp' ? Icons.lock_outline : Icons.description_outlined,
+                  color: loan.status == 'pending_otp' ? KhaataTheme.warningYellow : KhaataTheme.primaryBlue,
                   size: 24.sp,
                 ),
               ),
@@ -117,7 +137,7 @@ class _NotificationCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'New Loan Agreement',
+                      loan.status == 'pending_otp' ? 'Action Required: Setup OTP' : 'New Loan Agreement',
                       style: TextStyle(
                         fontSize: 15.sp,
                         fontWeight: FontWeight.w700,
@@ -126,7 +146,9 @@ class _NotificationCard extends StatelessWidget {
                     ),
                     SizedBox(height: 4.h),
                     Text(
-                      '${loan.lenderName} has sent you a loan agreement of ₹${NumberFormat('#,##0').format(loan.amount)}.',
+                      loan.status == 'pending_otp'
+                          ? '${loan.lenderName} is drafting an agreement of ₹${NumberFormat('#,##0').format(loan.amount)}.'
+                          : '${loan.lenderName} has sent you a loan agreement of ₹${NumberFormat('#,##0').format(loan.amount)}.',
                       style: TextStyle(
                         fontSize: 13.sp,
                         color: KhaataTheme.textGrey,

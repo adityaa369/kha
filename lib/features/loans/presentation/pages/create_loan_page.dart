@@ -53,7 +53,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
   }
 
   Future<void> _pickDocument() async {
-    FilePickerResult? result = await FilePicker.pickFiles(
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['pdf', 'jpg', 'png'],
     );
@@ -247,14 +247,13 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
     setState(() => _isLoading = false);
 
     if (result != null && mounted) {
-      // Show Success and Navigate Back
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Loan agreement sent to borrower for approval.', style: TextStyle(color: Colors.white)),
-          backgroundColor: Colors.green,
-        ),
-      );
-      context.pop();
+      // Navigate to OTP Confirmation
+      context.pushReplacement('/loan-confirmation', extra: {
+        'loan_id': result['id'],
+        'borrower_name': _borrowerNameController.text,
+        'borrower_phone': phone,
+        'amount': double.tryParse(_amountController.text) ?? 0.0,
+      });
     } else if (mounted) {
       // Show error if failed
       final state = cubit.state;
@@ -593,7 +592,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
               SizedBox(height: 16.h),
               GestureDetector(
                 onTap: () async {
-                  FilePickerResult? result = await FilePicker.pickFiles(
+                  FilePickerResult? result = await FilePicker.platform.pickFiles(
                     type: FileType.custom,
                     allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
                   );

@@ -44,6 +44,30 @@ class LoanRepository extends BaseRepository {
     });
   }
 
+  Future<bool> verifyLenderOtp(String loanId, String otp) async {
+    return await handleApiCall(() async {
+      final response = await _api.post('/loans/$loanId/verify-lender-otp', data: {'otp': otp});
+      if (response.data['success'] == true) return true;
+      throw ServerFailure(response.data['message'] ?? 'Failed to verify OTP');
+    });
+  }
+
+  Future<bool> closeLoan(String loanId, String otp) async {
+    return await handleApiCall(() async {
+      final response = await _api.post('/loans/$loanId/close', data: {'otp': otp});
+      if (response.data['success'] == true) return true;
+      throw ServerFailure(response.data['message'] ?? 'Failed to close loan');
+    });
+  }
+
+  Future<bool> requestClosureOtp(String loanId) async {
+    return await handleApiCall(() async {
+      final response = await _api.post('/loans/$loanId/close-otp', data: {});
+      if (response.data['success'] == true) return true;
+      throw ServerFailure(response.data['message'] ?? 'Failed to request closure OTP');
+    });
+  }
+
   Future<bool> resendOtp(String loanId) async {
     return await handleApiCall(() async {
       final response = await _api.post('/loans/$loanId/resend-otp');

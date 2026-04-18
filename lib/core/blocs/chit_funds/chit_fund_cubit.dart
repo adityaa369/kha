@@ -89,4 +89,83 @@ class ChitFundCubit extends Cubit<ChitFundState> {
       emit(ChitFundError(e.toString()));
     }
   }
+
+  Future<void> manualFinalizeAuction({
+    required String chitId,
+    required String winnerUserId,
+    required double bidDiscount,
+  }) async {
+    try {
+      emit(ChitFundLoading());
+      await _repository.finalizeAuction(
+        chitId: chitId,
+        winnerUserId: winnerUserId,
+        bidDiscount: bidDiscount,
+      );
+      emit(const ChitFundActionSuccess('Auction Finalized successfully!'));
+      await loadAdminDashboard(chitId);
+    } catch (e) {
+      emit(ChitFundError(e.toString()));
+      await loadAdminDashboard(chitId);
+    }
+  }
+
+  // Open auction
+  Future<void> openAuctionMonth({
+    required String chitId,
+    required int monthNumber,
+    required double baseAmount,
+  }) async {
+    try {
+      emit(ChitFundLoading());
+      await _repository.openAuctionMonth(chitId, monthNumber, baseAmount);
+      emit(const ChitFundActionSuccess('Auction opened successfully! Notifications sent.'));
+      await loadAdminDashboard(chitId);
+    } catch (e) {
+      emit(ChitFundError(e.toString()));
+      await loadAdminDashboard(chitId);
+    }
+  }
+
+  // Submit Bid
+  Future<void> submitBid({
+    required String chitId,
+    required double bidDiscount,
+  }) async {
+    try {
+      emit(ChitFundLoading());
+      await _repository.submitBid(chitId, bidDiscount);
+      emit(const ChitFundActionSuccess('Bid submitted successfully!'));
+      await loadInvitesAndOwned(); // Reload to refresh user dashboard
+    } catch (e) {
+      emit(ChitFundError(e.toString()));
+      await loadInvitesAndOwned();
+    }
+  }
+
+  // Get Auction Bids
+  Future<List<Map<String, dynamic>>> getAuctionBids(String chitId, int monthNumber) async {
+    try {
+      return await _repository.getAuctionBids(chitId, monthNumber);
+    } catch (e) {
+      return [];
+    }
+  }
+
+  // Verify Payment for explicitly selected month
+  Future<void> verifyMonthPayment({
+    required String chitId,
+    required int monthNumber,
+    required String subscriberId,
+    required bool isPaid,
+  }) async {
+    try {
+      await _repository.verifyMonthPayment(chitId, monthNumber, subscriberId, isPaid);
+      // Silently reload dashboard to show updated UI without showing success snackbar every single time
+      final data = await _repository.getAdminDashboard(chitId);
+      emit(ChitAdminDashboardLoaded(data));
+    } catch (e) {
+      emit(ChitFundError(e.toString()));
+    }
+  }
 }

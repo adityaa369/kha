@@ -7,6 +7,7 @@ import '../../../../config/constants.dart';
 import '../../../../config/theme.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/blocs/loans/loan_cubit.dart';
+import '../../../../core/blocs/loans/loan_state.dart';
 import '../../../../core/widgets/buttons.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 
@@ -73,7 +74,7 @@ class _LoanConfirmationPageState extends State<LoanConfirmationPage> {
         final loanId = widget.loanData['loan_id'];
         if (loanId == null) throw 'Missing loan ID';
 
-        final success = await context.read<LoanCubit>().verifyLoan(loanId);
+        final success = await context.read<LoanCubit>().verifyLenderOtp(loanId, _currentOtp);
         
         if (!mounted) return;
         setState(() => _isLoading = false);
@@ -129,6 +130,15 @@ class _LoanConfirmationPageState extends State<LoanConfirmationPage> {
                   ),
                 ],
               ),
+            ),
+          );
+        } else {
+          final state = context.read<LoanCubit>().state;
+          final String errorMessage = state is LoanError ? (state as LoanError).message : 'Invalid OTP entered. Please try again.';
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errorMessage),
+              backgroundColor: KhaataTheme.dangerRed,
             ),
           );
         }

@@ -201,21 +201,48 @@ class _ChitGroupAdminPageState extends State<ChitGroupAdminPage> {
                  const Center(child: Text("Process hasn't started yet")),
                if (chitDetails['status'] != 'registration')
                  Flexible(
-                   child: ListView.builder(
-                     shrinkWrap: true,
-                     itemCount: completedMonths + 1, // Include current active month
-                     itemBuilder: (c, idx) {
-                       int monthNum = idx + 1;
-                       bool isPaid = paidMonthsSet.contains(monthNum);
-                       return ListTile(
-                         leading: Icon(
-                           isPaid ? Icons.check_circle : Icons.cancel, 
-                           color: isPaid ? KhaataTheme.accentGreen : KhaataTheme.dangerRed
-                         ),
-                         title: Text('Month $monthNum Contribution', style: TextStyle(fontWeight: FontWeight.w600)),
-                         subtitle: Text(isPaid ? 'Payment Confirmed' : 'Payment Pending', style: TextStyle(color: isPaid ? KhaataTheme.accentGreen : KhaataTheme.dangerRed)),
+                   child: BlocBuilder<ChitFundCubit, ChitFundState>(
+                     builder: (context, state) {
+                       // Find the member's latest data from state
+                       Map<String, dynamic> currentMember = member; // default to passed
+                       if (state is ChitAdminDashboardLoaded) {
+                         final mm = (state.dashboardData['members'] as List?)?.firstWhere(
+                           (m) => m['id'] == member['id'], orElse: () => member
+                         );
+                         if (mm != null) currentMember = mm as Map<String, dynamic>;
+                       }
+                       
+                       final Set<int> currentPaidSet = ((currentMember['paidMonths'] ?? []) as List).map((e) => e as int).toSet();
+
+                       return ListView.builder(
+                         shrinkWrap: true,
+                         itemCount: completedMonths + 1, // Include current active month
+                         itemBuilder: (c, idx) {
+                           int monthNum = idx + 1;
+                           bool isPaid = currentPaidSet.contains(monthNum);
+                           
+                           return ListTile(
+                             leading: Icon(
+                               isPaid ? Icons.check_circle : Icons.cancel, 
+                               color: isPaid ? KhaataTheme.accentGreen : KhaataTheme.dangerRed
+                             ),
+                             title: Text('Month $monthNum Contribution', style: TextStyle(fontWeight: FontWeight.w600)),
+                             subtitle: Text(isPaid ? 'Payment Confirmed' : 'Payment Pending', style: TextStyle(color: isPaid ? KhaataTheme.accentGreen : KhaataTheme.dangerRed)),
+                             trailing: chitDetails['isOwner'] == true ? IconButton(
+                               icon: Icon(Icons.edit, color: KhaataTheme.primaryBlue, size: 20.sp),
+                               onPressed: () {
+                                 context.read<ChitFundCubit>().verifyMonthPayment(
+                                   chitId: chitDetails['id'],
+                                   monthNumber: monthNum,
+                                   subscriberId: currentMember['id'],
+                                   isPaid: !isPaid,
+                                 );
+                               },
+                             ) : null,
+                           );
+                         },
                        );
-                     },
+                     }
                    ),
                  ),
             ],

@@ -170,9 +170,90 @@ class LoansGivenPage extends StatelessWidget {
                             progress: loan.progress,
                             initials: loan.initials ?? loan.borrowerName[0].toUpperCase(),
                             totalPayable: loan.totalPayable != null ? '₹ ${_formatCurrency(loan.totalPayable!)}' : null,
-                            onCloseLoan: () {
-                              context.read<LoanCubit>().updateProgress(loan.id, 1.0);
-                              context.push(AppConstants.loanCloseSuccess);
+                            onCloseLoan: () async {
+                              showDialog(
+                                context: context,
+                                barrierDismissible: false,
+                                builder: (context) => const Center(child: CircularProgressIndicator()),
+                              );
+                              
+                              // Dispatch OTP dynamically
+                              final otpSent = await context.read<LoanCubit>().requestClosureOtp(loan.id);
+                              
+                              if (!context.mounted) return;
+                              Navigator.pop(context); // close loader
+                              
+                              if (otpSent) {
+                                  // Prompt Secure Input from Lender
+                                  final otpController = TextEditingController();
+                                  showDialog(
+                                      context: context,
+                                      barrierDismissible: false,
+                                      builder: (dialogContext) => AlertDialog(
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                          title: const Text('Finalize Closure', style: TextStyle(fontWeight: FontWeight.bold)),
+                                          content: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                  const Text('An OTP has been sent securely via Push Notification to the borrower. Enter it below to mutually confirm the agreement closure.'),
+                                                  const SizedBox(height: 16),
+                                                  TextField(
+                                                      controller: otpController,
+                                                      keyboardType: TextInputType.number,
+                                                      maxLength: 6,
+                                                      decoration: InputDecoration(
+                                                          hintText: '6-digit OTP',
+                                                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                                          filled: true,
+                                                          fillColor: Colors.grey[100],
+                                                          counterText: '',
+                                                      ),
+                                                  ),
+                                              ],
+                                          ),
+                                          actions: [
+                                              TextButton(
+                                                  onPressed: () => Navigator.pop(dialogContext),
+                                                  child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+                                              ),
+                                              ElevatedButton(
+                                                  style: ElevatedButton.styleFrom(
+                                                      backgroundColor: KhaataTheme.primaryBlue,
+                                                      foregroundColor: Colors.white,
+                                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                                  ),
+                                                  onPressed: () async {
+                                                      if (otpController.text.length != 6) return;
+                                                      
+                                                      Navigator.pop(dialogContext); // hide dialog
+                                                      
+                                                      // Execute mutual closure natively
+                                                      showDialog(context: context, barrierDismissible: false, builder: (_) => const Center(child: CircularProgressIndicator()));
+                                                      final success = await context.read<LoanCubit>().closeLoan(loan.id, otpController.text);
+                                                      
+                                                      if (!context.mounted) return;
+                                                      Navigator.pop(context); // hide loader
+                                                      
+                                                      if (success) {
+                                                          context.push(AppConstants.loanCloseSuccess);
+                                                      } else {
+                                                          final state = context.read<LoanCubit>().state;
+                                                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                                              backgroundColor: KhaataTheme.dangerRed,
+                                                              content: Text(state is LoanError ? state.message : 'Invalid Authentication OTP.')
+                                                          ));
+                                                      }
+                                                  },
+                                                  child: const Text('Confirm'),
+                                              ),
+                                          ],
+                                      ),
+                                  );
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Failed to initiate closure OTP.')),
+                                );
+                              }
                             },
                           ),
                           SizedBox(height: 12.h),
@@ -446,17 +527,18 @@ class _GivenLoanCard extends StatelessWidget {
                               _DetailRow(label: 'Repaid', value: '${(progress * 100).toInt()}%'),
                               if (totalPayable != null) _DetailRow(label: 'Total Payable', value: totalPayable!),
                               SizedBox(height: 20.h),
-                              SizedBox(
-                                width: double.infinity,
-                                child: PrimaryButton(
-                                  text: 'Close Loan',
-                                  onPressed: () {
-                                    onCloseLoan();
-                                    context.pop();
-                                  },
+                              if (status != 'Closed' && status != 'Completed')
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: PrimaryButton(
+                                    text: 'Close Loan',
+                                    onPressed: () {
+                                      context.pop();
+                                      onCloseLoan();
+                                    },
+                                  ),
                                 ),
-                              ),
-                              SizedBox(height: 12.h),
+                              if (status != 'Closed' && status != 'Completed') SizedBox(height: 12.h),
                               SizedBox(
                                 width: double.infinity,
                                 child: OutlinedButton(

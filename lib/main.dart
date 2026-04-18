@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'config/routes.dart';
 import 'config/theme.dart';
+import 'config/constants.dart';
 import 'core/blocs/auth/auth_cubit.dart';
 import 'core/blocs/loans/loan_cubit.dart';
 import 'core/blocs/credit_score/credit_score_cubit.dart';
@@ -23,13 +24,7 @@ void main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
     await Firebase.initializeApp().then((_) async {
-      try {
-        await FirebaseAppCheck.instance.activate(
-          androidProvider: AndroidProvider.playIntegrity,
-        );
-      } catch (e) {
-        print("AppCheck initialization allowed to gracefully fail: $e");
-      }
+      // App Check is disabled for local debug to prevent Phone Auth from blocking internal IP/Device requests
       try {
         NotificationService.initialize();
       } catch (e) {
@@ -128,7 +123,14 @@ class _NotificationListenerWidgetState extends State<NotificationListenerWidget>
     });
     
     _openSub = FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) async {
-      await BiometricAuthService.authenticate();
+      final authenticated = await BiometricAuthService.authenticate();
+      if (authenticated) {
+        if (message.data['type'] == 'LOAN_CREATED') {
+          router.go(AppConstants.myLoans);
+        } else if (message.data['type'] == 'LOAN_OTP' || message.data['type'] == 'LOAN_INIT_OTP') {
+          router.go(AppConstants.notifications);
+        }
+      }
     });
   }
   
