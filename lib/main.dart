@@ -24,7 +24,15 @@ void main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
     await Firebase.initializeApp().then((_) async {
-      // App Check is disabled for local debug to prevent Phone Auth from blocking internal IP/Device requests
+      try {
+        await FirebaseAppCheck.instance.activate(
+          androidProvider: AndroidProvider.playIntegrity,
+          appleProvider: AppleProvider.deviceCheck,
+        );
+      } catch(e) {
+        print("AppCheck Init Failed: $e");
+      }
+
       try {
         NotificationService.initialize();
       } catch (e) {

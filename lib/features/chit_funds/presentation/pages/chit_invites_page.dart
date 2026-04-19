@@ -12,6 +12,7 @@ import '../../../../data/models/chit_invite_model.dart';
 import '../../../../config/constants.dart';
 import '../../../../core/services/biometric_auth_service.dart';
 
+
 class ChitInvitesPage extends StatefulWidget {
   const ChitInvitesPage({super.key});
 
@@ -250,12 +251,12 @@ class _ChitInvitesPageState extends State<ChitInvitesPage> {
                  _showInviteDialog(chit);
              }
           },
-          onDelete: () async {
+          onDelete: !isFull ? () async {
             final auth = await BiometricAuthService.authenticate();
             if (auth && context.mounted) {
               context.read<ChitFundCubit>().deleteChitFund(chit.id);
             }
-          },
+          } : null,
           secondaryActionLabel: !isFull ? 'Dashboard' : null,
           onSecondaryAction: !isFull ? () => context.push(AppConstants.chitAdminDashboard, extra: chit.id) : null,
         );

@@ -161,8 +161,7 @@ class _MyLoansPageState extends State<MyLoansPage> with SingleTickerProviderStat
                       final displayedLoans = tabName == 'All' 
                         ? state.myLoans 
                         : state.myLoans.where((l) {
-                            final formattedType = l.type.split('_').map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '').join(' ');
-                            return formattedType == tabName;
+                            return l.displayType == tabName;
                           }).toList();
 
                       if (displayedLoans.isEmpty) {

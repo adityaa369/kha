@@ -66,42 +66,7 @@ class _ChitGroupAdminPageState extends State<ChitGroupAdminPage> {
              Tab(text: "Auctions"),
           ],
         ),
-        actions: [
-          BlocBuilder<ChitFundCubit, ChitFundState>(
-            builder: (context, state) {
-              if (state is ChitAdminDashboardLoaded && state.dashboardData['chitDetails']?['isOwner'] == true) {
-                return PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_vert, color: Colors.white),
-                  onSelected: (value) async {
-                    if (value == 'delete') {
-                      final authenticated = await BiometricAuthService.authenticate();
-                      if (!authenticated) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Biometric auth required to delete group', style: TextStyle(color: Colors.white)), backgroundColor: Colors.red)
-                          );
-                        }
-                        return;
-                      }
-                      
-                      if (context.mounted) {
-                        context.read<ChitFundCubit>().deleteChitFund(widget.chitId);
-                        context.pop();
-                      }
-                    }
-                  },
-                  itemBuilder: (BuildContext context) => [
-                    const PopupMenuItem<String>(
-                      value: 'delete',
-                      child: Text('Delete Group', style: TextStyle(color: Colors.red)),
-                    ),
-                  ],
-                );
-              }
-              return const SizedBox.shrink();
-            },
-          ),
-        ],
+
       ),
       body: BlocConsumer<ChitFundCubit, ChitFundState>(
         listener: (context, state) {
