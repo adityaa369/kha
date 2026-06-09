@@ -56,6 +56,7 @@ dependencies:
   flutter_dotenv: ^5.1.0
   sendotp_flutter_sdk: ^0.0.2
   local_auth: ^2.1.6
+  url_launcher: ^6.2.5
   dio_smart_retry: ^7.0.1
   pretty_dio_logger: ^1.4.0
   sentry_flutter: ^9.14.0
@@ -67,6 +68,14 @@ dependencies:
   firebase_app_check: ^0.4.2
   firebase_storage: ^13.2.0
   file_picker: ^8.1.4
+  
+  # Location
+  geolocator: ^13.0.1
+  geocoding: ^3.0.0
+  
+  # Animations
+  lottie: ^3.1.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -79,6 +88,7 @@ flutter:
 
   assets:
     - .env
+    - assets/images/
     
   # To add assets to your application, add an assets section, like this:
   # assets:

@@ -22,6 +22,9 @@ class LoanModel extends Equatable {
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final String? otp;
+  final double? emiAmount;
+  final double? totalPayableAmount;
+  final String? documentUrl;
 
   const LoanModel({
     required this.id,
@@ -44,6 +47,9 @@ class LoanModel extends Equatable {
     this.createdAt,
     this.updatedAt,
     this.otp,
+    this.emiAmount,
+    this.totalPayableAmount,
+    this.documentUrl,
   });
 
   factory LoanModel.fromJson(Map<String, dynamic> json) {
@@ -76,6 +82,9 @@ class LoanModel extends Equatable {
           ? DateTime.parse(json['updated_at'] ?? json['updatedAt'])
           : null,
       otp: json['otp']?.toString(),
+      emiAmount: json['emiAmount']?.toDouble() ?? json['emi_amount']?.toDouble(),
+      totalPayableAmount: json['totalPayable']?.toDouble() ?? json['total_payable']?.toDouble(),
+      documentUrl: json['documentUrl']?.toString() ?? json['document_url']?.toString(),
     );
   }
 
@@ -122,18 +131,17 @@ class LoanModel extends Equatable {
   }
 
   String get displayType {
-    switch (type) {
-      case 'personal':
-        return 'Hand Credit';
-      case 'business':
-        return 'Business Credit';
-      case 'home':
-        return 'Interest Credit';
-      case 'chitfund':
-        return 'Chit Funds';
-      default:
-        return type.toUpperCase();
+    final t = type.toLowerCase();
+    if (t == 'personal' || t == 'hand_credit') {
+      return 'Hand Credit';
+    } else if (t == 'business' || t == 'business_credit') {
+      return 'Business Credit';
+    } else if (t == 'home' || t == 'interest_credit') {
+      return 'Interest Credit';
+    } else if (t == 'chitfund') {
+      return 'Chit Funds';
     }
+    return type.toUpperCase();
   }
 
   String get displayAmount {
@@ -201,6 +209,7 @@ class LoanModel extends Equatable {
 
   // Calculate EMI (if interest rate and duration available)
   double? get emi {
+    if (emiAmount != null) return emiAmount;
     if (interestRate == null || durationMonths == null || durationMonths == 0) {
       return null;
     }
@@ -215,6 +224,7 @@ class LoanModel extends Equatable {
 
   // Calculate total payable amount
   double? get totalPayable {
+    if (totalPayableAmount != null) return totalPayableAmount;
     if (emi == null || durationMonths == null) return null;
     return emi! * durationMonths!;
   }
@@ -254,6 +264,9 @@ class LoanModel extends Equatable {
     String? aadhar,
     DateTime? createdAt,
     DateTime? updatedAt,
+    double? emiAmount,
+    double? totalPayableAmount,
+    String? documentUrl,
   }) {
     return LoanModel(
       id: id ?? this.id,
@@ -275,6 +288,9 @@ class LoanModel extends Equatable {
       aadhar: aadhar ?? this.aadhar,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      emiAmount: emiAmount ?? this.emiAmount,
+      totalPayableAmount: totalPayableAmount ?? this.totalPayableAmount,
+      documentUrl: documentUrl ?? this.documentUrl,
     );
   }
 
@@ -290,6 +306,9 @@ class LoanModel extends Equatable {
     progress,
     startDate,
     type,
+    emiAmount,
+    totalPayableAmount,
+    documentUrl,
   ];
 }
 

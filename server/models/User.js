@@ -23,6 +23,12 @@ const UserSchema = new mongoose.Schema({
         type: String,
         sparse: true
     },
+    city: String,
+    address: String,
+    password: {
+        type: String,
+        required: false
+    },
     pan: String,
     aadhar: String,
     dob: String,
@@ -30,6 +36,10 @@ const UserSchema = new mongoose.Schema({
     isVerified: {
         type: Boolean,
         default: false
+    },
+    fcmToken: {
+        type: String,
+        required: false
     }
 }, {
     timestamps: true
