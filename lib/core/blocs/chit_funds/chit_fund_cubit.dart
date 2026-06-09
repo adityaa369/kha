@@ -8,12 +8,31 @@ class ChitFundCubit extends Cubit<ChitFundState> {
   ChitFundCubit(this._repository) : super(ChitFundInitial());
 
   Future<void> loadInvitesAndOwned() async {
-    try {
-      if (state is! ChitFundInvitesLoaded) {
+    // 1. Load from local cache instantly if state is not already loaded
+    if (state is! ChitFundInvitesLoaded) {
+      try {
+        final cachedVacant = await _repository.getCachedVacantChits();
+        final cachedInvites = await _repository.getCachedMyInvites();
+        final cachedMyChits = await _repository.getCachedMyChits();
+        
+        if ((cachedVacant != null && cachedVacant.isNotEmpty) || 
+            (cachedInvites != null && cachedInvites.isNotEmpty) || 
+            (cachedMyChits != null && cachedMyChits.isNotEmpty)) {
+          emit(ChitFundInvitesLoaded(
+            ownedChits: cachedVacant ?? [],
+            pendingInvites: cachedInvites ?? [],
+            mySubscriptions: cachedMyChits ?? [],
+          ));
+        } else {
           emit(ChitFundLoading());
+        }
+      } catch (_) {
+        emit(ChitFundLoading());
       }
-      
-      // Fetch both owned forming chits AND pending invites AND active subscriptions
+    }
+
+    // 2. Fetch from server in the background
+    try {
       final ownedChits = await _repository.getVacantChits();
       final pendingInvites = await _repository.getMyInvites();
       final mySubscriptions = await _repository.getMyChits();
@@ -24,7 +43,10 @@ class ChitFundCubit extends Cubit<ChitFundState> {
         mySubscriptions: mySubscriptions,
       ));
     } catch (e) {
-      emit(ChitFundError(e.toString()));
+      // Only emit error if we don't have loaded data to show
+      if (state is! ChitFundInvitesLoaded) {
+        emit(ChitFundError(e.toString()));
+      }
     }
   }
 
@@ -136,10 +158,10 @@ class ChitFundCubit extends Cubit<ChitFundState> {
       emit(ChitFundLoading());
       await _repository.submitBid(chitId, bidDiscount);
       emit(const ChitFundActionSuccess('Bid submitted successfully!'));
-      await loadInvitesAndOwned(); // Reload to refresh user dashboard
+      await loadAdminDashboard(chitId);
     } catch (e) {
       emit(ChitFundError(e.toString()));
-      await loadInvitesAndOwned();
+      await loadAdminDashboard(chitId);
     }
   }
 

@@ -9,6 +9,7 @@ import '../../../../core/blocs/auth/auth_cubit.dart';
 import '../../../../core/blocs/loans/loan_cubit.dart';
 import '../../../../core/blocs/loans/loan_state.dart';
 import '../../../../core/widgets/buttons.dart';
+import '../../../../core/blocs/navigation/navigation_cubit.dart';
 
 class LoansGivenPage extends StatelessWidget {
   const LoansGivenPage({super.key});
@@ -17,543 +18,381 @@ class LoansGivenPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: KhaataTheme.backgroundGrey,
-      body: Column(
-        children: [
-          // Blue Header - Matching My Loans style
-          Container(
-            width: double.infinity,
-            color: KhaataTheme.primaryBlue,
-            padding: EdgeInsets.fromLTRB(16.w, 20.h, 16.w, 16.h),
-            child: SafeArea(
-              bottom: false,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Loans Given',
-                    style: TextStyle(
-                      fontSize: 20.sp,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black87),
+          onPressed: () {
+            if (Navigator.of(context).canPop()) {
+              context.pop();
+            } else {
+              context.read<NavigationCubit>().changeTab(0);
+            }
+          },
+        ),
+        title: Text(
+          'Given Loans',
+          style: TextStyle(
+            color: Colors.black87,
+            fontSize: 18.sp,
+            fontWeight: FontWeight.w700,
           ),
-
-          // Stats Row - Like My Loans
-          BlocBuilder<LoanCubit, LoanState>(
-            builder: (context, state) {
-              double totalLent = 0;
-              double totalPending = 0;
-              
-              if (state is LoansLoaded) {
-                for (var loan in state.givenLoans) {
-                  if (loan.status != 'pending_otp' && loan.status != 'pending_approval' && loan.status != 'rejected') {
-                    totalLent += loan.amount;
-                    totalPending += loan.remainingAmount;
-                  }
-                }
-              }
-
-              return Container(
-                color: Colors.white,
-                padding: EdgeInsets.symmetric(vertical: 16.h),
-                child: Row(
-                  children: [
-
-                    Expanded(
-                      child: _StatBox(
-                        label: 'Pending',
-                        amount: '₹ ${_formatCurrency(totalPending)}',
-                        icon: Icons.arrow_downward,
-                        color: KhaataTheme.warningYellow,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
+        ),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search, color: Colors.black87),
+            onPressed: () {},
           ),
-
-          // Loan List
-          Expanded(
-            child: BlocBuilder<LoanCubit, LoanState>(
-              builder: (context, state) {
-                if (state is LoanInitial) {
-                  final authState = context.read<AuthCubit>().state;
-                  if (authState is AuthenticatedFull) {
-                    context.read<LoanCubit>().fetchLoans();
-                  }
-                  return const Center(child: CircularProgressIndicator());
-                }
-                
-                if (state is LoanLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                if (state is LoanError) {
-                  return Center(child: Text(state.message));
-                }
-
-                if (state is LoansLoaded) {
-                  if (state.givenLoans.isEmpty) {
-                    return RefreshIndicator(
-                      color: KhaataTheme.primaryBlue,
-                      onRefresh: () async {
-                        await context.read<LoanCubit>().fetchLoans();
-                      },
-                      child: ListView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        children: [
-                          SizedBox(height: 100.h),
-                          Icon(Icons.handshake_outlined, size: 64.sp, color: Colors.grey[300]),
-                          SizedBox(height: 16.h),
-                          Center(
-                            child: Text(
-                              'No active accounts',
-                              style: TextStyle(color: Colors.grey, fontSize: 16.sp),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-
-                  return RefreshIndicator(
-                    color: KhaataTheme.primaryBlue,
-                    onRefresh: () async {
-                      await context.read<LoanCubit>().fetchLoans();
-                    },
-                    child: ListView.builder(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      padding: EdgeInsets.all(16.w),
-                    itemCount: state.givenLoans.length,
-                    itemBuilder: (context, index) {
-                      final loan = state.givenLoans[index];
-                      // Format date for the UI
-                      final dateStr = '${loan.startDate.day} ${_getMonthName(loan.startDate.month)} ${loan.startDate.year}';
-                      
-                      return Column(
-                        children: [
-                          _GivenLoanCard(
-                            name: loan.displayCounterpartyName,
-                            amount: loan.displayAmount,
-                            date: dateStr,
-                            status: loan.statusDisplay,
-                            statusColor: loan.statusColor,
-                            progress: loan.progress,
-                            initials: loan.initials ?? loan.borrowerName[0].toUpperCase(),
-                            totalPayable: loan.totalPayable != null ? '₹ ${_formatCurrency(loan.totalPayable!)}' : null,
-                            onCloseLoan: () async {
-                              showDialog(
-                                context: context,
-                                barrierDismissible: false,
-                                builder: (context) => const Center(child: CircularProgressIndicator()),
-                              );
-                              
-                              // Dispatch OTP dynamically
-                              final otpSent = await context.read<LoanCubit>().requestClosureOtp(loan.id);
-                              
-                              if (!context.mounted) return;
-                              Navigator.pop(context); // close loader
-                              
-                              if (otpSent) {
-                                  // Prompt Secure Input from Lender
-                                  final otpController = TextEditingController();
-                                  showDialog(
-                                      context: context,
-                                      barrierDismissible: false,
-                                      builder: (dialogContext) => AlertDialog(
-                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                          title: const Text('Finalize Closure', style: TextStyle(fontWeight: FontWeight.bold)),
-                                          content: Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                  const Text('An OTP has been sent securely via Push Notification to the borrower. Enter it below to mutually confirm the agreement closure.'),
-                                                  const SizedBox(height: 16),
-                                                  TextField(
-                                                      controller: otpController,
-                                                      keyboardType: TextInputType.number,
-                                                      maxLength: 6,
-                                                      decoration: InputDecoration(
-                                                          hintText: '6-digit OTP',
-                                                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                                                          filled: true,
-                                                          fillColor: Colors.grey[100],
-                                                          counterText: '',
-                                                      ),
-                                                  ),
-                                              ],
-                                          ),
-                                          actions: [
-                                              TextButton(
-                                                  onPressed: () => Navigator.pop(dialogContext),
-                                                  child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
-                                              ),
-                                              ElevatedButton(
-                                                  style: ElevatedButton.styleFrom(
-                                                      backgroundColor: KhaataTheme.primaryBlue,
-                                                      foregroundColor: Colors.white,
-                                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                                  ),
-                                                  onPressed: () async {
-                                                      if (otpController.text.length != 6) return;
-                                                      
-                                                      Navigator.pop(dialogContext); // hide dialog
-                                                      
-                                                      // Execute mutual closure natively
-                                                      showDialog(context: context, barrierDismissible: false, builder: (_) => const Center(child: CircularProgressIndicator()));
-                                                      final success = await context.read<LoanCubit>().closeLoan(loan.id, otpController.text);
-                                                      
-                                                      if (!context.mounted) return;
-                                                      Navigator.pop(context); // hide loader
-                                                      
-                                                      if (success) {
-                                                          context.push(AppConstants.loanCloseSuccess);
-                                                      } else {
-                                                          final state = context.read<LoanCubit>().state;
-                                                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                                              backgroundColor: KhaataTheme.dangerRed,
-                                                              content: Text(state is LoanError ? state.message : 'Invalid Authentication OTP.')
-                                                          ));
-                                                      }
-                                                  },
-                                                  child: const Text('Confirm'),
-                                              ),
-                                          ],
-                                      ),
-                                  );
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Failed to initiate closure OTP.')),
-                                );
-                              }
-                            },
-                          ),
-                          SizedBox(height: 12.h),
-                        ],
-                      );
-                    },
-                    ),
-                  );
-                }
-                return const SizedBox();
-              },
-            ),
+          IconButton(
+            icon: const Icon(Icons.tune, color: Colors.black87),
+            onPressed: () {},
           ),
         ],
       ),
+      body: BlocBuilder<LoanCubit, LoanState>(
+        builder: (context, state) {
+          double totalPending = 0;
+          
+          if (state is LoansLoaded) {
+            var filteredGivenLoans = state.givenLoans.where((l) => l.type != 'chit_fund').toList();
+            for (var loan in filteredGivenLoans) {
+              if (loan.status != 'pending_otp' && loan.status != 'pending_approval' && loan.status != 'rejected') {
+                totalPending += loan.remainingAmount;
+              }
+            }
+          }
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Top Card: Balance to Collect
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                child: Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.symmetric(vertical: 24.h),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF2FDF5), // Light green tint
+                    borderRadius: BorderRadius.circular(16.r),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        'Balance to Collect',
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          color: Colors.black54,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      SizedBox(height: 8.h),
+                      Text(
+                        '₹${_formatCurrency(totalPending)}',
+                        style: TextStyle(
+                          fontSize: 32.sp,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.green.shade700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              
+              // "All Loans" section header
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                child: Text(
+                  'All Loans',
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black87,
+                  ),
+                ),
+              ),
+              
+              // Expanded ListView
+              Expanded(
+                child: _buildLoanList(context, state),
+              ),
+            ],
+          );
+        },
+      ),
     );
+  }
+
+  Widget _buildLoanList(BuildContext context, LoanState state) {
+    if (state is LoanInitial) {
+      final authState = context.read<AuthCubit>().state;
+      if (authState is AuthenticatedFull) {
+        context.read<LoanCubit>().fetchLoans();
+      }
+      return const Center(child: CircularProgressIndicator());
+    }
+    
+    if (state is LoanLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (state is LoanError) {
+      return Center(child: Text(state.message));
+    }
+
+    if (state is LoansLoaded) {
+      final filteredGivenList = state.givenLoans.where((l) => l.type != 'chit_fund').toList();
+      
+      if (filteredGivenList.isEmpty) {
+        return RefreshIndicator(
+          color: Colors.green.shade700,
+          onRefresh: () async {
+            await context.read<LoanCubit>().fetchLoans();
+          },
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            children: [
+              SizedBox(height: 100.h),
+              Icon(Icons.handshake_outlined, size: 64.sp, color: Colors.grey[300]),
+              SizedBox(height: 16.h),
+              Center(
+                child: Text(
+                  'No active accounts',
+                  style: TextStyle(color: Colors.grey, fontSize: 16.sp),
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+
+      return RefreshIndicator(
+        color: Colors.green.shade700,
+        onRefresh: () async {
+          await context.read<LoanCubit>().fetchLoans();
+        },
+        child: ListView.builder(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: EdgeInsets.symmetric(horizontal: 16.w),
+          itemCount: filteredGivenList.length,
+          itemBuilder: (context, index) {
+            final loan = filteredGivenList[index];
+            final dateStr = '${loan.startDate.day} ${_getMonthName(loan.startDate.month)} ${loan.startDate.year}';
+            
+            // Generate initials color dynamically
+            final colorPairs = [
+              _ColorPair(bg: const Color(0xFFE8F5E9), text: const Color(0xFF2E7D32)), // Green
+              _ColorPair(bg: const Color(0xFFE3F2FD), text: const Color(0xFF1565C0)), // Blue
+              _ColorPair(bg: const Color(0xFFFFF3E0), text: const Color(0xFFEF6C00)), // Orange
+              _ColorPair(bg: const Color(0xFFFFEBEE), text: const Color(0xFFC62828)), // Red/Pinkish
+              _ColorPair(bg: const Color(0xFFF3E5F5), text: const Color(0xFF6A1B9A)), // Purple
+            ];
+            final colorPair = colorPairs[index % colorPairs.length];
+
+            return Padding(
+              padding: EdgeInsets.only(bottom: 12.h),
+              child: _GivenLoanCard(
+                name: loan.displayCounterpartyName,
+                mobile: loan.mobile ?? '-',
+                amount: '₹${_formatCurrency(loan.amount)}',
+                date: dateStr,
+                status: loan.statusDisplay,
+                progress: loan.progress,
+                initials: loan.initials ?? (loan.borrowerName.isNotEmpty ? loan.borrowerName[0].toUpperCase() : 'L'),
+                colorPair: colorPair,
+                totalPayable: loan.totalPayable != null ? '₹ ${_formatCurrency(loan.totalPayable!)}' : null,
+                onCloseLoan: () async {
+                  final router = GoRouter.of(context);
+                  final navigator = Navigator.of(context, rootNavigator: true);
+                  final sm = ScaffoldMessenger.of(context);
+                  final loanCubit = context.read<LoanCubit>();
+
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (context) => const Center(child: CircularProgressIndicator()),
+                  );
+                  
+                  // Dispatch OTP dynamically
+                  final otpSent = await loanCubit.requestClosureOtp(loan.id);
+                  
+                  navigator.pop(); // close loader
+                  
+                  if (otpSent) {
+                      // Prompt Secure Input from Lender
+                      final otpController = TextEditingController();
+                      showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (dialogContext) => AlertDialog(
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              title: const Text('Finalize Closure', style: TextStyle(fontWeight: FontWeight.bold)),
+                              content: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                      const Text('An OTP has been sent securely via Push Notification to the borrower. Enter it below to mutually confirm the agreement closure.'),
+                                      const SizedBox(height: 16),
+                                      TextField(
+                                          controller: otpController,
+                                          keyboardType: TextInputType.number,
+                                          maxLength: 6,
+                                          decoration: InputDecoration(
+                                              hintText: '6-digit OTP',
+                                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                              filled: true,
+                                              fillColor: Colors.grey[100],
+                                              counterText: '',
+                                          ),
+                                      ),
+                                  ],
+                              ),
+                              actions: [
+                                  TextButton(
+                                      onPressed: () => Navigator.pop(dialogContext),
+                                      child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+                                  ),
+                                  ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.green.shade700,
+                                          foregroundColor: Colors.white,
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                      ),
+                                      onPressed: () async {
+                                          if (otpController.text.length != 6) return;
+                                          
+                                          Navigator.pop(dialogContext); // hide dialog
+                                          
+                                          // Execute mutual closure natively
+                                          showDialog(context: context, barrierDismissible: false, builder: (_) => const Center(child: CircularProgressIndicator()));
+                                          final success = await loanCubit.closeLoan(loan.id, otpController.text);
+                                          
+                                          navigator.pop(); // hide loader
+                                          
+                                          if (success) {
+                                              router.push(AppConstants.loanCloseSuccess);
+                                          } else {
+                                              sm.showSnackBar(const SnackBar(
+                                                  backgroundColor: KhaataTheme.dangerRed,
+                                                  content: Text('Invalid Authentication OTP.')
+                                              ));
+                                          }
+                                      },
+                                      child: const Text('Confirm'),
+                                  ),
+                              ],
+                          ),
+                      );
+                  } else {
+                    sm.showSnackBar(
+                      const SnackBar(content: Text('Failed to initiate closure OTP.')),
+                    );
+                  }
+                },
+              ),
+            );
+          },
+        ),
+      );
+    }
+    return const SizedBox();
   }
 }
 
-class _StatBox extends StatelessWidget {
-  final String label;
-  final String amount;
-  final IconData icon;
-  final Color color;
-
-  const _StatBox({
-    required this.label,
-    required this.amount,
-    required this.icon,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 14.sp, color: color),
-            SizedBox(width: 4.w),
-            Text(
-              label,
-              style: TextStyle(fontSize: 11.sp, color: Colors.grey),
-            ),
-          ],
-        ),
-        SizedBox(height: 4.h),
-        Text(
-          amount,
-          style: TextStyle(
-            fontSize: 18.sp,
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
-        ),
-      ],
-    );
-  }
+class _ColorPair {
+  final Color bg;
+  final Color text;
+  const _ColorPair({required this.bg, required this.text});
 }
 
 class _GivenLoanCard extends StatelessWidget {
   final String name;
+  final String mobile;
   final String amount;
   final String date;
   final String status;
-  final Color statusColor;
   final double progress;
   final String initials;
+  final _ColorPair colorPair;
   final String? totalPayable;
   final VoidCallback onCloseLoan;
 
   const _GivenLoanCard({
     required this.name,
+    required this.mobile,
     required this.amount,
     required this.date,
     required this.status,
-    required this.statusColor,
     required this.progress,
     required this.initials,
+    required this.colorPair,
     required this.onCloseLoan,
     this.totalPayable,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+    return GestureDetector(
+      onTap: () {
+        // Show original modal sheet on card tap
+        showModalBottomSheet(
+          context: context,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
           ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Header with Avatar and Status
-          Padding(
-            padding: EdgeInsets.all(12.w),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 18.w,
-                      backgroundColor: statusColor.withOpacity(0.1),
-                      child: Text(
-                        initials,
-                        style: TextStyle(
-                          color: statusColor,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14.sp,
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 10.w),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          name,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 14.sp,
-                          ),
-                        ),
-                        Text(
-                          date,
-                          style: TextStyle(
-                            color: Colors.grey,
-                            fontSize: 11.sp,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                  decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(4.r),
-                  ),
-                  child: Text(
-                    status,
-                    style: TextStyle(
-                      color: statusColor,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 11.sp,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Amount and Progress
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 12.w),
+          builder: (context) => Container(
+            padding: EdgeInsets.all(20.w),
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      amount,
-                      style: TextStyle(
-                        fontSize: 18.sp,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      status == 'Pending OTP' ? 'OTP Not Verified' : '${(progress * 100).toInt()}% Repaid',
-                      style: TextStyle(
-                        fontSize: 11.sp,
-                        color: status == 'Pending OTP' ? Colors.redAccent : Colors.grey,
-                        fontWeight: status == 'Pending OTP' ? FontWeight.w600 : FontWeight.normal,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 8.h),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(2.r),
-                  child: LinearProgressIndicator(
-                    value: progress,
-                    backgroundColor: Colors.grey[200],
-                    valueColor: AlwaysStoppedAnimation<Color>(statusColor),
-                    minHeight: 4.h,
+                Text(
+                  'Loan Details',
+                  style: TextStyle(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green.shade700,
                   ),
                 ),
-                SizedBox(height: 12.h),
-              ],
-            ),
-          ),
-
-          // Action Buttons
-          Padding(
-            padding: EdgeInsets.fromLTRB(12.w, 0, 12.w, 12.w),
-            child: Row(
-              children: [
-                Expanded(
+                SizedBox(height: 16.h),
+                _DetailRow(label: 'Borrower', value: name),
+                _DetailRow(label: 'Mobile', value: mobile),
+                _DetailRow(label: 'Amount', value: amount),
+                _DetailRow(label: 'Date', value: date),
+                _DetailRow(label: 'Status', value: status),
+                _DetailRow(label: 'Repaid', value: '${(progress * 100).toInt()}%'),
+                if (totalPayable != null) _DetailRow(label: 'Total Payable', value: totalPayable!),
+                SizedBox(height: 20.h),
+                if (status != 'Closed' && status != 'Completed')
+                  SizedBox(
+                    width: double.infinity,
+                    child: PrimaryButton(
+                      text: 'Close Loan',
+                      onPressed: () {
+                        Navigator.pop(context);
+                        onCloseLoan();
+                      },
+                    ),
+                  ),
+                if (status != 'Closed' && status != 'Completed') SizedBox(height: 12.h),
+                SizedBox(
+                  width: double.infinity,
                   child: OutlinedButton(
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-                          title: const Text('Reminder Sent'),
-                          content: const Text('A payment reminder has been sent to the borrower.'),
-                          actions: [
-                            TextButton(
-                              onPressed: () => context.pop(),
-                              child: const Text('OK'),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
+                    onPressed: () => Navigator.pop(context),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: KhaataTheme.primaryBlue,
-                      side: const BorderSide(color: KhaataTheme.primaryBlue),
-                      padding: EdgeInsets.symmetric(vertical: 10.h),
+                      foregroundColor: Colors.green.shade700,
+                      side: BorderSide(color: Colors.green.shade700),
+                      padding: EdgeInsets.symmetric(vertical: 14.h),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8.r),
                       ),
                     ),
                     child: Text(
-                      'Reminder',
+                      'Back',
                       style: TextStyle(
-                        fontSize: 13.sp,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(width: 10.w),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      showModalBottomSheet(
-                        context: context,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
-                        ),
-                        builder: (context) => Container(
-                          padding: EdgeInsets.all(20.w),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Loan Details',
-                                style: TextStyle(
-                                  fontSize: 18.sp,
-                                  fontWeight: FontWeight.bold,
-                                  color: KhaataTheme.primaryBlue,
-                                ),
-                              ),
-                              SizedBox(height: 16.h),
-                              _DetailRow(label: 'Borrower', value: name),
-                              _DetailRow(label: 'Amount', value: amount),
-                              _DetailRow(label: 'Date', value: date),
-                              _DetailRow(label: 'Status', value: status),
-                              _DetailRow(label: 'Repaid', value: '${(progress * 100).toInt()}%'),
-                              if (totalPayable != null) _DetailRow(label: 'Total Payable', value: totalPayable!),
-                              SizedBox(height: 20.h),
-                              if (status != 'Closed' && status != 'Completed')
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: PrimaryButton(
-                                    text: 'Close Loan',
-                                    onPressed: () {
-                                      context.pop();
-                                      onCloseLoan();
-                                    },
-                                  ),
-                                ),
-                              if (status != 'Closed' && status != 'Completed') SizedBox(height: 12.h),
-                              SizedBox(
-                                width: double.infinity,
-                                child: OutlinedButton(
-                                  onPressed: () => context.pop(),
-                                  style: OutlinedButton.styleFrom(
-                                    foregroundColor: KhaataTheme.primaryBlue,
-                                    side: BorderSide(color: KhaataTheme.primaryBlue),
-                                    padding: EdgeInsets.symmetric(vertical: 14.h),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8.r),
-                                    ),
-                                  ),
-                                  child: Text(
-                                    'Back',
-                                    style: TextStyle(
-                                      fontSize: 16.sp,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: KhaataTheme.primaryBlue,
-                      foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(vertical: 10.h),
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                    ),
-                    child: Text(
-                      'Details',
-                      style: TextStyle(
-                        fontSize: 13.sp,
+                        fontSize: 16.sp,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -562,7 +401,104 @@ class _GivenLoanCard extends StatelessWidget {
               ],
             ),
           ),
-        ],
+        );
+      },
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16.r),
+          border: Border.all(color: Colors.grey.shade100, width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            // Initials Avatar Block
+            Container(
+              width: 44.w,
+              height: 44.w,
+              decoration: BoxDecoration(
+                color: colorPair.bg,
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                initials,
+                style: TextStyle(
+                  color: colorPair.text,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 14.sp,
+                ),
+              ),
+            ),
+            SizedBox(width: 12.w),
+            
+            // Name and Phone
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    mobile,
+                    style: TextStyle(
+                      fontSize: 11.sp,
+                      color: Colors.grey.shade600,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(width: 12.w),
+            
+            // Amount and given subtitle
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  amount,
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black87,
+                  ),
+                ),
+                SizedBox(height: 4.h),
+                Text(
+                  'Given Amount',
+                  style: TextStyle(
+                    fontSize: 10.sp,
+                    color: Colors.grey.shade500,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(width: 12.w),
+            
+            // Chevron Right
+            Icon(
+              Icons.chevron_right_rounded,
+              color: Colors.grey.shade400,
+              size: 20.sp,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -612,4 +548,4 @@ class _DetailRow extends StatelessWidget {
       ),
     );
   }
-}
+}

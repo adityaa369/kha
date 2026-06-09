@@ -26,6 +26,7 @@ class AppConstants {
   static const String bidAuth = '/bid-authorization';
   static const String loanSuccess = '/loan-success';
   static const String loanCloseSuccess = '/loan-close-success';
+  static const String loanDetails = '/loan-details';
   static const String chitSuccess = '/chit-success';
   static const String chitAdminDashboard = '/chit-admin-dashboard';
 

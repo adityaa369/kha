@@ -1,12 +1,9 @@
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/blocs/auth/auth_cubit.dart';
-import '../../../../config/constants.dart';
 import '../../../../config/theme.dart';
-import '../../../../core/widgets/buttons.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -16,192 +13,441 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final _mobileController = TextEditingController();
-  bool _termsAccepted = false;
+  final _phoneController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _obscurePassword = true;
+  final _formKey = GlobalKey<FormState>();
 
   @override
   void dispose() {
-    _mobileController.dispose();
+    _phoneController.dispose();
+    _passwordController.dispose();
     super.dispose();
+  }
+
+  void _handleLogin() {
+    if (_formKey.currentState?.validate() ?? false) {
+      final phone = _phoneController.text.trim();
+      final password = _passwordController.text;
+      context.read<AuthCubit>().loginWithPassword(phone, password);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: KhaataTheme.textDark),
-          onPressed: () => context.pop(),
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(horizontal: 24.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(height: 20.h),
-            Center(
-              child: Container(
-                width: 80.w,
-                height: 80.h,
-                decoration: BoxDecoration(
-                  color: KhaataTheme.accentGreen.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20.r),
-                ),
-                child: Icon(
-                  Icons.phone_android_rounded,
-                  color: KhaataTheme.accentGreen,
-                  size: 40.sp,
-                ),
+      backgroundColor: KhaataTheme.primaryBlue,
+      body: BlocConsumer<AuthCubit, AuthState>(
+        listener: (context, state) {
+          if (state is AuthError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: KhaataTheme.dangerRed,
               ),
-            ),
-            SizedBox(height: 32.h),
-            Text(
-              'Enter Mobile Number',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            SizedBox(height: 8.h),
-            Text(
-              'Linked to your bank account',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            SizedBox(height: 40.h),
-
-            // Mobile Input
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-              child: Row(
+            );
+          } else if (state is AuthenticatedFull) {
+            context.go('/home');
+          }
+        },
+        builder: (context, state) {
+          return SafeArea(
+            child: SingleChildScrollView(
+              child: Column(
                 children: [
+                  SizedBox(height: 52.h),
+                  
+                  Text(
+                    'Hand Loan Credit',
+                    style: TextStyle(
+                      fontSize: 26.sp,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  Text(
+                    'Digital Loan Agreements',
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: Colors.white.withOpacity(0.8),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  SizedBox(height: 24.h),
+
+                  // Login White Card
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 18.h),
-                    child: Text(
-                      '+91',
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w600,
-                        color: KhaataTheme.textDark,
+                    margin: EdgeInsets.symmetric(horizontal: 20.w),
+                    padding: EdgeInsets.all(24.w),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24.r),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.06),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Welcome back 📣',
+                            style: TextStyle(
+                              fontSize: 20.sp,
+                              fontWeight: FontWeight.w800,
+                              color: KhaataTheme.textDark,
+                            ),
+                          ),
+                          SizedBox(height: 4.h),
+                          Text(
+                            'Sign in to manage your loans & credits',
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              color: KhaataTheme.textGrey,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          SizedBox(height: 24.h),
+
+                          // Mobile Number Section
+                          Text(
+                            'Mobile number',
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.w700,
+                              color: KhaataTheme.textDark,
+                            ),
+                          ),
+                          SizedBox(height: 8.h),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Country Code box
+                              Container(
+                                height: 48.h,
+                                padding: EdgeInsets.symmetric(horizontal: 12.w),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF3F4F6),
+                                  borderRadius: BorderRadius.circular(12.r),
+                                ),
+                                alignment: Alignment.center,
+                                child: Row(
+                                  children: [
+                                    Text(
+                                      'IN',
+                                      style: TextStyle(
+                                        fontSize: 13.sp,
+                                        fontWeight: FontWeight.w800,
+                                        color: KhaataTheme.textDark,
+                                      ),
+                                    ),
+                                    SizedBox(width: 4.w),
+                                    Text(
+                                      '+91',
+                                      style: TextStyle(
+                                        fontSize: 13.sp,
+                                        fontWeight: FontWeight.w500,
+                                        color: KhaataTheme.textGrey,
+                                      ),
+                                    ),
+                                    SizedBox(width: 4.w),
+                                    Icon(
+                                      Icons.keyboard_arrow_down,
+                                      size: 14.sp,
+                                      color: KhaataTheme.textGrey,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              SizedBox(width: 8.w),
+                              // Phone Number Input
+                              Expanded(
+                                child: TextFormField(
+                                  controller: _phoneController,
+                                  keyboardType: TextInputType.phone,
+                                  maxLength: 10,
+                                  validator: (val) {
+                                    if (val == null || val.length != 10) {
+                                      return 'Enter a valid 10-digit number';
+                                    }
+                                    return null;
+                                  },
+                                  style: TextStyle(
+                                    fontSize: 14.sp,
+                                    fontWeight: FontWeight.w600,
+                                    color: KhaataTheme.textDark,
+                                  ),
+                                  decoration: InputDecoration(
+                                    hintText: '98765 43210',
+                                    hintStyle: TextStyle(
+                                      color: KhaataTheme.textGrey,
+                                      fontSize: 14.sp,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    counterText: '',
+                                    filled: true,
+                                    fillColor: const Color(0xFFF3F4F6),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12.r),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12.r),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12.r),
+                                      borderSide: const BorderSide(color: KhaataTheme.primaryBlue, width: 1.5),
+                                    ),
+                                    contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 16.h),
+
+                          // Password Section
+                          Text(
+                            'Password',
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.w700,
+                              color: KhaataTheme.textDark,
+                            ),
+                          ),
+                          SizedBox(height: 8.h),
+                          TextFormField(
+                            controller: _passwordController,
+                            obscureText: _obscurePassword,
+                            validator: (val) {
+                              if (val == null || val.isEmpty) {
+                                return 'Password is required';
+                              }
+                              return null;
+                            },
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w600,
+                              color: KhaataTheme.textDark,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: 'Enter your password',
+                              hintStyle: TextStyle(
+                                color: KhaataTheme.textGrey,
+                                fontSize: 14.sp,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              filled: true,
+                              fillColor: const Color(0xFFF3F4F6),
+                              prefixIcon: Icon(Icons.lock_outline, size: 20.sp, color: KhaataTheme.textGrey),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                                  size: 20.sp,
+                                  color: KhaataTheme.textGrey,
+                                ),
+                                onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12.r),
+                                borderSide: BorderSide.none,
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12.r),
+                                borderSide: BorderSide.none,
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12.r),
+                                borderSide: const BorderSide(color: KhaataTheme.primaryBlue, width: 1.5),
+                              ),
+                              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+                            ),
+                          ),
+                          SizedBox(height: 8.h),
+                          
+                          // Forgot Password
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: () {},
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              child: Text(
+                                'Forgot password?',
+                                style: TextStyle(
+                                  fontSize: 12.sp,
+                                  color: KhaataTheme.primaryBlue,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 24.h),
+
+                          // Sign In Button
+                          SizedBox(
+                            width: double.infinity,
+                            height: 52.h,
+                            child: ElevatedButton(
+                              onPressed: state is AuthLoading ? null : _handleLogin,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: KhaataTheme.primaryBlue,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12.r),
+                                ),
+                                elevation: 0,
+                              ),
+                              child: state is AuthLoading
+                                  ? SizedBox(
+                                      width: 20.w,
+                                      height: 20.h,
+                                      child: const CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : Text(
+                                      'Sign In',
+                                      style: TextStyle(
+                                        fontSize: 15.sp,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                            ),
+                          ),
+                          SizedBox(height: 20.h),
+
+                          // "Or continue with" Section
+                          Row(
+                            children: [
+                              Expanded(child: Divider(color: Colors.grey.shade200, thickness: 1)),
+                              Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 12.w),
+                                child: Text(
+                                  'or continue with',
+                                  style: TextStyle(
+                                    fontSize: 10.sp,
+                                    color: KhaataTheme.textGrey,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                              Expanded(child: Divider(color: Colors.grey.shade200, thickness: 1)),
+                            ],
+                          ),
+                          SizedBox(height: 16.h),
+
+                          // Social Login Buttons
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              // Google Button
+                              _SocialButton(
+                                child: Text(
+                                  'G',
+                                  style: TextStyle(
+                                    fontSize: 20.sp,
+                                    fontWeight: FontWeight.w900,
+                                    color: Colors.blue.shade600,
+                                    fontFamily: 'sans-serif',
+                                  ),
+                                ),
+                                onTap: () {},
+                              ),
+                              SizedBox(width: 16.w),
+                              // Apple Button
+                              _SocialButton(
+                                child: Icon(
+                                  Icons.apple,
+                                  size: 24.sp,
+                                  color: Colors.black,
+                                ),
+                                onTap: () {},
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 24.h),
+
+                          // Create Account Footer Link
+                          Center(
+                            child: GestureDetector(
+                              onTap: () => context.go('/signup'),
+                              child: RichText(
+                                text: TextSpan(
+                                  style: TextStyle(
+                                    fontSize: 12.sp,
+                                    color: KhaataTheme.textGrey,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  children: [
+                                    const TextSpan(text: 'New to Hand Loan Credit? '),
+                                    TextSpan(
+                                      text: 'Create account',
+                                      style: TextStyle(
+                                        color: KhaataTheme.primaryBlue,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                  Container(width: 1.w, height: 24.h, color: Colors.grey[300]),
-                  Expanded(
-                    child: TextField(
-                      controller: _mobileController,
-                      keyboardType: TextInputType.phone,
-                      maxLength: 10,
-                      decoration: InputDecoration(
-                        hintText: 'Mobile Number',
-                        counterText: '',
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16.w),
-                      ),
-                    ),
-                  ),
+                  SizedBox(height: 32.h),
                 ],
               ),
             ),
-
-            SizedBox(height: 24.h),
-
-            // Checkboxes
-            CheckboxTile(
-              value: _termsAccepted,
-              onChanged: (v) => setState(() => _termsAccepted = v!),
-              title: 'By signing up, I agree to the ',
-              linkText: 'Terms and Conditions, Privacy Policy',
-              onLinkTap: () {},
-            ),
-
-            SizedBox(height: 40.h),
-
-            BlocConsumer<AuthCubit, AuthState>(
-              listener: (context, state) {
-                if (state is OtpSent) {
-                  context.push(AppConstants.otp, extra: _mobileController.text);
-                } else if (state is AuthError) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(state.message)),
-                  );
-                }
-              },
-              builder: (context, state) {
-                return PrimaryButton(
-                  text: 'Get OTP',
-                  isLoading: state is AuthLoading,
-                  onPressed: (_termsAccepted &&
-                          _mobileController.text.length == 10)
-                      ? () => context.read<AuthCubit>().sendOtp(_mobileController.text)
-                      : null,
-                );
-              },
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
 }
 
-class CheckboxTile extends StatelessWidget {
-  final bool value;
-  final Function(bool?) onChanged;
-  final String title;
-  final String linkText;
-  final String? subtitle;
-  final VoidCallback onLinkTap;
+class _SocialButton extends StatelessWidget {
+  final Widget child;
+  final VoidCallback onTap;
 
-  const CheckboxTile({
-    super.key,
-    required this.value,
-    required this.onChanged,
-    required this.title,
-    required this.linkText,
-    this.subtitle,
-    required this.onLinkTap,
+  const _SocialButton({
+    required this.child,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 16.h),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Checkbox(
-            value: value,
-            onChanged: onChanged,
-            activeColor: KhaataTheme.primaryBlue,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4.r)),
-          ),
-          Expanded(
-            child: GestureDetector(
-              onTap: () => onChanged(!value),
-              child: RichText(
-                text: TextSpan(
-                  style: TextStyle(fontSize: 13.sp, color: KhaataTheme.textGrey),
-                  children: [
-                    TextSpan(text: title),
-                    TextSpan(
-                      text: linkText,
-                      style: const TextStyle(
-                        color: KhaataTheme.primaryBlue,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      recognizer: TapGestureRecognizer()..onTap = onLinkTap,
-                    ),
-                    if (subtitle != null) TextSpan(text: subtitle),
-                  ],
-                ),
-              ),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 48.w,
+        height: 48.h,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.grey.shade200),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
-          ),
-        ],
+          ],
+        ),
+        child: Center(child: child),
       ),
     );
   }

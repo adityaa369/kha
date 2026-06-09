@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
+const compression = require('compression');
 
 // Load environment variables
 dotenv.config();
@@ -11,7 +12,12 @@ const app = express();
 
 // Middlewares
 app.use(cors());
+app.use(compression());
 app.use(bodyParser.json());
+app.use((req, res, next) => {
+    req.body = req.body || {};
+    next();
+});
 
 // Request logging middleware
 app.use((req, res, next) => {

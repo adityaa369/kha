@@ -1,7 +1,9 @@
+import 'dart:convert';
 import '../models/loan_model.dart';
 import '../models/user_model.dart';
 import '../../core/network/api_client.dart';
 import '../../core/error/failures.dart';
+import '../../core/utils/secure_storage.dart';
 import 'base_repository.dart';
 
 class LoanRepository extends BaseRepository {
@@ -14,11 +16,32 @@ class LoanRepository extends BaseRepository {
       final takenResponse = await _api.get('/loans/taken');
       final givenResponse = await _api.get('/loans/given');
 
-      final myLoans = (takenResponse.data['loans'] as List)
+      final takenData = takenResponse.data;
+      final givenData = givenResponse.data;
+
+      final List takenList = (takenData is Map && takenData['loans'] is List)
+          ? takenData['loans']
+          : [];
+      final List givenList = (givenData is Map && givenData['loans'] is List)
+          ? givenData['loans']
+          : [];
+
+      // Save raw JSON representation to SecureStorage for caching
+      try {
+        final cacheMap = {
+          'myLoans': takenList,
+          'givenLoans': givenList,
+        };
+        await SecureStorage.saveCachedLoans(jsonEncode(cacheMap));
+      } catch (e) {
+        // Silent failure for caching write
+      }
+
+      final myLoans = takenList
           .map((json) => LoanModel.fromJson(json))
           .toList();
 
-      final givenLoans = (givenResponse.data['loans'] as List)
+      final givenLoans = givenList
           .map((json) => LoanModel.fromJson(json))
           .toList();
 
@@ -26,68 +49,99 @@ class LoanRepository extends BaseRepository {
     });
   }
 
+  Future<Map<String, List<LoanModel>>?> getCachedLoans() async {
+    try {
+      final cachedJsonStr = await SecureStorage.getCachedLoans();
+      if (cachedJsonStr != null) {
+        final Map<String, dynamic> cachedMap = jsonDecode(cachedJsonStr);
+        final List myLoansJson = cachedMap['myLoans'] ?? [];
+        final List givenLoansJson = cachedMap['givenLoans'] ?? [];
+        
+        final myLoans = myLoansJson.map((json) => LoanModel.fromJson(json)).toList();
+        final givenLoans = givenLoansJson.map((json) => LoanModel.fromJson(json)).toList();
+        
+        return {'myLoans': myLoans, 'givenLoans': givenLoans};
+      }
+    } catch (_) {}
+    return null;
+  }
+
   Future<LoanModel> createLoan(Map<String, dynamic> loanData) async {
     return await handleApiCall(() async {
       final response = await _api.post('/loans', data: loanData);
-      if (response.data['success'] == true) {
-        return LoanModel.fromJson(response.data['loan']);
+      final data = response.data;
+      if (data is Map && data['success'] == true) {
+        return LoanModel.fromJson(data['loan']);
       }
-      throw ServerFailure(response.data['message'] ?? 'Failed to create loan');
+      final errMsg = (data is Map) ? data['message']?.toString() : null;
+      throw ServerFailure(errMsg ?? 'Failed to create loan');
     });
   }
 
   Future<bool> verifyLoan(String loanId) async {
     return await handleApiCall(() async {
       final response = await _api.post('/loans/$loanId/verify', data: {});
-      if (response.data['success'] == true) return true;
-      throw ServerFailure(response.data['message'] ?? 'Failed to verify loan');
+      final data = response.data;
+      if (data is Map && data['success'] == true) return true;
+      final errMsg = (data is Map) ? data['message']?.toString() : null;
+      throw ServerFailure(errMsg ?? 'Failed to verify loan');
     });
   }
 
   Future<bool> verifyLenderOtp(String loanId, String otp) async {
     return await handleApiCall(() async {
       final response = await _api.post('/loans/$loanId/verify-lender-otp', data: {'otp': otp});
-      if (response.data['success'] == true) return true;
-      throw ServerFailure(response.data['message'] ?? 'Failed to verify OTP');
+      final data = response.data;
+      if (data is Map && data['success'] == true) return true;
+      final errMsg = (data is Map) ? data['message']?.toString() : null;
+      throw ServerFailure(errMsg ?? 'Failed to verify OTP');
     });
   }
 
   Future<bool> closeLoan(String loanId, String otp) async {
     return await handleApiCall(() async {
       final response = await _api.post('/loans/$loanId/close', data: {'otp': otp});
-      if (response.data['success'] == true) return true;
-      throw ServerFailure(response.data['message'] ?? 'Failed to close loan');
+      final data = response.data;
+      if (data is Map && data['success'] == true) return true;
+      final errMsg = (data is Map) ? data['message']?.toString() : null;
+      throw ServerFailure(errMsg ?? 'Failed to close loan');
     });
   }
 
   Future<bool> requestClosureOtp(String loanId) async {
     return await handleApiCall(() async {
       final response = await _api.post('/loans/$loanId/close-otp', data: {});
-      if (response.data['success'] == true) return true;
-      throw ServerFailure(response.data['message'] ?? 'Failed to request closure OTP');
+      final data = response.data;
+      if (data is Map && data['success'] == true) return true;
+      final errMsg = (data is Map) ? data['message']?.toString() : null;
+      throw ServerFailure(errMsg ?? 'Failed to request closure OTP');
     });
   }
 
   Future<bool> resendOtp(String loanId) async {
     return await handleApiCall(() async {
       final response = await _api.post('/loans/$loanId/resend-otp');
-      return response.data['success'] == true;
+      final data = response.data;
+      return data is Map && data['success'] == true;
     });
   }
 
   Future<bool> updateProgress(String loanId, double progress) async {
     return await handleApiCall(() async {
       final response = await _api.patch('/loans/$loanId/progress', data: {'progress': progress});
-      if (response.data['success'] == true) return true;
-      throw ServerFailure(response.data['message'] ?? 'Failed to update progress');
+      final data = response.data;
+      if (data is Map && data['success'] == true) return true;
+      final errMsg = (data is Map) ? data['message']?.toString() : null;
+      throw ServerFailure(errMsg ?? 'Failed to update progress');
     });
   }
 
   Future<UserModel?> checkBorrower(String phone) async {
     return await handleApiCall(() async {
       final response = await _api.post('/users/check-phone', data: {'phone': phone});
-      if (response.data['success'] == true && response.data['exists'] == true) {
-        return UserModel.fromJson(response.data['user']);
+      final data = response.data;
+      if (data is Map && data['success'] == true && data['exists'] == true) {
+        return UserModel.fromJson(data['user']);
       }
       return null;
     });

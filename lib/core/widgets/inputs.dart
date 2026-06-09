@@ -10,9 +10,13 @@ class KhaataTextField extends StatelessWidget {
   final List<TextInputFormatter>? inputFormatters;
   final bool readOnly;
   final Widget? suffix;
+  final Widget? prefixIcon;
   final String? Function(String?)? validator;
   final TextCapitalization textCapitalization;
-  final int? maxLines;  // ADD THIS
+  final int? maxLines;
+  final int? maxLength;
+  final void Function(String)? onChanged;
+  final void Function()? onTap;
 
   const KhaataTextField({
     super.key,
@@ -23,9 +27,13 @@ class KhaataTextField extends StatelessWidget {
     this.inputFormatters,
     this.readOnly = false,
     this.suffix,
+    this.prefixIcon,
     this.validator,
     this.textCapitalization = TextCapitalization.none,
-    this.maxLines = 1,  // ADD THIS
+    this.maxLines = 1,
+    this.maxLength,
+    this.onChanged,
+    this.onTap,
   });
 
   @override
@@ -42,10 +50,15 @@ class KhaataTextField extends StatelessWidget {
           readOnly: readOnly,
           validator: validator,
           textCapitalization: textCapitalization,
-          maxLines: maxLines,  // ADD THIS
+          maxLines: maxLines,
+          maxLength: maxLength,
+          onChanged: onChanged,
+          onTap: onTap,
           decoration: InputDecoration(
             hintText: hint,
             suffixIcon: suffix,
+            prefixIcon: prefixIcon,
+            counterText: '', // Hide default counter if maxLength is used
           ),
         ),
       ],

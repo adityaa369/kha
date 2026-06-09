@@ -8,6 +8,7 @@ import '../../../../core/blocs/auth/auth_cubit.dart';
 import '../../../../core/blocs/loans/loan_cubit.dart';
 import '../../../../core/blocs/loans/loan_state.dart';
 import '../../../../data/models/loan_model.dart';
+import '../../../../config/constants.dart';
 
 class MyLoansPage extends StatefulWidget {
   const MyLoansPage({super.key});
@@ -95,13 +96,10 @@ class _MyLoansPageState extends State<MyLoansPage> with SingleTickerProviderStat
               int activeCount = 0;
               int closedCount = 0;
               if (state is LoansLoaded) {
-                 final selectedTabName = _tabs[_tabController.index];
-                 final filteredForStats = selectedTabName == 'All' 
-                    ? state.myLoans 
-                    : state.myLoans.where((l) {
-                        final formattedType = l.type.split('_').map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '').join(' ');
-                        return formattedType == selectedTabName;
-                      }).toList();
+                  final selectedTabName = _tabs[_tabController.index];
+                  final filteredForStats = selectedTabName == 'All' 
+                     ? state.myLoans 
+                     : state.myLoans.where((l) => l.displayType == selectedTabName).toList();
 
                 activeCount = filteredForStats.where((l) => l.status != 'completed' && l.status != 'pending_otp' && l.status != 'pending_approval' && l.status != 'rejected').length;
                 closedCount = filteredForStats.where((l) => l.status == 'completed').length;
@@ -269,10 +267,46 @@ class _LoanCard extends StatelessWidget {
     required this.loan,
   });
 
+  Color _getBackgroundColor(String type) {
+    switch (type.toLowerCase().replaceAll('_', '')) {
+      case 'handcredit':
+        return const Color(0xFFE8F5E9); // Light Green
+      case 'businesscredit':
+        return const Color(0xFFF3E5F5); // Light Purple
+      case 'interestcredit':
+        return const Color(0xFFFFF3E0); // Light Orange
+      case 'chitfund':
+      case 'chitfunds':
+        return const Color(0xFFFCE8F3); // Light Pink
+      default:
+        return const Color(0xFFE8F4FD); // Light Blue
+    }
+  }
+
+  Color _getTextColor(String type) {
+    switch (type.toLowerCase().replaceAll('_', '')) {
+      case 'handcredit':
+        return const Color(0xFF1B5E20); // Dark Green
+      case 'businesscredit':
+        return const Color(0xFF4A148C); // Dark Violet
+      case 'interestcredit':
+        return const Color(0xFFE65100); // Dark Orange
+      case 'chitfund':
+      case 'chitfunds':
+        return const Color(0xFF880E4F); // Dark Pinkish
+      default:
+        return const Color(0xFF1565C0); // Dark Blue
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
+    return GestureDetector(
+      onTap: () {
+        context.push(AppConstants.loanDetails, extra: loan);
+      },
+      child: Container(
+        decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
@@ -285,11 +319,11 @@ class _LoanCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Bank Header - Blue background
+          // Bank Header - Colored background
           Container(
             padding: EdgeInsets.all(12.w),
             decoration: BoxDecoration(
-              color: const Color(0xFFE8F4FD), // Very light blue
+              color: _getBackgroundColor(loan.type),
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(12.r),
                 topRight: Radius.circular(12.r),
@@ -317,7 +351,7 @@ class _LoanCard extends StatelessWidget {
                         child: Text(
                           loan.initials ?? 'UL',
                           style: TextStyle(
-                            color: Colors.blue,
+                            color: _getTextColor(loan.type),
                             fontWeight: FontWeight.bold,
                             fontSize: 16.sp,
                           ),
@@ -476,18 +510,6 @@ class _LoanCard extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ),);
   }
-}
-
-String _formatCurrency(double amount) {
-  return amount.toStringAsFixed(0).replaceAllMapped(
-    RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-        (Match m) => '${m[1]},',
-  );
-}
-
-String _getMonthName(int month) {
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  return months[month - 1];
-}
+}

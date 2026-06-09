@@ -7,7 +7,7 @@ import '../../../../config/theme.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/blocs/auth/auth_cubit.dart';
 import '../../../../core/blocs/loans/loan_cubit.dart';
-import '../../../../core/blocs/credit_score/credit_score_cubit.dart';
+import '../../../../core/widgets/looping_avatar.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -73,10 +73,12 @@ class ProfilePage extends StatelessWidget {
                         builder: (context, state) {
                           String initials = '';
                           String fullName = 'Loading...';
+                          String? gender;
                           
                           if (state is AuthenticatedFull) {
                             initials = state.user.initials;
                             fullName = state.user.displayName;
+                            gender = state.user.gender;
                           } else if (state is AuthenticatedUnverified) {
                             initials = 'U';
                             fullName = 'Verified User';
@@ -87,20 +89,11 @@ class ProfilePage extends StatelessWidget {
                               Container(
                                 width: 72.w,
                                 height: 72.w,
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[200],
-                                  borderRadius: BorderRadius.circular(16.r),
+                                decoration: const BoxDecoration(
+                                  color: Colors.transparent,
+                                  shape: BoxShape.circle,
                                 ),
-                                child: Center(
-                                  child: Text(
-                                    initials,
-                                    style: TextStyle(
-                                      fontSize: 28.sp,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.grey[400],
-                                    ),
-                                  ),
-                                ),
+                                child: LoopingAvatar(gender: gender, height: 72.w),
                               ),
                               SizedBox(height: 12.h),
                               Text(
@@ -205,7 +198,6 @@ class ProfilePage extends StatelessWidget {
                         final router = GoRouter.of(context);
                         final authCubit = context.read<AuthCubit>();
                         final loanCubit = context.read<LoanCubit>();
-                        final creditCubit = context.read<CreditScoreCubit>();
                         
                         showDialog(
                           context: context,
@@ -223,7 +215,6 @@ class ProfilePage extends StatelessWidget {
                                   
                                   // Clear safe cubits if possible
                                   try { loanCubit.clear(); } catch (_) {}
-                                  try { creditCubit.clear(); } catch (_) {}
                                   
                                   authCubit.logout().then((_) {
                                     router.go(AppConstants.login);

@@ -171,7 +171,7 @@ class _MyChitCard extends StatelessWidget {
 
     return InkWell(
       onTap: () {
-        context.push('/chit-admin', extra: subData['chitId'] ?? subData['_id']);
+        context.push('/chit-admin', extra: subData['chitId']);
       },
       child: Container(
         margin: EdgeInsets.only(bottom: 16.h),

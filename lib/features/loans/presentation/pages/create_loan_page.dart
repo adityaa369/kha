@@ -33,8 +33,11 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
   final _amountController = TextEditingController();
   final _interestController = TextEditingController();
   final _durationController = TextEditingController();
+  final _notesController = TextEditingController();
+  final _shopNameController = TextEditingController();
 
   DateTime _startDate = DateTime.now();
+  DateTime? _dueDate;
   String _durationType = 'Months';
   String? _selectedDocumentName;
   File? _selectedDocumentFile;
@@ -49,13 +52,15 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
     _amountController.dispose();
     _interestController.dispose();
     _durationController.dispose();
+    _notesController.dispose();
+    _shopNameController.dispose();
     super.dispose();
   }
 
   Future<void> _pickDocument() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
-      allowedExtensions: ['pdf', 'jpg', 'png'],
+      allowedExtensions: ['pdf', 'jpg', 'png', 'jpeg'],
     );
 
     if (result != null) {
@@ -69,9 +74,9 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
   String getLoanTypeTitle() {
     switch (widget.loanType) {
       case 'hand_credit':
-        return 'Hand Credit';
+        return 'Add Hand Credit';
       case 'business_credit':
-        return 'Business Credit';
+        return 'Add Business Credit';
       case 'interest_credit':
         return 'Interest Credit';
       case 'chitfund':
@@ -81,25 +86,10 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
     }
   }
 
-  IconData getLoanTypeIcon() {
-    switch (widget.loanType) {
-      case 'hand_credit':
-        return Icons.account_balance_wallet;
-      case 'business_credit':
-        return Icons.business_center;
-      case 'interest_credit':
-        return Icons.home;
-      case 'chitfund':
-        return Icons.groups;
-      default:
-        return Icons.money;
-    }
-  }
-
-  Future<void> _selectDate(BuildContext context) async {
+  Future<void> _selectDate(BuildContext context, {required bool isDue}) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: _startDate,
+      initialDate: isDue ? (_dueDate ?? DateTime.now().add(const Duration(days: 30))) : _startDate,
       firstDate: DateTime.now(),
       lastDate: DateTime(2030),
       builder: (context, child) {
@@ -113,9 +103,13 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
         );
       },
     );
-    if (picked != null && picked != _startDate) {
+    if (picked != null) {
       setState(() {
-        _startDate = picked;
+        if (isDue) {
+          _dueDate = picked;
+        } else {
+          _startDate = picked;
+        }
       });
     }
   }
@@ -132,8 +126,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
     final rate = widget.loanType == 'interest_credit' ? (double.tryParse(_interestController.text) ?? 0.0) : 0.0;
     final months = _calculateMonths();
     
-    // Calculate simple interest assuming rate is Annual (APR)
-    final totalInterest = widget.loanType == 'interest_credit' ? (amount * rate * (months / 12)) / 100 : 0.0;
+    final totalInterest = widget.loanType == 'interest_credit' ? (amount * rate * months) / 100 : 0.0;
     final totalAmount = amount + totalInterest;
 
     showDialog(
@@ -157,7 +150,6 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
             Text('Duration: $months Months'),
             Divider(height: 24.h),
             Text('Total Repayment: ₹${totalAmount.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold)),
-            Text('EMI: ₹${(totalAmount / (months > 0 ? months : 1)).toStringAsFixed(2)}/month', style: TextStyle(color: KhaataTheme.textGrey, fontSize: 12.sp)),
           ],
         ),
         actions: [
@@ -197,7 +189,6 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
     final phone = _mobileController.text;
     final cubit = context.read<LoanCubit>();
 
-    // 1. Check if borrower exists
     final borrower = await cubit.checkBorrower(phone);
 
     if (borrower == null) {
@@ -207,7 +198,6 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
       return;
     }
 
-    // 2. Upload Document if exists
     String? documentUrl;
     if (_selectedDocumentFile != null) {
       try {
@@ -225,7 +215,6 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
       }
     }
 
-    // 3. Create Loan (Sends OTP to borrower)
     final idempotencyKey = const Uuid().v4();
     
     final loanData = {
@@ -239,6 +228,9 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
       'duration_months': _calculateMonths(),
       'duration_type': _durationType,
       'start_date': _startDate.toIso8601String(),
+      'due_date': _dueDate?.toIso8601String(),
+      'notes': _notesController.text,
+      'shop_name': _shopNameController.text,
       'type': widget.loanType,
       'documentUrl': documentUrl,
     };
@@ -248,7 +240,6 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
     setState(() => _isLoading = false);
 
     if (result != null && mounted) {
-      // Navigate to OTP Confirmation
       context.pushReplacement('/loan-confirmation', extra: {
         'loan_id': result['id'],
         'borrower_name': _borrowerNameController.text,
@@ -256,7 +247,6 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
         'amount': double.tryParse(_amountController.text) ?? 0.0,
       });
     } else if (mounted) {
-      // Show error if failed
       final state = cubit.state;
       if (state is LoanError) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -286,6 +276,9 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
   }
 
   int _calculateMonths() {
+    if (_dueDate != null) {
+       return (_dueDate!.difference(_startDate).inDays / 30).round();
+    }
     int val = int.tryParse(_durationController.text) ?? 0;
     if (_durationType == 'Years') {
       return val * 12;
@@ -296,54 +289,499 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
+        centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: KhaataTheme.textDark),
+          icon: const Icon(Icons.arrow_back, color: Colors.black87),
           onPressed: () => context.pop(),
         ),
-        title: Text(
-          getLoanTypeTitle(),
-          style: TextStyle(
-            color: KhaataTheme.textDark,
-            fontSize: 18.sp,
-            fontWeight: FontWeight.w700,
-          ),
+        title: Column(
+          children: [
+            Text(
+              getLoanTypeTitle(),
+              style: TextStyle(
+                color: Colors.black87,
+                fontSize: 18.sp,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            if (widget.loanType == 'hand_credit' || widget.loanType == 'interest_credit')
+              Text(
+                widget.loanType == 'interest_credit' ? 'Credit interest to borrower' : 'You are lending money',
+                style: TextStyle(
+                  color: Colors.grey.shade600,
+                  fontSize: 12.sp,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+          ],
         ),
+        actions: [
+          IconButton(
+            icon: Icon(
+              widget.loanType == 'business_credit' ? Icons.help_outline : Icons.info_outline,
+              color: Colors.green.shade700,
+            ),
+            onPressed: () {},
+          )
+        ],
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(20.w),
+        padding: EdgeInsets.all(16.w),
         child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header Card
+              if (widget.loanType == 'business_credit') _buildBusinessCreditLayout()
+              else if (widget.loanType == 'interest_credit') _buildInterestCreditLayout()
+              else _buildHandCreditLayout(),
+              
+              SizedBox(height: 24.h),
+              
+              // Save Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green.shade700,
+                    padding: EdgeInsets.symmetric(vertical: 16.h),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                  ),
+                  onPressed: _isLoading ? null : _submitForm,
+                  child: _isLoading 
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(widget.loanType == 'business_credit' ? Icons.save : Icons.description, color: Colors.white),
+                            SizedBox(width: 8.w),
+                            Text(
+                              'Save Agreement',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                ),
+              ),
+              SizedBox(height: 32.h), // Bottom padding
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+
+  Widget _buildInterestCreditLayout() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Card 1: Borrower Details
+        _FormCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _NumberedHeader(
+                number: 1, 
+                title: 'Borrower Details',
+                trailing: Icon(Icons.person_outline, color: Colors.green.shade700, size: 24.sp),
+              ),
+              SizedBox(height: 16.h),
+              KhaataTextField(
+                label: 'Full Name',
+                hint: 'Enter full name',
+                controller: _borrowerNameController,
+                prefixIcon: const Icon(Icons.person_outline),
+                textCapitalization: TextCapitalization.words,
+              ),
+              SizedBox(height: 16.h),
+              KhaataTextField(
+                label: 'Mobile Number',
+                hint: 'Enter mobile number',
+                controller: _mobileController,
+                prefixIcon: const Icon(Icons.phone_outlined),
+                keyboardType: TextInputType.phone,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(10),
+                ],
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: 16.h),
+
+        // Card 2: Interest Details
+        _FormCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _NumberedHeader(
+                number: 2, 
+                title: 'Interest Details',
+                trailing: Text('%', style: TextStyle(color: Colors.green.shade700, fontSize: 24.sp, fontWeight: FontWeight.bold)),
+              ),
+              SizedBox(height: 16.h),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: KhaataTextField(
+                      label: 'Interest Amount',
+                      hint: 'Enter amount',
+                      controller: _amountController,
+                      prefixIcon: Container(
+                        margin: EdgeInsets.all(4.w),
+                        decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(4.r)),
+                        child: Icon(Icons.currency_rupee, color: Colors.green.shade700, size: 18.sp),
+                      ),
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    ),
+                  ),
+                  SizedBox(width: 16.w),
+                  Expanded(
+                    child: KhaataTextField(
+                      label: 'Rate of Interest (%)',
+                      hint: 'Enter rate',
+                      controller: _interestController,
+                      prefixIcon: Container(
+                        margin: EdgeInsets.all(4.w),
+                        decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(4.r)),
+                        child: Icon(Icons.percent, color: Colors.green.shade700, size: 18.sp),
+                      ),
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 16.h),
+              Row(
+                children: [
+                  Expanded(
+                    child: _DateSelector(
+                      label: 'Start Date',
+                      date: _startDate,
+                      onTap: () => _selectDate(context, isDue: false),
+                    ),
+                  ),
+                  SizedBox(width: 16.w),
+                  Expanded(
+                    child: _DateSelector(
+                      label: 'End Date',
+                      date: _dueDate,
+                      hint: 'Select end date',
+                      onTap: () => _selectDate(context, isDue: true),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: 16.h),
+
+        // Card 3: Upload
+        _FormCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _NumberedHeader(
+                number: 3, 
+                title: 'Upload (Optional)',
+                trailing: Icon(Icons.attach_file, color: Colors.green.shade700, size: 24.sp),
+              ),
+              SizedBox(height: 16.h),
+              _DashedUploadBox(
+                fileName: _selectedDocumentName,
+                onTap: _pickDocument,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHandCreditLayout() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Card 1: Borrower Details
+        _FormCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _NumberedHeader(number: 1, title: 'Borrower Details'),
+              SizedBox(height: 16.h),
+              KhaataTextField(
+                label: 'Full Name',
+                hint: 'Enter full name',
+                controller: _borrowerNameController,
+                prefixIcon: const Icon(Icons.person_outline),
+                textCapitalization: TextCapitalization.words,
+              ),
+              SizedBox(height: 16.h),
+              KhaataTextField(
+                label: 'Mobile Number',
+                hint: 'Enter mobile number',
+                controller: _mobileController,
+                prefixIcon: const Icon(Icons.phone_outlined),
+                keyboardType: TextInputType.phone,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(10),
+                ],
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: 16.h),
+
+        // Card 2: Loan Details
+        _FormCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _NumberedHeader(number: 2, title: 'Loan Details'),
+              SizedBox(height: 16.h),
+              KhaataTextField(
+                label: 'Loan Amount',
+                hint: 'Enter loan amount',
+                controller: _amountController,
+                prefixIcon: const Icon(Icons.currency_rupee),
+                keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                ],
+              ),
+              SizedBox(height: 16.h),
+              Row(
+                children: [
+                  Expanded(
+                    child: _DateSelector(
+                      label: 'Start Date',
+                      date: _startDate,
+                      onTap: () => _selectDate(context, isDue: false),
+                    ),
+                  ),
+                  SizedBox(width: 16.w),
+                  Expanded(
+                    child: _DateSelector(
+                      label: 'Due Date',
+                      date: _dueDate,
+                      hint: 'Select due date',
+                      onTap: () => _selectDate(context, isDue: true),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: 16.h),
+
+        // Card 3: Additional
+        _FormCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _NumberedHeader(number: 3, title: 'Additional (Optional)'),
+              SizedBox(height: 16.h),
+              Text('Add Proof (Optional)', style: Theme.of(context).textTheme.bodyLarge),
+              SizedBox(height: 8.h),
+              _DashedUploadBox(
+                fileName: _selectedDocumentName,
+                onTap: _pickDocument,
+              ),
+              SizedBox(height: 16.h),
+              KhaataTextField(
+                label: 'Notes (Optional)',
+                hint: 'Add any notes (optional)',
+                controller: _notesController,
+                prefixIcon: const Icon(Icons.sticky_note_2_outlined),
+                maxLines: 3,
+                maxLength: 200,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBusinessCreditLayout() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Top Banner
+        Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(16.w),
+          decoration: BoxDecoration(
+            color: Colors.green.shade50,
+            borderRadius: BorderRadius.circular(12.r),
+            border: Border.all(color: Colors.green.shade100),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: EdgeInsets.all(8.w),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: Icon(Icons.storefront, color: Colors.green.shade700),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Business Credit',
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      'Add credit given to your customer for goods/services.',
+                      style: TextStyle(
+                        fontSize: 13.sp,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: 16.h),
+
+        // Card 1: Customer Details
+        _FormCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Customer Details', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w700)),
+              SizedBox(height: 16.h),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: KhaataTextField(
+                      label: 'Customer Name *',
+                      hint: 'Enter customer name',
+                      controller: _borrowerNameController,
+                      prefixIcon: const Icon(Icons.person_outline),
+                    ),
+                  ),
+                  SizedBox(width: 16.w),
+                  Expanded(
+                    child: KhaataTextField(
+                      label: 'Mobile Number',
+                      hint: 'Enter mobile number',
+                      controller: _mobileController,
+                      prefixIcon: const Icon(Icons.phone_outlined),
+                      keyboardType: TextInputType.phone,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(10),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 16.h),
+              KhaataTextField(
+                label: 'Business/Shop Name (Optional)',
+                hint: 'Enter business or shop name',
+                controller: _shopNameController,
+                prefixIcon: const Icon(Icons.storefront_outlined),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: 16.h),
+
+        // Card 2: Credit Details
+        _FormCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Credit Details', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w700)),
+              SizedBox(height: 16.h),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: KhaataTextField(
+                      label: 'Bill Amount *',
+                      hint: 'Enter bill amount',
+                      controller: _amountController,
+                      prefixIcon: const Icon(Icons.currency_rupee),
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    ),
+                  ),
+                  SizedBox(width: 16.w),
+                  Expanded(
+                    child: _DateSelector(
+                      label: 'Date *',
+                      date: _startDate,
+                      onTap: () => _selectDate(context, isDue: false),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 16.h),
+              _DateSelector(
+                label: 'Due Date (Optional)',
+                date: _dueDate,
+                hint: 'Select due date',
+                onTap: () => _selectDate(context, isDue: true),
+                icon: Icons.calendar_today_outlined,
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: 16.h),
+
+        // Card 3: Attachments
+        _FormCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Attachments (Optional)', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w700)),
+              SizedBox(height: 16.h),
               Container(
                 width: double.infinity,
-                padding: EdgeInsets.all(16.w),
+                padding: EdgeInsets.all(12.w),
                 decoration: BoxDecoration(
-                  color: KhaataTheme.primaryBlue.withOpacity(0.1),
+                  border: Border.all(color: Colors.grey.shade300),
                   borderRadius: BorderRadius.circular(12.r),
-                  border: Border.all(
-                    color: KhaataTheme.primaryBlue.withOpacity(0.2),
-                  ),
                 ),
                 child: Row(
                   children: [
                     Container(
-                      padding: EdgeInsets.all(12.w),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                      child: Icon(
-                        getLoanTypeIcon(),
-                        color: KhaataTheme.primaryBlue,
-                        size: 28.sp,
-                      ),
+                      padding: EdgeInsets.all(8.w),
+                      decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(8.r)),
+                      child: Icon(Icons.image_outlined, color: Colors.green.shade700),
                     ),
                     SizedBox(width: 12.w),
                     Expanded(
@@ -351,349 +789,243 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Create Agreement',
-                            style: TextStyle(
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.w700,
-                              color: KhaataTheme.primaryBlue,
-                            ),
+                            _selectedDocumentName ?? 'Upload Bill / Photo',
+                            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13.sp),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          SizedBox(height: 4.h),
-                          Text(
-                            'Fill borrower details & loan terms',
-                            style: TextStyle(
-                              fontSize: 12.sp,
-                              color: KhaataTheme.textGrey,
-                            ),
-                          ),
+                          if (_selectedDocumentName == null)
+                            Text('JPG, PNG up to 5MB', style: TextStyle(color: Colors.grey.shade600, fontSize: 11.sp)),
                         ],
                       ),
                     ),
-                  ],
-                ),
-              ),
-
-              SizedBox(height: 24.h),
-
-              // Borrower Details Section
-              const _SectionTitle(title: 'Borrower Details', icon: Icons.person),
-              SizedBox(height: 16.h),
-
-              KhaataTextField(
-                label: 'Full Name *',
-                hint: 'Enter borrower full name',
-                controller: _borrowerNameController,
-                textCapitalization: TextCapitalization.words,
-              ),
-              SizedBox(height: 16.h),
-
-              KhaataTextField(
-                label: 'Mobile Number *',
-                hint: '10 digit mobile number',
-                controller: _mobileController,
-                keyboardType: TextInputType.phone,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(10),
-                ],
-              ),
-              SizedBox(height: 16.h),
-
-              KhaataTextField(
-                label: 'Aadhar Number',
-                hint: '12 digit Aadhar number',
-                controller: _aadharController,
-                keyboardType: TextInputType.number,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(12),
-                ],
-              ),
-              SizedBox(height: 16.h),
-
-              KhaataTextField(
-                label: 'Address',
-                hint: 'Complete address',
-                controller: _addressController,
-                maxLines: 2,
-              ),
-
-              SizedBox(height: 24.h),
-
-              // Loan Details Section
-              const _SectionTitle(title: 'Loan Terms', icon: Icons.description),
-              SizedBox(height: 16.h),
-
-              KhaataTextField(
-                label: 'Loan Amount (₹) *',
-                hint: 'Enter amount',
-                controller: _amountController,
-                keyboardType: TextInputType.number,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                ],
-              ),
-              SizedBox(height: 16.h),
-
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (widget.loanType == 'interest_credit') ...[
-                    Expanded(
-                      child: KhaataTextField(
-                        label: 'Interest Rate (%)',
-                        hint: 'e.g. 12',
-                        controller: _interestController,
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-                        ],
-                      ),
-                    ),
-                    SizedBox(width: 16.w),
-                  ],
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Start Date',
-                          style: TextStyle(
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w600,
-                            color: KhaataTheme.textDark,
-                          ),
+                    SizedBox(width: 8.w),
+                    Flexible(
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: Colors.green.shade600),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
                         ),
-                        SizedBox(height: 8.h),
-                        GestureDetector(
-                          onTap: () => _selectDate(context),
-                          child: Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 16.w,
-                              vertical: 16.h,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.grey[100],
-                              borderRadius: BorderRadius.circular(12.r),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  '${_startDate.day}/${_startDate.month}/${_startDate.year}',
-                                  style: TextStyle(fontSize: 14.sp),
-                                ),
-                                Icon(
-                                  Icons.calendar_today,
-                                  size: 18.sp,
-                                  color: KhaataTheme.primaryBlue,
-                                ),
-                              ],
-                            ),
+                        onPressed: _pickDocument,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            _selectedDocumentName == null ? 'Choose from Gallery' : 'Change',
+                            style: TextStyle(color: Colors.green.shade700, fontSize: 13.sp, fontWeight: FontWeight.w600),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 16.h),
-
-              Row(
-                children: [
-                  Expanded(
-                    child: KhaataTextField(
-                      label: 'Duration',
-                      hint: 'e.g. 12',
-                      controller: _durationController,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                      ],
-                    ),
-                  ),
-                  SizedBox(width: 16.w),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Period',
-                          style: TextStyle(
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w600,
-                            color: KhaataTheme.textDark,
-                          ),
-                        ),
-                        SizedBox(height: 8.h),
-                        Container(
-                          padding: EdgeInsets.symmetric(horizontal: 12.w),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[100],
-                            borderRadius: BorderRadius.circular(12.r),
-                          ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<String>(
-                              value: _durationType,
-                              isExpanded: true,
-                              items: ['Days', 'Months', 'Years']
-                                  .map((e) => DropdownMenuItem(
-                                value: e,
-                                child: Text(e, style: TextStyle(fontSize: 14.sp)),
-                              ))
-                                  .toList(),
-                              onChanged: (val) {
-                                setState(() {
-                                  _durationType = val!;
-                                });
-                              },
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-
-              SizedBox(height: 32.h),
-
-              // Info Card
-              Container(
-                padding: EdgeInsets.all(16.w),
-                decoration: BoxDecoration(
-                  color: Colors.blue[50],
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.info_outline,
-                      color: KhaataTheme.primaryBlue,
-                      size: 20.sp,
-                    ),
-                    SizedBox(width: 12.w),
-                    Expanded(
-                      child: Text(
-                        'The borrower will receive a notification to verify and approve this agreement.',
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          color: KhaataTheme.primaryBlue,
                         ),
                       ),
                     ),
                   ],
                 ),
               ),
-
-              SizedBox(height: 24.h),
-
-              // Document Upload UI
-              const _SectionTitle(title: 'Supporting Documents', icon: Icons.attach_file),
-              SizedBox(height: 16.h),
-              GestureDetector(
-                onTap: () async {
-                  FilePickerResult? result = await FilePicker.platform.pickFiles(
-                    type: FileType.custom,
-                    allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
-                  );
-
-                  if (result != null && result.files.single.path != null) {
-                    setState(() {
-                      _selectedDocumentFile = File(result.files.single.path!);
-                      _selectedDocumentName = result.files.single.name;
-                    });
-                  }
-                },
-                child: Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.symmetric(vertical: 20.h, horizontal: 16.w),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    border: Border.all(
-                      color: _selectedDocumentName != null ? KhaataTheme.accentGreen : KhaataTheme.primaryBlue,
-                      style: BorderStyle.solid,
-                      width: 1.5,
-                    ),
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  child: Column(
-                    children: [
-                      Icon(
-                        _selectedDocumentName != null ? Icons.check_circle : Icons.cloud_upload_outlined,
-                        color: _selectedDocumentName != null ? KhaataTheme.accentGreen : KhaataTheme.primaryBlue,
-                        size: 32.sp,
-                      ),
-                      SizedBox(height: 8.h),
-                      Text(
-                        _selectedDocumentName ?? 'Tap to Upload Agreement/Proof',
-                        style: TextStyle(
-                          color: _selectedDocumentName != null ? KhaataTheme.accentGreen : KhaataTheme.textDark,
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      if (_selectedDocumentName == null) ...[
-                        SizedBox(height: 4.h),
-                        Text(
-                          'PDF, JPG, PNG (Max 5MB)',
-                          style: TextStyle(
-                            color: KhaataTheme.textGrey,
-                            fontSize: 12.sp,
-                          ),
-                        ),
-                      ] else ...[
-                        SizedBox(height: 8.h),
-                        GestureDetector(
-                          onTap: () => setState(() {
-                            _selectedDocumentName = null;
-                            _selectedDocumentFile = null;
-                          }),
-                          child: Text('Remove File', style: TextStyle(color: Colors.red, fontSize: 13.sp, fontWeight: FontWeight.normal)),
-                        )
-                      ]
-                    ],
-                  ),
-                ),
-              ),
-
-              SizedBox(height: 32.h),
-
-              PrimaryButton(
-                text: 'Send Agreement',
-                isLoading: _isLoading,
-                onPressed: _submitForm,
-              ),
-              SizedBox(height: 20.h),
             ],
           ),
         ),
-      ),
+      ],
     );
   }
 }
 
-class _SectionTitle extends StatelessWidget {
-  final String title;
-  final IconData icon;
+// ----------------------
+// Reusable UI Components
+// ----------------------
 
-  const _SectionTitle({required this.title, required this.icon});
+class _FormCard extends StatelessWidget {
+  final Widget child;
+  const _FormCard({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: child,
+    );
+  }
+}
+
+class _NumberedHeader extends StatelessWidget {
+  final int number;
+  final String title;
+  final Widget? trailing;
+
+  const _NumberedHeader({required this.number, required this.title, this.trailing});
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 20.sp, color: KhaataTheme.primaryBlue),
-        SizedBox(width: 8.w),
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 16.sp,
-            fontWeight: FontWeight.w700,
-            color: KhaataTheme.textDark,
+        Container(
+          width: 24.w,
+          height: 24.w,
+          decoration: BoxDecoration(
+            color: Colors.green.shade700,
+            shape: BoxShape.circle,
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            number.toString(),
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12.sp),
+          ),
+        ),
+        SizedBox(width: 12.w),
+        Expanded(
+          child: Text(
+            title,
+            style: TextStyle(
+              fontSize: 16.sp,
+              fontWeight: FontWeight.w700,
+              color: Colors.black87,
+            ),
+          ),
+        ),
+        if (trailing != null) ...[
+          SizedBox(width: 8.w),
+          trailing!,
+        ],
+      ],
+    );
+  }
+}
+
+class _DateSelector extends StatelessWidget {
+  final String label;
+  final DateTime? date;
+  final String? hint;
+  final VoidCallback onTap;
+  final IconData icon;
+
+  const _DateSelector({
+    required this.label,
+    required this.date,
+    required this.onTap,
+    this.hint,
+    this.icon = Icons.calendar_today_outlined,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: Theme.of(context).textTheme.bodyLarge),
+        SizedBox(height: 8.h),
+        GestureDetector(
+          onTap: onTap,
+          child: Container(
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h), // Matched TextField height
+            decoration: BoxDecoration(
+              color: Colors.white, // In designs, it looks outlined, wait... textfields are outlined?
+              borderRadius: BorderRadius.circular(8.r),
+              border: Border.all(color: Colors.grey.shade400),
+            ),
+            child: Row(
+              children: [
+                Icon(icon, size: 18.sp, color: Colors.grey.shade600),
+                SizedBox(width: 8.w),
+                Expanded(
+                  child: Text(
+                    date != null
+                        ? '${date!.day} ${_getMonthAbbr(date!.month)} ${date!.year}'
+                        : (hint ?? ''),
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      color: date != null ? Colors.black87 : Colors.grey.shade500,
+                    ),
+                  ),
+                ),
+                Icon(Icons.keyboard_arrow_down, size: 20.sp, color: Colors.grey.shade600),
+              ],
+            ),
           ),
         ),
       ],
+    );
+  }
+
+  String _getMonthAbbr(int month) {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return months[month - 1];
+  }
+}
+
+class _DashedUploadBox extends StatelessWidget {
+  final String? fileName;
+  final VoidCallback onTap;
+
+  const _DashedUploadBox({required this.fileName, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.all(16.w),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12.r),
+          // Custom dashed border can be complex without extra package. We'll use a normal light grey border.
+          // Wait, the design has a dashed border. We can use a package if available, or just use a soft border.
+          border: Border.all(color: Colors.grey.shade300, style: BorderStyle.solid),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: EdgeInsets.all(10.w),
+              decoration: BoxDecoration(
+                color: Colors.green.shade50,
+                shape: BoxShape.circle,
+              ),
+              child: Stack(
+                alignment: Alignment.bottomRight,
+                children: [
+                  Icon(Icons.image_outlined, color: Colors.green.shade700, size: 24.sp),
+                  Container(
+                    decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                    child: Icon(Icons.add_circle, color: Colors.green.shade700, size: 12.sp),
+                  )
+                ],
+              ),
+            ),
+            SizedBox(width: 16.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    fileName ?? 'Upload image',
+                    style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w500, color: Colors.black87),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (fileName == null)
+                    Text(
+                      'Tap to choose from gallery',
+                      style: TextStyle(fontSize: 12.sp, color: Colors.grey.shade500),
+                    ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: Colors.grey.shade400),
+          ],
+        ),
+      ),
     );
   }
 }

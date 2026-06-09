@@ -1,9 +1,11 @@
 import 'dart:convert';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:dio/dio.dart';
 import '../../../data/models/user_model.dart';
 import '../../network/api_client.dart';
 import '../../utils/secure_storage.dart';
+import '../../error/failures.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/notification_service.dart';
 
@@ -34,8 +36,9 @@ class AuthCubit extends Cubit<AuthState> {
         
         // Silently sync with backend to ensure token validity
         _api.get('/auth/me').then((response) async {
-          if (response.data['success'] == true) {
-            _currentUser = UserModel.fromJson(response.data['user']);
+          final data = response.data;
+          if (data is Map && data['success'] == true) {
+            _currentUser = UserModel.fromJson(data['user']);
             await SecureStorage.saveUserData(jsonEncode(_currentUser!.toFullJson()));
             _emitAuthenticatedState(); // Refresh UI with latest data
           } else {
@@ -104,7 +107,7 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  Future<void> verifyOtp(String phone, String otp) async {
+  Future<void> verifyOtp(String phone, String otp, {Map<String, dynamic>? registrationDetails}) async {
     emit(AuthLoading());
     try {
       if (_verificationId == null) {
@@ -128,19 +131,32 @@ class AuthCubit extends Cubit<AuthState> {
       final response = await _api.post('/auth/verify-otp', data: {
         'idToken': idToken,
         'phone': phone,
+        if (registrationDetails != null) 'registrationDetails': registrationDetails,
       });
 
-      if (response.data['success'] == true) {
-        final token = response.data['token'];
-        final userJson = response.data['user'];
+      final data = response.data;
+      if (data is Map && data['success'] == true) {
+        if (registrationDetails != null) {
+          emit(const RegistrationSuccess());
+        } else {
+          final token = data['token'];
+          final userJson = data['user'];
 
-        await SecureStorage.saveToken(token);
-        _currentUser = UserModel.fromJson(userJson);
-        await SecureStorage.saveUserData(jsonEncode(_currentUser!.toFullJson()));
+          await SecureStorage.saveToken(token);
+          _currentUser = UserModel.fromJson(userJson);
+          await SecureStorage.saveUserData(jsonEncode(_currentUser!.toFullJson()));
 
-        _emitAuthenticatedState();
+          _emitAuthenticatedState();
+        }
       } else {
-        emit(AuthError(response.data['message'] ?? 'Invalid backend response'));
+        final errMsg = (data is Map) ? data['message'] : null;
+        emit(AuthError(errMsg ?? 'Invalid backend response'));
+      }
+    } on DioException catch (e) {
+      if (e.error is Failure) {
+        emit(AuthError((e.error as Failure).message));
+      } else {
+        emit(AuthError('Verification failed: ${e.message ?? e.toString()}'));
       }
     } catch (e) {
       emit(AuthError('Verification failed: $e'));
@@ -162,12 +178,20 @@ class AuthCubit extends Cubit<AuthState> {
         'phone': phone,
       });
 
-      if (response.data['success'] == true) {
-        _currentUser = UserModel.fromJson(response.data['user']);
+      final data = response.data;
+      if (data is Map && data['success'] == true) {
+        _currentUser = UserModel.fromJson(data['user']);
         await SecureStorage.saveUserData(jsonEncode(_currentUser!.toFullJson()));
         emit(PersonalDetailsSaved(user: _currentUser!));
       } else {
-        emit(AuthError(response.data['message'] ?? 'Failed to save details'));
+        final errMsg = (data is Map) ? data['message'] : null;
+        emit(AuthError(errMsg ?? 'Failed to save details'));
+      }
+    } on DioException catch (e) {
+      if (e.error is Failure) {
+        emit(AuthError((e.error as Failure).message));
+      } else {
+        emit(AuthError('Failed to save details: ${e.message ?? e.toString()}'));
       }
     } catch (e) {
       emit(AuthError('Failed to save details: $e'));
@@ -189,12 +213,20 @@ class AuthCubit extends Cubit<AuthState> {
         'gender': gender,
       });
 
-      if (response.data['success'] == true) {
-        _currentUser = UserModel.fromJson(response.data['user']);
+      final data = response.data;
+      if (data is Map && data['success'] == true) {
+        _currentUser = UserModel.fromJson(data['user']);
         await SecureStorage.saveUserData(jsonEncode(_currentUser!.toFullJson()));
         emit(PanDetailsSaved(user: _currentUser!));
       } else {
-        emit(AuthError(response.data['message'] ?? 'Failed to save PAN details'));
+        final errMsg = (data is Map) ? data['message'] : null;
+        emit(AuthError(errMsg ?? 'Failed to save PAN details'));
+      }
+    } on DioException catch (e) {
+      if (e.error is Failure) {
+        emit(AuthError((e.error as Failure).message));
+      } else {
+        emit(AuthError('Failed to save PAN details: ${e.message ?? e.toString()}'));
       }
     } catch (e) {
       emit(AuthError('Failed to save PAN details: $e'));
@@ -211,15 +243,56 @@ class AuthCubit extends Cubit<AuthState> {
 
       final response = await _api.get('/auth/me');
 
-      if (response.data['success'] == true) {
-        _currentUser = UserModel.fromJson(response.data['user']);
+      final data = response.data;
+      if (data is Map && data['success'] == true) {
+        _currentUser = UserModel.fromJson(data['user']);
         await SecureStorage.saveUserData(jsonEncode(_currentUser!.toFullJson()));
         _emitAuthenticatedState();
       } else {
-        emit(AuthError(response.data['message'] ?? 'Registration failed'));
+        final errMsg = (data is Map) ? data['message'] : null;
+        emit(AuthError(errMsg ?? 'Registration failed'));
+      }
+    } on DioException catch (e) {
+      if (e.error is Failure) {
+        emit(AuthError((e.error as Failure).message));
+      } else {
+        emit(AuthError('Registration failed: ${e.message ?? e.toString()}'));
       }
     } catch (e) {
       emit(AuthError('Registration failed: $e'));
+    }
+  }
+
+  Future<void> loginWithPassword(String phone, String password) async {
+    emit(AuthLoading());
+    try {
+      final response = await _api.post('/auth/login-password', data: {
+        'phone': phone,
+        'password': password,
+      });
+
+      final data = response.data;
+      if (data is Map && data['success'] == true) {
+        final token = data['token'];
+        final userJson = data['user'];
+
+        await SecureStorage.saveToken(token);
+        _currentUser = UserModel.fromJson(userJson);
+        await SecureStorage.saveUserData(jsonEncode(_currentUser!.toFullJson()));
+
+        _emitAuthenticatedState();
+      } else {
+        final errMsg = (data is Map) ? data['message'] : null;
+        emit(AuthError(errMsg ?? 'Invalid backend response'));
+      }
+    } on DioException catch (e) {
+      if (e.error is Failure) {
+        emit(AuthError((e.error as Failure).message));
+      } else {
+        emit(AuthError('Login failed: ${e.message ?? e.toString()}'));
+      }
+    } catch (e) {
+      emit(AuthError('Login failed: $e'));
     }
   }
 

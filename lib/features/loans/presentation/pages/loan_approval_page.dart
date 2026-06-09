@@ -89,7 +89,9 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
                   SizedBox(width: 8.w),
                   Expanded(
                     child: Text(
-                      'Pending Your Approval',
+                      widget.loan.status == 'pending_otp'
+                          ? 'Pending Lender OTP Verification'
+                          : 'Pending Your Approval',
                       style: TextStyle(
                         color: const Color(0xFFF59E0B),
                         fontWeight: FontWeight.w700,
@@ -132,7 +134,7 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
             ),
             SizedBox(height: 32.h),
 
-            // Amount Section
+             // Amount Section
             Container(
               width: double.infinity,
               padding: EdgeInsets.all(24.w),
@@ -164,6 +166,52 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
             ),
             SizedBox(height: 24.h),
 
+            if (widget.loan.status == 'pending_otp') ...[
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(16.w),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEF3C7), // Light amber
+                  borderRadius: BorderRadius.circular(16.r),
+                  border: Border.all(color: const Color(0xFFFDE68A)),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      'VERIFICATION OTP',
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF92400E),
+                        letterSpacing: 1,
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                    Text(
+                      widget.loan.otp ?? '-',
+                      style: TextStyle(
+                        fontSize: 32.sp,
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFF92400E),
+                        letterSpacing: 4,
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                    Text(
+                      'Share this OTP with the Lender to verify and proceed with the loan setup.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFFB45309),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 24.h),
+            ],
+
             // Details Section
             Text(
               'Agreement Details',
@@ -182,11 +230,17 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
             SizedBox(height: 40.h),
 
             // Action Buttons
-            PrimaryButton(
-              text: 'Accept Agreement',
-              isLoading: _isApproving,
-              onPressed: _approveLoan,
-            ),
+            if (widget.loan.status == 'pending_otp')
+              PrimaryButton(
+                text: 'Waiting for Lender Verification...',
+                onPressed: null, // Disabled
+              )
+            else
+              PrimaryButton(
+                text: 'Accept Agreement',
+                isLoading: _isApproving,
+                onPressed: _approveLoan,
+              ),
             SizedBox(height: 16.h),
             SizedBox(
               width: double.infinity,

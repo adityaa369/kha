@@ -8,7 +8,6 @@ import 'config/theme.dart';
 import 'config/constants.dart';
 import 'core/blocs/auth/auth_cubit.dart';
 import 'core/blocs/loans/loan_cubit.dart';
-import 'core/blocs/credit_score/credit_score_cubit.dart';
 import 'core/blocs/chit_funds/chit_fund_cubit.dart';
 import 'data/repositories/chit_fund_repository.dart';
 
@@ -20,19 +19,21 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'core/services/biometric_auth_service.dart';
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
+
 void main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
     await Firebase.initializeApp().then((_) async {
       try {
         await FirebaseAppCheck.instance.activate(
-          androidProvider: AndroidProvider.playIntegrity,
-          appleProvider: AppleProvider.deviceCheck,
+          providerAndroid: kDebugMode ? const AndroidDebugProvider() : const AndroidPlayIntegrityProvider(),
+          providerApple: kDebugMode ? const AppleDebugProvider() : const AppleDeviceCheckProvider(),
         );
-      } catch(e) {
-        print("AppCheck Init Failed: $e");
+        print("Firebase App Check activated successfully.");
+      } catch (e) {
+        print("Firebase App Check activation failed: $e");
       }
-
       try {
         NotificationService.initialize();
       } catch (e) {
@@ -88,7 +89,6 @@ class KhaataApp extends StatelessWidget {
       providers: [
         BlocProvider(create: (_) => AuthCubit()..checkAuthStatus()),
         BlocProvider(create: (_) => LoanCubit()),
-        BlocProvider(create: (_) => CreditScoreCubit()),
         BlocProvider(create: (_) => ChitFundCubit(ChitFundRepository())),
       ],
       child: NotificationListenerWidget(

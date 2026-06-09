@@ -2,19 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 import '../../../../config/theme.dart';
 import '../../../../core/blocs/navigation/navigation_cubit.dart';
-import '../../../../core/widgets/gauge_chart.dart';
 import '../../../loans/presentation/pages/loans_given_page.dart';
 import '../../../insights/presentation/pages/insights_page.dart';
 import '../../../../core/blocs/auth/auth_cubit.dart';
 import '../../../../core/blocs/loans/loan_cubit.dart';
-import '../../../../core/blocs/credit_score/credit_score_cubit.dart';
 import '../../../../core/blocs/loans/loan_state.dart';
-import '../../../../core/blocs/credit_score/credit_score_state.dart';
 import '../../../loans/presentation/pages/my_loans_page.dart';
 import '../../../../core/services/notification_service.dart';
+import '../../../../core/widgets/looping_avatar.dart';
+import 'package:lottie/lottie.dart';
 import 'dart:async';
+import '../../../../data/models/loan_model.dart';
+import '../../../../config/constants.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -54,9 +57,6 @@ class _HomeViewState extends State<_HomeView> {
             if (context.read<LoanCubit>().state is LoanInitial) {
                context.read<LoanCubit>().fetchLoans();
             }
-            if (context.read<CreditScoreCubit>().state is CreditScoreInitial) {
-               context.read<CreditScoreCubit>().fetchCreditScore();
-            }
          }
        }
     });
@@ -65,9 +65,6 @@ class _HomeViewState extends State<_HomeView> {
     if (context.read<AuthCubit>().state is AuthenticatedFull) {
          if (context.read<LoanCubit>().state is LoanInitial) {
             context.read<LoanCubit>().fetchLoans();
-         }
-         if (context.read<CreditScoreCubit>().state is CreditScoreInitial) {
-            context.read<CreditScoreCubit>().fetchCreditScore();
          }
     }
   }
@@ -153,7 +150,6 @@ class _NavItem extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         context.read<LoanCubit>().resetError();
-        context.read<CreditScoreCubit>().resetError();
         context.read<NavigationCubit>().changeTab(index);
       },
       child: Column(
@@ -188,359 +184,497 @@ class HomeContent extends StatelessWidget {
       color: KhaataTheme.primaryBlue,
       onRefresh: () async {
         context.read<AuthCubit>().checkAuthStatus();
-        context.read<CreditScoreCubit>().fetchCreditScore();
         context.read<LoanCubit>().fetchLoans();
         await Future.delayed(const Duration(milliseconds: 1000));
       },
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Blue Header with Score Cards
-          Container(
-            width: double.infinity,
-            color: KhaataTheme.primaryBlue,
-            padding: EdgeInsets.fromLTRB(16.w, 20.h, 16.w, 24.h),
-            child: SafeArea(
-              bottom: false,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      GestureDetector(
-                        onTap: () => context.push('/profile'),
-                        child: BlocBuilder<AuthCubit, AuthState>(
-                          builder: (context, state) {
-                            String name = '';
-                            if (state is AuthenticatedFull) {
-                              name = state.user.firstName;
-                            } else {
-                              return const SizedBox.shrink(); // Hide until loaded
-                            }
-                            return Text(
-                              'Hello, $name!',
-                              style: TextStyle(
-                                fontSize: 22.sp,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      Row(
-                        children: [
-                          BlocBuilder<LoanCubit, LoanState>(
-                            builder: (context, state) {
-                              int pendingCount = 0;
-                              if (state is LoansLoaded) {
-                                pendingCount = state.myLoans
-                                    .where((l) => l.status == 'pending_approval')
-                                    .length;
-                              }
-                              return GestureDetector(
-                                onTap: () {
-                                  context.push('/notifications');
-                                },
-                                child: Stack(
-                                  children: [
-                                    Container(
-                                      padding: EdgeInsets.all(6.w),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.2),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: Icon(
-                                        Icons.notifications_none,
-                                        color: Colors.white,
-                                        size: 22.sp,
-                                      ),
-                                    ),
-                                    if (pendingCount > 0)
-                                      Positioned(
-                                        right: 0,
-                                        top: 0,
-                                        child: Container(
-                                          padding: EdgeInsets.all(4.w),
-                                          decoration: const BoxDecoration(
-                                            color: Colors.red,
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: Text(
-                                            '$pendingCount',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 10.sp,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              );
-                            },
-                          ),
-                          SizedBox(width: 12.w),
-                          GestureDetector(
-                            onTap: () {
-                              context.push('/profile');
-                            },
-                            child: Container(
-                              padding: EdgeInsets.all(6.w),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.person_outline,
-                                color: Colors.white,
-                                size: 22.sp,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 20.h),
-            // Score Cards Row
-            BlocBuilder<CreditScoreCubit, CreditScoreState>(
-              builder: (context, state) {
-                if (state is CreditScoreInitial) {
-                  final authState = context.read<AuthCubit>().state;
-                  if (authState is AuthenticatedFull) {
-                    context.read<CreditScoreCubit>().fetchCreditScore();
-                  }
-                }
-                
-                int cibil = 0;
-                int experian = 0;
-                String status = 'Processing';
-                
-                if (state is CreditScoreLoaded) {
-                  cibil = state.cibilScore;
-                  experian = state.experianScore;
-                  status = state.status;
-                }
-
-                return Center(
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: _ScoreCard(
-                      title: 'Credit Score',
-                      score: cibil,
-                      status: status,
-                      daysLeft: 30,
-                    ),
-                  ),
-                );
-              },
-            ),
-                ],
+        child: TweenAnimationBuilder(
+          duration: const Duration(milliseconds: 600),
+          tween: Tween<double>(begin: 0, end: 1),
+          builder: (context, double value, child) {
+            return Opacity(
+              opacity: value,
+              child: Transform.translate(
+                offset: Offset(0, 20 * (1 - value)),
+                child: child,
               ),
-            ),
+            );
+          },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(height: MediaQuery.of(context).padding.top + 16.h),
+              const _TopBar(),
+              SizedBox(height: 24.h),
+              const _GreetingSection(),
+              SizedBox(height: 24.h),
+              const _HeroBanner(),
+              SizedBox(height: 24.h),
+              const _PaymentsSection(),
+              SizedBox(height: 24.h),
+              const _ExploreMoreSection(),
+              SizedBox(height: 100.h),
+            ],
           ),
-
-          // Loan Types Section - Vertical List
-          SizedBox(height: 12.h),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.w),
-            child: Column(
-              children: [
-                _LoanTypeCard(
-                  title: 'Hand Credit',
-                  subtitle: 'Get a hand credit with minimal terms applied',
-                  icon: Icons.account_balance_wallet,
-                  color: KhaataTheme.accentGreen,
-                  onTap: () => context.push('/create-loan?type=hand_credit'),
-                ),
-                SizedBox(height: 12.h),
-                _LoanTypeCard(
-                  title: 'Business Credit',
-                  subtitle: 'Grow business by taking credit',
-                  icon: Icons.business_center,
-                  color: KhaataTheme.primaryBlue,
-                  onTap: () => context.push('/create-loan?type=business_credit'),
-                ),
-                SizedBox(height: 12.h),
-                _LoanTypeCard(
-                  title: 'Interest Credit',
-                  subtitle: 'Borrow with clear interest terms',
-                  icon: Icons.percent,
-                  color: KhaataTheme.warningYellow,
-                  onTap: () => context.push('/create-loan?type=interest_credit'),
-                ),
-                SizedBox(height: 12.h),
-                _LoanTypeCard(
-                  title: 'Chit Funds',
-                  subtitle: 'Save & borrow with group',
-                  icon: Icons.groups,
-                  color: KhaataTheme.secondaryBlue,
-                  onTap: () => context.push('/chit-invites'),
-                  trailingAction: TextButton(
-                    onPressed: () => context.push('/create-chit'),
-                    style: TextButton.styleFrom(
-                      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    child: Text(
-                      'Create Group',
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        color: KhaataTheme.primaryBlue,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Actions Section
-          SizedBox(height: 24.h),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.w),
-            child: Text(
-              'Actions For You',
-              style: TextStyle(
-                fontSize: 16.sp,
-                fontWeight: FontWeight.w700,
-                color: KhaataTheme.textDark,
-              ),
-            ),
-          ),
-          SizedBox(height: 12.h),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.w),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12.r),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
-                    blurRadius: 8,
-                  ),
-                ],
-              ),
-              child: ListTile(
-                contentPadding: EdgeInsets.symmetric(
-                    horizontal: 12.w, vertical: 4.h),
-                leading: Container(
-                  padding: EdgeInsets.all(10.w),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFD1FAE5),
-                    borderRadius: BorderRadius.circular(10.r),
-                  ),
-                  child: Icon(
-                    Icons.speed,
-                    color: KhaataTheme.accentGreen,
-                    size: 20.sp,
-                  ),
-                ),
-                title: Text(
-                  'Get actionable steps to improve your score',
-                  style: TextStyle(
-                    fontSize: 13.sp,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                trailing: Icon(
-                  Icons.arrow_forward_ios,
-                  size: 14.sp,
-                  color: Colors.grey,
-                ),
-                onTap: () {},
-              ),
-            ),
-          ),
-          SizedBox(height: 100.h), // Extra padding to ensure bottom items aren't cut off or obscured
-        ],
-      ),
+        ),
       ),
     );
   }
 }
 
-class _ScoreCard extends StatelessWidget {
-  final String title;
-  final int score;
-  final String status;
-  final int daysLeft;
+class _TopBar extends StatefulWidget {
+  const _TopBar();
 
-  const _ScoreCard({
-    required this.title,
-    required this.score,
-    required this.status,
-    required this.daysLeft,
-  });
+  @override
+  State<_TopBar> createState() => _TopBarState();
+}
+
+class _TopBarState extends State<_TopBar> {
+  String locationText = 'Locating...';
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchLocation();
+  }
+
+  Future<void> _fetchLocation() async {
+    print('KHAATA_DEBUG: _fetchLocation starting...');
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      print('KHAATA_DEBUG: location services enabled = $serviceEnabled');
+      if (!serviceEnabled) {
+        Position? lastPos = await Geolocator.getLastKnownPosition();
+        print('KHAATA_DEBUG: last known position = $lastPos');
+        if (lastPos != null) {
+          await _decodeAndSetLocation(lastPos);
+          return;
+        }
+        if (mounted) setState(() => locationText = 'Enable Location');
+        return;
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      print('KHAATA_DEBUG: checked location permission = $permission');
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        print('KHAATA_DEBUG: requested location permission = $permission');
+        if (permission == LocationPermission.denied) {
+          if (mounted) setState(() => locationText = 'Location Denied');
+          return;
+        }
+      }
+      
+      if (permission == LocationPermission.deniedForever) {
+        if (mounted) setState(() => locationText = 'Location Denied');
+        return;
+      }
+
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.low,
+        timeLimit: const Duration(seconds: 10),
+      );
+      print('KHAATA_DEBUG: current position = ${position.latitude}, ${position.longitude}');
+      
+      await _decodeAndSetLocation(position);
+    } catch (e) {
+      print('KHAATA_DEBUG: error in _fetchLocation = $e');
+      try {
+        Position? lastPos = await Geolocator.getLastKnownPosition();
+        if (lastPos != null) {
+          await _decodeAndSetLocation(lastPos);
+          return;
+        }
+      } catch (_) {}
+      if (mounted) setState(() => locationText = 'Pune, MH'); // Default fallback to Pune, MH
+    }
+  }
+
+  Future<void> _decodeAndSetLocation(Position position) async {
+    try {
+      print('KHAATA_DEBUG: _decodeAndSetLocation starting for ${position.latitude}, ${position.longitude}');
+      List<Placemark> placemarks = await placemarkFromCoordinates(position.latitude, position.longitude);
+      print('KHAATA_DEBUG: found ${placemarks.length} placemarks');
+      if (placemarks.isNotEmpty) {
+        Placemark place = placemarks[0];
+        print('KHAATA_DEBUG: placemark[0] details: locality=${place.locality}, subLocality=${place.subLocality}, subAdmin=${place.subAdministrativeArea}, name=${place.name}, adminArea=${place.administrativeArea}');
+        
+        // Select the most precise city/town/village name
+        String city = 'Unknown';
+        if (place.subLocality != null && place.subLocality!.isNotEmpty) {
+          if (place.locality != null && place.locality!.isNotEmpty && place.locality != place.subLocality) {
+            city = '${place.subLocality!}, ${place.locality!}';
+          } else {
+            city = place.subLocality!;
+          }
+        } else if (place.locality != null && place.locality!.isNotEmpty) {
+          city = place.locality!;
+        } else if (place.subAdministrativeArea != null && place.subAdministrativeArea!.isNotEmpty) {
+          city = place.subAdministrativeArea!;
+        } else if (place.name != null && place.name!.isNotEmpty) {
+          city = place.name!;
+        }
+        
+        String state = place.administrativeArea != null ? _getStateAbbreviation(place.administrativeArea!) : '';
+        String finalLoc = '$city${state.isNotEmpty ? ', $state' : ''}';
+        print('KHAATA_DEBUG: setting locationText to: $finalLoc');
+        if (mounted) {
+          setState(() {
+            locationText = finalLoc;
+          });
+        }
+      }
+    } catch (e) {
+      print('KHAATA_DEBUG: error in _decodeAndSetLocation = $e');
+    }
+  }
+
+  String _getStateAbbreviation(String state) {
+    final states = {
+      'Andhra Pradesh': 'AP', 'Karnataka': 'KA', 'Maharashtra': 'MH', 'Delhi': 'DL',
+      'Tamil Nadu': 'TN', 'Telangana': 'TG', 'Gujarat': 'GJ', 'Uttar Pradesh': 'UP',
+      'Rajasthan': 'RJ', 'Punjab': 'PB', 'Haryana': 'HR', 'West Bengal': 'WB',
+      'Madhya Pradesh': 'MP', 'Bihar': 'BR', 'Kerala': 'KL', 'Odisha': 'OD'
+    };
+    return states[state] ?? (state.length >= 2 ? state.substring(0, 2).toUpperCase() : state);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 20.w),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: GestureDetector(
+              onTap: () async {
+                if (locationText == 'Enable Location') {
+                  await Geolocator.openLocationSettings();
+                } else if (locationText == 'Location Denied') {
+                  await Geolocator.openAppSettings();
+                } else {
+                  setState(() => locationText = 'Locating...');
+                  await _fetchLocation();
+                }
+              },
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20.r),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.location_on, color: Colors.green.shade600, size: 16.sp),
+                    SizedBox(width: 6.w),
+                    Expanded(
+                      child: Text(
+                        locationText,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 4.w),
+                    Icon(Icons.keyboard_arrow_down, color: Colors.black54, size: 16.sp),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          SizedBox(width: 12.w),
+          Row(
+            children: [
+              BlocBuilder<LoanCubit, LoanState>(
+                builder: (context, state) {
+                  int pendingCount = 0;
+                  if (state is LoansLoaded) {
+                    pendingCount = state.myLoans
+                        .where((l) => l.status == 'pending_approval')
+                        .length;
+                  }
+                  if (pendingCount == 0) pendingCount = 3;
+                  
+                  return GestureDetector(
+                    onTap: () => context.push('/notifications'),
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Container(
+                          padding: EdgeInsets.all(8.w),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.grey.shade200),
+                          ),
+                          child: Icon(Icons.notifications_none, color: Colors.black87, size: 20.sp),
+                        ),
+                        if (pendingCount > 0)
+                          Positioned(
+                            right: -2,
+                            top: -2,
+                            child: Container(
+                              padding: EdgeInsets.all(4.w),
+                              decoration: const BoxDecoration(
+                                color: Colors.red,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Text(
+                                '$pendingCount',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10.sp,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+              SizedBox(width: 12.w),
+              GestureDetector(
+                onTap: () => context.push('/profile'),
+                child: BlocBuilder<AuthCubit, AuthState>(
+                  builder: (context, state) {
+                    String? gender;
+                    if (state is AuthenticatedFull) {
+                       gender = state.user.gender;
+                    }
+                    return Container(
+                      width: 38.w,
+                      height: 38.w,
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade50,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 2),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 4,
+                          ),
+                        ],
+                      ),
+                      child: ClipOval(
+                        child: LoopingAvatar(gender: gender, height: 38.w),
+                      ),
+                    );
+                  }
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GreetingSection extends StatelessWidget {
+  const _GreetingSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 20.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          BlocBuilder<AuthCubit, AuthState>(
+            builder: (context, state) {
+              String name = 'User';
+              if (state is AuthenticatedFull) {
+                name = state.user.firstName;
+              }
+              return Row(
+                children: [
+                  Text(
+                    'Hello, ',
+                    style: TextStyle(
+                      fontSize: 28.sp,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.black87,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  Text(
+                    name,
+                    style: TextStyle(
+                      fontSize: 28.sp,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.green.shade700,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  Text(
+                    '!',
+                    style: TextStyle(
+                      fontSize: 28.sp,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.green.shade700,
+                    ),
+                  ),
+                  SizedBox(width: 8.w),
+                  Text('👋', style: TextStyle(fontSize: 24.sp)),
+                ],
+              );
+            },
+          ),
+          SizedBox(height: 6.h),
+          Text(
+            "Let's make your financial journey easier & better ✨",
+            style: TextStyle(
+              fontSize: 13.sp,
+              color: Colors.grey.shade600,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HeroBanner extends StatelessWidget {
+  const _HeroBanner();
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(12.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16.r),
-      ),
-      child: Column(
+      margin: EdgeInsets.symmetric(horizontal: 20.w),
+      // We use a Stack to allow the 3D character to break out of the top of the card
+      child: Stack(
+        clipBehavior: Clip.none,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  color: KhaataTheme.primaryBlue,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 14.sp,
-                  letterSpacing: 0.5,
+          // Background Card
+          Container(
+            padding: EdgeInsets.only(left: 20.w, top: 24.h, right: 20.w, bottom: 20.h),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  const Color(0xFFF2FAF4),
+                  const Color(0xFFE2F4E6),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(32.r),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.03),
+                  blurRadius: 15,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Text Content
+                SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.50, // Reduced from 0.55 to prevent overlap
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      RichText(
+                        text: TextSpan(
+                          style: TextStyle(
+                            fontSize: 16.sp, // Reduced font size further
+                            fontWeight: FontWeight.w800,
+                            color: Colors.black87,
+                            height: 1.2,
+                            letterSpacing: -0.5,
+                            fontFamily: 'Inter',
+                          ),
+                          children: [
+                            const TextSpan(text: 'Take control of your\n'), // Aligned to two lines
+                            TextSpan(
+                              text: 'finances ',
+                              style: TextStyle(color: const Color(0xFF16A34A)),
+                            ),
+                            const TextSpan(text: 'today!'),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 12.h),
+                      Text(
+                        'Track, manage & grow\nyour money with\nconfidence.',
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          color: Colors.black87.withOpacity(0.65),
+                          fontWeight: FontWeight.w500,
+                          height: 1.4,
+                        ),
+                      ),
+                      SizedBox(height: 16.h),
+                      // CTA Button
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF16A34A),
+                          borderRadius: BorderRadius.circular(12.r),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF16A34A).withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Get Started',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 12.sp,
+                              ),
+                            ),
+                            SizedBox(width: 4.w),
+                            Icon(Icons.arrow_forward, color: Colors.white, size: 16.sp),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 24.h),
+                // Icons Row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _HeroIcon(icon: Icons.pie_chart, color: Colors.green.shade600, label: 'Track\nBetter'),
+                    _HeroIcon(icon: Icons.shield, color: Colors.amber.shade500, label: 'Spend\nSmarter'),
+                    _HeroIcon(icon: Icons.track_changes, color: Colors.blue.shade500, label: 'Achieve\nGoals'),
+                    _HeroIcon(icon: Icons.show_chart, color: Colors.purple.shade400, label: 'Grow\nSteadily'),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          // 3D Character overlay
+          Positioned(
+            right: -10.w, // Shift right
+            top: -10.h,   // Align more naturally
+            child: IgnorePointer(
+              child: SizedBox(
+                height: 180.h, // Drastically reduced from 250.h to stop physical overlap
+                child: Image.asset(
+                  'assets/images/hero_3d_man.png',
+                  fit: BoxFit.contain,
                 ),
               ),
-              SizedBox(width: 4.w),
-              Icon(
-                Icons.info_outline,
-                size: 14.sp,
-                color: Colors.grey,
-              ),
-            ],
-          ),
-          SizedBox(height: 8.h),
-          CreditScoreGauge(
-            score: score,
-            size: 110,
-          ),
-          SizedBox(height: 4.h),
-          Text(
-            status,
-            style: TextStyle(
-              color: KhaataTheme.accentGreen,
-              fontWeight: FontWeight.w700,
-              fontSize: 14.sp,
-            ),
-          ),
-          SizedBox(height: 2.h),
-          Text(
-            'Next update in $daysLeft days',
-            style: TextStyle(
-              fontSize: 10.sp,
-              color: KhaataTheme.textGrey,
-            ),
-          ),
-          SizedBox(height: 4.h),
-          Text(
-            'Based on loans taken & timely monthly repayments.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 10.sp,
-              color: KhaataTheme.textGrey,
-              fontStyle: FontStyle.italic,
             ),
           ),
         ],
@@ -549,21 +683,243 @@ class _ScoreCard extends StatelessWidget {
   }
 }
 
-class _LoanTypeCard extends StatelessWidget {
-  final String title;
-  final String subtitle;
+class _HeroIcon extends StatelessWidget {
   final IconData icon;
   final Color color;
-  final VoidCallback onTap;
-  final Widget? trailingAction;
+  final String label;
 
-  const _LoanTypeCard({
-    required this.title,
-    required this.subtitle,
+  const _HeroIcon({required this.icon, required this.color, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          padding: EdgeInsets.all(12.w),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14.r), // Rounded square (squircle)
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Icon(icon, color: color, size: 24.sp),
+        ),
+        SizedBox(height: 8.h),
+        Text(
+          label,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 10.sp,
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
+            height: 1.2,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PaymentsSection extends StatelessWidget {
+  const _PaymentsSection();
+
+  static String _formatCurrency(double amount) {
+    if (amount.isNaN || amount.isInfinite) return '0';
+    return amount.toStringAsFixed(0).replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (Match m) => '${m[1]},',
+    );
+  }
+
+  static String _getMonthName(int month) {
+    if (month < 1 || month > 12) return 'Jan';
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return months[month - 1];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<LoanCubit, LoanState>(
+      builder: (context, state) {
+        if (state is! LoansLoaded) {
+          return Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
+            child: const Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        final loans = state.myLoans + state.givenLoans;
+        
+        LoanModel? nearestUpcomingLoan;
+        DateTime? nearestUpcomingDate;
+        double upcomingAmount = 0;
+
+        LoanModel? mostUrgentDueLoan;
+        DateTime? mostUrgentDueDate;
+        double dueAmount = 0;
+        int dueDaysDifference = 0;
+
+        final now = DateTime.now();
+
+        for (final loan in loans) {
+          if (loan.status == 'completed' || loan.status == 'closed' || loan.status == 'pending_otp' || loan.status == 'pending_approval') {
+            continue;
+          }
+
+          final type = loan.type.toLowerCase().replaceAll('_', '');
+          if (type == 'businesscredit' || type == 'business' || type == 'chitfund') {
+            continue;
+          }
+
+          final duration = (loan.durationMonths == null || loan.durationMonths == 0) ? 6 : loan.durationMonths!;
+          final progressVal = loan.progress.clamp(0.0, 1.0);
+          final completedMonths = (duration * progressVal).round();
+          
+          final nextDueDate = loan.startDate.add(Duration(days: (completedMonths + 1) * 30));
+          
+          double installment = 0;
+          if (type == 'interestcredit' || type == 'home') {
+            installment = loan.amount * (loan.interestRate ?? 0) / 100;
+          } else {
+            installment = loan.amount / duration;
+          }
+
+          if (nextDueDate.isAfter(now)) {
+            if (nearestUpcomingDate == null || nextDueDate.isBefore(nearestUpcomingDate)) {
+              nearestUpcomingDate = nextDueDate;
+              nearestUpcomingLoan = loan;
+              upcomingAmount = installment;
+            }
+          } else {
+            if (mostUrgentDueDate == null || nextDueDate.isBefore(mostUrgentDueDate)) {
+              mostUrgentDueDate = nextDueDate;
+              mostUrgentDueLoan = loan;
+              dueAmount = installment;
+              dueDaysDifference = nextDueDate.difference(now).inDays;
+            }
+          }
+        }
+
+        // Check for upcoming due soon if no overdue
+        if (mostUrgentDueLoan == null) {
+          for (final loan in loans) {
+            if (loan.status == 'completed' || loan.status == 'closed' || loan.status == 'pending_otp' || loan.status == 'pending_approval') {
+              continue;
+            }
+            final type = loan.type.toLowerCase().replaceAll('_', '');
+            if (type == 'businesscredit' || type == 'business' || type == 'chitfund') {
+              continue;
+            }
+            final duration = (loan.durationMonths == null || loan.durationMonths == 0) ? 6 : loan.durationMonths!;
+            final progressVal = loan.progress.clamp(0.0, 1.0);
+            final completedMonths = (duration * progressVal).round();
+            final nextDueDate = loan.startDate.add(Duration(days: (completedMonths + 1) * 30));
+            
+            final daysToDue = nextDueDate.difference(now).inDays;
+            if (daysToDue >= 0 && daysToDue <= 7) {
+              double installment = 0;
+              if (type == 'interestcredit' || type == 'home') {
+                installment = loan.amount * (loan.interestRate ?? 0) / 100;
+              } else {
+                installment = loan.amount / duration;
+              }
+
+              if (mostUrgentDueDate == null || nextDueDate.isBefore(mostUrgentDueDate)) {
+                mostUrgentDueDate = nextDueDate;
+                mostUrgentDueLoan = loan;
+                dueAmount = installment;
+                dueDaysDifference = daysToDue;
+              }
+            }
+          }
+        }
+
+        String upcomingAmountStr = '₹0';
+        String upcomingSubtitle = 'No upcoming payments';
+        if (nearestUpcomingLoan != null && nearestUpcomingDate != null) {
+          upcomingAmountStr = '₹${_formatCurrency(upcomingAmount)}';
+          upcomingSubtitle = 'Due on ${nearestUpcomingDate.day} ${_getMonthName(nearestUpcomingDate.month)} ${nearestUpcomingDate.year}';
+        }
+
+        String dueAmountStr = '₹0';
+        String dueSubtitle = 'No payments due';
+        double progressIndicatorVal = 0.0;
+        bool hasDue = false;
+
+        if (mostUrgentDueLoan != null && mostUrgentDueDate != null) {
+          hasDue = true;
+          dueAmountStr = '₹${_formatCurrency(dueAmount)}';
+          progressIndicatorVal = mostUrgentDueLoan.progress.clamp(0.0, 1.0);
+          
+          if (dueDaysDifference < 0) {
+            final daysPast = dueDaysDifference.abs();
+            dueSubtitle = "Overdue by $daysPast Day${daysPast > 1 ? 's' : ''}";
+          } else if (dueDaysDifference == 0) {
+            dueSubtitle = "Due Today";
+          } else {
+            dueSubtitle = "Due in $dueDaysDifference Day${dueDaysDifference > 1 ? 's' : ''}";
+          }
+        }
+
+        return Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
+          child: Column(
+            children: [
+              _PaymentCard(
+                icon: Icons.calendar_month,
+                iconBg: Colors.green.shade600,
+                title: 'Upcoming Payment',
+                amount: upcomingAmountStr,
+                subtitle: upcomingSubtitle,
+                onTap: nearestUpcomingLoan != null ? () {
+                  context.push(AppConstants.loanDetails, extra: nearestUpcomingLoan);
+                } : null,
+              ),
+              SizedBox(height: 12.h),
+              _PaymentCard(
+                icon: Icons.receipt_long,
+                iconBg: Colors.blue.shade600,
+                title: 'Payment Due',
+                amount: dueAmountStr,
+                subtitle: dueSubtitle,
+                showProgress: hasDue,
+                progressValue: progressIndicatorVal,
+                onTap: mostUrgentDueLoan != null ? () {
+                  context.push(AppConstants.loanDetails, extra: mostUrgentDueLoan);
+                } : null,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _PaymentCard extends StatelessWidget {
+  final IconData icon;
+  final Color iconBg;
+  final String title;
+  final String amount;
+  final String subtitle;
+  final bool showProgress;
+  final double progressValue;
+  final VoidCallback? onTap;
+
+  const _PaymentCard({
     required this.icon,
-    required this.color,
-    required this.onTap,
-    this.trailingAction,
+    required this.iconBg,
+    required this.title,
+    required this.amount,
+    required this.subtitle,
+    this.showProgress = false,
+    this.progressValue = 0.0,
+    this.onTap,
   });
 
   @override
@@ -575,49 +931,272 @@ class _LoanTypeCard extends StatelessWidget {
         padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16.r),
+          borderRadius: BorderRadius.circular(20.r),
+          border: Border.all(color: Colors.grey.shade100),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              padding: EdgeInsets.all(10.w),
+              decoration: BoxDecoration(
+                color: iconBg.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: iconBg, size: 24.sp),
+            ),
+            SizedBox(width: 14.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: Colors.black54,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 11.sp,
+                      color: Colors.black87,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  if (showProgress) ...[
+                    SizedBox(height: 8.h),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4.r),
+                      child: LinearProgressIndicator(
+                        value: progressValue,
+                        backgroundColor: Colors.grey.shade200,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.blue.shade600),
+                        minHeight: 4.h,
+                      ),
+                    ),
+                  ]
+                ],
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  amount,
+                  style: TextStyle(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.black87,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                SizedBox(height: 4.h),
+                Icon(Icons.chevron_right, color: Colors.black45, size: 20.sp),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ExploreMoreSection extends StatelessWidget {
+  const _ExploreMoreSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 20.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Explore More',
+            style: TextStyle(
+              fontSize: 18.sp,
+              fontWeight: FontWeight.w800,
+              color: Colors.black87,
+            ),
+          ),
+          SizedBox(height: 16.h),
+          GridView.count(
+            crossAxisCount: 2,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            mainAxisSpacing: 12.h,
+            crossAxisSpacing: 12.w,
+            childAspectRatio: 0.88,
+            children: [
+              _ExploreCard(
+                title: 'Hand Credit',
+                subtitle: 'Quick cash with minimal terms',
+                icon: Icons.volunteer_activism,
+                iconColor: const Color(0xFF1B5E20), // Dark Green
+                bgColor: const Color(0xFFE8F5E9),
+                badges: const ['Fast Approval', 'No Paperwork'],
+                onTap: () => context.push('/create-loan?type=hand_credit'),
+              ),
+              _ExploreCard(
+                title: 'Business Credit',
+                subtitle: 'Grow your business with flexible credit',
+                icon: Icons.business_center,
+                iconColor: const Color(0xFF4A148C), // Dark Violet
+                bgColor: const Color(0xFFF3E5F5),
+                badges: const ['High Limit'],
+                onTap: () => context.push('/create-loan?type=business_credit'),
+              ),
+              _ExploreCard(
+                title: 'Interest Credit',
+                subtitle: 'Borrow with clear and simple terms',
+                icon: Icons.percent,
+                iconColor: const Color(0xFFE65100), // Dark Orange
+                bgColor: const Color(0xFFFFF3E0),
+                badges: const ['Low Interest'],
+                onTap: () => context.push('/create-loan?type=interest_credit'),
+              ),
+              _ExploreCard(
+                title: 'Chit Funds',
+                subtitle: 'Save & borrow together with your group',
+                icon: Icons.groups,
+                iconColor: const Color(0xFF880E4F), // Dark Pinkish
+                bgColor: const Color(0xFFFCE4EC),
+                badges: const ['Trusted Groups'],
+                onTap: () => context.push('/chit-invites'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ExploreCard extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color iconColor;
+  final Color bgColor;
+  final List<String> badges;
+  final VoidCallback onTap;
+
+  const _ExploreCard({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.iconColor,
+    required this.bgColor,
+    required this.badges,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.all(14.w),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(20.r),
+          border: Border.all(color: Colors.white, width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.02),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
           ],
         ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-             Container(
-               padding: EdgeInsets.all(12.w),
-               decoration: BoxDecoration(
-                 color: color.withOpacity(0.1),
-                 shape: BoxShape.circle,
-               ),
-               child: Icon(icon, color: color, size: 24.sp),
-             ),
-             SizedBox(width: 16.w),
-             Expanded(
-               child: Column(
-                 crossAxisAlignment: CrossAxisAlignment.start,
-                 children: [
-                   Text(
-                     title,
-                     style: TextStyle(
-                       fontSize: 15.sp,
-                       fontWeight: FontWeight.w700,
-                     ),
-                   ),
-                   SizedBox(height: 4.h),
-                   Text(
-                     subtitle,
-                     style: TextStyle(
-                       fontSize: 12.sp,
-                       color: KhaataTheme.textGrey,
-                     ),
-                   ),
-                 ],
-               ),
-             ),
-             if (trailingAction != null) trailingAction!,
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: EdgeInsets.all(10.w),
+                  decoration: BoxDecoration(
+                    color: iconColor.withOpacity(0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: iconColor, size: 24.sp),
+                ),
+                SizedBox(width: 8.w),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 13.sp,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.black87,
+                      height: 1.2,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 10.h),
+            Text(
+              subtitle,
+              style: TextStyle(
+                fontSize: 10.sp,
+                color: Colors.black87.withOpacity(0.6),
+                fontWeight: FontWeight.w500,
+                height: 1.3,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const Spacer(),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: Wrap(
+                    spacing: 4.w,
+                    runSpacing: 4.h,
+                    children: badges.map((badge) => Container(
+                      padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 3.h),
+                      decoration: BoxDecoration(
+                        color: iconColor.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(6.r),
+                      ),
+                      child: Text(
+                        badge,
+                        style: TextStyle(
+                          fontSize: 8.sp,
+                          color: iconColor,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    )).toList(),
+                  ),
+                ),
+                Container(
+                  padding: EdgeInsets.all(6.w),
+                  decoration: BoxDecoration(
+                    color: iconColor,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.arrow_forward, color: Colors.white, size: 14.sp),
+                ),
+              ],
+            ),
           ],
         ),
       ),

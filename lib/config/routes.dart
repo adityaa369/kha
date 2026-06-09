@@ -7,6 +7,7 @@ import '../features/auth/presentation/pages/pan_details_page.dart';
 import '../features/auth/presentation/pages/personal_details_page.dart';
 import '../features/auth/presentation/pages/registration_otp_page.dart';
 import '../features/auth/presentation/pages/welcome_page.dart';
+import '../features/auth/presentation/pages/signup_page.dart';
 import '../features/auth/presentation/pages/processing_page.dart';
 import '../features/home/presentation/pages/home_page.dart';
 import '../features/insights/presentation/pages/insights_page.dart';
@@ -17,6 +18,7 @@ import '../features/loans/presentation/pages/create_loan_page.dart';
 import '../features/loans/presentation/pages/loan_confirmation_page.dart';
 import '../features/loans/presentation/pages/loan_success_page.dart';
 import '../features/loans/presentation/pages/loan_close_success_page.dart';
+import '../features/loans/presentation/pages/loan_details_page.dart';
 import '../features/splash/presentation/pages/splash_page.dart';
 import '../features/auth/presentation/pages/auth_choice_page.dart';
 import '../features/chit_funds/presentation/pages/chit_invites_page.dart';
@@ -37,6 +39,7 @@ final router = GoRouter(
     
     final isAuthRoute = [
       AppConstants.login,
+      '/signup',
       AppConstants.otp,
       AppConstants.welcome,
       AppConstants.splash,
@@ -52,14 +55,21 @@ final router = GoRouter(
 
     if (state.uri.path == AppConstants.splash) return null;
 
-    if (authState is Unauthenticated || authState is AuthInitial) {
+    if (authState is Unauthenticated || authState is AuthInitial || authState is RegistrationSuccess) {
       if (!isAuthRoute) return AppConstants.login;
       return null;
     }
     
     if (authState is OtpVerified || authState is RegistrationOtpVerified || authState is AuthenticatedUnverified) {
-      if (state.uri.path != AppConstants.personalDetails) {
-        return AppConstants.personalDetails;
+      final user = authState is AuthenticatedUnverified ? authState.user : null;
+      if (user != null && user.firstName.isNotEmpty) {
+        if (state.uri.path != AppConstants.panDetails) {
+          return AppConstants.panDetails;
+        }
+      } else {
+        if (state.uri.path != AppConstants.personalDetails) {
+          return AppConstants.personalDetails;
+        }
       }
       return null;
     }
@@ -89,6 +99,7 @@ final router = GoRouter(
     GoRoute(path: AppConstants.splash, builder: (context, state) => const SplashPage()),
     GoRoute(path: AppConstants.welcome, builder: (context, state) => const WelcomePage()),
     GoRoute(path: AppConstants.login, builder: (context, state) => const LoginPage()),
+    GoRoute(path: '/signup', builder: (context, state) => const SignupPage()),
     GoRoute(
       path: AppConstants.otp,
       builder: (context, state) {
@@ -135,6 +146,13 @@ final router = GoRouter(
     ),
     GoRoute(path: AppConstants.loanSuccess, builder: (context, state) => const LoanSuccessPage()),
     GoRoute(path: AppConstants.loanCloseSuccess, builder: (context, state) => const LoanCloseSuccessPage()),
+    GoRoute(
+      path: AppConstants.loanDetails,
+      builder: (context, state) {
+        final loan = state.extra as LoanModel;
+        return LoanDetailsPage(loan: loan);
+      },
+    ),
     GoRoute(path: '/auth-choice', builder: (context, state) => const AuthChoicePage()),
     GoRoute(path: AppConstants.chitInvites, builder: (context, state) => const ChitInvitesPage()),
     GoRoute(path: AppConstants.myChits, builder: (context, state) => const MyChitsPage()),

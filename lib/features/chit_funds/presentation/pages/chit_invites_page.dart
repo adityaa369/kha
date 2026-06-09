@@ -21,7 +21,7 @@ class ChitInvitesPage extends StatefulWidget {
 }
 
 class _ChitInvitesPageState extends State<ChitInvitesPage> {
-  int _selectedIndex = 0; // 0 = Invites, 1 = My Created Groups
+  int _selectedIndex = 0; // 0 = Invites, 1 = Joined, 2 = My Created Groups
 
   @override
   void initState() {
@@ -146,9 +146,11 @@ class _ChitInvitesPageState extends State<ChitInvitesPage> {
           
           List<ChitInviteModel> invites = [];
           List<ChitFundModel> owned = [];
+          List<Map<String, dynamic>> joined = [];
           if (state is ChitFundInvitesLoaded) {
              invites = state.pendingInvites;
              owned = state.ownedChits;
+             joined = state.mySubscriptions;
           }
 
           return Column(
@@ -158,15 +160,18 @@ class _ChitInvitesPageState extends State<ChitInvitesPage> {
                 color: KhaataTheme.primaryBlue,
                 child: Row(
                   children: [
-                    _buildTab(0, 'Received Invites (${invites.length})'),
-                    _buildTab(1, 'My Groups (${owned.length})'),
+                    _buildTab(0, 'Invites (${invites.length})'),
+                    _buildTab(1, 'Joined (${joined.length})'),
+                    _buildTab(2, 'Owned (${owned.length})'),
                   ],
                 ),
               ),
               Expanded(
                 child: _selectedIndex == 0
                     ? _buildInvitesList(invites)
-                    : _buildOwnedList(owned),
+                    : _selectedIndex == 1
+                        ? _buildJoinedList(joined)
+                        : _buildOwnedList(owned),
               ),
             ],
           );
@@ -222,6 +227,34 @@ class _ChitInvitesPageState extends State<ChitInvitesPage> {
           detail3Label: 'Duration', detail3Val: '${chit.totalMonths} Mo',
           actionLabel: 'Review Invitation',
           onAction: () => _showAcceptDialog(invite),
+        );
+      },
+    );
+  }
+
+  Widget _buildJoinedList(List<Map<String, dynamic>> joined) {
+    if (joined.isEmpty) {
+       return const Center(child: Text("You haven't joined any groups yet.", style: TextStyle(color: KhaataTheme.textGrey)));
+    }
+    return ListView.builder(
+      padding: EdgeInsets.all(16.w),
+      itemCount: joined.length,
+      itemBuilder: (context, index) {
+        final sub = joined[index];
+        final String chitName = sub['chitName'] ?? 'Unknown Group';
+        final num totalValue = sub['totalValue'] ?? 0;
+        final num monthly = sub['dueAmount'] ?? 0;
+        
+        return _buildCard(
+          title: chitName,
+          badge: 'Active Member',
+          detail1Label: 'Total Value', detail1Val: currencyFormatter.format(totalValue),
+          detail2Label: 'Monthly Due', detail2Val: currencyFormatter.format(monthly),
+          detail3Label: 'Duration', detail3Val: '${sub['completedMonths'] ?? 0}/${sub['totalMonths'] ?? 1} Mo',
+          actionLabel: 'Enter Bidding / Dashboard',
+          onAction: () {
+             context.push(AppConstants.chitAdminDashboard, extra: sub['chitId']);
+          },
         );
       },
     );

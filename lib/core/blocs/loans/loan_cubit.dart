@@ -22,16 +22,39 @@ class LoanCubit extends Cubit<LoanState> {
 
   Future<void> fetchLoans() async {
     resetError();
+    
+    // 1. Load from local cache instantly if state is not already loaded
     if (state is! LoansLoaded) {
-      emit(LoanLoading());
+      try {
+        final cachedLoans = await _repository.getCachedLoans();
+        if (cachedLoans != null && state is! LoansLoaded) {
+          emit(LoansLoaded(
+            myLoans: cachedLoans['myLoans']!,
+            givenLoans: cachedLoans['givenLoans']!,
+          ));
+        } else if (state is! LoansLoaded) {
+          emit(LoanLoading());
+        }
+      } catch (_) {
+        if (state is! LoansLoaded) {
+          emit(LoanLoading());
+        }
+      }
     }
+
+    // 2. Fetch from server in the background
     try {
       final loans = await _repository.fetchLoans();
       emit(LoansLoaded(myLoans: loans['myLoans']!, givenLoans: loans['givenLoans']!));
     } on Failure catch (f) {
-      emit(LoanError(f.message));
+      // Only emit error if we don't have loaded data to show
+      if (state is! LoansLoaded) {
+        emit(LoanError(f.message));
+      }
     } catch (e) {
-      emit(LoanError('Failed to fetch loans: $e'));
+      if (state is! LoansLoaded) {
+        emit(LoanError('Failed to fetch loans: $e'));
+      }
     }
   }
 

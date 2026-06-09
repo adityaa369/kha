@@ -37,11 +37,20 @@ class ApiClient {
               myException = e.copyWith(error: const NetworkFailure());
               break;
             case DioExceptionType.badResponse:
-              final msg = e.response?.data?['message'];
-              if (e.response?.statusCode == 500) {
+              final responseData = e.response?.data;
+              String? msg;
+              if (responseData is Map) {
+                msg = responseData['message']?.toString();
+              } else if (responseData is String) {
+                msg = responseData;
+              }
+              final statusCode = e.response?.statusCode ?? 500;
+              if (statusCode >= 500) {
                 myException = e.copyWith(error: ServerFailure(msg ?? 'Internal Server Error'));
-              } else if (e.response?.statusCode == 400 || e.response?.statusCode == 404) {
-                myException = e.copyWith(error: ValidationFailure(msg ?? 'Invalid request'));
+              } else if (statusCode == 403) {
+                myException = e.copyWith(error: AuthFailure(msg ?? 'Access denied'));
+              } else {
+                myException = e.copyWith(error: ValidationFailure(msg ?? 'Request failed'));
               }
               break;
             default:
