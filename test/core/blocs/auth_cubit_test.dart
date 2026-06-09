@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/services.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:dio/dio.dart';
@@ -8,6 +9,19 @@ import 'package:khatha/core/network/api_client.dart';
 class MockApiClient extends Mock implements ApiClient {}
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  
+  setUpAll(() {
+    const MethodChannel channel = MethodChannel('plugins.it_nomads.com/flutter_secure_storage');
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
+      if (methodCall.method == 'read') return null;
+      if (methodCall.method == 'write') return null;
+      if (methodCall.method == 'delete') return null;
+      return null;
+    });
+  });
+
   late MockApiClient mockApiClient;
   late AuthCubit authCubit;
 
@@ -20,28 +34,49 @@ void main() {
     authCubit.close();
   });
 
-  group('AuthCubit - sendOtp', () {
+  group('AuthCubit - savePersonalDetails', () {
     const String testPhone = '9876543210';
+    const String testEmail = 'test@example.com';
+    const String firstName = 'John';
+    const String lastName = 'Doe';
 
     blocTest<AuthCubit, AuthState>(
-      'emits [AuthLoading, OtpSent] when API call is successful',
+      'emits [AuthLoading, PersonalDetailsSaved] when API call is successful',
       build: () {
         when(() => mockApiClient.post(any(), data: any(named: 'data')))
             .thenAnswer((_) async => Response(
-                  requestOptions: RequestOptions(path: '/auth/send-otp'),
-                  data: {'success': true},
+                  requestOptions: RequestOptions(path: '/auth/register'),
+                  data: {
+                    'success': true,
+                    'user': {
+                      'id': '123',
+                      'firstName': firstName,
+                      'lastName': lastName,
+                      'phone': testPhone,
+                      'email': testEmail,
+                      'isVerified': true,
+                      'city': '',
+                      'address': '',
+                      'pan': '',
+                      'aadhar': '',
+                      'dob': '',
+                      'gender': '',
+                    }
+                  },
                   statusCode: 200,
                 ));
         return authCubit;
       },
-      act: (cubit) => cubit.sendOtp(testPhone),
+      act: (cubit) => cubit.savePersonalDetails(
+        firstName: firstName,
+        lastName: lastName,
+        email: testEmail,
+        phone: testPhone,
+      ),
       expect: () => [
         isA<AuthLoading>(),
-        isA<OtpSent>().having((s) => s.phone, 'phone', testPhone),
+        isA<PersonalDetailsSaved>(),
       ],
-      verify: (_) {
-        verify(() => mockApiClient.post('/auth/send-otp', data: {'phone': testPhone})).called(1);
-      },
     );
 
     blocTest<AuthCubit, AuthState>(
@@ -49,16 +84,21 @@ void main() {
       build: () {
         when(() => mockApiClient.post(any(), data: any(named: 'data')))
             .thenAnswer((_) async => Response(
-                  requestOptions: RequestOptions(path: '/auth/send-otp'),
-                  data: {'success': false, 'message': 'Invalid phone number'},
+                  requestOptions: RequestOptions(path: '/auth/register'),
+                  data: {'success': false, 'message': 'Failed to save details'},
                   statusCode: 400,
                 ));
         return authCubit;
       },
-      act: (cubit) => cubit.sendOtp(testPhone),
+      act: (cubit) => cubit.savePersonalDetails(
+        firstName: firstName,
+        lastName: lastName,
+        email: testEmail,
+        phone: testPhone,
+      ),
       expect: () => [
         isA<AuthLoading>(),
-        isA<AuthError>().having((s) => s.message, 'message', 'Invalid phone number'),
+        isA<AuthError>().having((s) => s.message, 'message', 'Failed to save details'),
       ],
     );
   });
