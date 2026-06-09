@@ -753,7 +753,7 @@ class _PaymentsSection extends StatelessWidget {
           );
         }
 
-        final loans = state.myLoans + state.givenLoans;
+        final loans = state.myLoans;
         
         LoanModel? nearestUpcomingLoan;
         DateTime? nearestUpcomingDate;
