@@ -10,6 +10,7 @@ import '../../../../core/blocs/loans/loan_cubit.dart';
 import '../../../../core/blocs/loans/loan_state.dart';
 import '../../../../core/widgets/buttons.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class LoanConfirmationPage extends StatefulWidget {
   final Map<String, dynamic> loanData;
@@ -27,12 +28,16 @@ class _LoanConfirmationPageState extends State<LoanConfirmationPage> {
   bool _canResend = false;
   bool _isLoading = false;
   String _currentOtp = '';
+  String? _verificationId;
 
   @override
   void initState() {
     super.initState();
     _errorController = StreamController<ErrorAnimationType>.broadcast();
     _startResendTimer();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _sendOtp();
+    });
   }
 
   @override
@@ -65,7 +70,79 @@ class _LoanConfirmationPageState extends State<LoanConfirmationPage> {
     }
   }
 
+  Future<void> _sendOtp() async {
+    setState(() => _isLoading = true);
+    try {
+      final phone = widget.loanData['borrower_phone'];
+      if (phone == null || phone.isEmpty) {
+        throw 'Borrower phone number is missing';
+      }
+      final formattedPhone = phone.startsWith('+') ? phone : '+91$phone';
+
+      await FirebaseAuth.instance.verifyPhoneNumber(
+        phoneNumber: formattedPhone,
+        verificationCompleted: (PhoneAuthCredential credential) {
+          if (credential.smsCode != null) {
+            _otpController.text = credential.smsCode!;
+            setState(() {
+              _currentOtp = credential.smsCode!;
+            });
+            _verifyOtp();
+          }
+        },
+        verificationFailed: (FirebaseAuthException e) {
+          if (!mounted) return;
+          setState(() => _isLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Firebase SMS OTP failed: ${e.message}'),
+              backgroundColor: KhaataTheme.dangerRed,
+            ),
+          );
+        },
+        codeSent: (String verificationId, int? resendToken) {
+          if (!mounted) return;
+          setState(() {
+            _verificationId = verificationId;
+            _isLoading = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Firebase SMS OTP sent to borrower.'),
+              backgroundColor: KhaataTheme.accentGreen,
+            ),
+          );
+        },
+        codeAutoRetrievalTimeout: (String verificationId) {
+          if (!mounted) return;
+          setState(() {
+            _verificationId = verificationId;
+          });
+        },
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error sending OTP: $e'),
+          backgroundColor: KhaataTheme.dangerRed,
+        ),
+      );
+    }
+  }
+
   void _verifyOtp() async {
+    if (_verificationId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Verification ID is not available yet. Please wait for the OTP.'),
+          backgroundColor: KhaataTheme.dangerRed,
+        ),
+      );
+      return;
+    }
+
     if (_currentOtp.length == 6) {
       if (!mounted) return;
       setState(() => _isLoading = true);
@@ -74,7 +151,11 @@ class _LoanConfirmationPageState extends State<LoanConfirmationPage> {
         final loanId = widget.loanData['loan_id'];
         if (loanId == null) throw 'Missing loan ID';
 
-        final success = await context.read<LoanCubit>().verifyLenderOtp(loanId, _currentOtp);
+        final success = await context.read<LoanCubit>().verifyLenderOtp(
+          loanId,
+          _currentOtp,
+          _verificationId!,
+        );
         
         if (!mounted) return;
         setState(() => _isLoading = false);
@@ -296,12 +377,9 @@ class _LoanConfirmationPageState extends State<LoanConfirmationPage> {
               _canResend
                   ? TextButton(
                 onPressed: () async {
-                  final loanId = widget.loanData['loan_id'];
-                  if (loanId != null) {
-                    await context.read<LoanCubit>().resendOtp(loanId);
-                  }
                   _otpController.clear();
                   _startResendTimer();
+                  await _sendOtp();
                 },
                 child: Text(
                   'Resend OTP',

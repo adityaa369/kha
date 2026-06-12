@@ -88,9 +88,12 @@ class LoanRepository extends BaseRepository {
     });
   }
 
-  Future<bool> verifyLenderOtp(String loanId, String otp) async {
+  Future<bool> verifyLenderOtp(String loanId, String otp, String verificationId) async {
     return await handleApiCall(() async {
-      final response = await _api.post('/loans/$loanId/verify-lender-otp', data: {'otp': otp});
+      final response = await _api.post('/loans/$loanId/verify-lender-otp', data: {
+        'otp': otp,
+        'verificationId': verificationId,
+      });
       final data = response.data;
       if (data is Map && data['success'] == true) return true;
       final errMsg = (data is Map) ? data['message']?.toString() : null;
@@ -98,9 +101,12 @@ class LoanRepository extends BaseRepository {
     });
   }
 
-  Future<bool> closeLoan(String loanId, String otp) async {
+  Future<bool> closeLoan(String loanId, String otp, String verificationId) async {
     return await handleApiCall(() async {
-      final response = await _api.post('/loans/$loanId/close', data: {'otp': otp});
+      final response = await _api.post('/loans/$loanId/close', data: {
+        'otp': otp,
+        'verificationId': verificationId,
+      });
       final data = response.data;
       if (data is Map && data['success'] == true) return true;
       final errMsg = (data is Map) ? data['message']?.toString() : null;

@@ -96,10 +96,10 @@ class LoanCubit extends Cubit<LoanState> {
   }
 
   // Verify Lender OTP
-  Future<bool> verifyLenderOtp(String loanId, String otp) async {
+  Future<bool> verifyLenderOtp(String loanId, String otp, String verificationId) async {
     emit(LoanLoading());
     try {
-      final success = await _repository.verifyLenderOtp(loanId, otp);
+      final success = await _repository.verifyLenderOtp(loanId, otp, verificationId);
       if (success) {
         await fetchLoans();
       }
@@ -127,9 +127,9 @@ class LoanCubit extends Cubit<LoanState> {
   }
 
   // Close Loan
-  Future<bool> closeLoan(String loanId, String otp) async {
+  Future<bool> closeLoan(String loanId, String otp, String verificationId) async {
     try {
-      final success = await _repository.closeLoan(loanId, otp);
+      final success = await _repository.closeLoan(loanId, otp, verificationId);
       if (success) {
         await fetchLoans();
       }

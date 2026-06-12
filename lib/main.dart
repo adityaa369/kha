@@ -122,6 +122,17 @@ class _NotificationListenerWidgetState extends State<NotificationListenerWidget>
   StreamSubscription? _sub;
   StreamSubscription? _openSub;
 
+  Future<void> _handleNotificationRouting(RemoteMessage message) async {
+    final authenticated = await BiometricAuthService.authenticate();
+    if (authenticated) {
+      if (message.data['type'] == 'LOAN_CREATED') {
+        router.go(AppConstants.myLoans);
+      } else if (message.data['type'] == 'LOAN_OTP' || message.data['type'] == 'LOAN_INIT_OTP') {
+        router.go(AppConstants.notifications);
+      }
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -130,14 +141,17 @@ class _NotificationListenerWidgetState extends State<NotificationListenerWidget>
       context.read<ChitFundCubit>().loadInvitesAndOwned();
     });
     
-    _openSub = FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) async {
-      final authenticated = await BiometricAuthService.authenticate();
-      if (authenticated) {
-        if (message.data['type'] == 'LOAN_CREATED') {
-          router.go(AppConstants.myLoans);
-        } else if (message.data['type'] == 'LOAN_OTP' || message.data['type'] == 'LOAN_INIT_OTP') {
-          router.go(AppConstants.notifications);
-        }
+    _openSub = FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      _handleNotificationRouting(message);
+    });
+
+    FirebaseMessaging.instance.getInitialMessage().then((RemoteMessage? message) {
+      if (message != null) {
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) {
+            _handleNotificationRouting(message);
+          }
+        });
       }
     });
   }

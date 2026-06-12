@@ -11,6 +11,7 @@ import '../../../../data/models/loan_model.dart';
 import '../../../../core/blocs/loans/loan_cubit.dart';
 import '../../../../core/blocs/loans/loan_state.dart';
 import '../../../../core/blocs/auth/auth_cubit.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class LoanDetailsPage extends StatelessWidget {
   final LoanModel loan;
@@ -1553,88 +1554,119 @@ class LoanDetailsPage extends StatelessWidget {
       builder: (_) => const Center(child: CircularProgressIndicator()),
     );
     
-    final otpSent = await loanCubit.requestClosureOtp(loan.id);
-    
-    navigator.pop(); // Pop loader
-    
-    if (otpSent) {
-      final otpController = TextEditingController();
-      if (!context.mounted) return;
+    try {
+      final phone = loan.mobile;
+      if (phone == null || phone.isEmpty) {
+        throw 'Borrower phone number is missing';
+      }
+      final formattedPhone = phone.startsWith('+') ? phone : '+91$phone';
       
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (dialogContext) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-          title: const Text('Finalize Closure', style: TextStyle(fontWeight: FontWeight.bold)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('An OTP has been sent securely via Push Notification to the borrower. Enter it below to mutually confirm the agreement closure.'),
-              SizedBox(height: 16.h),
-              TextField(
-                controller: otpController,
-                keyboardType: TextInputType.number,
-                maxLength: 6,
-                decoration: InputDecoration(
-                  hintText: '6-digit OTP',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
-                  filled: true,
-                  fillColor: Colors.grey.shade100,
-                  counterText: '',
+      String? verificationId;
+
+      await FirebaseAuth.instance.verifyPhoneNumber(
+        phoneNumber: formattedPhone,
+        verificationCompleted: (PhoneAuthCredential credential) {},
+        verificationFailed: (FirebaseAuthException e) {
+          navigator.pop(); // Pop loader
+          sm.showSnackBar(SnackBar(
+            backgroundColor: Colors.red,
+            content: Text('Firebase SMS OTP failed: ${e.message}'),
+          ));
+        },
+        codeSent: (String vId, int? resendToken) {
+          navigator.pop(); // Pop loader
+          verificationId = vId;
+
+          final otpController = TextEditingController();
+          if (!context.mounted) return;
+          
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (dialogContext) => AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+              title: const Text('Finalize Closure', style: TextStyle(fontWeight: FontWeight.bold)),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('An OTP has been sent securely via Firebase SMS to the borrower (${formattedPhone}). Enter it below to mutually confirm the agreement closure.'),
+                  SizedBox(height: 16.h),
+                  TextField(
+                    controller: otpController,
+                    keyboardType: TextInputType.number,
+                    maxLength: 6,
+                    decoration: InputDecoration(
+                      hintText: '6-digit OTP',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
+                      filled: true,
+                      fillColor: Colors.grey.shade100,
+                      counterText: '',
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
                 ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green.shade700,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
-              ),
-              onPressed: () async {
-                if (otpController.text.length != 6) return;
-                
-                Navigator.pop(dialogContext); // Hide dialog
-                
-                // Show loader
-                showDialog(
-                  context: context,
-                  barrierDismissible: false,
-                  builder: (_) => const Center(child: CircularProgressIndicator()),
-                );
-                
-                final success = await loanCubit.closeLoan(loan.id, otpController.text);
-                
-                if (context.mounted) {
-                  Navigator.pop(context); // Pop loader
-                  
-                  if (success) {
-                    GoRouter.of(context).push(AppConstants.loanCloseSuccess);
-                  } else {
-                     sm.showSnackBar(
-                      const SnackBar(
-                        backgroundColor: Colors.red,
-                        content: Text('Invalid Authentication OTP.'),
-                      ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green.shade700,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                  ),
+                  onPressed: () async {
+                    if (otpController.text.length != 6) return;
+                    
+                    Navigator.pop(dialogContext); // Hide dialog
+                    
+                    // Show loader
+                    showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (_) => const Center(child: CircularProgressIndicator()),
                     );
-                  }
-                }
-              },
-              child: const Text('Confirm'),
+                    
+                    final success = await loanCubit.closeLoan(
+                      loan.id,
+                      otpController.text,
+                      verificationId!,
+                    );
+                    
+                    if (context.mounted) {
+                      Navigator.pop(context); // Pop loader
+                      
+                      if (success) {
+                        GoRouter.of(context).push(AppConstants.loanCloseSuccess);
+                      } else {
+                        final state = loanCubit.state;
+                        final String errorMsg = state is LoanError ? state.message : 'Invalid Authentication OTP.';
+                        sm.showSnackBar(
+                          SnackBar(
+                            backgroundColor: Colors.red,
+                            content: Text(errorMsg),
+                          ),
+                        );
+                      }
+                    }
+                  },
+                  child: const Text('Confirm'),
+                ),
+              ],
             ),
-          ],
-        ),
+          );
+        },
+        codeAutoRetrievalTimeout: (String vId) {
+          verificationId = vId;
+        },
       );
-    } else {
-      sm.showSnackBar(
-        const SnackBar(content: Text('Failed to initiate closure OTP.')),
-      );
+    } catch (e) {
+      navigator.pop(); // Pop loader
+      sm.showSnackBar(SnackBar(
+        backgroundColor: Colors.red,
+        content: Text('Failed to initiate closure OTP: $e'),
+      ));
     }
   }
 
@@ -1658,85 +1690,137 @@ class LoanDetailsPage extends StatelessWidget {
   double _getSafeProgress(LoanModel loan) {
     if (loan.progress.isNaN || loan.progress.isInfinite) return 0.0;
     return loan.progress.clamp(0.0, 1.0);
-  }
-
-  // Verify Borrower OTP Dialog (Lender side)
-  void _showVerifyOtpDialog(BuildContext context, LoanModel loan, _ThemeConfig config) {
-    final controller = TextEditingController();
+  }  // Verify Borrower OTP Dialog (Lender side)
+  void _showVerifyOtpDialog(BuildContext context, LoanModel loan, _ThemeConfig config) async {
+    final sm = ScaffoldMessenger.of(context);
+    final loanCubit = context.read<LoanCubit>();
+    
+    // Show loading spinner while requesting Firebase OTP
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-        title: Text('Verify Borrower OTP', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp, color: config.primary)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Enter the 6-digit OTP sent to the borrower.', style: TextStyle(fontSize: 12.sp, color: Colors.grey.shade600)),
-            SizedBox(height: 16.h),
-            TextField(
-              controller: controller,
-              keyboardType: TextInputType.number,
-              maxLength: 6,
-              decoration: InputDecoration(
-                hintText: 'Enter 6-digit OTP',
-                counterText: '',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: config.primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
-            ),
-            onPressed: () async {
-              final otp = controller.text.trim();
-              if (otp.length != 6) return;
-              
-              Navigator.pop(dialogContext);
-              
-              showDialog(
-                context: context,
-                barrierDismissible: false,
-                builder: (_) => const Center(child: CircularProgressIndicator()),
-              );
-              
-              final success = await context.read<LoanCubit>().verifyLenderOtp(loan.id, otp);
-              
-              if (context.mounted) {
-                Navigator.pop(context); // pop loader
-                if (success) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      backgroundColor: Colors.green,
-                      content: Text('OTP verified successfully! Agreement sent for signature.'),
-                    ),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      backgroundColor: Colors.red,
-                      content: Text('Invalid OTP. Please try again.'),
-                    ),
-                  );
-                }
-              }
-            },
-            child: const Text('Verify'),
-          ),
-        ],
-      ),
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
     );
-  }
+    
+    try {
+      final phone = loan.mobile;
+      if (phone == null || phone.isEmpty) {
+        throw 'Borrower phone number is missing';
+      }
+      final formattedPhone = phone.startsWith('+') ? phone : '+91$phone';
+      
+      String? verificationId;
 
+      await FirebaseAuth.instance.verifyPhoneNumber(
+        phoneNumber: formattedPhone,
+        verificationCompleted: (PhoneAuthCredential credential) {},
+        verificationFailed: (FirebaseAuthException e) {
+          Navigator.pop(context); // Pop loader
+          sm.showSnackBar(SnackBar(
+            backgroundColor: Colors.red,
+            content: Text('Firebase SMS OTP failed: ${e.message}'),
+          ));
+        },
+        codeSent: (String vId, int? resendToken) {
+          Navigator.pop(context); // Pop loader
+          verificationId = vId;
+
+          final controller = TextEditingController();
+          showDialog(
+            context: context,
+            builder: (dialogContext) => AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+              title: Text('Verify Borrower OTP', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp, color: config.primary)),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Enter the 6-digit OTP sent to the borrower (${formattedPhone}).', style: TextStyle(fontSize: 12.sp, color: Colors.grey.shade600)),
+                  SizedBox(height: 16.h),
+                  TextField(
+                    controller: controller,
+                    keyboardType: TextInputType.number,
+                    maxLength: 6,
+                    decoration: InputDecoration(
+                      hintText: 'Enter 6-digit OTP',
+                      counterText: '',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: config.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                  ),
+                  onPressed: () async {
+                    final otp = controller.text.trim();
+                    if (otp.length != 6) return;
+                    
+                    Navigator.pop(dialogContext); // Pop dialog
+                    
+                    showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (_) => const Center(child: CircularProgressIndicator()),
+                    );
+                    
+                    final success = await loanCubit.verifyLenderOtp(
+                      loan.id,
+                      otp,
+                      verificationId!,
+                    );
+                    
+                    if (context.mounted) {
+                      Navigator.pop(context); // pop loader
+                      if (success) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            backgroundColor: Colors.green,
+                            content: Text(
+                              loan.type == 'interest_credit' || loan.type == 'interestcredit'
+                                  ? 'Interest setup confirmed!'
+                                  : 'Loan setup confirmed!',
+                            ),
+                          ),
+                        );
+                      } else {
+                        final state = loanCubit.state;
+                        final String errorMsg = state is LoanError ? state.message : 'Invalid OTP. Please try again.';
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            backgroundColor: Colors.red,
+                            content: Text(errorMsg),
+                          ),
+                        );
+                      }
+                    }
+                  },
+                  child: const Text('Confirm'),
+                ),
+              ],
+            ),
+          );
+        },
+        codeAutoRetrievalTimeout: (String vId) {
+          verificationId = vId;
+        },
+      );
+    } catch (e) {
+      Navigator.pop(context); // Pop loader
+      sm.showSnackBar(SnackBar(
+        backgroundColor: Colors.red,
+        content: Text('Failed to initiate Firebase OTP: $e'),
+      ));
+    }
+  }
   Widget _buildProofDocumentSection(BuildContext context, _ThemeConfig config, LoanModel loan) {
     if (loan.documentUrl == null || loan.documentUrl!.trim().isEmpty) {
       return const SizedBox.shrink();
