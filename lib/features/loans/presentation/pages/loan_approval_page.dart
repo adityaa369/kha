@@ -188,17 +188,19 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
                     ),
                     SizedBox(height: 8.h),
                     Text(
-                      widget.loan.otp ?? '-',
+                      widget.loan.otp == 'FIREBASE_OTP' ? 'SMS SENT' : (widget.loan.otp ?? '-'),
                       style: TextStyle(
-                        fontSize: 32.sp,
+                        fontSize: widget.loan.otp == 'FIREBASE_OTP' ? 24.sp : 32.sp,
                         fontWeight: FontWeight.w900,
                         color: const Color(0xFF92400E),
-                        letterSpacing: 4,
+                        letterSpacing: widget.loan.otp == 'FIREBASE_OTP' ? 1.w : 4.w,
                       ),
                     ),
                     SizedBox(height: 8.h),
                     Text(
-                      'Share this OTP with the Lender to verify and proceed with the loan setup.',
+                      widget.loan.otp == 'FIREBASE_OTP'
+                          ? 'A verification OTP has been sent to your mobile phone via SMS. Please share it with the Lender to complete the setup.'
+                          : 'Share this OTP with the Lender to verify and proceed with the loan setup.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 12.sp,

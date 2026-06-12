@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -202,7 +203,10 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
     if (_selectedDocumentFile != null) {
       try {
         final ref = FirebaseStorage.instance.ref().child('loan_documents/${const Uuid().v4()}_${_selectedDocumentName}');
-        await ref.putFile(_selectedDocumentFile!);
+        await ref.putFile(_selectedDocumentFile!).timeout(
+          const Duration(seconds: 15),
+          onTimeout: () => throw TimeoutException('Firebase Storage upload timed out after 15 seconds. Please check your storage rules/connection.'),
+        );
         documentUrl = await ref.getDownloadURL();
       } catch (e) {
         if (mounted) {
@@ -279,7 +283,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
     if (_dueDate != null) {
        return (_dueDate!.difference(_startDate).inDays / 30).round();
     }
-    int val = int.tryParse(_durationController.text) ?? 0;
+    int val = int.tryParse(_durationController.text) ?? 1;
     if (_durationType == 'Years') {
       return val * 12;
     }
