@@ -14,7 +14,6 @@ import '../../../../core/blocs/loans/loan_state.dart';
 import '../../../loans/presentation/pages/my_loans_page.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../../core/widgets/looping_avatar.dart';
-import 'package:lottie/lottie.dart';
 import 'dart:async';
 import '../../../../data/models/loan_model.dart';
 import '../../../../config/constants.dart';
@@ -46,26 +45,27 @@ class _HomeViewState extends State<_HomeView> {
   void initState() {
     super.initState();
     _msgSub = NotificationService.onMessageStream.stream.listen((payload) {
-      if (payload['type'] == 'LOAN_ACCEPTED' || payload['type'] == 'LOAN_CREATED') {
+      if (payload['type'] == 'LOAN_ACCEPTED' ||
+          payload['type'] == 'LOAN_CREATED') {
         if (mounted) context.read<LoanCubit>().fetchLoans();
       }
     });
 
     _authSub = context.read<AuthCubit>().stream.listen((authState) {
-       if (authState is AuthenticatedFull) {
-         if (mounted) {
-            if (context.read<LoanCubit>().state is LoanInitial) {
-               context.read<LoanCubit>().fetchLoans();
-            }
-         }
-       }
+      if (authState is AuthenticatedFull) {
+        if (mounted) {
+          if (context.read<LoanCubit>().state is LoanInitial) {
+            context.read<LoanCubit>().fetchLoans();
+          }
+        }
+      }
     });
-    
+
     // Trigger immediately if already AuthenticatedFull
     if (context.read<AuthCubit>().state is AuthenticatedFull) {
-         if (context.read<LoanCubit>().state is LoanInitial) {
-            context.read<LoanCubit>().fetchLoans();
-         }
+      if (context.read<LoanCubit>().state is LoanInitial) {
+        context.read<LoanCubit>().fetchLoans();
+      }
     }
   }
 
@@ -79,7 +79,7 @@ class _HomeViewState extends State<_HomeView> {
   @override
   Widget build(BuildContext context) {
     final currentIndex = context.select<NavigationCubit, int>(
-          (cubit) => cubit.state,
+      (cubit) => cubit.state,
     );
 
     return Scaffold(
@@ -98,7 +98,7 @@ class _HomeViewState extends State<_HomeView> {
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, -5),
             ),
@@ -112,15 +112,20 @@ class _HomeViewState extends State<_HomeView> {
               children: [
                 _NavItem(icon: Icons.home_rounded, label: 'Home', index: 0),
                 _NavItem(
-                    icon: Icons.account_balance_wallet_rounded,
-                    label: 'My Loans',
-                    index: 1),
+                  icon: Icons.account_balance_wallet_rounded,
+                  label: 'My Loans',
+                  index: 1,
+                ),
                 _NavItem(
-                    icon: Icons.insights_rounded, label: 'Insights', index: 2),
+                  icon: Icons.insights_rounded,
+                  label: 'Insights',
+                  index: 2,
+                ),
                 _NavItem(
-                    icon: Icons.handshake_rounded,
-                    label: 'Given',
-                    index: 3),
+                  icon: Icons.handshake_rounded,
+                  label: 'Given',
+                  index: 3,
+                ),
               ],
             ),
           ),
@@ -144,7 +149,7 @@ class _NavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isSelected = context.select<NavigationCubit, bool>(
-          (cubit) => cubit.state == index,
+      (cubit) => cubit.state == index,
     );
 
     return GestureDetector(
@@ -240,13 +245,13 @@ class _TopBarState extends State<_TopBar> {
   }
 
   Future<void> _fetchLocation() async {
-    print('KHAATA_DEBUG: _fetchLocation starting...');
+    debugPrint('KHAATA_DEBUG: _fetchLocation starting...');
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      print('KHAATA_DEBUG: location services enabled = $serviceEnabled');
+      debugPrint('KHAATA_DEBUG: location services enabled = $serviceEnabled');
       if (!serviceEnabled) {
         Position? lastPos = await Geolocator.getLastKnownPosition();
-        print('KHAATA_DEBUG: last known position = $lastPos');
+        debugPrint('KHAATA_DEBUG: last known position = $lastPos');
         if (lastPos != null) {
           await _decodeAndSetLocation(lastPos);
           return;
@@ -256,30 +261,34 @@ class _TopBarState extends State<_TopBar> {
       }
 
       LocationPermission permission = await Geolocator.checkPermission();
-      print('KHAATA_DEBUG: checked location permission = $permission');
+      debugPrint('KHAATA_DEBUG: checked location permission = $permission');
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
-        print('KHAATA_DEBUG: requested location permission = $permission');
+        debugPrint('KHAATA_DEBUG: requested location permission = $permission');
         if (permission == LocationPermission.denied) {
           if (mounted) setState(() => locationText = 'Location Denied');
           return;
         }
       }
-      
+
       if (permission == LocationPermission.deniedForever) {
         if (mounted) setState(() => locationText = 'Location Denied');
         return;
       }
 
       Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.low,
-        timeLimit: const Duration(seconds: 10),
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.low,
+          timeLimit: Duration(seconds: 10),
+        ),
       );
-      print('KHAATA_DEBUG: current position = ${position.latitude}, ${position.longitude}');
-      
+      debugPrint(
+        'KHAATA_DEBUG: current position = ${position.latitude}, ${position.longitude}',
+      );
+
       await _decodeAndSetLocation(position);
     } catch (e) {
-      print('KHAATA_DEBUG: error in _fetchLocation = $e');
+      debugPrint('KHAATA_DEBUG: error in _fetchLocation = $e');
       try {
         Position? lastPos = await Geolocator.getLastKnownPosition();
         if (lastPos != null) {
@@ -287,38 +296,54 @@ class _TopBarState extends State<_TopBar> {
           return;
         }
       } catch (_) {}
-      if (mounted) setState(() => locationText = 'Pune, MH'); // Default fallback to Pune, MH
+      if (mounted) {
+        setState(
+          () => locationText = 'Location Unavailable',
+        );
+      }
     }
   }
 
   Future<void> _decodeAndSetLocation(Position position) async {
     try {
-      print('KHAATA_DEBUG: _decodeAndSetLocation starting for ${position.latitude}, ${position.longitude}');
-      List<Placemark> placemarks = await placemarkFromCoordinates(position.latitude, position.longitude);
-      print('KHAATA_DEBUG: found ${placemarks.length} placemarks');
+      debugPrint(
+        'KHAATA_DEBUG: placemark decoding for ${position.latitude}, ${position.longitude}...',
+      );
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
+      debugPrint('KHAATA_DEBUG: placemarks found = ${placemarks.length}');
       if (placemarks.isNotEmpty) {
         Placemark place = placemarks[0];
-        print('KHAATA_DEBUG: placemark[0] details: locality=${place.locality}, subLocality=${place.subLocality}, subAdmin=${place.subAdministrativeArea}, name=${place.name}, adminArea=${place.administrativeArea}');
-        
+        debugPrint(
+          'KHAATA_DEBUG: placemark[0] details: locality=${place.locality}, subLocality=${place.subLocality}, subAdmin=${place.subAdministrativeArea}, name=${place.name}, adminArea=${place.administrativeArea}',
+        );
+
         // Select the most precise city/town/village name
         String city = 'Unknown';
         if (place.subLocality != null && place.subLocality!.isNotEmpty) {
-          if (place.locality != null && place.locality!.isNotEmpty && place.locality != place.subLocality) {
+          if (place.locality != null &&
+              place.locality!.isNotEmpty &&
+              place.locality != place.subLocality) {
             city = '${place.subLocality!}, ${place.locality!}';
           } else {
             city = place.subLocality!;
           }
         } else if (place.locality != null && place.locality!.isNotEmpty) {
           city = place.locality!;
-        } else if (place.subAdministrativeArea != null && place.subAdministrativeArea!.isNotEmpty) {
+        } else if (place.subAdministrativeArea != null &&
+            place.subAdministrativeArea!.isNotEmpty) {
           city = place.subAdministrativeArea!;
         } else if (place.name != null && place.name!.isNotEmpty) {
           city = place.name!;
         }
-        
-        String state = place.administrativeArea != null ? _getStateAbbreviation(place.administrativeArea!) : '';
+
+        String state = place.administrativeArea != null
+            ? _getStateAbbreviation(place.administrativeArea!)
+            : '';
         String finalLoc = '$city${state.isNotEmpty ? ', $state' : ''}';
-        print('KHAATA_DEBUG: setting locationText to: $finalLoc');
+        debugPrint('KHAATA_DEBUG: setting locationText to: $finalLoc');
         if (mounted) {
           setState(() {
             locationText = finalLoc;
@@ -326,18 +351,31 @@ class _TopBarState extends State<_TopBar> {
         }
       }
     } catch (e) {
-      print('KHAATA_DEBUG: error in _decodeAndSetLocation = $e');
+      debugPrint('KHAATA_DEBUG: error in _decodeAndSetLocation = $e');
     }
   }
 
   String _getStateAbbreviation(String state) {
     final states = {
-      'Andhra Pradesh': 'AP', 'Karnataka': 'KA', 'Maharashtra': 'MH', 'Delhi': 'DL',
-      'Tamil Nadu': 'TN', 'Telangana': 'TG', 'Gujarat': 'GJ', 'Uttar Pradesh': 'UP',
-      'Rajasthan': 'RJ', 'Punjab': 'PB', 'Haryana': 'HR', 'West Bengal': 'WB',
-      'Madhya Pradesh': 'MP', 'Bihar': 'BR', 'Kerala': 'KL', 'Odisha': 'OD'
+      'Andhra Pradesh': 'AP',
+      'Karnataka': 'KA',
+      'Maharashtra': 'MH',
+      'Delhi': 'DL',
+      'Tamil Nadu': 'TN',
+      'Telangana': 'TG',
+      'Gujarat': 'GJ',
+      'Uttar Pradesh': 'UP',
+      'Rajasthan': 'RJ',
+      'Punjab': 'PB',
+      'Haryana': 'HR',
+      'West Bengal': 'WB',
+      'Madhya Pradesh': 'MP',
+      'Bihar': 'BR',
+      'Kerala': 'KL',
+      'Odisha': 'OD',
     };
-    return states[state] ?? (state.length >= 2 ? state.substring(0, 2).toUpperCase() : state);
+    return states[state] ??
+        (state.length >= 2 ? state.substring(0, 2).toUpperCase() : state);
   }
 
   @override
@@ -368,7 +406,11 @@ class _TopBarState extends State<_TopBar> {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.location_on, color: Colors.green.shade600, size: 16.sp),
+                    Icon(
+                      Icons.location_on,
+                      color: Colors.green.shade600,
+                      size: 16.sp,
+                    ),
                     SizedBox(width: 6.w),
                     Expanded(
                       child: Text(
@@ -383,7 +425,11 @@ class _TopBarState extends State<_TopBar> {
                       ),
                     ),
                     SizedBox(width: 4.w),
-                    Icon(Icons.keyboard_arrow_down, color: Colors.black54, size: 16.sp),
+                    Icon(
+                      Icons.keyboard_arrow_down,
+                      color: Colors.black54,
+                      size: 16.sp,
+                    ),
                   ],
                 ),
               ),
@@ -401,7 +447,7 @@ class _TopBarState extends State<_TopBar> {
                         .length;
                   }
                   if (pendingCount == 0) pendingCount = 3;
-                  
+
                   return GestureDetector(
                     onTap: () => context.push('/notifications'),
                     child: Stack(
@@ -414,7 +460,11 @@ class _TopBarState extends State<_TopBar> {
                             shape: BoxShape.circle,
                             border: Border.all(color: Colors.grey.shade200),
                           ),
-                          child: Icon(Icons.notifications_none, color: Colors.black87, size: 20.sp),
+                          child: Icon(
+                            Icons.notifications_none,
+                            color: Colors.black87,
+                            size: 20.sp,
+                          ),
                         ),
                         if (pendingCount > 0)
                           Positioned(
@@ -448,7 +498,7 @@ class _TopBarState extends State<_TopBar> {
                   builder: (context, state) {
                     String? gender;
                     if (state is AuthenticatedFull) {
-                       gender = state.user.gender;
+                      gender = state.user.gender;
                     }
                     return Container(
                       width: 38.w,
@@ -459,7 +509,7 @@ class _TopBarState extends State<_TopBar> {
                         border: Border.all(color: Colors.white, width: 2),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
+                            color: Colors.black.withValues(alpha: 0.05),
                             blurRadius: 4,
                           ),
                         ],
@@ -468,7 +518,7 @@ class _TopBarState extends State<_TopBar> {
                         child: LoopingAvatar(gender: gender, height: 38.w),
                       ),
                     );
-                  }
+                  },
                 ),
               ),
             ],
@@ -523,20 +573,9 @@ class _GreetingSection extends StatelessWidget {
                       color: Colors.green.shade700,
                     ),
                   ),
-                  SizedBox(width: 8.w),
-                  Text('👋', style: TextStyle(fontSize: 24.sp)),
                 ],
               );
             },
-          ),
-          SizedBox(height: 6.h),
-          Text(
-            "Let's make your financial journey easier & better ✨",
-            style: TextStyle(
-              fontSize: 13.sp,
-              color: Colors.grey.shade600,
-              fontWeight: FontWeight.w500,
-            ),
           ),
         ],
       ),
@@ -557,20 +596,22 @@ class _HeroBanner extends StatelessWidget {
         children: [
           // Background Card
           Container(
-            padding: EdgeInsets.only(left: 20.w, top: 24.h, right: 20.w, bottom: 20.h),
+            padding: EdgeInsets.only(
+              left: 20.w,
+              top: 24.h,
+              right: 20.w,
+              bottom: 20.h,
+            ),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
+              gradient: const LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  const Color(0xFFF2FAF4),
-                  const Color(0xFFE2F4E6),
-                ],
+                colors: [Color(0xFFF2FAF4), Color(0xFFE2F4E6)],
               ),
               borderRadius: BorderRadius.circular(32.r),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.03),
+                  color: Colors.black.withValues(alpha: 0.03),
                   blurRadius: 15,
                   offset: const Offset(0, 8),
                 ),
@@ -581,7 +622,9 @@ class _HeroBanner extends StatelessWidget {
               children: [
                 // Text Content
                 SizedBox(
-                  width: MediaQuery.of(context).size.width * 0.50, // Reduced from 0.55 to prevent overlap
+                  width:
+                      MediaQuery.of(context).size.width *
+                      0.50, // Reduced from 0.55 to prevent overlap
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -595,13 +638,15 @@ class _HeroBanner extends StatelessWidget {
                             letterSpacing: -0.5,
                             fontFamily: 'Inter',
                           ),
-                          children: [
-                            const TextSpan(text: 'Take control of your\n'), // Aligned to two lines
+                          children: const [
+                            TextSpan(
+                              text: 'Take control of your\n',
+                            ), // Aligned to two lines
                             TextSpan(
                               text: 'finances ',
-                              style: TextStyle(color: const Color(0xFF16A34A)),
+                              style: TextStyle(color: Color(0xFF16A34A)),
                             ),
-                            const TextSpan(text: 'today!'),
+                            TextSpan(text: 'today!'),
                           ],
                         ),
                       ),
@@ -610,7 +655,7 @@ class _HeroBanner extends StatelessWidget {
                         'Track, manage & grow\nyour money with\nconfidence.',
                         style: TextStyle(
                           fontSize: 12.sp,
-                          color: Colors.black87.withOpacity(0.65),
+                          color: Colors.black87.withValues(alpha: 0.65),
                           fontWeight: FontWeight.w500,
                           height: 1.4,
                         ),
@@ -618,13 +663,18 @@ class _HeroBanner extends StatelessWidget {
                       SizedBox(height: 16.h),
                       // CTA Button
                       Container(
-                        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 16.w,
+                          vertical: 10.h,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFF16A34A),
                           borderRadius: BorderRadius.circular(12.r),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF16A34A).withOpacity(0.3),
+                              color: const Color(
+                                0xFF16A34A,
+                              ).withValues(alpha: 0.3),
                               blurRadius: 8,
                               offset: const Offset(0, 4),
                             ),
@@ -642,7 +692,11 @@ class _HeroBanner extends StatelessWidget {
                               ),
                             ),
                             SizedBox(width: 4.w),
-                            Icon(Icons.arrow_forward, color: Colors.white, size: 16.sp),
+                            Icon(
+                              Icons.arrow_forward,
+                              color: Colors.white,
+                              size: 16.sp,
+                            ),
                           ],
                         ),
                       ),
@@ -654,10 +708,26 @@ class _HeroBanner extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _HeroIcon(icon: Icons.pie_chart, color: Colors.green.shade600, label: 'Track\nBetter'),
-                    _HeroIcon(icon: Icons.shield, color: Colors.amber.shade500, label: 'Spend\nSmarter'),
-                    _HeroIcon(icon: Icons.track_changes, color: Colors.blue.shade500, label: 'Achieve\nGoals'),
-                    _HeroIcon(icon: Icons.show_chart, color: Colors.purple.shade400, label: 'Grow\nSteadily'),
+                    _HeroIcon(
+                      icon: Icons.pie_chart,
+                      color: Colors.green.shade600,
+                      label: 'Track\nBetter',
+                    ),
+                    _HeroIcon(
+                      icon: Icons.shield,
+                      color: Colors.amber.shade500,
+                      label: 'Spend\nSmarter',
+                    ),
+                    _HeroIcon(
+                      icon: Icons.track_changes,
+                      color: Colors.blue.shade500,
+                      label: 'Achieve\nGoals',
+                    ),
+                    _HeroIcon(
+                      icon: Icons.show_chart,
+                      color: Colors.purple.shade400,
+                      label: 'Grow\nSteadily',
+                    ),
                   ],
                 ),
               ],
@@ -666,10 +736,11 @@ class _HeroBanner extends StatelessWidget {
           // 3D Character overlay
           Positioned(
             right: -10.w, // Shift right
-            top: -10.h,   // Align more naturally
+            top: -10.h, // Align more naturally
             child: IgnorePointer(
               child: SizedBox(
-                height: 180.h, // Drastically reduced from 250.h to stop physical overlap
+                height: 180
+                    .h, // Drastically reduced from 250.h to stop physical overlap
                 child: Image.asset(
                   'assets/images/hero_3d_man.png',
                   fit: BoxFit.contain,
@@ -688,7 +759,11 @@ class _HeroIcon extends StatelessWidget {
   final Color color;
   final String label;
 
-  const _HeroIcon({required this.icon, required this.color, required this.label});
+  const _HeroIcon({
+    required this.icon,
+    required this.color,
+    required this.label,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -698,10 +773,12 @@ class _HeroIcon extends StatelessWidget {
           padding: EdgeInsets.all(12.w),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(14.r), // Rounded square (squircle)
+            borderRadius: BorderRadius.circular(
+              14.r,
+            ), // Rounded square (squircle)
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.04),
+                color: Colors.black.withValues(alpha: 0.04),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -730,15 +807,30 @@ class _PaymentsSection extends StatelessWidget {
 
   static String _formatCurrency(double amount) {
     if (amount.isNaN || amount.isInfinite) return '0';
-    return amount.toStringAsFixed(0).replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (Match m) => '${m[1]},',
-    );
+    return amount
+        .toStringAsFixed(0)
+        .replaceAllMapped(
+          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (Match m) => '${m[1]},',
+        );
   }
 
   static String _getMonthName(int month) {
     if (month < 1 || month > 12) return 'Jan';
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
     return months[month - 1];
   }
 
@@ -754,7 +846,7 @@ class _PaymentsSection extends StatelessWidget {
         }
 
         final loans = state.myLoans;
-        
+
         LoanModel? nearestUpcomingLoan;
         DateTime? nearestUpcomingDate;
         double upcomingAmount = 0;
@@ -767,21 +859,31 @@ class _PaymentsSection extends StatelessWidget {
         final now = DateTime.now();
 
         for (final loan in loans) {
-          if (loan.status == 'completed' || loan.status == 'closed' || loan.status == 'pending_otp' || loan.status == 'pending_approval') {
+          if (loan.status == 'completed' ||
+              loan.status == 'closed' ||
+              loan.status == 'pending_otp' ||
+              loan.status == 'pending_approval') {
             continue;
           }
 
           final type = loan.type.toLowerCase().replaceAll('_', '');
-          if (type == 'businesscredit' || type == 'business' || type == 'chitfund') {
+          if (type == 'businesscredit' ||
+              type == 'business' ||
+              type == 'chitfund') {
             continue;
           }
 
-          final duration = (loan.durationMonths == null || loan.durationMonths == 0) ? 6 : loan.durationMonths!;
+          final duration =
+              (loan.durationMonths == null || loan.durationMonths == 0)
+              ? 6
+              : loan.durationMonths!;
           final progressVal = loan.progress.clamp(0.0, 1.0);
           final completedMonths = (duration * progressVal).round();
-          
-          final nextDueDate = loan.startDate.add(Duration(days: (completedMonths + 1) * 30));
-          
+
+          final nextDueDate = loan.startDate.add(
+            Duration(days: (completedMonths + 1) * 30),
+          );
+
           double installment = 0;
           if (type == 'interestcredit' || type == 'home') {
             installment = loan.amount * (loan.interestRate ?? 0) / 100;
@@ -790,13 +892,15 @@ class _PaymentsSection extends StatelessWidget {
           }
 
           if (nextDueDate.isAfter(now)) {
-            if (nearestUpcomingDate == null || nextDueDate.isBefore(nearestUpcomingDate)) {
+            if (nearestUpcomingDate == null ||
+                nextDueDate.isBefore(nearestUpcomingDate)) {
               nearestUpcomingDate = nextDueDate;
               nearestUpcomingLoan = loan;
               upcomingAmount = installment;
             }
           } else {
-            if (mostUrgentDueDate == null || nextDueDate.isBefore(mostUrgentDueDate)) {
+            if (mostUrgentDueDate == null ||
+                nextDueDate.isBefore(mostUrgentDueDate)) {
               mostUrgentDueDate = nextDueDate;
               mostUrgentDueLoan = loan;
               dueAmount = installment;
@@ -808,18 +912,28 @@ class _PaymentsSection extends StatelessWidget {
         // Check for upcoming due soon if no overdue
         if (mostUrgentDueLoan == null) {
           for (final loan in loans) {
-            if (loan.status == 'completed' || loan.status == 'closed' || loan.status == 'pending_otp' || loan.status == 'pending_approval') {
+            if (loan.status == 'completed' ||
+                loan.status == 'closed' ||
+                loan.status == 'pending_otp' ||
+                loan.status == 'pending_approval') {
               continue;
             }
             final type = loan.type.toLowerCase().replaceAll('_', '');
-            if (type == 'businesscredit' || type == 'business' || type == 'chitfund') {
+            if (type == 'businesscredit' ||
+                type == 'business' ||
+                type == 'chitfund') {
               continue;
             }
-            final duration = (loan.durationMonths == null || loan.durationMonths == 0) ? 6 : loan.durationMonths!;
+            final duration =
+                (loan.durationMonths == null || loan.durationMonths == 0)
+                ? 6
+                : loan.durationMonths!;
             final progressVal = loan.progress.clamp(0.0, 1.0);
             final completedMonths = (duration * progressVal).round();
-            final nextDueDate = loan.startDate.add(Duration(days: (completedMonths + 1) * 30));
-            
+            final nextDueDate = loan.startDate.add(
+              Duration(days: (completedMonths + 1) * 30),
+            );
+
             final daysToDue = nextDueDate.difference(now).inDays;
             if (daysToDue >= 0 && daysToDue <= 7) {
               double installment = 0;
@@ -829,7 +943,8 @@ class _PaymentsSection extends StatelessWidget {
                 installment = loan.amount / duration;
               }
 
-              if (mostUrgentDueDate == null || nextDueDate.isBefore(mostUrgentDueDate)) {
+              if (mostUrgentDueDate == null ||
+                  nextDueDate.isBefore(mostUrgentDueDate)) {
                 mostUrgentDueDate = nextDueDate;
                 mostUrgentDueLoan = loan;
                 dueAmount = installment;
@@ -843,7 +958,8 @@ class _PaymentsSection extends StatelessWidget {
         String upcomingSubtitle = 'No upcoming payments';
         if (nearestUpcomingLoan != null && nearestUpcomingDate != null) {
           upcomingAmountStr = '₹${_formatCurrency(upcomingAmount)}';
-          upcomingSubtitle = 'Due on ${nearestUpcomingDate.day} ${_getMonthName(nearestUpcomingDate.month)} ${nearestUpcomingDate.year}';
+          upcomingSubtitle =
+              'Due on ${nearestUpcomingDate.day} ${_getMonthName(nearestUpcomingDate.month)} ${nearestUpcomingDate.year}';
         }
 
         String dueAmountStr = '₹0';
@@ -855,14 +971,15 @@ class _PaymentsSection extends StatelessWidget {
           hasDue = true;
           dueAmountStr = '₹${_formatCurrency(dueAmount)}';
           progressIndicatorVal = mostUrgentDueLoan.progress.clamp(0.0, 1.0);
-          
+
           if (dueDaysDifference < 0) {
             final daysPast = dueDaysDifference.abs();
             dueSubtitle = "Overdue by $daysPast Day${daysPast > 1 ? 's' : ''}";
           } else if (dueDaysDifference == 0) {
             dueSubtitle = "Due Today";
           } else {
-            dueSubtitle = "Due in $dueDaysDifference Day${dueDaysDifference > 1 ? 's' : ''}";
+            dueSubtitle =
+                "Due in $dueDaysDifference Day${dueDaysDifference > 1 ? 's' : ''}";
           }
         }
 
@@ -876,9 +993,14 @@ class _PaymentsSection extends StatelessWidget {
                 title: 'Upcoming Payment',
                 amount: upcomingAmountStr,
                 subtitle: upcomingSubtitle,
-                onTap: nearestUpcomingLoan != null ? () {
-                  context.push(AppConstants.loanDetails, extra: nearestUpcomingLoan);
-                } : null,
+                onTap: nearestUpcomingLoan != null
+                    ? () {
+                        context.push(
+                          AppConstants.loanDetails,
+                          extra: nearestUpcomingLoan,
+                        );
+                      }
+                    : null,
               ),
               SizedBox(height: 12.h),
               _PaymentCard(
@@ -889,9 +1011,14 @@ class _PaymentsSection extends StatelessWidget {
                 subtitle: dueSubtitle,
                 showProgress: hasDue,
                 progressValue: progressIndicatorVal,
-                onTap: mostUrgentDueLoan != null ? () {
-                  context.push(AppConstants.loanDetails, extra: mostUrgentDueLoan);
-                } : null,
+                onTap: mostUrgentDueLoan != null
+                    ? () {
+                        context.push(
+                          AppConstants.loanDetails,
+                          extra: mostUrgentDueLoan,
+                        );
+                      }
+                    : null,
               ),
             ],
           ),
@@ -935,7 +1062,7 @@ class _PaymentCard extends StatelessWidget {
           border: Border.all(color: Colors.grey.shade100),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -947,7 +1074,7 @@ class _PaymentCard extends StatelessWidget {
             Container(
               padding: EdgeInsets.all(10.w),
               decoration: BoxDecoration(
-                color: iconBg.withOpacity(0.1),
+                color: iconBg.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: iconBg, size: 24.sp),
@@ -982,11 +1109,13 @@ class _PaymentCard extends StatelessWidget {
                       child: LinearProgressIndicator(
                         value: progressValue,
                         backgroundColor: Colors.grey.shade200,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.blue.shade600),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Colors.blue.shade600,
+                        ),
                         minHeight: 4.h,
                       ),
                     ),
-                  ]
+                  ],
                 ],
               ),
             ),
@@ -1047,7 +1176,7 @@ class _ExploreMoreSection extends StatelessWidget {
                 icon: Icons.volunteer_activism,
                 iconColor: const Color(0xFF1B5E20), // Dark Green
                 bgColor: const Color(0xFFE8F5E9),
-                badges: const ['Fast Approval', 'No Paperwork'],
+                badges: const ['Fast Approval'],
                 onTap: () => context.push('/create-loan?type=hand_credit'),
               ),
               _ExploreCard(
@@ -1116,7 +1245,7 @@ class _ExploreCard extends StatelessWidget {
           border: Border.all(color: Colors.white, width: 1.5),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.02),
+              color: Colors.black.withValues(alpha: 0.02),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -1131,7 +1260,7 @@ class _ExploreCard extends StatelessWidget {
                 Container(
                   padding: EdgeInsets.all(10.w),
                   decoration: BoxDecoration(
-                    color: iconColor.withOpacity(0.15),
+                    color: iconColor.withValues(alpha: 0.15),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(icon, color: iconColor, size: 24.sp),
@@ -1155,7 +1284,7 @@ class _ExploreCard extends StatelessWidget {
               subtitle,
               style: TextStyle(
                 fontSize: 10.sp,
-                color: Colors.black87.withOpacity(0.6),
+                color: Colors.black87.withValues(alpha: 0.6),
                 fontWeight: FontWeight.w500,
                 height: 1.3,
               ),
@@ -1170,21 +1299,28 @@ class _ExploreCard extends StatelessWidget {
                   child: Wrap(
                     spacing: 4.w,
                     runSpacing: 4.h,
-                    children: badges.map((badge) => Container(
-                      padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 3.h),
-                      decoration: BoxDecoration(
-                        color: iconColor.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(6.r),
-                      ),
-                      child: Text(
-                        badge,
-                        style: TextStyle(
-                          fontSize: 8.sp,
-                          color: iconColor,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    )).toList(),
+                    children: badges
+                        .map(
+                          (badge) => Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 6.w,
+                              vertical: 3.h,
+                            ),
+                            decoration: BoxDecoration(
+                              color: iconColor.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(6.r),
+                            ),
+                            child: Text(
+                              badge,
+                              style: TextStyle(
+                                fontSize: 8.sp,
+                                color: iconColor,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        )
+                        .toList(),
                   ),
                 ),
                 Container(
@@ -1193,7 +1329,11 @@ class _ExploreCard extends StatelessWidget {
                     color: iconColor,
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(Icons.arrow_forward, color: Colors.white, size: 14.sp),
+                  child: Icon(
+                    Icons.arrow_forward,
+                    color: Colors.white,
+                    size: 14.sp,
+                  ),
                 ),
               ],
             ),

@@ -136,7 +136,9 @@ class _LoanConfirmationPageState extends State<LoanConfirmationPage> {
     if (_verificationId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Verification ID is not available yet. Please wait for the OTP.'),
+          content: Text(
+            'Verification ID is not available yet. Please wait for the OTP.',
+          ),
           backgroundColor: KhaataTheme.dangerRed,
         ),
       );
@@ -156,7 +158,7 @@ class _LoanConfirmationPageState extends State<LoanConfirmationPage> {
           _currentOtp,
           _verificationId!,
         );
-        
+
         if (!mounted) return;
         setState(() => _isLoading = false);
 
@@ -175,7 +177,7 @@ class _LoanConfirmationPageState extends State<LoanConfirmationPage> {
                   Container(
                     padding: EdgeInsets.all(16.w),
                     decoration: BoxDecoration(
-                      color: KhaataTheme.accentGreen.withOpacity(0.1),
+                      color: KhaataTheme.accentGreen.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -215,7 +217,9 @@ class _LoanConfirmationPageState extends State<LoanConfirmationPage> {
           );
         } else {
           final state = context.read<LoanCubit>().state;
-          final String errorMessage = state is LoanError ? (state as LoanError).message : 'Invalid OTP entered. Please try again.';
+          final String errorMessage = state is LoanError
+              ? (state).message
+              : 'Invalid OTP entered. Please try again.';
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(errorMessage),
@@ -264,10 +268,10 @@ class _LoanConfirmationPageState extends State<LoanConfirmationPage> {
                 width: double.infinity,
                 padding: EdgeInsets.all(20.w),
                 decoration: BoxDecoration(
-                  color: KhaataTheme.primaryBlue.withOpacity(0.05),
+                  color: KhaataTheme.primaryBlue.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(16.r),
                   border: Border.all(
-                    color: KhaataTheme.primaryBlue.withOpacity(0.2),
+                    color: KhaataTheme.primaryBlue.withValues(alpha: 0.2),
                   ),
                 ),
                 child: Column(
@@ -325,18 +329,12 @@ class _LoanConfirmationPageState extends State<LoanConfirmationPage> {
               // OTP Section
               Text(
                 'Enter OTP sent to',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  color: KhaataTheme.textGrey,
-                ),
+                style: TextStyle(fontSize: 14.sp, color: KhaataTheme.textGrey),
               ),
               SizedBox(height: 4.h),
               Text(
                 '+91 ${widget.loanData['borrower_phone']}',
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
               ),
 
               SizedBox(height: 32.h),
@@ -376,27 +374,27 @@ class _LoanConfirmationPageState extends State<LoanConfirmationPage> {
               // Resend Section
               _canResend
                   ? TextButton(
-                onPressed: () async {
-                  _otpController.clear();
-                  _startResendTimer();
-                  await _sendOtp();
-                },
-                child: Text(
-                  'Resend OTP',
-                  style: TextStyle(
-                    color: KhaataTheme.primaryBlue,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14.sp,
-                  ),
-                ),
-              )
+                      onPressed: () async {
+                        _otpController.clear();
+                        _startResendTimer();
+                        await _sendOtp();
+                      },
+                      child: Text(
+                        'Resend OTP',
+                        style: TextStyle(
+                          color: KhaataTheme.primaryBlue,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14.sp,
+                        ),
+                      ),
+                    )
                   : Text(
-                'Resend OTP in $_resendTimer seconds',
-                style: TextStyle(
-                  color: KhaataTheme.textGrey,
-                  fontSize: 14.sp,
-                ),
-              ),
+                      'Resend OTP in $_resendTimer seconds',
+                      style: TextStyle(
+                        color: KhaataTheme.textGrey,
+                        fontSize: 14.sp,
+                      ),
+                    ),
 
               SizedBox(height: 40.h),
 

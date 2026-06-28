@@ -33,7 +33,7 @@ class AuthChoicePage extends StatelessWidget {
                     borderRadius: BorderRadius.circular(20.r),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
+                        color: Colors.black.withValues(alpha: 0.2),
                         blurRadius: 20,
                         offset: const Offset(0, 10),
                       ),
@@ -62,10 +62,7 @@ class AuthChoicePage extends StatelessWidget {
                 SizedBox(height: 12.h),
                 Text(
                   'Digital Loan Agreements Made Simple',
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    color: Colors.white70,
-                  ),
+                  style: TextStyle(fontSize: 14.sp, color: Colors.white70),
                 ),
                 const Spacer(),
                 // Login Button
@@ -79,7 +76,8 @@ class AuthChoicePage extends StatelessWidget {
                 _AuthButton(
                   text: 'Create Account',
                   isOutlined: true,
-                  onTap: () => context.push(AppConstants.login), // Same as login for now
+                  onTap: () =>
+                      context.push(AppConstants.login), // Same as login for now
                 ),
                 SizedBox(height: 40.h),
               ],

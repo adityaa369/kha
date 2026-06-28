@@ -14,10 +14,9 @@ part 'auth_state.dart';
 class AuthCubit extends Cubit<AuthState> {
   final ApiClient _api;
 
-  AuthCubit({ApiClient? api}) 
-      : _api = api ?? ApiClient(),
-        super(AuthInitial());
+  AuthCubit({ApiClient? api}) : _api = api ?? ApiClient(), super(AuthInitial());
   UserModel? _currentUser;
+  bool isPasswordResetFlow = false;
   String? _verificationId;
 
   UserModel? get currentUser => _currentUser;
@@ -30,23 +29,28 @@ class AuthCubit extends Cubit<AuthState> {
 
       if (token != null && userDataJson != null) {
         _currentUser = UserModel.fromJson(jsonDecode(userDataJson));
-        
+
         // INSTANTLY emit authenticated state using local cache!
         _emitAuthenticatedState();
-        
+
         // Silently sync with backend to ensure token validity
-        _api.get('/auth/me').then((response) async {
-          final data = response.data;
-          if (data is Map && data['success'] == true) {
-            _currentUser = UserModel.fromJson(data['user']);
-            await SecureStorage.saveUserData(jsonEncode(_currentUser!.toFullJson()));
-            _emitAuthenticatedState(); // Refresh UI with latest data
-          } else {
-            await logout();
-          }
-        }).catchError((_) {
-            // Ignore network timeouts silently during optimistic boot
-        });
+        _api
+            .get('/auth/me')
+            .then((response) async {
+              final data = response.data;
+              if (data is Map && data['success'] == true) {
+                _currentUser = UserModel.fromJson(data['user']);
+                await SecureStorage.saveUserData(
+                  jsonEncode(_currentUser!.toFullJson()),
+                );
+                _emitAuthenticatedState(); // Refresh UI with latest data
+              } else {
+                await logout();
+              }
+            })
+            .catchError((_) {
+              // Ignore network timeouts silently during optimistic boot
+            });
       } else {
         emit(Unauthenticated());
       }
@@ -60,7 +64,7 @@ class AuthCubit extends Cubit<AuthState> {
       emit(Unauthenticated());
       return;
     }
-    
+
     // Sync FCM Token quietly in the background
     try {
       final fcmToken = await NotificationService.getToken();
@@ -68,7 +72,7 @@ class AuthCubit extends Cubit<AuthState> {
         await _api.post('/users/fcm-token', data: {'fcmToken': fcmToken});
       }
     } catch (_) {}
-    
+
     if (_currentUser!.isKycComplete && _currentUser!.firstName.isNotEmpty) {
       emit(AuthenticatedFull(user: _currentUser!));
     } else {
@@ -107,11 +111,24 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  Future<void> verifyOtp(String phone, String otp, {Map<String, dynamic>? registrationDetails}) async {
+  Future<void> startPasswordReset(String phone) async {
+    isPasswordResetFlow = true;
+    await sendOtp(phone);
+  }
+
+  Future<void> verifyOtp(
+    String phone,
+    String otp, {
+    Map<String, dynamic>? registrationDetails,
+  }) async {
     emit(AuthLoading());
     try {
       if (_verificationId == null) {
-        emit(const AuthError('Verification session expired. Please request OTP again.'));
+        emit(
+          const AuthError(
+            'Verification session expired. Please request OTP again.',
+          ),
+        );
         return;
       }
 
@@ -119,8 +136,9 @@ class AuthCubit extends Cubit<AuthState> {
         verificationId: _verificationId!,
         smsCode: otp,
       );
-      
-      final UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+
+      final UserCredential userCredential = await FirebaseAuth.instance
+          .signInWithCredential(credential);
       final idToken = await userCredential.user?.getIdToken();
 
       if (idToken == null) {
@@ -128,11 +146,15 @@ class AuthCubit extends Cubit<AuthState> {
         return;
       }
 
-      final response = await _api.post('/auth/verify-otp', data: {
-        'idToken': idToken,
-        'phone': phone,
-        if (registrationDetails != null) 'registrationDetails': registrationDetails,
-      });
+      final response = await _api.post(
+        '/auth/verify-otp',
+        data: {
+          'idToken': idToken,
+          'phone': phone,
+          if (registrationDetails != null)
+            'registrationDetails': registrationDetails,
+        },
+      );
 
       final data = response.data;
       if (data is Map && data['success'] == true) {
@@ -144,9 +166,16 @@ class AuthCubit extends Cubit<AuthState> {
 
           await SecureStorage.saveToken(token);
           _currentUser = UserModel.fromJson(userJson);
-          await SecureStorage.saveUserData(jsonEncode(_currentUser!.toFullJson()));
+          await SecureStorage.saveUserData(
+            jsonEncode(_currentUser!.toFullJson()),
+          );
 
-          _emitAuthenticatedState();
+          if (isPasswordResetFlow) {
+            isPasswordResetFlow = false;
+            emit(const PasswordResetRequired());
+          } else {
+            _emitAuthenticatedState();
+          }
         }
       } else {
         final errMsg = (data is Map) ? data['message'] : null;
@@ -171,17 +200,22 @@ class AuthCubit extends Cubit<AuthState> {
   }) async {
     emit(AuthLoading());
     try {
-      final response = await _api.post('/auth/register', data: {
-        'firstName': firstName,
-        'lastName': lastName,
-        'email': email,
-        'phone': phone,
-      });
+      final response = await _api.post(
+        '/auth/register',
+        data: {
+          'firstName': firstName,
+          'lastName': lastName,
+          'email': email,
+          'phone': phone,
+        },
+      );
 
       final data = response.data;
       if (data is Map && data['success'] == true) {
         _currentUser = UserModel.fromJson(data['user']);
-        await SecureStorage.saveUserData(jsonEncode(_currentUser!.toFullJson()));
+        await SecureStorage.saveUserData(
+          jsonEncode(_currentUser!.toFullJson()),
+        );
         emit(PersonalDetailsSaved(user: _currentUser!));
       } else {
         final errMsg = (data is Map) ? data['message'] : null;
@@ -206,17 +240,17 @@ class AuthCubit extends Cubit<AuthState> {
   }) async {
     emit(AuthLoading());
     try {
-      final response = await _api.post('/auth/register', data: {
-        'pan': pan,
-        'aadhar': aadhar,
-        'dob': dob,
-        'gender': gender,
-      });
+      final response = await _api.post(
+        '/auth/register',
+        data: {'pan': pan, 'aadhar': aadhar, 'dob': dob, 'gender': gender},
+      );
 
       final data = response.data;
       if (data is Map && data['success'] == true) {
         _currentUser = UserModel.fromJson(data['user']);
-        await SecureStorage.saveUserData(jsonEncode(_currentUser!.toFullJson()));
+        await SecureStorage.saveUserData(
+          jsonEncode(_currentUser!.toFullJson()),
+        );
         emit(PanDetailsSaved(user: _currentUser!));
       } else {
         final errMsg = (data is Map) ? data['message'] : null;
@@ -226,7 +260,9 @@ class AuthCubit extends Cubit<AuthState> {
       if (e.error is Failure) {
         emit(AuthError((e.error as Failure).message));
       } else {
-        emit(AuthError('Failed to save PAN details: ${e.message ?? e.toString()}'));
+        emit(
+          AuthError('Failed to save PAN details: ${e.message ?? e.toString()}'),
+        );
       }
     } catch (e) {
       emit(AuthError('Failed to save PAN details: $e'));
@@ -246,7 +282,9 @@ class AuthCubit extends Cubit<AuthState> {
       final data = response.data;
       if (data is Map && data['success'] == true) {
         _currentUser = UserModel.fromJson(data['user']);
-        await SecureStorage.saveUserData(jsonEncode(_currentUser!.toFullJson()));
+        await SecureStorage.saveUserData(
+          jsonEncode(_currentUser!.toFullJson()),
+        );
         _emitAuthenticatedState();
       } else {
         final errMsg = (data is Map) ? data['message'] : null;
@@ -266,10 +304,10 @@ class AuthCubit extends Cubit<AuthState> {
   Future<void> loginWithPassword(String phone, String password) async {
     emit(AuthLoading());
     try {
-      final response = await _api.post('/auth/login-password', data: {
-        'phone': phone,
-        'password': password,
-      });
+      final response = await _api.post(
+        '/auth/login-password',
+        data: {'phone': phone, 'password': password},
+      );
 
       final data = response.data;
       if (data is Map && data['success'] == true) {
@@ -278,7 +316,9 @@ class AuthCubit extends Cubit<AuthState> {
 
         await SecureStorage.saveToken(token);
         _currentUser = UserModel.fromJson(userJson);
-        await SecureStorage.saveUserData(jsonEncode(_currentUser!.toFullJson()));
+        await SecureStorage.saveUserData(
+          jsonEncode(_currentUser!.toFullJson()),
+        );
 
         _emitAuthenticatedState();
       } else {
@@ -293,6 +333,32 @@ class AuthCubit extends Cubit<AuthState> {
       }
     } catch (e) {
       emit(AuthError('Login failed: $e'));
+    }
+  }
+
+  Future<void> resetPassword(String newPassword) async {
+    emit(AuthLoading());
+    try {
+      final response = await _api.post(
+        '/auth/reset-password',
+        data: {'password': newPassword},
+      );
+
+      final data = response.data;
+      if (data is Map && data['success'] == true) {
+        _emitAuthenticatedState();
+      } else {
+        final errMsg = (data is Map) ? data['message'] : null;
+        emit(AuthError(errMsg ?? 'Failed to reset password'));
+      }
+    } on DioException catch (e) {
+      if (e.error is Failure) {
+        emit(AuthError((e.error as Failure).message));
+      } else {
+        emit(AuthError('Reset failed: ${e.message ?? e.toString()}'));
+      }
+    } catch (e) {
+      emit(AuthError('Reset failed: $e'));
     }
   }
 

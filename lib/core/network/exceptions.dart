@@ -12,19 +12,20 @@ class AppException implements Exception {
 
 class NetworkException extends AppException {
   NetworkException([String message = 'Please check your internet connection'])
-      : super(message, 'Network Error');
+    : super(message, 'Network Error');
 }
 
 class ServerException extends AppException {
   ServerException([String message = 'Internal Server Error'])
-      : super(message, 'Server Error');
+    : super(message, 'Server Error');
 }
 
 class AuthException extends AppException {
-  AuthException([String message = 'Unauthorized']) : super(message, 'Auth Error');
+  AuthException([String message = 'Unauthorized'])
+    : super(message, 'Auth Error');
 }
 
 class BadRequestException extends AppException {
   BadRequestException([String message = 'Invalid Request'])
-      : super(message, 'Bad Request');
+    : super(message, 'Bad Request');
 }

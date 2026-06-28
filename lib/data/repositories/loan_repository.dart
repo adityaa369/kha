@@ -28,10 +28,7 @@ class LoanRepository extends BaseRepository {
 
       // Save raw JSON representation to SecureStorage for caching
       try {
-        final cacheMap = {
-          'myLoans': takenList,
-          'givenLoans': givenList,
-        };
+        final cacheMap = {'myLoans': takenList, 'givenLoans': givenList};
         await SecureStorage.saveCachedLoans(jsonEncode(cacheMap));
       } catch (e) {
         // Silent failure for caching write
@@ -45,6 +42,7 @@ class LoanRepository extends BaseRepository {
           .map((json) => LoanModel.fromJson(json))
           .toList();
 
+      // Real loans are fetched from backend — no mock data needed
       return {'myLoans': myLoans, 'givenLoans': givenLoans};
     });
   }
@@ -56,10 +54,14 @@ class LoanRepository extends BaseRepository {
         final Map<String, dynamic> cachedMap = jsonDecode(cachedJsonStr);
         final List myLoansJson = cachedMap['myLoans'] ?? [];
         final List givenLoansJson = cachedMap['givenLoans'] ?? [];
-        
-        final myLoans = myLoansJson.map((json) => LoanModel.fromJson(json)).toList();
-        final givenLoans = givenLoansJson.map((json) => LoanModel.fromJson(json)).toList();
-        
+
+        final myLoans = myLoansJson
+            .map((json) => LoanModel.fromJson(json))
+            .toList();
+        final givenLoans = givenLoansJson
+            .map((json) => LoanModel.fromJson(json))
+            .toList();
+
         return {'myLoans': myLoans, 'givenLoans': givenLoans};
       }
     } catch (_) {}
@@ -88,12 +90,16 @@ class LoanRepository extends BaseRepository {
     });
   }
 
-  Future<bool> verifyLenderOtp(String loanId, String otp, String verificationId) async {
+  Future<bool> verifyLenderOtp(
+    String loanId,
+    String otp,
+    String verificationId,
+  ) async {
     return await handleApiCall(() async {
-      final response = await _api.post('/loans/$loanId/verify-lender-otp', data: {
-        'otp': otp,
-        'verificationId': verificationId,
-      });
+      final response = await _api.post(
+        '/loans/$loanId/verify-lender-otp',
+        data: {'otp': otp, 'verificationId': verificationId},
+      );
       final data = response.data;
       if (data is Map && data['success'] == true) return true;
       final errMsg = (data is Map) ? data['message']?.toString() : null;
@@ -101,12 +107,16 @@ class LoanRepository extends BaseRepository {
     });
   }
 
-  Future<bool> closeLoan(String loanId, String otp, String verificationId) async {
+  Future<bool> closeLoan(
+    String loanId,
+    String otp,
+    String verificationId,
+  ) async {
     return await handleApiCall(() async {
-      final response = await _api.post('/loans/$loanId/close', data: {
-        'otp': otp,
-        'verificationId': verificationId,
-      });
+      final response = await _api.post(
+        '/loans/$loanId/close',
+        data: {'otp': otp, 'verificationId': verificationId},
+      );
       final data = response.data;
       if (data is Map && data['success'] == true) return true;
       final errMsg = (data is Map) ? data['message']?.toString() : null;
@@ -132,9 +142,51 @@ class LoanRepository extends BaseRepository {
     });
   }
 
+  Future<bool> recordPayment(String loanId, double amount, String otp, String verificationId) async {
+    return await handleApiCall(() async {
+      final response = await _api.post(
+        '/loans/$loanId/record-payment',
+        data: {'amount': amount, 'otp': otp, 'verificationId': verificationId},
+      );
+      final data = response.data;
+      if (data is Map && data['success'] == true) return true;
+      final errMsg = (data is Map) ? data['message']?.toString() : null;
+      throw ServerFailure(errMsg ?? 'Failed to record payment');
+    });
+  }
+
+  Future<bool> recordInterest(String loanId, double amount, String otp, String verificationId) async {
+    return await handleApiCall(() async {
+      final response = await _api.post(
+        '/loans/$loanId/record-interest',
+        data: {'amount': amount, 'otp': otp, 'verificationId': verificationId},
+      );
+      final data = response.data;
+      if (data is Map && data['success'] == true) return true;
+      final errMsg = (data is Map) ? data['message']?.toString() : null;
+      throw ServerFailure(errMsg ?? 'Failed to record interest payment');
+    });
+  }
+
+  Future<bool> addCredit(String loanId, double amount, String otp, String verificationId) async {
+    return await handleApiCall(() async {
+      final response = await _api.post(
+        '/loans/$loanId/add-credit',
+        data: {'amount': amount, 'otp': otp, 'verificationId': verificationId},
+      );
+      final data = response.data;
+      if (data is Map && data['success'] == true) return true;
+      final errMsg = (data is Map) ? data['message']?.toString() : null;
+      throw ServerFailure(errMsg ?? 'Failed to add credit');
+    });
+  }
+
   Future<bool> updateProgress(String loanId, double progress) async {
     return await handleApiCall(() async {
-      final response = await _api.patch('/loans/$loanId/progress', data: {'progress': progress});
+      final response = await _api.patch(
+        '/loans/$loanId/progress',
+        data: {'progress': progress},
+      );
       final data = response.data;
       if (data is Map && data['success'] == true) return true;
       final errMsg = (data is Map) ? data['message']?.toString() : null;
@@ -144,12 +196,39 @@ class LoanRepository extends BaseRepository {
 
   Future<UserModel?> checkBorrower(String phone) async {
     return await handleApiCall(() async {
-      final response = await _api.post('/users/check-phone', data: {'phone': phone});
+      final response = await _api.post(
+        '/users/check-phone',
+        data: {'phone': phone},
+      );
       final data = response.data;
       if (data is Map && data['success'] == true && data['exists'] == true) {
         return UserModel.fromJson(data['user']);
       }
       return null;
+    });
+  }
+
+  Future<String> uploadDocument(
+    String fileName,
+    String fileType,
+    List<int> fileBytes,
+  ) async {
+    return await handleApiCall(() async {
+      final base64Data = base64Encode(fileBytes);
+      final response = await _api.post(
+        '/loans/upload-document',
+        data: {
+          'fileName': fileName,
+          'fileType': fileType,
+          'base64Data': base64Data,
+        },
+      );
+      final data = response.data;
+      if (data is Map && data['success'] == true) {
+        return data['url']?.toString() ?? '';
+      }
+      final errMsg = (data is Map) ? data['message']?.toString() : null;
+      throw ServerFailure(errMsg ?? 'Failed to upload document');
     });
   }
 }

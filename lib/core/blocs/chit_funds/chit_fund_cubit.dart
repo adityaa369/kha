@@ -14,15 +14,17 @@ class ChitFundCubit extends Cubit<ChitFundState> {
         final cachedVacant = await _repository.getCachedVacantChits();
         final cachedInvites = await _repository.getCachedMyInvites();
         final cachedMyChits = await _repository.getCachedMyChits();
-        
-        if ((cachedVacant != null && cachedVacant.isNotEmpty) || 
-            (cachedInvites != null && cachedInvites.isNotEmpty) || 
+
+        if ((cachedVacant != null && cachedVacant.isNotEmpty) ||
+            (cachedInvites != null && cachedInvites.isNotEmpty) ||
             (cachedMyChits != null && cachedMyChits.isNotEmpty)) {
-          emit(ChitFundInvitesLoaded(
-            ownedChits: cachedVacant ?? [],
-            pendingInvites: cachedInvites ?? [],
-            mySubscriptions: cachedMyChits ?? [],
-          ));
+          emit(
+            ChitFundInvitesLoaded(
+              ownedChits: cachedVacant ?? [],
+              pendingInvites: cachedInvites ?? [],
+              mySubscriptions: cachedMyChits ?? [],
+            ),
+          );
         } else {
           emit(ChitFundLoading());
         }
@@ -36,12 +38,14 @@ class ChitFundCubit extends Cubit<ChitFundState> {
       final ownedChits = await _repository.getVacantChits();
       final pendingInvites = await _repository.getMyInvites();
       final mySubscriptions = await _repository.getMyChits();
-      
-      emit(ChitFundInvitesLoaded(
-        ownedChits: ownedChits,
-        pendingInvites: pendingInvites,
-        mySubscriptions: mySubscriptions,
-      ));
+
+      emit(
+        ChitFundInvitesLoaded(
+          ownedChits: ownedChits,
+          pendingInvites: pendingInvites,
+          mySubscriptions: mySubscriptions,
+        ),
+      );
     } catch (e) {
       // Only emit error if we don't have loaded data to show
       if (state is! ChitFundInvitesLoaded) {
@@ -84,7 +88,11 @@ class ChitFundCubit extends Cubit<ChitFundState> {
   Future<void> respondToInvite(String inviteId, String status) async {
     try {
       await _repository.respondToInvite(inviteId, status);
-      emit(ChitFundActionSuccess('Invite ${status == 'accepted' ? 'Accepted & Joined' : 'Declined'}!'));
+      emit(
+        ChitFundActionSuccess(
+          'Invite ${status == 'accepted' ? 'Accepted & Joined' : 'Declined'}!',
+        ),
+      );
       await loadInvitesAndOwned();
     } catch (e) {
       emit(ChitFundError(e.toString()));
@@ -141,7 +149,11 @@ class ChitFundCubit extends Cubit<ChitFundState> {
     try {
       emit(ChitFundLoading());
       await _repository.openAuctionMonth(chitId, monthNumber, baseAmount);
-      emit(const ChitFundActionSuccess('Auction opened successfully! Notifications sent.'));
+      emit(
+        const ChitFundActionSuccess(
+          'Auction opened successfully! Notifications sent.',
+        ),
+      );
       await loadAdminDashboard(chitId);
     } catch (e) {
       emit(ChitFundError(e.toString()));
@@ -166,7 +178,10 @@ class ChitFundCubit extends Cubit<ChitFundState> {
   }
 
   // Get Auction Bids
-  Future<List<Map<String, dynamic>>> getAuctionBids(String chitId, int monthNumber) async {
+  Future<List<Map<String, dynamic>>> getAuctionBids(
+    String chitId,
+    int monthNumber,
+  ) async {
     try {
       return await _repository.getAuctionBids(chitId, monthNumber);
     } catch (e) {
@@ -182,7 +197,12 @@ class ChitFundCubit extends Cubit<ChitFundState> {
     required bool isPaid,
   }) async {
     try {
-      await _repository.verifyMonthPayment(chitId, monthNumber, subscriberId, isPaid);
+      await _repository.verifyMonthPayment(
+        chitId,
+        monthNumber,
+        subscriberId,
+        isPaid,
+      );
       // Silently reload dashboard to show updated UI without showing success snackbar every single time
       final data = await _repository.getAdminDashboard(chitId);
       emit(ChitAdminDashboardLoaded(data));

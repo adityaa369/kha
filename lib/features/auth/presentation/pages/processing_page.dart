@@ -1,3 +1,4 @@
+import '../../../../core/utils/error_handler.dart';
 import 'dart:math' show cos, sin;
 
 import 'package:flutter/material.dart';
@@ -34,18 +35,18 @@ class _ProcessingPageState extends State<ProcessingPage>
     try {
       final authCubit = context.read<AuthCubit>();
       await authCubit.completeRegistration();
-      
+
       // Check if registration failed
       if (authCubit.state is AuthError) {
         throw (authCubit.state as AuthError).message;
       }
-      
+
       await authCubit.processCreditScore();
-      
+
       if (authCubit.state is AuthError) {
         throw (authCubit.state as AuthError).message;
       }
-      
+
       if (mounted) {
         context.go(AppConstants.home);
       }
@@ -107,17 +108,14 @@ class _ProcessingPageState extends State<ProcessingPage>
             Text(
               'It will take upto 30 sec to get your\nCredit Score',
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                color: KhaataTheme.textGrey,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyLarge!.copyWith(color: KhaataTheme.textGrey),
             ),
             SizedBox(height: 60.h),
             Text(
               'Score Powered by',
-              style: TextStyle(
-                fontSize: 12.sp,
-                color: KhaataTheme.textGrey,
-              ),
+              style: TextStyle(fontSize: 12.sp, color: KhaataTheme.textGrey),
             ),
             SizedBox(height: 12.h),
             Text(
@@ -191,13 +189,10 @@ class GaugePainter extends CustomPainter {
     canvas.drawLine(center, needleEnd, needlePaint);
 
     // Center dot
-    canvas.drawCircle(
-      center,
-      8.w,
-      Paint()..color = KhaataTheme.primaryBlue,
-    );
+    canvas.drawCircle(center, 8.w, Paint()..color = KhaataTheme.primaryBlue);
   }
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
+

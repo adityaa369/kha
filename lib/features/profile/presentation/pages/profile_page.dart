@@ -32,7 +32,11 @@ class ProfilePage extends StatelessWidget {
               child: Row(
                 children: [
                   IconButton(
-                    icon: Icon(Icons.arrow_back, color: Colors.white, size: 22.sp),
+                    icon: Icon(
+                      Icons.arrow_back,
+                      color: Colors.white,
+                      size: 22.sp,
+                    ),
                     onPressed: () => context.pop(),
                   ),
                   Expanded(
@@ -64,23 +68,20 @@ class ProfilePage extends StatelessWidget {
                         borderRadius: BorderRadius.circular(16.r),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.04),
+                            color: Colors.black.withValues(alpha: 0.04),
                             blurRadius: 10,
                           ),
                         ],
                       ),
                       child: BlocBuilder<AuthCubit, AuthState>(
                         builder: (context, state) {
-                          String initials = '';
                           String fullName = 'Loading...';
                           String? gender;
-                          
+
                           if (state is AuthenticatedFull) {
-                            initials = state.user.initials;
                             fullName = state.user.displayName;
                             gender = state.user.gender;
                           } else if (state is AuthenticatedUnverified) {
-                            initials = 'U';
                             fullName = 'Verified User';
                           }
 
@@ -93,7 +94,10 @@ class ProfilePage extends StatelessWidget {
                                   color: Colors.transparent,
                                   shape: BoxShape.circle,
                                 ),
-                                child: LoopingAvatar(gender: gender, height: 72.w),
+                                child: LoopingAvatar(
+                                  gender: gender,
+                                  height: 72.w,
+                                ),
                               ),
                               SizedBox(height: 12.h),
                               Text(
@@ -118,7 +122,7 @@ class ProfilePage extends StatelessWidget {
                         borderRadius: BorderRadius.circular(16.r),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.04),
+                            color: Colors.black.withValues(alpha: 0.04),
                             blurRadius: 10,
                           ),
                         ],
@@ -129,60 +133,97 @@ class ProfilePage extends StatelessWidget {
                             icon: Icons.person_outline,
                             title: 'Personal Details',
                             subtitle: 'Email, Gender, Pan, DOB, Address',
-                            onTap: () => _showComingSoon(context, 'Personal Details'),
+                            onTap: () =>
+                                _showComingSoon(context, 'Personal Details'),
                           ),
-                          Divider(height: 1, indent: 56.w, color: Colors.grey[200]),
+                          Divider(
+                            height: 1,
+                            indent: 56.w,
+                            color: Colors.grey[200],
+                          ),
                           _MenuTile(
                             icon: Icons.account_balance_outlined,
                             title: 'Bank Account',
                             subtitle: 'Manage your linked bank accounts',
-                            onTap: () => _showComingSoon(context, 'Bank Account Manager'),
+                            onTap: () => _showComingSoon(
+                              context,
+                              'Bank Account Manager',
+                            ),
                           ),
-                          Divider(height: 1, indent: 56.w, color: Colors.grey[200]),
+                          Divider(
+                            height: 1,
+                            indent: 56.w,
+                            color: Colors.grey[200],
+                          ),
                           _MenuTile(
                             icon: Icons.description_outlined,
                             title: 'Legal Information',
                             subtitle: 'Terms and Conditions',
-                            onTap: () => _showComingSoon(context, 'Legal Documents'),
+                            onTap: () =>
+                                _showComingSoon(context, 'Legal Documents'),
                           ),
-                          Divider(height: 1, indent: 56.w, color: Colors.grey[200]),
+                          Divider(
+                            height: 1,
+                            indent: 56.w,
+                            color: Colors.grey[200],
+                          ),
                           _MenuTile(
                             icon: Icons.notifications_none,
                             title: 'Notifications',
                             subtitle: 'Manage your notification preferences',
-                            onTap: () => _showComingSoon(context, 'Notification Settings'),
+                            onTap: () => _showComingSoon(
+                              context,
+                              'Notification Settings',
+                            ),
                           ),
-                          Divider(height: 1, indent: 56.w, color: Colors.grey[200]),
+                          Divider(
+                            height: 1,
+                            indent: 56.w,
+                            color: Colors.grey[200],
+                          ),
                           _MenuTile(
                             icon: Icons.share_outlined,
                             title: 'Share App',
                             subtitle: 'Refer us to a friend',
                             onTap: () {
-                               // Implement Share functionality or show dialog
-                               _showComingSoon(context, 'Share App');
+                              // Implement Share functionality or show dialog
+                              _showComingSoon(context, 'Share App');
                             },
                           ),
-                          Divider(height: 1, indent: 56.w, color: Colors.grey[200]),
+                          Divider(
+                            height: 1,
+                            indent: 56.w,
+                            color: Colors.grey[200],
+                          ),
                           _MenuTile(
                             icon: Icons.chat_bubble_outline,
                             title: 'Alerts on WhatsApp',
                             subtitle: 'Keep up with all important updates',
-                            onTap: () => _showComingSoon(context, 'WhatsApp Alerts'),
+                            onTap: () =>
+                                _showComingSoon(context, 'WhatsApp Alerts'),
                           ),
-                          Divider(height: 1, indent: 56.w, color: Colors.grey[200]),
+                          Divider(
+                            height: 1,
+                            indent: 56.w,
+                            color: Colors.grey[200],
+                          ),
                           _MenuTile(
                             icon: Icons.settings_outlined,
                             title: 'Account Management',
                             subtitle: 'Modify Khaata App Settings',
                             onTap: () {},
                           ),
-                          Divider(height: 1, indent: 56.w, color: Colors.grey[200]),
+                          Divider(
+                            height: 1,
+                            indent: 56.w,
+                            color: Colors.grey[200],
+                          ),
                           _MenuTile(
                             icon: Icons.lock_outline,
                             title: 'Lock App',
                             subtitle: 'Secure with Biometrics',
                             onTap: () {
-                               context.go(AppConstants.splash);
+                              context.go(AppConstants.splash);
                             },
                           ),
                         ],
@@ -198,12 +239,14 @@ class ProfilePage extends StatelessWidget {
                         final router = GoRouter.of(context);
                         final authCubit = context.read<AuthCubit>();
                         final loanCubit = context.read<LoanCubit>();
-                        
+
                         showDialog(
                           context: context,
                           builder: (dialogContext) => AlertDialog(
                             title: const Text('Logout?'),
-                            content: const Text('This will clear your session and you will need an OTP to login again.\n\nUse "Lock App" if you just want to secure the device.'),
+                            content: const Text(
+                              'This will clear your session and you will need an OTP to login again.\n\nUse "Lock App" if you just want to secure the device.',
+                            ),
                             actions: [
                               TextButton(
                                 onPressed: () => dialogContext.pop(),
@@ -212,15 +255,20 @@ class ProfilePage extends StatelessWidget {
                               TextButton(
                                 onPressed: () {
                                   dialogContext.pop(); // Close dialog first
-                                  
+
                                   // Clear safe cubits if possible
-                                  try { loanCubit.clear(); } catch (_) {}
-                                  
+                                  try {
+                                    loanCubit.clear();
+                                  } catch (_) {}
+
                                   authCubit.logout().then((_) {
                                     router.go(AppConstants.login);
                                   });
                                 },
-                                child: const Text('Logout', style: TextStyle(color: Colors.red)),
+                                child: const Text(
+                                  'Logout',
+                                  style: TextStyle(color: Colors.red),
+                                ),
                               ),
                             ],
                           ),
@@ -258,6 +306,7 @@ class ProfilePage extends StatelessWidget {
       ),
     );
   }
+
   void _showComingSoon(BuildContext context, String feature) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -297,23 +346,13 @@ class _MenuTile extends StatelessWidget {
       ),
       title: Text(
         title,
-        style: TextStyle(
-          fontWeight: FontWeight.w600,
-          fontSize: 13.sp,
-        ),
+        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13.sp),
       ),
       subtitle: Text(
         subtitle,
-        style: TextStyle(
-          fontSize: 11.sp,
-          color: KhaataTheme.textGrey,
-        ),
+        style: TextStyle(fontSize: 11.sp, color: KhaataTheme.textGrey),
       ),
-      trailing: Icon(
-        Icons.chevron_right,
-        color: Colors.grey,
-        size: 18.sp,
-      ),
+      trailing: Icon(Icons.chevron_right, color: Colors.grey, size: 18.sp),
     );
   }
 }

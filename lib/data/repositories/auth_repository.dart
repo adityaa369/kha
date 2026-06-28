@@ -20,10 +20,10 @@ class AuthRepository extends BaseRepository {
 
   Future<Map<String, dynamic>> verifyOtp(String idToken, String phone) async {
     return await handleApiCall(() async {
-      final response = await _api.post('/auth/verify-otp', data: {
-        'idToken': idToken,
-        'phone': phone,
-      });
+      final response = await _api.post(
+        '/auth/verify-otp',
+        data: {'idToken': idToken, 'phone': phone},
+      );
       if (response.data['success'] == true) {
         return {
           'token': response.data['token'],

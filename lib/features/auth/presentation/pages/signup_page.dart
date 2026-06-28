@@ -1,3 +1,4 @@
+import '../../../../core/utils/error_handler.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -124,13 +125,15 @@ class _SignupPageState extends State<SignupPage> {
       if (!_termsAccepted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Please accept the Terms of Service & Privacy Policy'),
+            content: Text(
+              'Please accept the Terms of Service & Privacy Policy',
+            ),
             backgroundColor: KhaataTheme.dangerRed,
           ),
         );
         return;
       }
-      
+
       // Trigger Firebase OTP
       context.read<AuthCubit>().sendOtp(_phoneController.text.trim());
       _startTimer();
@@ -142,7 +145,7 @@ class _SignupPageState extends State<SignupPage> {
     if (_otpController.text.length == 6) {
       final phone = _phoneController.text.trim();
       final otp = _otpController.text;
-      
+
       final registrationDetails = {
         'firstName': _firstNameController.text.trim(),
         'lastName': _lastNameController.text.trim(),
@@ -156,7 +159,11 @@ class _SignupPageState extends State<SignupPage> {
         'password': _passwordController.text,
       };
 
-      context.read<AuthCubit>().verifyOtp(phone, otp, registrationDetails: registrationDetails);
+      context.read<AuthCubit>().verifyOtp(
+        phone,
+        otp,
+        registrationDetails: registrationDetails,
+      );
     }
   }
 
@@ -165,10 +172,10 @@ class _SignupPageState extends State<SignupPage> {
     final pass = _passwordController.text;
     if (pass.isEmpty) return 'None';
     if (pass.length < 5) return 'Weak';
-    
+
     bool hasDigits = pass.contains(RegExp(r'[0-9]'));
     bool hasUppercase = pass.contains(RegExp(r'[A-Z]'));
-    
+
     if (pass.length >= 8 && hasDigits && hasUppercase) {
       return 'Strong';
     }
@@ -194,7 +201,8 @@ class _SignupPageState extends State<SignupPage> {
     );
     if (picked != null) {
       setState(() {
-        _dobController.text = '${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}';
+        _dobController.text =
+            '${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}';
       });
     }
   }
@@ -202,7 +210,7 @@ class _SignupPageState extends State<SignupPage> {
   @override
   Widget build(BuildContext context) {
     final strength = _getPasswordStrength();
-    
+
     return Scaffold(
       backgroundColor: KhaataTheme.primaryBlue,
       body: BlocConsumer<AuthCubit, AuthState>(
@@ -217,7 +225,9 @@ class _SignupPageState extends State<SignupPage> {
           } else if (state is RegistrationSuccess) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('Registration successful! Please login with your credentials.'),
+                content: Text(
+                  'Registration successful! Please login with your credentials.',
+                ),
                 backgroundColor: Colors.green,
               ),
             );
@@ -234,7 +244,10 @@ class _SignupPageState extends State<SignupPage> {
               children: [
                 // Custom Header
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 16.w,
+                    vertical: 16.h,
+                  ),
                   child: Row(
                     children: [
                       GestureDetector(
@@ -254,9 +267,7 @@ class _SignupPageState extends State<SignupPage> {
                       ),
                       SizedBox(width: 12.w),
                       Text(
-                        _currentStep == 0
-                            ? 'back to login'
-                            : 'Back',
+                        _currentStep == 0 ? 'back to login' : 'Back',
                         style: TextStyle(
                           fontSize: 14.sp,
                           color: Colors.white,
@@ -266,7 +277,7 @@ class _SignupPageState extends State<SignupPage> {
                     ],
                   ),
                 ),
-                
+
                 // Screen Title
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 24.w),
@@ -279,10 +290,10 @@ class _SignupPageState extends State<SignupPage> {
                           _currentStep == 0
                               ? 'Create account'
                               : _currentStep == 1
-                                  ? 'KYC Verification'
-                                  : _currentStep == 2
-                                      ? 'Secure your account'
-                                      : 'Verify your number',
+                              ? 'KYC Verification'
+                              : _currentStep == 2
+                              ? 'Secure your account'
+                              : 'Verify your number',
                           style: TextStyle(
                             fontSize: 26.sp,
                             fontWeight: FontWeight.w900,
@@ -295,13 +306,13 @@ class _SignupPageState extends State<SignupPage> {
                           _currentStep == 0
                               ? "Let's get your details set up"
                               : _currentStep == 1
-                                  ? 'Enter your government IDs'
-                                  : _currentStep == 2
-                                      ? 'Create a strong password'
-                                      : 'One last step to go!',
+                              ? 'Enter your government IDs'
+                              : _currentStep == 2
+                              ? 'Create a strong password'
+                              : 'One last step to go!',
                           style: TextStyle(
                             fontSize: 12.sp,
-                            color: Colors.white.withOpacity(0.8),
+                            color: Colors.white.withValues(alpha: 0.8),
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -325,7 +336,7 @@ class _SignupPageState extends State<SignupPage> {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.06),
+                          color: Colors.black.withValues(alpha: 0.06),
                           blurRadius: 20,
                           offset: const Offset(0, -8),
                         ),
@@ -361,13 +372,13 @@ class _SignupPageState extends State<SignupPage> {
                             children: [
                               // Step 1: Personal Details & Address
                               _buildStep1(),
-                              
+
                               // Step 2: KYC Details (PAN, Aadhar, DOB)
                               _buildStep2KYC(),
-                              
+
                               // Step 3: Set Password
                               _buildStep2Password(strength),
-                              
+
                               // Step 4: Verify Number (OTP)
                               _buildStep3OTP(state),
                             ],
@@ -420,20 +431,44 @@ class _SignupPageState extends State<SignupPage> {
                     children: [
                       Text(
                         'First name',
-                        style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.bold, color: KhaataTheme.textDark),
+                        style: TextStyle(
+                          fontSize: 11.sp,
+                          fontWeight: FontWeight.bold,
+                          color: KhaataTheme.textDark,
+                        ),
                       ),
                       SizedBox(height: 6.h),
                       TextFormField(
                         controller: _firstNameController,
-                        style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w600, color: KhaataTheme.textDark),
-                        validator: (val) => val == null || val.isEmpty ? 'Required' : null,
+                        style: TextStyle(
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.w600,
+                          color: KhaataTheme.textDark,
+                        ),
+                        validator: (val) =>
+                            val == null || val.isEmpty ? 'Required' : null,
                         decoration: InputDecoration(
                           filled: true,
                           fillColor: const Color(0xFFF3F4F6),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide.none),
-                          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide.none),
-                          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: const BorderSide(color: KhaataTheme.primaryBlue, width: 1.5)),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.r),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.r),
+                            borderSide: BorderSide.none,
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.r),
+                            borderSide: const BorderSide(
+                              color: KhaataTheme.primaryBlue,
+                              width: 1.5,
+                            ),
+                          ),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 14.w,
+                            vertical: 12.h,
+                          ),
                         ),
                       ),
                     ],
@@ -446,20 +481,44 @@ class _SignupPageState extends State<SignupPage> {
                     children: [
                       Text(
                         'Last name',
-                        style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.bold, color: KhaataTheme.textDark),
+                        style: TextStyle(
+                          fontSize: 11.sp,
+                          fontWeight: FontWeight.bold,
+                          color: KhaataTheme.textDark,
+                        ),
                       ),
                       SizedBox(height: 6.h),
                       TextFormField(
                         controller: _lastNameController,
-                        style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w600, color: KhaataTheme.textDark),
-                        validator: (val) => val == null || val.isEmpty ? 'Required' : null,
+                        style: TextStyle(
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.w600,
+                          color: KhaataTheme.textDark,
+                        ),
+                        validator: (val) =>
+                            val == null || val.isEmpty ? 'Required' : null,
                         decoration: InputDecoration(
                           filled: true,
                           fillColor: const Color(0xFFF3F4F6),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide.none),
-                          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide.none),
-                          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: const BorderSide(color: KhaataTheme.primaryBlue, width: 1.5)),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.r),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.r),
+                            borderSide: BorderSide.none,
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.r),
+                            borderSide: const BorderSide(
+                              color: KhaataTheme.primaryBlue,
+                              width: 1.5,
+                            ),
+                          ),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 14.w,
+                            vertical: 12.h,
+                          ),
                         ),
                       ),
                     ],
@@ -472,7 +531,11 @@ class _SignupPageState extends State<SignupPage> {
             // Mobile number
             Text(
               'Mobile number',
-              style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.bold, color: KhaataTheme.textDark),
+              style: TextStyle(
+                fontSize: 11.sp,
+                fontWeight: FontWeight.bold,
+                color: KhaataTheme.textDark,
+              ),
             ),
             SizedBox(height: 6.h),
             Row(
@@ -488,10 +551,26 @@ class _SignupPageState extends State<SignupPage> {
                   alignment: Alignment.center,
                   child: Row(
                     children: [
-                      Text('IN', style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.bold)),
+                      Text(
+                        'IN',
+                        style: TextStyle(
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       SizedBox(width: 4.w),
-                      Text('+91', style: TextStyle(fontSize: 13.sp, color: KhaataTheme.textGrey)),
-                      Icon(Icons.keyboard_arrow_down, size: 14.sp, color: KhaataTheme.textGrey),
+                      Text(
+                        '+91',
+                        style: TextStyle(
+                          fontSize: 13.sp,
+                          color: KhaataTheme.textGrey,
+                        ),
+                      ),
+                      Icon(
+                        Icons.keyboard_arrow_down,
+                        size: 14.sp,
+                        color: KhaataTheme.textGrey,
+                      ),
                     ],
                   ),
                 ),
@@ -501,16 +580,37 @@ class _SignupPageState extends State<SignupPage> {
                     controller: _phoneController,
                     keyboardType: TextInputType.phone,
                     maxLength: 10,
-                    validator: (val) => val == null || val.length != 10 ? 'Enter 10-digit phone number' : null,
-                    style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w600, color: KhaataTheme.textDark),
+                    validator: (val) => val == null || val.length != 10
+                        ? 'Enter 10-digit phone number'
+                        : null,
+                    style: TextStyle(
+                      fontSize: 13.sp,
+                      fontWeight: FontWeight.w600,
+                      color: KhaataTheme.textDark,
+                    ),
                     decoration: InputDecoration(
                       counterText: '',
                       filled: true,
                       fillColor: const Color(0xFFF3F4F6),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide.none),
-                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide.none),
-                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: const BorderSide(color: KhaataTheme.primaryBlue, width: 1.5)),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.r),
+                        borderSide: BorderSide.none,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.r),
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.r),
+                        borderSide: const BorderSide(
+                          color: KhaataTheme.primaryBlue,
+                          width: 1.5,
+                        ),
+                      ),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 14.w,
+                        vertical: 12.h,
+                      ),
                     ),
                   ),
                 ),
@@ -521,7 +621,11 @@ class _SignupPageState extends State<SignupPage> {
             // Email
             Text(
               'Email address',
-              style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.bold, color: KhaataTheme.textDark),
+              style: TextStyle(
+                fontSize: 11.sp,
+                fontWeight: FontWeight.bold,
+                color: KhaataTheme.textDark,
+              ),
             ),
             SizedBox(height: 6.h),
             TextFormField(
@@ -532,15 +636,38 @@ class _SignupPageState extends State<SignupPage> {
                 if (!val.contains('@')) return 'Enter a valid email';
                 return null;
               },
-              style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w600, color: KhaataTheme.textDark),
+              style: TextStyle(
+                fontSize: 13.sp,
+                fontWeight: FontWeight.w600,
+                color: KhaataTheme.textDark,
+              ),
               decoration: InputDecoration(
-                prefixIcon: Icon(Icons.mail_outline, size: 20.sp, color: KhaataTheme.textGrey),
+                prefixIcon: Icon(
+                  Icons.mail_outline,
+                  size: 20.sp,
+                  color: KhaataTheme.textGrey,
+                ),
                 filled: true,
                 fillColor: const Color(0xFFF3F4F6),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide.none),
-                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide.none),
-                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: const BorderSide(color: KhaataTheme.primaryBlue, width: 1.5)),
-                contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: const BorderSide(
+                    color: KhaataTheme.primaryBlue,
+                    width: 1.5,
+                  ),
+                ),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 14.w,
+                  vertical: 12.h,
+                ),
               ),
             ),
             SizedBox(height: 14.h),
@@ -548,21 +675,49 @@ class _SignupPageState extends State<SignupPage> {
             // Address details
             Text(
               'Address details',
-              style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.bold, color: KhaataTheme.textDark),
+              style: TextStyle(
+                fontSize: 11.sp,
+                fontWeight: FontWeight.bold,
+                color: KhaataTheme.textDark,
+              ),
             ),
             SizedBox(height: 6.h),
             TextFormField(
               controller: _addressController,
-              validator: (val) => val == null || val.isEmpty ? 'Address is required' : null,
-              style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w600, color: KhaataTheme.textDark),
+              validator: (val) =>
+                  val == null || val.isEmpty ? 'Address is required' : null,
+              style: TextStyle(
+                fontSize: 13.sp,
+                fontWeight: FontWeight.w600,
+                color: KhaataTheme.textDark,
+              ),
               decoration: InputDecoration(
-                prefixIcon: Icon(Icons.home_outlined, size: 20.sp, color: KhaataTheme.textGrey),
+                prefixIcon: Icon(
+                  Icons.home_outlined,
+                  size: 20.sp,
+                  color: KhaataTheme.textGrey,
+                ),
                 filled: true,
                 fillColor: const Color(0xFFF3F4F6),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide.none),
-                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide.none),
-                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: const BorderSide(color: KhaataTheme.primaryBlue, width: 1.5)),
-                contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: const BorderSide(
+                    color: KhaataTheme.primaryBlue,
+                    width: 1.5,
+                  ),
+                ),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 14.w,
+                  vertical: 12.h,
+                ),
               ),
             ),
             SizedBox(height: 14.h),
@@ -570,22 +725,54 @@ class _SignupPageState extends State<SignupPage> {
             // City
             Text(
               'City',
-              style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.bold, color: KhaataTheme.textDark),
+              style: TextStyle(
+                fontSize: 11.sp,
+                fontWeight: FontWeight.bold,
+                color: KhaataTheme.textDark,
+              ),
             ),
             SizedBox(height: 6.h),
             TextFormField(
               controller: _cityController,
-              validator: (val) => val == null || val.isEmpty ? 'City is required' : null,
-              style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w600, color: KhaataTheme.textDark),
+              validator: (val) =>
+                  val == null || val.isEmpty ? 'City is required' : null,
+              style: TextStyle(
+                fontSize: 13.sp,
+                fontWeight: FontWeight.w600,
+                color: KhaataTheme.textDark,
+              ),
               decoration: InputDecoration(
-                prefixIcon: Icon(Icons.location_city_outlined, size: 20.sp, color: KhaataTheme.textGrey),
-                suffixIcon: Icon(Icons.keyboard_arrow_down, size: 20.sp, color: KhaataTheme.textGrey),
+                prefixIcon: Icon(
+                  Icons.location_city_outlined,
+                  size: 20.sp,
+                  color: KhaataTheme.textGrey,
+                ),
+                suffixIcon: Icon(
+                  Icons.keyboard_arrow_down,
+                  size: 20.sp,
+                  color: KhaataTheme.textGrey,
+                ),
                 filled: true,
                 fillColor: const Color(0xFFF3F4F6),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide.none),
-                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide.none),
-                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: const BorderSide(color: KhaataTheme.primaryBlue, width: 1.5)),
-                contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: const BorderSide(
+                    color: KhaataTheme.primaryBlue,
+                    width: 1.5,
+                  ),
+                ),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 14.w,
+                  vertical: 12.h,
+                ),
               ),
             ),
             SizedBox(height: 24.h),
@@ -598,10 +785,19 @@ class _SignupPageState extends State<SignupPage> {
                 onPressed: _submitStep1,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: KhaataTheme.primaryBlue,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
                   elevation: 0,
                 ),
-                child: Text('Next', style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.bold, color: Colors.white)),
+                child: Text(
+                  'Next',
+                  style: TextStyle(
+                    fontSize: 15.sp,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
               ),
             ),
             SizedBox(height: 16.h),
@@ -612,12 +808,19 @@ class _SignupPageState extends State<SignupPage> {
                 onTap: () => context.go('/login'),
                 child: RichText(
                   text: TextSpan(
-                    style: TextStyle(fontSize: 12.sp, color: KhaataTheme.textGrey, fontWeight: FontWeight.w500),
-                    children: [
-                      const TextSpan(text: 'Already have an account? '),
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: KhaataTheme.textGrey,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    children: const [
+                      TextSpan(text: 'Already have an account? '),
                       TextSpan(
                         text: 'Sign in',
-                        style: TextStyle(color: KhaataTheme.primaryBlue, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          color: KhaataTheme.primaryBlue,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ],
                   ),
@@ -659,7 +862,11 @@ class _SignupPageState extends State<SignupPage> {
             // PAN Card number
             Text(
               'PAN card number',
-              style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.bold, color: KhaataTheme.textDark),
+              style: TextStyle(
+                fontSize: 11.sp,
+                fontWeight: FontWeight.bold,
+                color: KhaataTheme.textDark,
+              ),
             ),
             SizedBox(height: 6.h),
             TextFormField(
@@ -667,20 +874,45 @@ class _SignupPageState extends State<SignupPage> {
               textCapitalization: TextCapitalization.characters,
               validator: (val) {
                 if (val == null || val.isEmpty) return 'PAN is required';
-                if (!RegExp(r'^[A-Z]{5}[0-9]{4}[A-Z]$').hasMatch(val.toUpperCase())) {
+                if (!RegExp(
+                  r'^[A-Z]{5}[0-9]{4}[A-Z]$',
+                ).hasMatch(val.toUpperCase())) {
                   return 'Invalid PAN format';
                 }
                 return null;
               },
-              style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w600, color: KhaataTheme.textDark),
+              style: TextStyle(
+                fontSize: 13.sp,
+                fontWeight: FontWeight.w600,
+                color: KhaataTheme.textDark,
+              ),
               decoration: InputDecoration(
-                prefixIcon: Icon(Icons.credit_card_rounded, size: 20.sp, color: KhaataTheme.textGrey),
+                prefixIcon: Icon(
+                  Icons.credit_card_rounded,
+                  size: 20.sp,
+                  color: KhaataTheme.textGrey,
+                ),
                 filled: true,
                 fillColor: const Color(0xFFF3F4F6),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide.none),
-                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide.none),
-                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: const BorderSide(color: KhaataTheme.primaryBlue, width: 1.5)),
-                contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: const BorderSide(
+                    color: KhaataTheme.primaryBlue,
+                    width: 1.5,
+                  ),
+                ),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 14.w,
+                  vertical: 12.h,
+                ),
               ),
             ),
             SizedBox(height: 14.h),
@@ -688,7 +920,11 @@ class _SignupPageState extends State<SignupPage> {
             // Aadhar Number
             Text(
               'Aadhar number',
-              style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.bold, color: KhaataTheme.textDark),
+              style: TextStyle(
+                fontSize: 11.sp,
+                fontWeight: FontWeight.bold,
+                color: KhaataTheme.textDark,
+              ),
             ),
             SizedBox(height: 6.h),
             TextFormField(
@@ -702,16 +938,39 @@ class _SignupPageState extends State<SignupPage> {
                 }
                 return null;
               },
-              style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w600, color: KhaataTheme.textDark),
+              style: TextStyle(
+                fontSize: 13.sp,
+                fontWeight: FontWeight.w600,
+                color: KhaataTheme.textDark,
+              ),
               decoration: InputDecoration(
-                prefixIcon: Icon(Icons.fingerprint_outlined, size: 20.sp, color: KhaataTheme.textGrey),
+                prefixIcon: Icon(
+                  Icons.fingerprint_outlined,
+                  size: 20.sp,
+                  color: KhaataTheme.textGrey,
+                ),
                 counterText: '',
                 filled: true,
                 fillColor: const Color(0xFFF3F4F6),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide.none),
-                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide.none),
-                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: const BorderSide(color: KhaataTheme.primaryBlue, width: 1.5)),
-                contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: const BorderSide(
+                    color: KhaataTheme.primaryBlue,
+                    width: 1.5,
+                  ),
+                ),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 14.w,
+                  vertical: 12.h,
+                ),
               ),
             ),
             SizedBox(height: 14.h),
@@ -719,7 +978,11 @@ class _SignupPageState extends State<SignupPage> {
             // Date of birth
             Text(
               'Date of birth',
-              style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.bold, color: KhaataTheme.textDark),
+              style: TextStyle(
+                fontSize: 11.sp,
+                fontWeight: FontWeight.bold,
+                color: KhaataTheme.textDark,
+              ),
             ),
             SizedBox(height: 6.h),
             GestureDetector(
@@ -727,16 +990,41 @@ class _SignupPageState extends State<SignupPage> {
               child: AbsorbPointer(
                 child: TextFormField(
                   controller: _dobController,
-                  validator: (val) => val == null || val.isEmpty ? 'Date of birth is required' : null,
-                  style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w600, color: KhaataTheme.textDark),
+                  validator: (val) => val == null || val.isEmpty
+                      ? 'Date of birth is required'
+                      : null,
+                  style: TextStyle(
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w600,
+                    color: KhaataTheme.textDark,
+                  ),
                   decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.calendar_today_outlined, size: 20.sp, color: KhaataTheme.textGrey),
+                    prefixIcon: Icon(
+                      Icons.calendar_today_outlined,
+                      size: 20.sp,
+                      color: KhaataTheme.textGrey,
+                    ),
                     filled: true,
                     fillColor: const Color(0xFFF3F4F6),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide.none),
-                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide.none),
-                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: const BorderSide(color: KhaataTheme.primaryBlue, width: 1.5)),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.r),
+                      borderSide: BorderSide.none,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.r),
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.r),
+                      borderSide: const BorderSide(
+                        color: KhaataTheme.primaryBlue,
+                        width: 1.5,
+                      ),
+                    ),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 14.w,
+                      vertical: 12.h,
+                    ),
                   ),
                 ),
               ),
@@ -744,7 +1032,14 @@ class _SignupPageState extends State<SignupPage> {
             SizedBox(height: 14.h),
 
             // Gender Selection
-            Text('Gender', style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.bold, color: KhaataTheme.textDark)),
+            Text(
+              'Gender',
+              style: TextStyle(
+                fontSize: 11.sp,
+                fontWeight: FontWeight.bold,
+                color: KhaataTheme.textDark,
+              ),
+            ),
             SizedBox(height: 8.h),
             Row(
               children: [
@@ -765,10 +1060,19 @@ class _SignupPageState extends State<SignupPage> {
                 onPressed: _submitStep2,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: KhaataTheme.primaryBlue,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
                   elevation: 0,
                 ),
-                child: Text('Next', style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.bold, color: Colors.white)),
+                child: Text(
+                  'Next',
+                  style: TextStyle(
+                    fontSize: 15.sp,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
               ),
             ),
           ],
@@ -785,7 +1089,9 @@ class _SignupPageState extends State<SignupPage> {
         child: Container(
           padding: EdgeInsets.symmetric(vertical: 12.h),
           decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFFE6F4EA) : const Color(0xFFF3F4F6),
+            color: isSelected
+                ? const Color(0xFFE6F4EA)
+                : const Color(0xFFF3F4F6),
             border: Border.all(
               color: isSelected ? KhaataTheme.primaryBlue : Colors.transparent,
               width: 1.5,
@@ -798,7 +1104,9 @@ class _SignupPageState extends State<SignupPage> {
             style: TextStyle(
               fontSize: 13.sp,
               fontWeight: FontWeight.bold,
-              color: isSelected ? KhaataTheme.primaryBlue : KhaataTheme.textGrey,
+              color: isSelected
+                  ? KhaataTheme.primaryBlue
+                  : KhaataTheme.textGrey,
             ),
           ),
         ),
@@ -835,7 +1143,11 @@ class _SignupPageState extends State<SignupPage> {
             // New password
             Text(
               'New password',
-              style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.bold, color: KhaataTheme.textDark),
+              style: TextStyle(
+                fontSize: 11.sp,
+                fontWeight: FontWeight.bold,
+                color: KhaataTheme.textDark,
+              ),
             ),
             SizedBox(height: 6.h),
             TextFormField(
@@ -859,14 +1171,21 @@ class _SignupPageState extends State<SignupPage> {
               decoration: InputDecoration(
                 filled: true,
                 fillColor: const Color(0xFFF3F4F6),
-                prefixIcon: Icon(Icons.lock_outline, size: 20.sp, color: KhaataTheme.textGrey),
+                prefixIcon: Icon(
+                  Icons.lock_outline,
+                  size: 20.sp,
+                  color: KhaataTheme.textGrey,
+                ),
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                    _obscurePassword
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
                     size: 20.sp,
                     color: KhaataTheme.textGrey,
                   ),
-                  onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                  onPressed: () =>
+                      setState(() => _obscurePassword = !_obscurePassword),
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.r),
@@ -878,9 +1197,15 @@ class _SignupPageState extends State<SignupPage> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.r),
-                  borderSide: const BorderSide(color: KhaataTheme.primaryBlue, width: 1.5),
+                  borderSide: const BorderSide(
+                    color: KhaataTheme.primaryBlue,
+                    width: 1.5,
+                  ),
                 ),
-                contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 14.w,
+                  vertical: 12.h,
+                ),
               ),
             ),
             SizedBox(height: 14.h),
@@ -888,7 +1213,11 @@ class _SignupPageState extends State<SignupPage> {
             // Confirm password
             Text(
               'Confirm password',
-              style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.bold, color: KhaataTheme.textDark),
+              style: TextStyle(
+                fontSize: 11.sp,
+                fontWeight: FontWeight.bold,
+                color: KhaataTheme.textDark,
+              ),
             ),
             SizedBox(height: 6.h),
             TextFormField(
@@ -908,14 +1237,21 @@ class _SignupPageState extends State<SignupPage> {
               decoration: InputDecoration(
                 filled: true,
                 fillColor: const Color(0xFFF3F4F6),
-                prefixIcon: Icon(Icons.lock_outline, size: 20.sp, color: KhaataTheme.textGrey),
+                prefixIcon: Icon(
+                  Icons.lock_outline,
+                  size: 20.sp,
+                  color: KhaataTheme.textGrey,
+                ),
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _obscureConfirm ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                    _obscureConfirm
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
                     size: 20.sp,
                     color: KhaataTheme.textGrey,
                   ),
-                  onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                  onPressed: () =>
+                      setState(() => _obscureConfirm = !_obscureConfirm),
                 ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.r),
@@ -927,9 +1263,15 @@ class _SignupPageState extends State<SignupPage> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.r),
-                  borderSide: const BorderSide(color: KhaataTheme.primaryBlue, width: 1.5),
+                  borderSide: const BorderSide(
+                    color: KhaataTheme.primaryBlue,
+                    width: 1.5,
+                  ),
                 ),
-                contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 14.w,
+                  vertical: 12.h,
+                ),
               ),
             ),
             SizedBox(height: 12.h),
@@ -939,7 +1281,11 @@ class _SignupPageState extends State<SignupPage> {
               children: [
                 Text(
                   'Password strength',
-                  style: TextStyle(fontSize: 10.sp, color: KhaataTheme.textGrey, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    fontSize: 10.sp,
+                    color: KhaataTheme.textGrey,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const Spacer(),
                 Text(
@@ -950,10 +1296,10 @@ class _SignupPageState extends State<SignupPage> {
                     color: strength == 'Strong'
                         ? Colors.green
                         : strength == 'Medium'
-                            ? Colors.orange
-                            : strength == 'Weak'
-                                ? Colors.red
-                                : KhaataTheme.textGrey,
+                        ? Colors.orange
+                        : strength == 'Weak'
+                        ? Colors.red
+                        : KhaataTheme.textGrey,
                   ),
                 ),
               ],
@@ -969,7 +1315,7 @@ class _SignupPageState extends State<SignupPage> {
                 } else if (strength == 'Strong') {
                   barColor = Colors.green;
                 }
-                
+
                 return Expanded(
                   child: Container(
                     height: 4.h,
@@ -993,26 +1339,39 @@ class _SignupPageState extends State<SignupPage> {
                   height: 24.h,
                   child: Checkbox(
                     value: _termsAccepted,
-                    onChanged: (v) => setState(() => _termsAccepted = v ?? false),
+                    onChanged: (v) =>
+                        setState(() => _termsAccepted = v ?? false),
                     activeColor: KhaataTheme.primaryBlue,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4.r)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4.r),
+                    ),
                   ),
                 ),
                 SizedBox(width: 8.w),
                 Expanded(
                   child: RichText(
                     text: TextSpan(
-                      style: TextStyle(fontSize: 11.sp, color: KhaataTheme.textGrey, height: 1.4),
-                      children: [
-                        const TextSpan(text: 'I agree to the '),
+                      style: TextStyle(
+                        fontSize: 11.sp,
+                        color: KhaataTheme.textGrey,
+                        height: 1.4,
+                      ),
+                      children: const [
+                        TextSpan(text: 'I agree to the '),
                         TextSpan(
                           text: 'Terms of Service',
-                          style: TextStyle(color: KhaataTheme.primaryBlue, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            color: KhaataTheme.primaryBlue,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                        const TextSpan(text: ' and '),
+                        TextSpan(text: ' and '),
                         TextSpan(
                           text: 'Privacy Policy',
-                          style: TextStyle(color: KhaataTheme.primaryBlue, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            color: KhaataTheme.primaryBlue,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ],
                     ),
@@ -1030,10 +1389,19 @@ class _SignupPageState extends State<SignupPage> {
                 onPressed: _submitStep3,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: KhaataTheme.primaryBlue,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
                   elevation: 0,
                 ),
-                child: Text('Continue', style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.bold, color: Colors.white)),
+                child: Text(
+                  'Continue',
+                  style: TextStyle(
+                    fontSize: 15.sp,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
               ),
             ),
           ],
@@ -1045,7 +1413,7 @@ class _SignupPageState extends State<SignupPage> {
   // Step 4 Layout (OTP Verification)
   Widget _buildStep3OTP(AuthState state) {
     final phone = _phoneController.text.trim();
-    
+
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1114,7 +1482,11 @@ class _SignupPageState extends State<SignupPage> {
           // Firebase OTP requires 6 digits. We show 6 cells for correct operation.
           Text(
             'Enter Verification Code',
-            style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.bold, color: KhaataTheme.textDark),
+            style: TextStyle(
+              fontSize: 12.sp,
+              fontWeight: FontWeight.bold,
+              color: KhaataTheme.textDark,
+            ),
           ),
           SizedBox(height: 12.h),
           PinCodeTextField(
@@ -1168,7 +1540,11 @@ class _SignupPageState extends State<SignupPage> {
                   children: [
                     Text(
                       "Didn't get it? ",
-                      style: TextStyle(fontSize: 12.sp, color: KhaataTheme.textGrey, fontWeight: FontWeight.w500),
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        color: KhaataTheme.textGrey,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                     GestureDetector(
                       onTap: () {
@@ -1195,12 +1571,15 @@ class _SignupPageState extends State<SignupPage> {
             width: double.infinity,
             height: 52.h,
             child: ElevatedButton(
-              onPressed: (state is AuthLoading || _otpController.text.length != 6)
+              onPressed:
+                  (state is AuthLoading || _otpController.text.length != 6)
                   ? null
                   : _verifyOtp,
               style: ElevatedButton.styleFrom(
                 backgroundColor: KhaataTheme.primaryBlue,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
                 elevation: 0,
               ),
               child: state is AuthLoading
@@ -1214,7 +1593,11 @@ class _SignupPageState extends State<SignupPage> {
                     )
                   : Text(
                       'Verify & Create account',
-                      style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.bold, color: Colors.white),
+                      style: TextStyle(
+                        fontSize: 15.sp,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
             ),
           ),
@@ -1223,3 +1606,4 @@ class _SignupPageState extends State<SignupPage> {
     );
   }
 }
+

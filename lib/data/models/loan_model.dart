@@ -7,11 +7,13 @@ class LoanModel extends Equatable {
   final String? userId; // For loans taken by user
   final String borrowerName;
   final String? lenderName;
+  final String? lenderPhone;
   final String? initials;
   final double amount;
   final double? interestRate;
   final int? durationMonths;
-  final String status; // 'pending_otp', 'active', 'completed', 'overdue', 'due_soon', 'defaulted'
+  final String
+  status; // 'pending_otp', 'active', 'completed', 'overdue', 'due_soon', 'defaulted'
   final double progress; // 0.0 to 1.0
   final DateTime startDate;
   final DateTime? endDate;
@@ -32,6 +34,7 @@ class LoanModel extends Equatable {
     this.userId,
     required this.borrowerName,
     this.lenderName,
+    this.lenderPhone,
     this.initials,
     required this.amount,
     this.interestRate,
@@ -59,33 +62,65 @@ class LoanModel extends Equatable {
       userId: json['user_id']?.toString() ?? json['borrower']?.toString(),
       borrowerName: json['borrowerName'] ?? json['borrower_name'] ?? '',
       lenderName: json['lenderName'] ?? json['lender_name'],
-      initials: json['initials'] ?? _generateInitials(json['lenderName'] ?? json['borrowerName'] ?? json['borrower_name'] ?? ''),
-      amount: (json['amount'] ?? 0).toDouble(),
-      interestRate: json['interestRate']?.toDouble() ?? json['interest_rate']?.toDouble(),
-      durationMonths: json['durationMonths'] ?? json['duration_months'],
-      status: json['status'] ?? 'active',
-      progress: (json['progress'] ?? 0).toDouble(),
-      startDate: DateTime.parse(json['startDate'] ?? json['start_date'] ?? DateTime.now().toIso8601String()),
-      endDate: json['endDate'] != null || json['end_date'] != null 
-          ? DateTime.parse(json['endDate'] ?? json['end_date']) 
-          : null,
-      activatedAt: json['activatedAt'] != null || json['activated_at'] != null
-          ? DateTime.parse(json['activatedAt'] ?? json['activated_at'])
-          : null,
-      type: json['loanType'] ?? json['type'] ?? 'personal',
-      mobile: json['borrowerPhone'] ?? json['mobile'] ?? json['borrower_phone'],
-      aadhar: json['borrowerAadhar'] ?? json['aadhar'] ?? json['borrower_aadhar'],
-      createdAt: json['created_at'] != null || json['createdAt'] != null
-          ? DateTime.parse(json['created_at'] ?? json['createdAt'])
-          : null,
-      updatedAt: json['updated_at'] != null || json['updatedAt'] != null
-          ? DateTime.parse(json['updated_at'] ?? json['updatedAt'])
-          : null,
+      lenderPhone:
+          json['lenderPhone']?.toString() ?? json['lender_phone']?.toString(),
+      initials:
+          json['initials'] ??
+          _generateInitials(
+            json['lenderName'] ??
+                json['borrowerName'] ??
+                json['borrower_name'] ??
+                '',
+          ),
+      amount: _parseDouble(json['amount']) ?? 0.0,
+      interestRate:
+          _parseDouble(json['interestRate']) ?? _parseDouble(json['interest_rate']),
+      durationMonths: json['durationMonths'] is int
+          ? json['durationMonths']
+          : (json['duration_months'] is int
+              ? json['duration_months']
+              : int.tryParse(json['durationMonths']?.toString() ?? json['duration_months']?.toString() ?? '')),
+      status: json['status']?.toString() ?? 'active',
+      progress: (_parseDouble(json['progress']) ?? 0.0).clamp(0.0, 1.0),
+      startDate: _parseDate(json['startDate'] ?? json['start_date']) ?? DateTime.now(),
+      endDate: _parseDate(json['endDate'] ?? json['end_date']),
+      activatedAt: _parseDate(json['activatedAt'] ?? json['activated_at']),
+      type: json['loanType']?.toString() ?? json['type']?.toString() ?? 'personal',
+      mobile: json['borrowerPhone']?.toString() ?? json['mobile']?.toString() ?? json['borrower_phone']?.toString(),
+      aadhar:
+          json['borrowerAadhar']?.toString() ?? json['aadhar']?.toString() ?? json['borrower_aadhar']?.toString(),
+      createdAt: _parseDate(json['created_at'] ?? json['createdAt']),
+      updatedAt: _parseDate(json['updated_at'] ?? json['updatedAt']),
       otp: json['otp']?.toString(),
-      emiAmount: json['emiAmount']?.toDouble() ?? json['emi_amount']?.toDouble(),
-      totalPayableAmount: json['totalPayable']?.toDouble() ?? json['total_payable']?.toDouble(),
-      documentUrl: json['documentUrl']?.toString() ?? json['document_url']?.toString(),
+      emiAmount: _parseDouble(json['emiAmount']) ?? _parseDouble(json['emi_amount']),
+      totalPayableAmount:
+          _parseDouble(json['totalPayable']) ?? _parseDouble(json['total_payable']),
+      documentUrl:
+          json['documentUrl']?.toString() ?? json['document_url']?.toString(),
     );
+  }
+
+  /// Safely parse a value to double, whether it's an int, double, or numeric string
+  static double? _parseDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) {
+      final parsed = double.tryParse(value);
+      return parsed;
+    }
+    return null;
+  }
+
+  /// Safely parse a date string, returning null on failure
+  static DateTime? _parseDate(dynamic value) {
+    if (value == null) return null;
+    if (value is DateTime) return value;
+    try {
+      return DateTime.parse(value.toString());
+    } catch (_) {
+      return null;
+    }
   }
 
   // For REST API insert
@@ -160,10 +195,12 @@ class LoanModel extends Equatable {
   }
 
   static String _formatNumber(double number) {
-    return number.toStringAsFixed(0).replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+    return number
+        .toStringAsFixed(0)
+        .replaceAllMapped(
+          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
           (Match m) => '${m[1]},',
-    );
+        );
   }
 
   String get statusDisplay {
@@ -250,6 +287,7 @@ class LoanModel extends Equatable {
     String? userId,
     String? borrowerName,
     String? lenderName,
+    String? lenderPhone,
     String? initials,
     double? amount,
     double? interestRate,
@@ -274,6 +312,7 @@ class LoanModel extends Equatable {
       userId: userId ?? this.userId,
       borrowerName: borrowerName ?? this.borrowerName,
       lenderName: lenderName ?? this.lenderName,
+      lenderPhone: lenderPhone ?? this.lenderPhone,
       initials: initials ?? this.initials,
       amount: amount ?? this.amount,
       interestRate: interestRate ?? this.interestRate,
@@ -301,6 +340,7 @@ class LoanModel extends Equatable {
     userId,
     borrowerName,
     lenderName,
+    lenderPhone,
     amount,
     status,
     progress,

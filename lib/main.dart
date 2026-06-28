@@ -20,27 +20,34 @@ import 'core/services/biometric_auth_service.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'firebase_options.dart';
 
 void main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
-    await Firebase.initializeApp().then((_) async {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    ).then((_) async {
       try {
         await FirebaseAppCheck.instance.activate(
-          providerAndroid: kDebugMode ? const AndroidDebugProvider() : const AndroidPlayIntegrityProvider(),
-          providerApple: kDebugMode ? const AppleDebugProvider() : const AppleDeviceCheckProvider(),
+          providerAndroid: kDebugMode
+              ? const AndroidDebugProvider()
+              : const AndroidPlayIntegrityProvider(),
+          providerApple: kDebugMode
+              ? const AppleDebugProvider()
+              : const AppleDeviceCheckProvider(),
         );
-        print("Firebase App Check activated successfully.");
+        debugPrint("Firebase App Check activated successfully.");
       } catch (e) {
-        print("Firebase App Check activation failed: $e");
+        debugPrint("Firebase App Check activation failed: $e");
       }
       try {
         NotificationService.initialize();
       } catch (e) {
-        print("Notification init failed: $e");
+        debugPrint("Notification init failed: $e");
       }
     });
-    
+
     await dotenv.load(fileName: ".env");
 
     SystemChrome.setPreferredOrientations([
@@ -55,27 +62,47 @@ void main() async {
       ),
     );
 
+    ErrorWidget.builder = (FlutterErrorDetails details) {
+      return Material(
+        color: Colors.white,
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline, color: KhaataTheme.primaryBlue, size: 60),
+                const SizedBox(height: 16),
+                const Text('Something went wrong', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
+                const SizedBox(height: 8),
+                Text(details.exceptionAsString(), textAlign: TextAlign.center, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+              ],
+            ),
+          ),
+        ),
+      );
+    };
+
     await SentryFlutter.init((options) {
       options.dsn = dotenv.env['SENTRY_DSN'] ?? '';
       options.tracesSampleRate = 1.0;
     }, appRunner: () => runApp(const KhaataApp()));
-
   } catch (globalError, stackTrace) {
     runApp(
       MaterialApp(
         home: Scaffold(
-          backgroundColor: Colors.red,
+          backgroundColor: Colors.white,
           body: SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Text(
                 'CRITICAL APP LAUNCH FAILURE:\n\n$globalError\n\n$stackTrace',
-                style: const TextStyle(color: Colors.white, fontSize: 14),
+                style: const TextStyle(color: Colors.black87, fontSize: 14),
               ),
             ),
           ),
         ),
-      )
+      ),
     );
   }
 }
@@ -115,10 +142,12 @@ class NotificationListenerWidget extends StatefulWidget {
   const NotificationListenerWidget({super.key, required this.child});
 
   @override
-  State<NotificationListenerWidget> createState() => _NotificationListenerWidgetState();
+  State<NotificationListenerWidget> createState() =>
+      _NotificationListenerWidgetState();
 }
 
-class _NotificationListenerWidgetState extends State<NotificationListenerWidget> {
+class _NotificationListenerWidgetState
+    extends State<NotificationListenerWidget> {
   StreamSubscription? _sub;
   StreamSubscription? _openSub;
 
@@ -127,8 +156,13 @@ class _NotificationListenerWidgetState extends State<NotificationListenerWidget>
     if (authenticated) {
       if (message.data['type'] == 'LOAN_CREATED') {
         router.go(AppConstants.myLoans);
-      } else if (message.data['type'] == 'LOAN_OTP' || message.data['type'] == 'LOAN_INIT_OTP') {
+      } else if (message.data['type'] == 'LOAN_OTP' ||
+          message.data['type'] == 'LOAN_INIT_OTP') {
         router.go(AppConstants.notifications);
+      } else if (message.data['type'] == 'CHIT_AUCTION_START') {
+        // Deep link into the live auction room immediately
+        final ledgerId = message.data['ledgerId'] ?? '';
+        router.go('/chit-live-auction?ledgerId=$ledgerId');
       }
     }
   }
@@ -137,15 +171,20 @@ class _NotificationListenerWidgetState extends State<NotificationListenerWidget>
   void initState() {
     super.initState();
     _sub = NotificationService.onMessageStream.stream.listen((_) {
+      if (!mounted) return;
       context.read<LoanCubit>().fetchLoans();
       context.read<ChitFundCubit>().loadInvitesAndOwned();
     });
-    
-    _openSub = FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+
+    _openSub = FirebaseMessaging.onMessageOpenedApp.listen((
+      RemoteMessage message,
+    ) {
       _handleNotificationRouting(message);
     });
 
-    FirebaseMessaging.instance.getInitialMessage().then((RemoteMessage? message) {
+    FirebaseMessaging.instance.getInitialMessage().then((
+      RemoteMessage? message,
+    ) {
       if (message != null) {
         Future.delayed(const Duration(milliseconds: 500), () {
           if (mounted) {
@@ -155,7 +194,7 @@ class _NotificationListenerWidgetState extends State<NotificationListenerWidget>
       }
     });
   }
-  
+
   @override
   void dispose() {
     _sub?.cancel();

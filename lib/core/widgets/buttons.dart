@@ -26,13 +26,13 @@ class PrimaryButton extends StatelessWidget {
       ),
       child: isLoading
           ? SizedBox(
-        height: 20.h,
-        width: 20.h,
-        child: const CircularProgressIndicator(
-          strokeWidth: 2,
-          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-        ),
-      )
+              height: 20.h,
+              width: 20.h,
+              child: const CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+            )
           : Text(text),
     );
   }
@@ -42,13 +42,14 @@ class SecondaryButton extends StatelessWidget {
   final String text;
   final VoidCallback onPressed;
 
-  const SecondaryButton({super.key, required this.text, required this.onPressed});
+  const SecondaryButton({
+    super.key,
+    required this.text,
+    required this.onPressed,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton(
-      onPressed: onPressed,
-      child: Text(text),
-    );
+    return OutlinedButton(onPressed: onPressed, child: Text(text));
   }
 }

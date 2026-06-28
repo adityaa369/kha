@@ -6,10 +6,10 @@ import '../../error/failures.dart';
 class LoanCubit extends Cubit<LoanState> {
   final LoanRepository _repository;
 
-  LoanCubit({LoanRepository? repository}) 
-      : _repository = repository ?? LoanRepository(),
-        super(LoanInitial());
-  
+  LoanCubit({LoanRepository? repository})
+    : _repository = repository ?? LoanRepository(),
+      super(LoanInitial());
+
   void clear() {
     emit(LoanInitial());
   }
@@ -22,16 +22,18 @@ class LoanCubit extends Cubit<LoanState> {
 
   Future<void> fetchLoans() async {
     resetError();
-    
+
     // 1. Load from local cache instantly if state is not already loaded
     if (state is! LoansLoaded) {
       try {
         final cachedLoans = await _repository.getCachedLoans();
         if (cachedLoans != null && state is! LoansLoaded) {
-          emit(LoansLoaded(
-            myLoans: cachedLoans['myLoans']!,
-            givenLoans: cachedLoans['givenLoans']!,
-          ));
+          emit(
+            LoansLoaded(
+              myLoans: cachedLoans['myLoans']!,
+              givenLoans: cachedLoans['givenLoans']!,
+            ),
+          );
         } else if (state is! LoansLoaded) {
           emit(LoanLoading());
         }
@@ -45,7 +47,12 @@ class LoanCubit extends Cubit<LoanState> {
     // 2. Fetch from server in the background
     try {
       final loans = await _repository.fetchLoans();
-      emit(LoansLoaded(myLoans: loans['myLoans']!, givenLoans: loans['givenLoans']!));
+      emit(
+        LoansLoaded(
+          myLoans: loans['myLoans']!,
+          givenLoans: loans['givenLoans']!,
+        ),
+      );
     } on Failure catch (f) {
       // Only emit error if we don't have loaded data to show
       if (state is! LoansLoaded) {
@@ -58,12 +65,14 @@ class LoanCubit extends Cubit<LoanState> {
     }
   }
 
-  Future<Map<String, dynamic>?> createLoan(Map<String, dynamic> loanData) async {
+  Future<Map<String, dynamic>?> createLoan(
+    Map<String, dynamic> loanData,
+  ) async {
     emit(LoanLoading());
     try {
       final newLoan = await _repository.createLoan(loanData);
       emit(LoanCreated(newLoan));
-      
+
       // Refresh the lists
       await fetchLoans();
       return {'id': newLoan.id};
@@ -96,10 +105,18 @@ class LoanCubit extends Cubit<LoanState> {
   }
 
   // Verify Lender OTP
-  Future<bool> verifyLenderOtp(String loanId, String otp, String verificationId) async {
+  Future<bool> verifyLenderOtp(
+    String loanId,
+    String otp,
+    String verificationId,
+  ) async {
     emit(LoanLoading());
     try {
-      final success = await _repository.verifyLenderOtp(loanId, otp, verificationId);
+      final success = await _repository.verifyLenderOtp(
+        loanId,
+        otp,
+        verificationId,
+      );
       if (success) {
         await fetchLoans();
       }
@@ -127,7 +144,11 @@ class LoanCubit extends Cubit<LoanState> {
   }
 
   // Close Loan
-  Future<bool> closeLoan(String loanId, String otp, String verificationId) async {
+  Future<bool> closeLoan(
+    String loanId,
+    String otp,
+    String verificationId,
+  ) async {
     try {
       final success = await _repository.closeLoan(loanId, otp, verificationId);
       if (success) {
@@ -139,6 +160,48 @@ class LoanCubit extends Cubit<LoanState> {
       return false;
     } catch (e) {
       emit(LoanError('Failed to close loan: $e'));
+      return false;
+    }
+  }
+
+  Future<bool> recordPayment(String loanId, double amount, String otp, String verificationId) async {
+    try {
+      final success = await _repository.recordPayment(loanId, amount, otp, verificationId);
+      if (success) await fetchLoans();
+      return success;
+    } on Failure catch (f) {
+      emit(LoanError(f.message));
+      return false;
+    } catch (e) {
+      emit(LoanError('Failed to record payment: $e'));
+      return false;
+    }
+  }
+
+  Future<bool> recordInterest(String loanId, double amount, String otp, String verificationId) async {
+    try {
+      final success = await _repository.recordInterest(loanId, amount, otp, verificationId);
+      if (success) await fetchLoans();
+      return success;
+    } on Failure catch (f) {
+      emit(LoanError(f.message));
+      return false;
+    } catch (e) {
+      emit(LoanError('Failed to record interest payment: $e'));
+      return false;
+    }
+  }
+
+  Future<bool> addCredit(String loanId, double amount, String otp, String verificationId) async {
+    try {
+      final success = await _repository.addCredit(loanId, amount, otp, verificationId);
+      if (success) await fetchLoans();
+      return success;
+    } on Failure catch (f) {
+      emit(LoanError(f.message));
+      return false;
+    } catch (e) {
+      emit(LoanError('Failed to add credit: $e'));
       return false;
     }
   }
@@ -174,6 +237,23 @@ class LoanCubit extends Cubit<LoanState> {
       return null;
     } catch (e) {
       return null;
+    }
+  }
+
+  // Upload document
+  Future<String> uploadDocument(
+    String fileName,
+    String fileType,
+    List<int> fileBytes,
+  ) async {
+    try {
+      return await _repository.uploadDocument(fileName, fileType, fileBytes);
+    } on Failure catch (f) {
+      emit(LoanError(f.message));
+      rethrow;
+    } catch (e) {
+      emit(LoanError('Failed to upload document: $e'));
+      rethrow;
     }
   }
 }

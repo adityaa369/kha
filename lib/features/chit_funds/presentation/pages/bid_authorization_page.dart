@@ -52,7 +52,7 @@ class _BidAuthCard extends StatelessWidget {
         border: Border.all(color: KhaataTheme.borderGrey, width: 1),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -97,13 +97,10 @@ class _BidAuthCard extends StatelessWidget {
               ),
               child: Text(
                 'Authorize',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600),
               ),
             ),
-          )
+          ),
         ],
       ),
     );

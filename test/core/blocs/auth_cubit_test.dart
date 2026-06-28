@@ -10,16 +10,18 @@ class MockApiClient extends Mock implements ApiClient {}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  
+
   setUpAll(() {
-    const MethodChannel channel = MethodChannel('plugins.it_nomads.com/flutter_secure_storage');
+    const MethodChannel channel = MethodChannel(
+      'plugins.it_nomads.com/flutter_secure_storage',
+    );
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
-      if (methodCall.method == 'read') return null;
-      if (methodCall.method == 'write') return null;
-      if (methodCall.method == 'delete') return null;
-      return null;
-    });
+          if (methodCall.method == 'read') return null;
+          if (methodCall.method == 'write') return null;
+          if (methodCall.method == 'delete') return null;
+          return null;
+        });
   });
 
   late MockApiClient mockApiClient;
@@ -43,28 +45,31 @@ void main() {
     blocTest<AuthCubit, AuthState>(
       'emits [AuthLoading, PersonalDetailsSaved] when API call is successful',
       build: () {
-        when(() => mockApiClient.post(any(), data: any(named: 'data')))
-            .thenAnswer((_) async => Response(
-                  requestOptions: RequestOptions(path: '/auth/register'),
-                  data: {
-                    'success': true,
-                    'user': {
-                      'id': '123',
-                      'firstName': firstName,
-                      'lastName': lastName,
-                      'phone': testPhone,
-                      'email': testEmail,
-                      'isVerified': true,
-                      'city': '',
-                      'address': '',
-                      'pan': '',
-                      'aadhar': '',
-                      'dob': '',
-                      'gender': '',
-                    }
-                  },
-                  statusCode: 200,
-                ));
+        when(
+          () => mockApiClient.post(any(), data: any(named: 'data')),
+        ).thenAnswer(
+          (_) async => Response(
+            requestOptions: RequestOptions(path: '/auth/register'),
+            data: {
+              'success': true,
+              'user': {
+                'id': '123',
+                'firstName': firstName,
+                'lastName': lastName,
+                'phone': testPhone,
+                'email': testEmail,
+                'isVerified': true,
+                'city': '',
+                'address': '',
+                'pan': '',
+                'aadhar': '',
+                'dob': '',
+                'gender': '',
+              },
+            },
+            statusCode: 200,
+          ),
+        );
         return authCubit;
       },
       act: (cubit) => cubit.savePersonalDetails(
@@ -73,21 +78,21 @@ void main() {
         email: testEmail,
         phone: testPhone,
       ),
-      expect: () => [
-        isA<AuthLoading>(),
-        isA<PersonalDetailsSaved>(),
-      ],
+      expect: () => [isA<AuthLoading>(), isA<PersonalDetailsSaved>()],
     );
 
     blocTest<AuthCubit, AuthState>(
       'emits [AuthLoading, AuthError] when API call fails',
       build: () {
-        when(() => mockApiClient.post(any(), data: any(named: 'data')))
-            .thenAnswer((_) async => Response(
-                  requestOptions: RequestOptions(path: '/auth/register'),
-                  data: {'success': false, 'message': 'Failed to save details'},
-                  statusCode: 400,
-                ));
+        when(
+          () => mockApiClient.post(any(), data: any(named: 'data')),
+        ).thenAnswer(
+          (_) async => Response(
+            requestOptions: RequestOptions(path: '/auth/register'),
+            data: {'success': false, 'message': 'Failed to save details'},
+            statusCode: 400,
+          ),
+        );
         return authCubit;
       },
       act: (cubit) => cubit.savePersonalDetails(
@@ -98,7 +103,11 @@ void main() {
       ),
       expect: () => [
         isA<AuthLoading>(),
-        isA<AuthError>().having((s) => s.message, 'message', 'Failed to save details'),
+        isA<AuthError>().having(
+          (s) => s.message,
+          'message',
+          'Failed to save details',
+        ),
       ],
     );
   });

@@ -32,12 +32,36 @@ class KhaataTheme {
         surface: cardWhite,
       ),
       textTheme: GoogleFonts.interTextTheme().copyWith(
-        displayLarge: GoogleFonts.inter(fontSize: 32.sp, fontWeight: FontWeight.bold, color: textDark),
-        titleLarge: GoogleFonts.inter(fontSize: 24.sp, fontWeight: FontWeight.w700, color: textDark),
-        titleMedium: GoogleFonts.inter(fontSize: 18.sp, fontWeight: FontWeight.w600, color: textDark),
-        bodyLarge: GoogleFonts.inter(fontSize: 16.sp, fontWeight: FontWeight.w500, color: textDark),
-        bodyMedium: GoogleFonts.inter(fontSize: 14.sp, fontWeight: FontWeight.w400, color: textGrey),
-        labelLarge: GoogleFonts.inter(fontSize: 16.sp, fontWeight: FontWeight.w600, color: Colors.white),
+        displayLarge: GoogleFonts.inter(
+          fontSize: 32.sp,
+          fontWeight: FontWeight.bold,
+          color: textDark,
+        ),
+        titleLarge: GoogleFonts.inter(
+          fontSize: 24.sp,
+          fontWeight: FontWeight.w700,
+          color: textDark,
+        ),
+        titleMedium: GoogleFonts.inter(
+          fontSize: 18.sp,
+          fontWeight: FontWeight.w600,
+          color: textDark,
+        ),
+        bodyLarge: GoogleFonts.inter(
+          fontSize: 16.sp,
+          fontWeight: FontWeight.w500,
+          color: textDark,
+        ),
+        bodyMedium: GoogleFonts.inter(
+          fontSize: 14.sp,
+          fontWeight: FontWeight.w400,
+          color: textGrey,
+        ),
+        labelLarge: GoogleFonts.inter(
+          fontSize: 16.sp,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -45,9 +69,14 @@ class KhaataTheme {
           foregroundColor: Colors.white,
           elevation: 0,
           padding: EdgeInsets.symmetric(vertical: 16.h),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.r),
+          ),
           minimumSize: Size(double.infinity, 56.h),
-          textStyle: GoogleFonts.inter(fontSize: 16.sp, fontWeight: FontWeight.w600),
+          textStyle: GoogleFonts.inter(
+            fontSize: 16.sp,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -55,9 +84,14 @@ class KhaataTheme {
           foregroundColor: primaryBlue,
           side: const BorderSide(color: primaryBlue, width: 1.5),
           padding: EdgeInsets.symmetric(vertical: 16.h),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.r),
+          ),
           minimumSize: Size(double.infinity, 56.h),
-          textStyle: GoogleFonts.inter(fontSize: 16.sp, fontWeight: FontWeight.w600),
+          textStyle: GoogleFonts.inter(
+            fontSize: 16.sp,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -80,7 +114,9 @@ class KhaataTheme {
       ),
       cardTheme: CardThemeData(
         elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.r),
+        ),
         color: cardWhite,
       ),
       appBarTheme: AppBarTheme(

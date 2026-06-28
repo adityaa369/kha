@@ -72,15 +72,18 @@ class _MyChitsPageState extends State<MyChitsPage> {
 
           double totalDueOverall = 0;
           for (var sub in subs) {
-             num due = sub['dueAmount'] ?? 0;
-             totalDueOverall += due;
+            num due = sub['dueAmount'] ?? 0;
+            totalDueOverall += due;
           }
 
           return Column(
             children: [
               Expanded(
                 child: ListView.builder(
-                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 16.w,
+                    vertical: 8.h,
+                  ),
                   itemCount: subs.length,
                   itemBuilder: (context, index) {
                     return _MyChitCard(
@@ -138,7 +141,7 @@ class _MyChitsPageState extends State<MyChitsPage> {
                     ),
                   ],
                 ),
-              )
+              ),
             ],
           );
         },
@@ -151,7 +154,7 @@ class _MyChitCard extends StatelessWidget {
   final int index;
   final Map<String, dynamic> subData;
   final NumberFormat currencyFormatter;
-  
+
   const _MyChitCard({
     required this.index,
     required this.subData,
@@ -166,7 +169,7 @@ class _MyChitCard extends StatelessWidget {
     num dueAmount = subData['dueAmount'] ?? 0;
     int totalMonths = subData['totalMonths'] ?? 1;
     int completedMonths = subData['completedMonths'] ?? 0;
-    
+
     double progress = totalMonths > 0 ? (completedMonths / totalMonths) : 0.0;
 
     return InkWell(
@@ -182,177 +185,193 @@ class _MyChitCard extends StatelessWidget {
           border: Border.all(color: KhaataTheme.borderGrey, width: 1),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
           ],
         ),
         child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                chitName,
-                style: TextStyle(
-                  color: KhaataTheme.textDark,
-                  fontSize: 15.sp,
-                  fontWeight: FontWeight.w600,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  chitName,
+                  style: TextStyle(
+                    color: KhaataTheme.textDark,
+                    fontSize: 15.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-                decoration: BoxDecoration(
-                  color: KhaataTheme.backgroundGrey,
-                  borderRadius: BorderRadius.circular(4.r),
-                ),
-                child: Row(
-                  children: [
-                    Text(
-                      'Details',
-                      style: TextStyle(
-                        color: KhaataTheme.primaryBlue,
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    SizedBox(width: 4.w),
-                    Icon(Icons.arrow_forward_rounded, color: KhaataTheme.primaryBlue, size: 14.sp),
-                  ],
-                ),
-              )
-            ],
-          ),
-          SizedBox(height: 20.h),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Subscribed Value',
-                    style: TextStyle(
-                      color: KhaataTheme.textGrey,
-                      fontSize: 12.sp,
-                      fontWeight: FontWeight.w500,
-                    ),
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 12.w,
+                    vertical: 6.h,
                   ),
-                  SizedBox(height: 6.h),
-                  Text(
-                    currencyFormatter.format(totalValue),
-                    style: TextStyle(
-                      color: KhaataTheme.textDark,
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w700,
-                    ),
+                  decoration: BoxDecoration(
+                    color: KhaataTheme.backgroundGrey,
+                    borderRadius: BorderRadius.circular(4.r),
                   ),
-                ],
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    'Due Amount',
-                    style: TextStyle(
-                      color: KhaataTheme.textGrey,
-                      fontSize: 12.sp,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  SizedBox(height: 6.h),
-                  Text(
-                    currencyFormatter.format(dueAmount),
-                    style: TextStyle(
-                      color: KhaataTheme.dangerRed,
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
-              )
-            ],
-          ),
-          SizedBox(height: 20.h),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Circular Progress
-              SizedBox(
-                width: 50.w,
-                height: 50.w,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    CircularProgressIndicator(
-                      value: progress,
-                      strokeWidth: 5.w,
-                      backgroundColor: KhaataTheme.borderGrey,
-                      valueColor: const AlwaysStoppedAnimation<Color>(KhaataTheme.accentGreen), 
-                    ),
-                    Center(
-                      child: Text(
-                        '$completedMonths/$totalMonths',
+                  child: Row(
+                    children: [
+                      Text(
+                        'Details',
                         style: TextStyle(
-                          color: KhaataTheme.textDark,
-                          fontSize: 11.sp,
-                          fontWeight: FontWeight.w700,
+                          color: KhaataTheme.primaryBlue,
+                          fontSize: 12.sp,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
+                      SizedBox(width: 4.w),
+                      Icon(
+                        Icons.arrow_forward_rounded,
+                        color: KhaataTheme.primaryBlue,
+                        size: 14.sp,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 20.h),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Subscribed Value',
+                      style: TextStyle(
+                        color: KhaataTheme.textGrey,
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    SizedBox(height: 6.h),
+                    Text(
+                      currencyFormatter.format(totalValue),
+                      style: TextStyle(
+                        color: KhaataTheme.textDark,
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ],
                 ),
-              ),
-              // Branch
-              Column(
-                children: [
-                  Text(
-                    'Branch',
-                    style: TextStyle(
-                      color: KhaataTheme.textGrey,
-                      fontSize: 11.sp,
-                    ),
-                  ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    branch,
-                    style: TextStyle(
-                      color: KhaataTheme.textDark,
-                      fontSize: 13.sp,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-              // Amount Button
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                decoration: BoxDecoration(
-                  border: Border.all(color: KhaataTheme.borderGrey),
-                  borderRadius: BorderRadius.circular(6.r),
-                ),
-                child: Row(
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Icon(Icons.currency_rupee, color: KhaataTheme.textGrey, size: 14.sp),
-                    SizedBox(width: 4.w),
                     Text(
-                      'Pay Installment',
+                      'Due Amount',
                       style: TextStyle(
                         color: KhaataTheme.textGrey,
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    SizedBox(height: 6.h),
+                    Text(
+                      currencyFormatter.format(dueAmount),
+                      style: TextStyle(
+                        color: KhaataTheme.dangerRed,
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            SizedBox(height: 20.h),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Circular Progress
+                SizedBox(
+                  width: 50.w,
+                  height: 50.w,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      CircularProgressIndicator(
+                        value: progress,
+                        strokeWidth: 5.w,
+                        backgroundColor: KhaataTheme.borderGrey,
+                        valueColor: const AlwaysStoppedAnimation<Color>(
+                          KhaataTheme.accentGreen,
+                        ),
+                      ),
+                      Center(
+                        child: Text(
+                          '$completedMonths/$totalMonths',
+                          style: TextStyle(
+                            color: KhaataTheme.textDark,
+                            fontSize: 11.sp,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Branch
+                Column(
+                  children: [
+                    Text(
+                      'Branch',
+                      style: TextStyle(
+                        color: KhaataTheme.textGrey,
+                        fontSize: 11.sp,
+                      ),
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      branch,
+                      style: TextStyle(
+                        color: KhaataTheme.textDark,
                         fontSize: 13.sp,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
                 ),
-              )
-            ],
-          )
-        ],
-      ),
+                // Amount Button
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 16.w,
+                    vertical: 8.h,
+                  ),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: KhaataTheme.borderGrey),
+                    borderRadius: BorderRadius.circular(6.r),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.currency_rupee,
+                        color: KhaataTheme.textGrey,
+                        size: 14.sp,
+                      ),
+                      SizedBox(width: 4.w),
+                      Text(
+                        'Pay Installment',
+                        style: TextStyle(
+                          color: KhaataTheme.textGrey,
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

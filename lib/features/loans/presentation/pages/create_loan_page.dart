@@ -5,16 +5,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import '../../../../config/theme.dart';
-import '../../../../core/widgets/buttons.dart';
 import '../../../../core/widgets/inputs.dart';
-import 'dart:math';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/blocs/loans/loan_cubit.dart';
 import '../../../../core/blocs/loans/loan_state.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/services/biometric_auth_service.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class CreateLoanPage extends StatefulWidget {
   final String loanType;
@@ -39,7 +37,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
 
   DateTime _startDate = DateTime.now();
   DateTime? _dueDate;
-  String _durationType = 'Months';
+  final String _durationType = 'Months';
   String? _selectedDocumentName;
   File? _selectedDocumentFile;
   bool _isLoading = false;
@@ -90,7 +88,9 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
   Future<void> _selectDate(BuildContext context, {required bool isDue}) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: isDue ? (_dueDate ?? DateTime.now().add(const Duration(days: 30))) : _startDate,
+      initialDate: isDue
+          ? (_dueDate ?? DateTime.now().add(const Duration(days: 30)))
+          : _startDate,
       firstDate: DateTime.now(),
       lastDate: DateTime(2030),
       builder: (context, child) {
@@ -124,16 +124,26 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
 
   void _showPreviewDialog() {
     final amount = double.tryParse(_amountController.text) ?? 0.0;
-    final rate = widget.loanType == 'interest_credit' ? (double.tryParse(_interestController.text) ?? 0.0) : 0.0;
+    final rate = widget.loanType == 'interest_credit'
+        ? (double.tryParse(_interestController.text) ?? 0.0)
+        : 0.0;
     final months = _calculateMonths();
-    
-    final totalInterest = widget.loanType == 'interest_credit' ? (amount * rate * months) / 100 : 0.0;
+
+    final totalInterest = widget.loanType == 'interest_credit'
+        ? (amount * rate * months) / 100
+        : 0.0;
     final totalAmount = amount + totalInterest;
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Loan Summary', style: TextStyle(color: KhaataTheme.primaryBlue, fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Loan Summary',
+          style: TextStyle(
+            color: KhaataTheme.primaryBlue,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -150,7 +160,10 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
             SizedBox(height: 8.h),
             Text('Duration: $months Months'),
             Divider(height: 24.h),
-            Text('Total Repayment: ₹${totalAmount.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold)),
+            Text(
+              'Total Repayment: ₹${totalAmount.toStringAsFixed(2)}',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
           ],
         ),
         actions: [
@@ -159,12 +172,17 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: KhaataTheme.primaryBlue),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: KhaataTheme.primaryBlue,
+            ),
             onPressed: () {
               context.pop();
               _processLoanCreation();
             },
-            child: const Text('Confirm & Send', style: TextStyle(color: Colors.white)),
+            child: const Text(
+              'Confirm & Send',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -177,7 +195,10 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Biometric signature required to create agreement.', style: TextStyle(color: Colors.white)),
+            content: Text(
+              'Biometric signature required to create agreement.',
+              style: TextStyle(color: Colors.white),
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -185,6 +206,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
       return;
     }
 
+    if (!mounted) return;
     setState(() => _isLoading = true);
 
     final phone = _mobileController.text;
@@ -199,28 +221,78 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
       return;
     }
 
-    String? documentUrl;
     if (_selectedDocumentFile != null) {
       try {
-        final ref = FirebaseStorage.instance.ref().child('loan_documents/${const Uuid().v4()}_${_selectedDocumentName}');
-        await ref.putFile(_selectedDocumentFile!).timeout(
-          const Duration(seconds: 15),
-          onTimeout: () => throw TimeoutException('Firebase Storage upload timed out after 15 seconds. Please check your storage rules/connection.'),
-        );
-        documentUrl = await ref.getDownloadURL();
+        final ref = FirebaseStorage.instance
+            .ref()
+            .child('documents')
+            .child('${DateTime.now().millisecondsSinceEpoch}_${_selectedDocumentName ?? 'doc'}');
+        final uploadTask = ref.putFile(_selectedDocumentFile!);
+        final snapshot = await uploadTask;
+        final documentUrl = await snapshot.ref.getDownloadURL();
+        _finalizeLoanCreation(phone, documentUrl);
       } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to upload document: $e')),
-          );
-        }
         setState(() => _isLoading = false);
-        return;
+        if (mounted) {
+          _showUploadFailedDialog(phone, 'Failed to upload document: $e');
+        }
       }
+    } else {
+      _finalizeLoanCreation(phone, null);
     }
+  }
 
+  void _showUploadFailedDialog(String phone, String errorMessage) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.amber),
+            SizedBox(width: 8),
+            Text('Upload Failed'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(errorMessage),
+            const SizedBox(height: 16),
+            const Text(
+              'Do you want to proceed with creating this agreement without the attached document?',
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: KhaataTheme.primaryBlue,
+            ),
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              _finalizeLoanCreation(phone, null);
+            },
+            child: const Text(
+              'Proceed Without Document',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _finalizeLoanCreation(String phone, String? documentUrl) async {
+    setState(() => _isLoading = true);
+    final cubit = context.read<LoanCubit>();
     final idempotencyKey = const Uuid().v4();
-    
+
     final loanData = {
       'idempotency_key': idempotencyKey,
       'borrower_phone': phone,
@@ -228,7 +300,9 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
       'borrower_aadhar': _aadharController.text,
       'borrower_address': _addressController.text,
       'amount': double.tryParse(_amountController.text) ?? 0.0,
-      'interest_rate': widget.loanType == 'interest_credit' ? (double.tryParse(_interestController.text) ?? 0.0) : 0.0,
+      'interest_rate': widget.loanType == 'interest_credit'
+          ? (double.tryParse(_interestController.text) ?? 0.0)
+          : 0.0,
       'duration_months': _calculateMonths(),
       'duration_type': _durationType,
       'start_date': _startDate.toIso8601String(),
@@ -240,22 +314,28 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
     };
 
     final result = await cubit.createLoan(loanData);
-    
+
     setState(() => _isLoading = false);
 
     if (result != null && mounted) {
-      context.pushReplacement('/loan-confirmation', extra: {
-        'loan_id': result['id'],
-        'borrower_name': _borrowerNameController.text,
-        'borrower_phone': phone,
-        'amount': double.tryParse(_amountController.text) ?? 0.0,
-      });
+      context.pushReplacement(
+        '/loan-confirmation',
+        extra: {
+          'loan_id': result['id'],
+          'borrower_name': _borrowerNameController.text,
+          'borrower_phone': phone,
+          'amount': double.tryParse(_amountController.text) ?? 0.0,
+        },
+      );
     } else if (mounted) {
       final state = cubit.state;
       if (state is LoanError) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(state.message, style: const TextStyle(color: Colors.white)),
+            content: Text(
+              state.message,
+              style: const TextStyle(color: Colors.white),
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -268,12 +348,11 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('User Not Found'),
-        content: const Text('This phone number is not registered on Khaata. Please ask the borrower to register first.'),
+        content: const Text(
+          'This phone number is not registered on Khaata. Please ask the borrower to register first.',
+        ),
         actions: [
-          TextButton(
-            onPressed: () => context.pop(),
-            child: const Text('OK'),
-          ),
+          TextButton(onPressed: () => context.pop(), child: const Text('OK')),
         ],
       ),
     );
@@ -281,7 +360,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
 
   int _calculateMonths() {
     if (_dueDate != null) {
-       return (_dueDate!.difference(_startDate).inDays / 30).round();
+      return (_dueDate!.difference(_startDate).inDays / 30).round();
     }
     int val = int.tryParse(_durationController.text) ?? 1;
     if (_durationType == 'Years') {
@@ -312,9 +391,12 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
                 fontWeight: FontWeight.w700,
               ),
             ),
-            if (widget.loanType == 'hand_credit' || widget.loanType == 'interest_credit')
+            if (widget.loanType == 'hand_credit' ||
+                widget.loanType == 'interest_credit')
               Text(
-                widget.loanType == 'interest_credit' ? 'Credit interest to borrower' : 'You are lending money',
+                widget.loanType == 'interest_credit'
+                    ? 'Credit interest to borrower'
+                    : 'You are lending money',
                 style: TextStyle(
                   color: Colors.grey.shade600,
                   fontSize: 12.sp,
@@ -326,11 +408,13 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
         actions: [
           IconButton(
             icon: Icon(
-              widget.loanType == 'business_credit' ? Icons.help_outline : Icons.info_outline,
+              widget.loanType == 'business_credit'
+                  ? Icons.help_outline
+                  : Icons.info_outline,
               color: Colors.green.shade700,
             ),
             onPressed: () {},
-          )
+          ),
         ],
       ),
       body: SingleChildScrollView(
@@ -340,12 +424,15 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (widget.loanType == 'business_credit') _buildBusinessCreditLayout()
-              else if (widget.loanType == 'interest_credit') _buildInterestCreditLayout()
-              else _buildHandCreditLayout(),
-              
+              if (widget.loanType == 'business_credit')
+                _buildBusinessCreditLayout()
+              else if (widget.loanType == 'interest_credit')
+                _buildInterestCreditLayout()
+              else
+                _buildHandCreditLayout(),
+
               SizedBox(height: 24.h),
-              
+
               // Save Button
               SizedBox(
                 width: double.infinity,
@@ -358,12 +445,17 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
                     ),
                   ),
                   onPressed: _isLoading ? null : _submitForm,
-                  child: _isLoading 
+                  child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
                       : Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(widget.loanType == 'business_credit' ? Icons.save : Icons.description, color: Colors.white),
+                            Icon(
+                              widget.loanType == 'business_credit'
+                                  ? Icons.save
+                                  : Icons.description,
+                              color: Colors.white,
+                            ),
                             SizedBox(width: 8.w),
                             Text(
                               'Save Agreement',
@@ -385,7 +477,6 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
     );
   }
 
-
   Widget _buildInterestCreditLayout() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -396,9 +487,13 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _NumberedHeader(
-                number: 1, 
+                number: 1,
                 title: 'Borrower Details',
-                trailing: Icon(Icons.person_outline, color: Colors.green.shade700, size: 24.sp),
+                trailing: Icon(
+                  Icons.person_outline,
+                  color: Colors.green.shade700,
+                  size: 24.sp,
+                ),
               ),
               SizedBox(height: 16.h),
               KhaataTextField(
@@ -431,9 +526,16 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _NumberedHeader(
-                number: 2, 
+                number: 2,
                 title: 'Interest Details',
-                trailing: Text('%', style: TextStyle(color: Colors.green.shade700, fontSize: 24.sp, fontWeight: FontWeight.bold)),
+                trailing: Text(
+                  '%',
+                  style: TextStyle(
+                    color: Colors.green.shade700,
+                    fontSize: 24.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
               SizedBox(height: 16.h),
               Row(
@@ -446,8 +548,15 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
                       controller: _amountController,
                       prefixIcon: Container(
                         margin: EdgeInsets.all(4.w),
-                        decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(4.r)),
-                        child: Icon(Icons.currency_rupee, color: Colors.green.shade700, size: 18.sp),
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade50,
+                          borderRadius: BorderRadius.circular(4.r),
+                        ),
+                        child: Icon(
+                          Icons.currency_rupee,
+                          color: Colors.green.shade700,
+                          size: 18.sp,
+                        ),
                       ),
                       keyboardType: TextInputType.number,
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -461,10 +570,19 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
                       controller: _interestController,
                       prefixIcon: Container(
                         margin: EdgeInsets.all(4.w),
-                        decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(4.r)),
-                        child: Icon(Icons.percent, color: Colors.green.shade700, size: 18.sp),
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade50,
+                          borderRadius: BorderRadius.circular(4.r),
+                        ),
+                        child: Icon(
+                          Icons.percent,
+                          color: Colors.green.shade700,
+                          size: 18.sp,
+                        ),
                       ),
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                     ),
                   ),
                 ],
@@ -501,9 +619,13 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _NumberedHeader(
-                number: 3, 
+                number: 3,
                 title: 'Upload (Optional)',
-                trailing: Icon(Icons.attach_file, color: Colors.green.shade700, size: 24.sp),
+                trailing: Icon(
+                  Icons.attach_file,
+                  color: Colors.green.shade700,
+                  size: 24.sp,
+                ),
               ),
               SizedBox(height: 16.h),
               _DashedUploadBox(
@@ -526,7 +648,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _NumberedHeader(number: 1, title: 'Borrower Details'),
+              const _NumberedHeader(number: 1, title: 'Borrower Details'),
               SizedBox(height: 16.h),
               KhaataTextField(
                 label: 'Full Name',
@@ -557,7 +679,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _NumberedHeader(number: 2, title: 'Loan Details'),
+              const _NumberedHeader(number: 2, title: 'Loan Details'),
               SizedBox(height: 16.h),
               KhaataTextField(
                 label: 'Loan Amount',
@@ -565,9 +687,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
                 controller: _amountController,
                 prefixIcon: const Icon(Icons.currency_rupee),
                 keyboardType: TextInputType.number,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                ],
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               ),
               SizedBox(height: 16.h),
               Row(
@@ -600,9 +720,12 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _NumberedHeader(number: 3, title: 'Additional (Optional)'),
+              const _NumberedHeader(number: 3, title: 'Additional (Optional)'),
               SizedBox(height: 16.h),
-              Text('Add Proof (Optional)', style: Theme.of(context).textTheme.bodyLarge),
+              Text(
+                'Add Proof (Optional)',
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
               SizedBox(height: 8.h),
               _DashedUploadBox(
                 fileName: _selectedDocumentName,
@@ -664,10 +787,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
                     SizedBox(height: 4.h),
                     Text(
                       'Add credit given to your customer for goods/services.',
-                      style: TextStyle(
-                        fontSize: 13.sp,
-                        color: Colors.black87,
-                      ),
+                      style: TextStyle(fontSize: 13.sp, color: Colors.black87),
                     ),
                   ],
                 ),
@@ -682,7 +802,10 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Customer Details', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w700)),
+              Text(
+                'Customer Details',
+                style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w700),
+              ),
               SizedBox(height: 16.h),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -728,7 +851,10 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Credit Details', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w700)),
+              Text(
+                'Credit Details',
+                style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w700),
+              ),
               SizedBox(height: 16.h),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -771,7 +897,10 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Attachments (Optional)', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w700)),
+              Text(
+                'Attachments (Optional)',
+                style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w700),
+              ),
               SizedBox(height: 16.h),
               Container(
                 width: double.infinity,
@@ -784,8 +913,14 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
                   children: [
                     Container(
                       padding: EdgeInsets.all(8.w),
-                      decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(8.r)),
-                      child: Icon(Icons.image_outlined, color: Colors.green.shade700),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade50,
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                      child: Icon(
+                        Icons.image_outlined,
+                        color: Colors.green.shade700,
+                      ),
                     ),
                     SizedBox(width: 12.w),
                     Expanded(
@@ -794,12 +929,21 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
                         children: [
                           Text(
                             _selectedDocumentName ?? 'Upload Bill / Photo',
-                            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13.sp),
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13.sp,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                           if (_selectedDocumentName == null)
-                            Text('JPG, PNG up to 5MB', style: TextStyle(color: Colors.grey.shade600, fontSize: 11.sp)),
+                            Text(
+                              'JPG, PNG up to 5MB',
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontSize: 11.sp,
+                              ),
+                            ),
                         ],
                       ),
                     ),
@@ -808,15 +952,26 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
                       child: OutlinedButton(
                         style: OutlinedButton.styleFrom(
                           side: BorderSide(color: Colors.green.shade600),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
-                          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.r),
+                          ),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 12.w,
+                            vertical: 8.h,
+                          ),
                         ),
                         onPressed: _pickDocument,
                         child: FittedBox(
                           fit: BoxFit.scaleDown,
                           child: Text(
-                            _selectedDocumentName == null ? 'Choose from Gallery' : 'Change',
-                            style: TextStyle(color: Colors.green.shade700, fontSize: 13.sp, fontWeight: FontWeight.w600),
+                            _selectedDocumentName == null
+                                ? 'Choose from Gallery'
+                                : 'Change',
+                            style: TextStyle(
+                              color: Colors.green.shade700,
+                              fontSize: 13.sp,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ),
@@ -851,7 +1006,7 @@ class _FormCard extends StatelessWidget {
         border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -867,7 +1022,11 @@ class _NumberedHeader extends StatelessWidget {
   final String title;
   final Widget? trailing;
 
-  const _NumberedHeader({required this.number, required this.title, this.trailing});
+  const _NumberedHeader({
+    required this.number,
+    required this.title,
+    this.trailing,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -883,7 +1042,11 @@ class _NumberedHeader extends StatelessWidget {
           alignment: Alignment.center,
           child: Text(
             number.toString(),
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12.sp),
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 12.sp,
+            ),
           ),
         ),
         SizedBox(width: 12.w),
@@ -897,10 +1060,7 @@ class _NumberedHeader extends StatelessWidget {
             ),
           ),
         ),
-        if (trailing != null) ...[
-          SizedBox(width: 8.w),
-          trailing!,
-        ],
+        if (trailing != null) ...[SizedBox(width: 8.w), trailing!],
       ],
     );
   }
@@ -932,9 +1092,13 @@ class _DateSelector extends StatelessWidget {
           onTap: onTap,
           child: Container(
             width: double.infinity,
-            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h), // Matched TextField height
+            padding: EdgeInsets.symmetric(
+              horizontal: 12.w,
+              vertical: 14.h,
+            ), // Matched TextField height
             decoration: BoxDecoration(
-              color: Colors.white, // In designs, it looks outlined, wait... textfields are outlined?
+              color: Colors
+                  .white, // In designs, it looks outlined, wait... textfields are outlined?
               borderRadius: BorderRadius.circular(8.r),
               border: Border.all(color: Colors.grey.shade400),
             ),
@@ -949,11 +1113,17 @@ class _DateSelector extends StatelessWidget {
                         : (hint ?? ''),
                     style: TextStyle(
                       fontSize: 14.sp,
-                      color: date != null ? Colors.black87 : Colors.grey.shade500,
+                      color: date != null
+                          ? Colors.black87
+                          : Colors.grey.shade500,
                     ),
                   ),
                 ),
-                Icon(Icons.keyboard_arrow_down, size: 20.sp, color: Colors.grey.shade600),
+                Icon(
+                  Icons.keyboard_arrow_down,
+                  size: 20.sp,
+                  color: Colors.grey.shade600,
+                ),
               ],
             ),
           ),
@@ -963,7 +1133,20 @@ class _DateSelector extends StatelessWidget {
   }
 
   String _getMonthAbbr(int month) {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
     return months[month - 1];
   }
 }
@@ -986,7 +1169,10 @@ class _DashedUploadBox extends StatelessWidget {
           borderRadius: BorderRadius.circular(12.r),
           // Custom dashed border can be complex without extra package. We'll use a normal light grey border.
           // Wait, the design has a dashed border. We can use a package if available, or just use a soft border.
-          border: Border.all(color: Colors.grey.shade300, style: BorderStyle.solid),
+          border: Border.all(
+            color: Colors.grey.shade300,
+            style: BorderStyle.solid,
+          ),
         ),
         child: Row(
           children: [
@@ -999,11 +1185,22 @@ class _DashedUploadBox extends StatelessWidget {
               child: Stack(
                 alignment: Alignment.bottomRight,
                 children: [
-                  Icon(Icons.image_outlined, color: Colors.green.shade700, size: 24.sp),
+                  Icon(
+                    Icons.image_outlined,
+                    color: Colors.green.shade700,
+                    size: 24.sp,
+                  ),
                   Container(
-                    decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                    child: Icon(Icons.add_circle, color: Colors.green.shade700, size: 12.sp),
-                  )
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.add_circle,
+                      color: Colors.green.shade700,
+                      size: 12.sp,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -1014,14 +1211,21 @@ class _DashedUploadBox extends StatelessWidget {
                 children: [
                   Text(
                     fileName ?? 'Upload image',
-                    style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w500, color: Colors.black87),
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black87,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   if (fileName == null)
                     Text(
                       'Tap to choose from gallery',
-                      style: TextStyle(fontSize: 12.sp, color: Colors.grey.shade500),
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        color: Colors.grey.shade500,
+                      ),
                     ),
                 ],
               ),

@@ -21,12 +21,14 @@ class ChitInviteModel {
 
   factory ChitInviteModel.fromJson(Map<String, dynamic> json) {
     Map<String, dynamic> senderObj = json['sender'] ?? {};
-    
+
     return ChitInviteModel(
       id: json['_id'] ?? '',
       chitFund: ChitFundModel.fromJson(json['chitFund'] ?? {}),
       senderId: senderObj['_id'] ?? '',
-      senderName: '${senderObj['firstName'] ?? ''} ${senderObj['lastName'] ?? ''}'.trim(),
+      senderName:
+          '${senderObj['firstName'] ?? ''} ${senderObj['lastName'] ?? ''}'
+              .trim(),
       senderPhone: senderObj['phone'] ?? '',
       receiverPhone: json['receiverPhone'] ?? '',
       status: json['status'] ?? 'pending',

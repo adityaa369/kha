@@ -46,15 +46,13 @@ class _SplashPageState extends State<SplashPage>
     );
 
     // Slide up slightly
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.2),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.1, 0.6, curve: Curves.easeOutCubic),
-      ),
-    );
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _controller,
+            curve: const Interval(0.1, 0.6, curve: Curves.easeOutCubic),
+          ),
+        );
 
     // Start animation
     _controller.forward();
@@ -73,7 +71,7 @@ class _SplashPageState extends State<SplashPage>
     bool navigated = false;
     for (int i = 0; i < 30; i++) {
       if (!mounted) return;
-      
+
       final state = context.read<AuthCubit>().state;
       if (state is! AuthLoading && state is! AuthInitial) {
         _handleNavigation(state);
@@ -98,7 +96,9 @@ class _SplashPageState extends State<SplashPage>
       // Token valid, but require Biometric Unlock
       setState(() => _isLocked = true);
       _attemptBiometricUnlock(showFailureMessage: false);
-    } else if (state is OtpVerified || state is RegistrationOtpVerified || state is AuthenticatedUnverified) {
+    } else if (state is OtpVerified ||
+        state is RegistrationOtpVerified ||
+        state is AuthenticatedUnverified) {
       final user = state is AuthenticatedUnverified ? state.user : null;
       if (user != null && user.firstName.isNotEmpty) {
         context.go(AppConstants.panDetails);
@@ -114,12 +114,14 @@ class _SplashPageState extends State<SplashPage>
     }
   }
 
-  Future<void> _attemptBiometricUnlock({bool showFailureMessage = false}) async {
+  Future<void> _attemptBiometricUnlock({
+    bool showFailureMessage = false,
+  }) async {
     final authenticated = await BiometricAuthService.authenticate();
     if (authenticated && mounted) {
       context.go(AppConstants.home);
     } else if (mounted && showFailureMessage) {
-       ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Authentication failed. Please try again.'),
           backgroundColor: Colors.red,
@@ -166,13 +168,17 @@ class _SplashPageState extends State<SplashPage>
                     ),
                     SizedBox(height: 30.h),
                     ElevatedButton.icon(
-                      onPressed: () => _attemptBiometricUnlock(showFailureMessage: true),
+                      onPressed: () =>
+                          _attemptBiometricUnlock(showFailureMessage: true),
                       icon: const Icon(Icons.fingerprint),
                       label: const Text('Unlock'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
                         foregroundColor: KhaataTheme.primaryBlue,
-                        padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 12.h),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 32.w,
+                          vertical: 12.h,
+                        ),
                       ),
                     ),
                   ],
@@ -189,8 +195,8 @@ class _SplashPageState extends State<SplashPage>
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                                Text(
-                                'Hand Loan Credit',
+                              Text(
+                                'Hand Credit',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontSize: 32.sp, // Smaller than 48.sp
@@ -226,12 +232,12 @@ class _SplashPageState extends State<SplashPage>
 }
 
 class TextUntil extends StatelessWidget {
-    final String text;
-    final TextStyle style;
-    const TextUntil(this.text, {super.key, required this.style});
-    
-    @override
-    Widget build(BuildContext context) {
-      return Text(text, style: style);
-    }
+  final String text;
+  final TextStyle style;
+  const TextUntil(this.text, {super.key, required this.style});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(text, style: style);
+  }
 }

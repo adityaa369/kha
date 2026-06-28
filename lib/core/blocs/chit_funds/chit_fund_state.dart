@@ -46,7 +46,7 @@ class ChitFundActionSuccess extends ChitFundState {
 
 class ChitAdminDashboardLoaded extends ChitFundState {
   final Map<String, dynamic> dashboardData;
-  
+
   const ChitAdminDashboardLoaded(this.dashboardData);
 
   @override

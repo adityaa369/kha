@@ -17,14 +17,15 @@ class MyLoansPage extends StatefulWidget {
   State<MyLoansPage> createState() => _MyLoansPageState();
 }
 
-class _MyLoansPageState extends State<MyLoansPage> with SingleTickerProviderStateMixin {
+class _MyLoansPageState extends State<MyLoansPage>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final List<String> _tabs = [
     'All',
     'Hand Credit',
     'Business Credit',
     'Interest Credit',
-    'Chit Funds'
+    'Chit Funds',
   ];
 
   @override
@@ -96,13 +97,25 @@ class _MyLoansPageState extends State<MyLoansPage> with SingleTickerProviderStat
               int activeCount = 0;
               int closedCount = 0;
               if (state is LoansLoaded) {
-                  final selectedTabName = _tabs[_tabController.index];
-                  final filteredForStats = selectedTabName == 'All' 
-                     ? state.myLoans 
-                     : state.myLoans.where((l) => l.displayType == selectedTabName).toList();
+                final selectedTabName = _tabs[_tabController.index];
+                final filteredForStats = selectedTabName == 'All'
+                    ? state.myLoans
+                    : state.myLoans
+                          .where((l) => l.displayType == selectedTabName)
+                          .toList();
 
-                activeCount = filteredForStats.where((l) => l.status != 'completed' && l.status != 'pending_otp' && l.status != 'pending_approval' && l.status != 'rejected').length;
-                closedCount = filteredForStats.where((l) => l.status == 'completed').length;
+                activeCount = filteredForStats
+                    .where(
+                      (l) =>
+                          l.status != 'completed' &&
+                          l.status != 'pending_otp' &&
+                          l.status != 'pending_approval' &&
+                          l.status != 'rejected',
+                    )
+                    .length;
+                closedCount = filteredForStats
+                    .where((l) => l.status == 'completed')
+                    .length;
               }
 
               return Container(
@@ -112,19 +125,22 @@ class _MyLoansPageState extends State<MyLoansPage> with SingleTickerProviderStat
                   children: [
                     Expanded(
                       child: _StatBox(
-                          count: activeCount.toString(),
-                          label: 'Active Accounts',
-                          color: KhaataTheme.accentGreen),
+                        count: activeCount.toString(),
+                        label: 'Active Accounts',
+                        color: KhaataTheme.accentGreen,
+                      ),
                     ),
                     Container(
-                        width: 1.w,
-                        height: 40.h,
-                        color: Colors.grey[200]),
+                      width: 1.w,
+                      height: 40.h,
+                      color: Colors.grey[200],
+                    ),
                     Expanded(
                       child: _StatBox(
-                          count: closedCount.toString(),
-                          label: 'Closed Accounts',
-                          color: Colors.grey),
+                        count: closedCount.toString(),
+                        label: 'Closed Accounts',
+                        color: Colors.grey,
+                      ),
                     ),
                   ],
                 ),
@@ -143,7 +159,7 @@ class _MyLoansPageState extends State<MyLoansPage> with SingleTickerProviderStat
                   }
                   return const Center(child: CircularProgressIndicator());
                 }
-                
+
                 if (state is LoanLoading) {
                   return const Center(child: CircularProgressIndicator());
                 }
@@ -156,11 +172,11 @@ class _MyLoansPageState extends State<MyLoansPage> with SingleTickerProviderStat
                   return TabBarView(
                     controller: _tabController,
                     children: _tabs.map((tabName) {
-                      final displayedLoans = tabName == 'All' 
-                        ? state.myLoans 
-                        : state.myLoans.where((l) {
-                            return l.displayType == tabName;
-                          }).toList();
+                      final displayedLoans = tabName == 'All'
+                          ? state.myLoans
+                          : state.myLoans.where((l) {
+                              return l.displayType == tabName;
+                            }).toList();
 
                       if (displayedLoans.isEmpty) {
                         return RefreshIndicator(
@@ -172,12 +188,19 @@ class _MyLoansPageState extends State<MyLoansPage> with SingleTickerProviderStat
                             physics: const AlwaysScrollableScrollPhysics(),
                             children: [
                               SizedBox(height: 100.h),
-                              Icon(Icons.receipt_long_outlined, size: 64.sp, color: Colors.grey[300]),
+                              Icon(
+                                Icons.receipt_long_outlined,
+                                size: 64.sp,
+                                color: Colors.grey[300],
+                              ),
                               SizedBox(height: 16.h),
                               Center(
                                 child: Text(
                                   'No active accounts',
-                                  style: TextStyle(color: Colors.grey, fontSize: 16.sp),
+                                  style: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 16.sp,
+                                  ),
                                 ),
                               ),
                             ],
@@ -223,7 +246,11 @@ class _StatBox extends StatelessWidget {
   final String label;
   final Color color;
 
-  const _StatBox({required this.count, required this.label, required this.color});
+  const _StatBox({
+    required this.count,
+    required this.label,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -240,20 +267,14 @@ class _StatBox extends StatelessWidget {
             SizedBox(width: 6.w),
             Text(
               count,
-              style: TextStyle(
-                fontSize: 20.sp,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold),
             ),
           ],
         ),
         SizedBox(height: 4.h),
         Text(
           label,
-          style: TextStyle(
-            fontSize: 11.sp,
-            color: Colors.grey,
-          ),
+          style: TextStyle(fontSize: 11.sp, color: Colors.grey),
         ),
       ],
     );
@@ -263,9 +284,7 @@ class _StatBox extends StatelessWidget {
 class _LoanCard extends StatelessWidget {
   final LoanModel loan;
 
-  const _LoanCard({
-    required this.loan,
-  });
+  const _LoanCard({required this.loan});
 
   Color _getBackgroundColor(String type) {
     switch (type.toLowerCase().replaceAll('_', '')) {
@@ -307,209 +326,210 @@ class _LoanCard extends StatelessWidget {
       },
       child: Container(
         decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Bank Header - Colored background
-          Container(
-            padding: EdgeInsets.all(12.w),
-            decoration: BoxDecoration(
-              color: _getBackgroundColor(loan.type),
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(12.r),
-                topRight: Radius.circular(12.r),
-              ),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12.r),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 36.w,
-                      height: 36.w,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8.r),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 4,
+          ],
+        ),
+        child: Column(
+          children: [
+            // Bank Header - Colored background
+            Container(
+              padding: EdgeInsets.all(12.w),
+              decoration: BoxDecoration(
+                color: _getBackgroundColor(loan.type),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(12.r),
+                  topRight: Radius.circular(12.r),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 36.w,
+                        height: 36.w,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8.r),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.05),
+                              blurRadius: 4,
+                            ),
+                          ],
+                        ),
+                        child: Center(
+                          child: Text(
+                            loan.initials ?? 'UL',
+                            style: TextStyle(
+                              color: _getTextColor(loan.type),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16.sp,
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 10.w),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            loan.displayCounterpartyName, // Uses Lender's name if available, else borrower Name
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14.sp,
+                            ),
+                          ),
+                          Text(
+                            loan.type.toUpperCase(),
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ],
                       ),
-                      child: Center(
-                        child: Text(
-                          loan.initials ?? 'UL',
-                          style: TextStyle(
-                            color: _getTextColor(loan.type),
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16.sp,
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 10.w),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          loan.displayCounterpartyName, // Uses Lender's name if available, else borrower Name
-                          style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 14.sp,
-                          ),
-                        ),
-                        Text(
-                          loan.type.toUpperCase(),
-                          style: TextStyle(
-                            color: Colors.grey,
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                Icon(
-                  Icons.person_outline,
-                  color: Colors.grey,
-                  size: 20.sp,
-                ),
-              ],
-            ),
-          ),
-          // Body
-          Padding(
-            padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 24.h),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Loan Amount',
-                          style: TextStyle(
-                            color: Colors.grey,
-                            fontSize: 11.sp,
-                          ),
-                        ),
-                        SizedBox(height: 4.h),
-                        Text(
-                          loan.displayAmount,
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          'Status',
-                          style: TextStyle(
-                            color: Colors.grey,
-                            fontSize: 11.sp,
-                          ),
-                        ),
-                        SizedBox(height: 4.h),
-                        Text(
-                          loan.statusDisplay,
-                          style: TextStyle(
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.bold,
-                            color: loan.statusColor,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                SizedBox(height: 12.h),
-                if (loan.status == 'pending_otp' || loan.status == 'pending_approval')
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48.h,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        context.push(
-                          '/loan-approval',
-                          extra: loan,
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: KhaataTheme.primaryBlue,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                        ),
-                      ),
-                      child: Text(
-                        'Review Agreement',
-                        style: TextStyle(
-                          fontSize: 13.sp,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  )
-                else
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48.h,
-                    child: OutlinedButton(
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-                            title: const Text('Reminder Set'),
-                            content: const Text('You will be reminded 3 days before the next due date.'),
-                            actions: [
-                              TextButton(
-                                onPressed: () => context.pop(),
-                                child: const Text('OK'),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: KhaataTheme.primaryBlue,
-                        side: const BorderSide(color: KhaataTheme.primaryBlue),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                        ),
-                      ),
-                      child: Text(
-                        'Set Reminder',
-                        style: TextStyle(
-                          fontSize: 13.sp,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
+                    ],
                   ),
-              ],
+                  Icon(Icons.person_outline, color: Colors.grey, size: 20.sp),
+                ],
+              ),
             ),
-          ),
-        ],
+            // Body
+            Padding(
+              padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 24.h),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Loan Amount',
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: 11.sp,
+                            ),
+                          ),
+                          SizedBox(height: 4.h),
+                          Text(
+                            loan.displayAmount,
+                            style: TextStyle(
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            'Status',
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: 11.sp,
+                            ),
+                          ),
+                          SizedBox(height: 4.h),
+                          Text(
+                            loan.statusDisplay,
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.bold,
+                              color: loan.statusColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 12.h),
+                  if (loan.status == 'pending_otp' ||
+                      loan.status == 'pending_approval')
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48.h,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          context.push('/loan-approval', extra: loan);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: KhaataTheme.primaryBlue,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.r),
+                          ),
+                        ),
+                        child: Text(
+                          'Review Agreement',
+                          style: TextStyle(
+                            fontSize: 13.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48.h,
+                      child: OutlinedButton(
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12.r),
+                              ),
+                              title: const Text('Reminder Set'),
+                              content: const Text(
+                                'You will be reminded 3 days before the next due date.',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => context.pop(),
+                                  child: const Text('OK'),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: KhaataTheme.primaryBlue,
+                          side: const BorderSide(
+                            color: KhaataTheme.primaryBlue,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.r),
+                          ),
+                        ),
+                        child: Text(
+                          'Set Reminder',
+                          style: TextStyle(
+                            fontSize: 13.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
-    ),);
+    );
   }
-}
+}

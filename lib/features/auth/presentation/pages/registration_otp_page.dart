@@ -1,3 +1,4 @@
+import '../../../../core/utils/error_handler.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
@@ -95,13 +96,17 @@ class _RegistrationOtpPageState extends State<RegistrationOtpPage> {
                 height: 80.h,
                 decoration: BoxDecoration(
                   color: _hasError
-                      ? KhaataTheme.dangerRed.withOpacity(0.1)
-                      : KhaataTheme.primaryBlue.withOpacity(0.1),
+                      ? KhaataTheme.dangerRed.withValues(alpha: 0.1)
+                      : KhaataTheme.primaryBlue.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20.r),
                 ),
                 child: Icon(
-                  _hasError ? Icons.error_outline : Icons.verified_user_outlined,
-                  color: _hasError ? KhaataTheme.dangerRed : KhaataTheme.primaryBlue,
+                  _hasError
+                      ? Icons.error_outline
+                      : Icons.verified_user_outlined,
+                  color: _hasError
+                      ? KhaataTheme.dangerRed
+                      : KhaataTheme.primaryBlue,
                   size: 40.sp,
                 ),
               ),
@@ -143,7 +148,9 @@ class _RegistrationOtpPageState extends State<RegistrationOtpPage> {
                   activeFillColor: Colors.white,
                   inactiveFillColor: Colors.grey[100],
                   selectedFillColor: Colors.blue[50],
-                  activeColor: _hasError ? KhaataTheme.dangerRed : KhaataTheme.primaryBlue,
+                  activeColor: _hasError
+                      ? KhaataTheme.dangerRed
+                      : KhaataTheme.primaryBlue,
                   inactiveColor: Colors.grey[300],
                   selectedColor: KhaataTheme.primaryBlue,
                   errorBorderColor: KhaataTheme.dangerRed,
@@ -184,21 +191,26 @@ class _RegistrationOtpPageState extends State<RegistrationOtpPage> {
 
               _canResend
                   ? TextButton(
-                onPressed: () {
-                  _otpController.clear();
-                  context.read<AuthCubit>().sendOtp(widget.phone);
-                  _startResendTimer();
-                },
-                child: const Text('Resend OTP',
-                  style: TextStyle(
-                    color: KhaataTheme.primaryBlue,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              )
-                  : Text('Resend OTP in $_resendTimer seconds',
-                style: TextStyle(color: KhaataTheme.textGrey, fontSize: 14.sp),
-              ),
+                      onPressed: () {
+                        _otpController.clear();
+                        context.read<AuthCubit>().sendOtp(widget.phone);
+                        _startResendTimer();
+                      },
+                      child: const Text(
+                        'Resend OTP',
+                        style: TextStyle(
+                          color: KhaataTheme.primaryBlue,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    )
+                  : Text(
+                      'Resend OTP in $_resendTimer seconds',
+                      style: TextStyle(
+                        color: KhaataTheme.textGrey,
+                        fontSize: 14.sp,
+                      ),
+                    ),
 
               SizedBox(height: 40.h),
 
@@ -211,9 +223,9 @@ class _RegistrationOtpPageState extends State<RegistrationOtpPage> {
                       _hasError = true;
                       _errorController?.add(ErrorAnimationType.shake);
                     });
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(state.message)),
-                    );
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text(state.message)));
                   }
                 },
                 builder: (context, state) {
@@ -231,3 +243,4 @@ class _RegistrationOtpPageState extends State<RegistrationOtpPage> {
     );
   }
 }
+

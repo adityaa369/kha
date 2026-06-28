@@ -109,9 +109,12 @@ class UserModel extends Equatable {
   }
 
   bool get isKycComplete =>
-      pan != null && pan!.isNotEmpty &&
-          aadhar != null && aadhar!.isNotEmpty &&
-          dob != null && dob!.isNotEmpty;
+      pan != null &&
+      pan!.isNotEmpty &&
+      aadhar != null &&
+      aadhar!.isNotEmpty &&
+      dob != null &&
+      dob!.isNotEmpty;
 
   @override
   List<Object?> get props => [

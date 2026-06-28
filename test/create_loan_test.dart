@@ -10,26 +10,29 @@ void main() {
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) {
-        return MaterialApp(
-          home: CreateLoanPage(loanType: loanType),
-        );
+        return MaterialApp(home: CreateLoanPage(loanType: loanType));
       },
     );
   }
 
-  testWidgets('Test CreateLoanPage Business Credit Layout', (WidgetTester tester) async {
+  testWidgets('Test CreateLoanPage Business Credit Layout', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(buildTestWidget('business_credit'));
     expect(find.byType(CreateLoanPage), findsOneWidget);
   });
 
-  testWidgets('Test CreateLoanPage Interest Credit Layout', (WidgetTester tester) async {
+  testWidgets('Test CreateLoanPage Interest Credit Layout', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(buildTestWidget('interest_credit'));
     expect(find.byType(CreateLoanPage), findsOneWidget);
   });
 
-  testWidgets('Test CreateLoanPage Hand Credit Layout', (WidgetTester tester) async {
+  testWidgets('Test CreateLoanPage Hand Credit Layout', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(buildTestWidget('hand_credit'));
     expect(find.byType(CreateLoanPage), findsOneWidget);
   });
 }
-

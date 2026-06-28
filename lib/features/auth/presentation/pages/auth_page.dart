@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../config/theme.dart';
 import '../../../../core/utils/validators.dart';
 
-
 class AuthPage extends StatefulWidget {
   const AuthPage({super.key});
 
@@ -16,7 +15,6 @@ class _AuthPageState extends State<AuthPage>
     with SingleTickerProviderStateMixin {
   bool isLogin = true;
   late AnimationController _animationController;
-  late Animation<double> _slideAnimation;
 
   // Controllers
   final _loginPhoneController = TextEditingController();
@@ -37,9 +35,6 @@ class _AuthPageState extends State<AuthPage>
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 400),
       vsync: this,
-    );
-    _slideAnimation = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
   }
 
@@ -69,10 +64,7 @@ class _AuthPageState extends State<AuthPage>
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              KhaataTheme.primaryBlue,
-              Color(0xFF1E40AF),
-            ],
+            colors: [KhaataTheme.primaryBlue, Color(0xFF1E40AF)],
           ),
         ),
         child: SafeArea(
@@ -89,7 +81,7 @@ class _AuthPageState extends State<AuthPage>
                     borderRadius: BorderRadius.circular(20.r),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
+                        color: Colors.black.withValues(alpha: 0.2),
                         blurRadius: 20,
                         offset: const Offset(0, 10),
                       ),
@@ -108,10 +100,7 @@ class _AuthPageState extends State<AuthPage>
               SizedBox(height: 30.h),
 
               // Sliding Toggle
-              SlidingToggle(
-                isLogin: isLogin,
-                onToggle: toggleAuthMode,
-              ),
+              SlidingToggle(isLogin: isLogin, onToggle: toggleAuthMode),
 
               SizedBox(height: 30.h),
 
@@ -143,21 +132,22 @@ class _AuthPageState extends State<AuthPage>
                       },
                       child: isLogin
                           ? _LoginForm(
-                        key: const ValueKey('login'),
-                        phoneController: _loginPhoneController,
-                        aadharController: _loginAadharController,
-                        passwordController: _loginPasswordController,
-                      )
+                              key: const ValueKey('login'),
+                              phoneController: _loginPhoneController,
+                              aadharController: _loginAadharController,
+                              passwordController: _loginPasswordController,
+                            )
                           : _SignupForm(
-                        key: const ValueKey('signup'),
-                        phoneController: _signupPhoneController,
-                        nameController: _signupNameController,
-                        emailController: _signupEmailController,
-                        panController: _signupPanController,
-                        aadharController: _signupAadharController,
-                        passwordController: _signupPasswordController,
-                        confirmPasswordController: _signupConfirmPasswordController,
-                      ),
+                              key: const ValueKey('signup'),
+                              phoneController: _signupPhoneController,
+                              nameController: _signupNameController,
+                              emailController: _signupEmailController,
+                              panController: _signupPanController,
+                              aadharController: _signupAadharController,
+                              passwordController: _signupPasswordController,
+                              confirmPasswordController:
+                                  _signupConfirmPasswordController,
+                            ),
                     ),
                   ),
                 ),
@@ -175,7 +165,8 @@ class SlidingToggle extends StatelessWidget {
   final bool isLogin;
   final VoidCallback onToggle;
 
-  const SlidingToggle({super.key, 
+  const SlidingToggle({
+    super.key,
     required this.isLogin,
     required this.onToggle,
   });
@@ -186,7 +177,7 @@ class SlidingToggle extends StatelessWidget {
       width: 280.w,
       height: 50.h,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
+        color: Colors.white.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(25.r),
       ),
       child: Stack(
@@ -204,7 +195,7 @@ class SlidingToggle extends StatelessWidget {
                 borderRadius: BorderRadius.circular(25.r),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: 0.1),
                     blurRadius: 10,
                   ),
                 ],
@@ -240,7 +231,9 @@ class SlidingToggle extends StatelessWidget {
                     child: Text(
                       'Sign Up',
                       style: TextStyle(
-                        color: !isLogin ? KhaataTheme.primaryBlue : Colors.white,
+                        color: !isLogin
+                            ? KhaataTheme.primaryBlue
+                            : Colors.white,
                         fontSize: 16.sp,
                         fontWeight: FontWeight.w700,
                       ),
@@ -299,10 +292,7 @@ class _LoginFormState extends State<_LoginForm> {
             SizedBox(height: 8.h),
             Text(
               'Sign in to continue',
-              style: TextStyle(
-                fontSize: 14.sp,
-                color: KhaataTheme.textGrey,
-              ),
+              style: TextStyle(fontSize: 14.sp, color: KhaataTheme.textGrey),
             ),
             SizedBox(height: 30.h),
 
@@ -358,7 +348,8 @@ class _LoginFormState extends State<_LoginForm> {
                   obscurePassword ? Icons.visibility_off : Icons.visibility,
                   size: 20.sp,
                 ),
-                onPressed: () => setState(() => obscurePassword = !obscurePassword),
+                onPressed: () =>
+                    setState(() => obscurePassword = !obscurePassword),
               ),
             ),
 
@@ -392,10 +383,7 @@ class _LoginFormState extends State<_LoginForm> {
               ),
               child: Text(
                 'Sign In',
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w700,
-                ),
+                style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w700),
               ),
             ),
 
@@ -405,7 +393,10 @@ class _LoginFormState extends State<_LoginForm> {
             Center(
               child: TextButton.icon(
                 onPressed: () {},
-                icon: const Icon(Icons.fingerprint, color: KhaataTheme.primaryBlue),
+                icon: const Icon(
+                  Icons.fingerprint,
+                  color: KhaataTheme.primaryBlue,
+                ),
                 label: const Text(
                   'Use Biometric',
                   style: TextStyle(color: KhaataTheme.primaryBlue),
@@ -617,9 +608,11 @@ class _SignupFormState extends State<_SignupForm> {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.info_outline,
-                      size: 16.sp,
-                      color: KhaataTheme.primaryBlue),
+                  Icon(
+                    Icons.info_outline,
+                    size: 16.sp,
+                    color: KhaataTheme.primaryBlue,
+                  ),
                   SizedBox(width: 8.w),
                   Expanded(
                     child: Text(
@@ -645,8 +638,11 @@ class _SignupFormState extends State<_SignupForm> {
               obscureText: obscurePassword,
               validator: Validators.validatePassword,
               suffix: IconButton(
-                icon: Icon(obscurePassword ? Icons.visibility_off : Icons.visibility),
-                onPressed: () => setState(() => obscurePassword = !obscurePassword),
+                icon: Icon(
+                  obscurePassword ? Icons.visibility_off : Icons.visibility,
+                ),
+                onPressed: () =>
+                    setState(() => obscurePassword = !obscurePassword),
               ),
             ),
             SizedBox(height: 20.h),
@@ -656,12 +652,17 @@ class _SignupFormState extends State<_SignupForm> {
               controller: widget.confirmPasswordController,
               obscureText: obscureConfirm,
               validator: (val) {
-                if (val != widget.passwordController.text) return 'Passwords don\'t match';
+                if (val != widget.passwordController.text) {
+                  return 'Passwords don\'t match';
+                }
                 return null;
               },
               suffix: IconButton(
-                icon: Icon(obscureConfirm ? Icons.visibility_off : Icons.visibility),
-                onPressed: () => setState(() => obscureConfirm = !obscureConfirm),
+                icon: Icon(
+                  obscureConfirm ? Icons.visibility_off : Icons.visibility,
+                ),
+                onPressed: () =>
+                    setState(() => obscureConfirm = !obscureConfirm),
               ),
             ),
           ],
@@ -789,9 +790,9 @@ class _AnimatedInputFieldState extends State<_AnimatedInputField> {
             hintText: widget.hint,
             prefixIcon: widget.prefix != null
                 ? Padding(
-              padding: EdgeInsets.only(left: 16.w),
-              child: widget.prefix,
-            )
+                    padding: EdgeInsets.only(left: 16.w),
+                    child: widget.prefix,
+                  )
                 : null,
             suffixIcon: widget.suffix,
             filled: true,
@@ -829,10 +830,7 @@ class _AnimatedInputFieldState extends State<_AnimatedInputField> {
             padding: EdgeInsets.only(top: 4.h, left: 4.w),
             child: Text(
               errorText!,
-              style: TextStyle(
-                color: KhaataTheme.dangerRed,
-                fontSize: 12.sp,
-              ),
+              style: TextStyle(color: KhaataTheme.dangerRed, fontSize: 12.sp),
             ),
           ),
       ],

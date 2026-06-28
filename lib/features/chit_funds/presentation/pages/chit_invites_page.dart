@@ -9,9 +9,7 @@ import '../../../../core/blocs/chit_funds/chit_fund_cubit.dart';
 import '../../../../core/blocs/chit_funds/chit_fund_state.dart';
 import '../../../../data/models/chit_fund_model.dart';
 import '../../../../data/models/chit_invite_model.dart';
-import '../../../../config/constants.dart';
 import '../../../../core/services/biometric_auth_service.dart';
-
 
 class ChitInvitesPage extends StatefulWidget {
   const ChitInvitesPage({super.key});
@@ -47,14 +45,18 @@ class _ChitInvitesPageState extends State<ChitInvitesPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('Enter the mobile number of the user you want to invite to this group.'),
+              const Text(
+                'Enter the mobile number of the user you want to invite to this group.',
+              ),
               SizedBox(height: 16.h),
               TextField(
                 controller: phoneController,
                 keyboardType: TextInputType.phone,
                 decoration: InputDecoration(
                   hintText: '+91 XXXXXXXXXX',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
                 ),
               ),
             ],
@@ -69,11 +71,19 @@ class _ChitInvitesPageState extends State<ChitInvitesPage> {
             onPressed: () {
               if (phoneController.text.isNotEmpty) {
                 Navigator.pop(ctx);
-                context.read<ChitFundCubit>().sendInvite(chit.id, phoneController.text);
+                context.read<ChitFundCubit>().sendInvite(
+                  chit.id,
+                  phoneController.text,
+                );
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: KhaataTheme.primaryBlue),
-            child: const Text('Send Invite', style: TextStyle(color: Colors.white)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: KhaataTheme.primaryBlue,
+            ),
+            child: const Text(
+              'Send Invite',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -94,17 +104,28 @@ class _ChitInvitesPageState extends State<ChitInvitesPage> {
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
-              context.read<ChitFundCubit>().respondToInvite(invite.id, 'declined');
+              context.read<ChitFundCubit>().respondToInvite(
+                invite.id,
+                'declined',
+              );
             },
             child: const Text('Decline', style: TextStyle(color: Colors.red)),
           ),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(ctx);
-              context.read<ChitFundCubit>().respondToInvite(invite.id, 'accepted');
+              context.read<ChitFundCubit>().respondToInvite(
+                invite.id,
+                'accepted',
+              );
             },
-            style: ElevatedButton.styleFrom(backgroundColor: KhaataTheme.primaryBlue),
-            child: const Text('Accept & Join', style: TextStyle(color: Colors.white)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: KhaataTheme.primaryBlue,
+            ),
+            child: const Text(
+              'Accept & Join',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -136,21 +157,26 @@ class _ChitInvitesPageState extends State<ChitInvitesPage> {
           if (state is ChitFundActionSuccess) {
             context.push(AppConstants.chitSuccess);
           } else if (state is ChitFundError) {
-             ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${state.message}'), backgroundColor: Colors.red));
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Error: ${state.message}'),
+                backgroundColor: Colors.red,
+              ),
+            );
           }
         },
         builder: (context, state) {
           if (state is ChitFundLoading || state is ChitFundInitial) {
-             return const Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
-          
+
           List<ChitInviteModel> invites = [];
           List<ChitFundModel> owned = [];
           List<Map<String, dynamic>> joined = [];
           if (state is ChitFundInvitesLoaded) {
-             invites = state.pendingInvites;
-             owned = state.ownedChits;
-             joined = state.mySubscriptions;
+            invites = state.pendingInvites;
+            owned = state.ownedChits;
+            joined = state.mySubscriptions;
           }
 
           return Column(
@@ -170,8 +196,8 @@ class _ChitInvitesPageState extends State<ChitInvitesPage> {
                 child: _selectedIndex == 0
                     ? _buildInvitesList(invites)
                     : _selectedIndex == 1
-                        ? _buildJoinedList(joined)
-                        : _buildOwnedList(owned),
+                    ? _buildJoinedList(joined)
+                    : _buildOwnedList(owned),
               ),
             ],
           );
@@ -211,7 +237,12 @@ class _ChitInvitesPageState extends State<ChitInvitesPage> {
 
   Widget _buildInvitesList(List<ChitInviteModel> invites) {
     if (invites.isEmpty) {
-       return const Center(child: Text("No pending invites.", style: TextStyle(color: KhaataTheme.textGrey)));
+      return const Center(
+        child: Text(
+          "No pending invites.",
+          style: TextStyle(color: KhaataTheme.textGrey),
+        ),
+      );
     }
     return ListView.builder(
       padding: EdgeInsets.all(16.w),
@@ -222,9 +253,12 @@ class _ChitInvitesPageState extends State<ChitInvitesPage> {
         return _buildCard(
           title: chit.name,
           badge: 'From: ${invite.senderName}',
-          detail1Label: 'Total Value', detail1Val: currencyFormatter.format(chit.totalValue),
-          detail2Label: 'Monthly', detail2Val: currencyFormatter.format(chit.monthlySubscription),
-          detail3Label: 'Duration', detail3Val: '${chit.totalMonths} Mo',
+          detail1Label: 'Total Value',
+          detail1Val: currencyFormatter.format(chit.totalValue),
+          detail2Label: 'Monthly',
+          detail2Val: currencyFormatter.format(chit.monthlySubscription),
+          detail3Label: 'Duration',
+          detail3Val: '${chit.totalMonths} Mo',
           actionLabel: 'Review Invitation',
           onAction: () => _showAcceptDialog(invite),
         );
@@ -234,7 +268,12 @@ class _ChitInvitesPageState extends State<ChitInvitesPage> {
 
   Widget _buildJoinedList(List<Map<String, dynamic>> joined) {
     if (joined.isEmpty) {
-       return const Center(child: Text("You haven't joined any groups yet.", style: TextStyle(color: KhaataTheme.textGrey)));
+      return const Center(
+        child: Text(
+          "You haven't joined any groups yet.",
+          style: TextStyle(color: KhaataTheme.textGrey),
+        ),
+      );
     }
     return ListView.builder(
       padding: EdgeInsets.all(16.w),
@@ -244,16 +283,20 @@ class _ChitInvitesPageState extends State<ChitInvitesPage> {
         final String chitName = sub['chitName'] ?? 'Unknown Group';
         final num totalValue = sub['totalValue'] ?? 0;
         final num monthly = sub['dueAmount'] ?? 0;
-        
+
         return _buildCard(
           title: chitName,
           badge: 'Active Member',
-          detail1Label: 'Total Value', detail1Val: currencyFormatter.format(totalValue),
-          detail2Label: 'Monthly Due', detail2Val: currencyFormatter.format(monthly),
-          detail3Label: 'Duration', detail3Val: '${sub['completedMonths'] ?? 0}/${sub['totalMonths'] ?? 1} Mo',
+          detail1Label: 'Total Value',
+          detail1Val: currencyFormatter.format(totalValue),
+          detail2Label: 'Monthly Due',
+          detail2Val: currencyFormatter.format(monthly),
+          detail3Label: 'Duration',
+          detail3Val:
+              '${sub['completedMonths'] ?? 0}/${sub['totalMonths'] ?? 1} Mo',
           actionLabel: 'Enter Bidding / Dashboard',
           onAction: () {
-             context.push(AppConstants.chitAdminDashboard, extra: sub['chitId']);
+            context.push(AppConstants.chitAdminDashboard, extra: sub['chitId']);
           },
         );
       },
@@ -262,7 +305,12 @@ class _ChitInvitesPageState extends State<ChitInvitesPage> {
 
   Widget _buildOwnedList(List<ChitFundModel> owned) {
     if (owned.isEmpty) {
-       return const Center(child: Text("You haven't created any forming groups.", style: TextStyle(color: KhaataTheme.textGrey)));
+      return const Center(
+        child: Text(
+          "You haven't created any forming groups.",
+          style: TextStyle(color: KhaataTheme.textGrey),
+        ),
+      );
     }
     return ListView.builder(
       padding: EdgeInsets.all(16.w),
@@ -273,41 +321,54 @@ class _ChitInvitesPageState extends State<ChitInvitesPage> {
         return _buildCard(
           title: chit.name,
           badge: isFull ? 'Active/Full' : 'Forming',
-          detail1Label: 'Total Value', detail1Val: currencyFormatter.format(chit.totalValue),
-          detail2Label: 'Members', detail2Val: '${chit.currentSubscribersCount}/${chit.totalMonths}',
-          detail3Label: 'Monthly', detail3Val: currencyFormatter.format(chit.monthlySubscription),
+          detail1Label: 'Total Value',
+          detail1Val: currencyFormatter.format(chit.totalValue),
+          detail2Label: 'Members',
+          detail2Val: '${chit.currentSubscribersCount}/${chit.totalMonths}',
+          detail3Label: 'Monthly',
+          detail3Val: currencyFormatter.format(chit.monthlySubscription),
           actionLabel: isFull ? 'Manage Group' : 'Invite Members',
           onAction: () {
-             if (isFull) {
-                 context.push(AppConstants.chitAdminDashboard, extra: chit.id);
-             } else {
-                 _showInviteDialog(chit);
-             }
-          },
-          onDelete: !isFull ? () async {
-            final auth = await BiometricAuthService.authenticate();
-            if (auth && context.mounted) {
-              context.read<ChitFundCubit>().deleteChitFund(chit.id);
+            if (isFull) {
+              context.push(AppConstants.chitAdminDashboard, extra: chit.id);
+            } else {
+              _showInviteDialog(chit);
             }
-          } : null,
+          },
+          onDelete: !isFull
+              ? () async {
+                  final auth = await BiometricAuthService.authenticate();
+                  if (auth && context.mounted) {
+                    context.read<ChitFundCubit>().deleteChitFund(chit.id);
+                  }
+                }
+              : null,
           secondaryActionLabel: !isFull ? 'Dashboard' : null,
-          onSecondaryAction: !isFull ? () => context.push(AppConstants.chitAdminDashboard, extra: chit.id) : null,
+          onSecondaryAction: !isFull
+              ? () => context.push(
+                  AppConstants.chitAdminDashboard,
+                  extra: chit.id,
+                )
+              : null,
         );
       },
     );
   }
 
   Widget _buildCard({
-     required String title,
-     required String badge,
-     required String detail1Label, required String detail1Val,
-     required String detail2Label, required String detail2Val,
-     required String detail3Label, required String detail3Val,
-     required String actionLabel,
-     required VoidCallback onAction,
-     String? secondaryActionLabel,
-     VoidCallback? onSecondaryAction,
-     VoidCallback? onDelete,
+    required String title,
+    required String badge,
+    required String detail1Label,
+    required String detail1Val,
+    required String detail2Label,
+    required String detail2Val,
+    required String detail3Label,
+    required String detail3Val,
+    required String actionLabel,
+    required VoidCallback onAction,
+    String? secondaryActionLabel,
+    VoidCallback? onSecondaryAction,
+    VoidCallback? onDelete,
   }) {
     return Container(
       margin: EdgeInsets.only(bottom: 16.h),
@@ -318,7 +379,7 @@ class _ChitInvitesPageState extends State<ChitInvitesPage> {
         border: Border.all(color: KhaataTheme.borderGrey),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -346,9 +407,12 @@ class _ChitInvitesPageState extends State<ChitInvitesPage> {
               Row(
                 children: [
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 10.w,
+                      vertical: 4.h,
+                    ),
                     decoration: BoxDecoration(
-                      color: KhaataTheme.primaryBlue.withOpacity(0.1),
+                      color: KhaataTheme.primaryBlue.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12.r),
                     ),
                     child: Text(
@@ -362,15 +426,21 @@ class _ChitInvitesPageState extends State<ChitInvitesPage> {
                   ),
                   if (onDelete != null)
                     PopupMenuButton<String>(
-                      icon: const Icon(Icons.more_vert, color: KhaataTheme.textGrey),
+                      icon: const Icon(
+                        Icons.more_vert,
+                        color: KhaataTheme.textGrey,
+                      ),
                       onSelected: (val) {
                         if (val == 'delete') onDelete();
                       },
                       itemBuilder: (c) => [
                         const PopupMenuItem(
                           value: 'delete',
-                          child: Text('Delete Group', style: TextStyle(color: Colors.red)),
-                        )
+                          child: Text(
+                            'Delete Group',
+                            style: TextStyle(color: Colors.red),
+                          ),
+                        ),
                       ],
                     ),
                 ],
@@ -395,7 +465,10 @@ class _ChitInvitesPageState extends State<ChitInvitesPage> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: KhaataTheme.primaryBlue,
                     foregroundColor: Colors.white,
-                    padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 12.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 4.w,
+                      vertical: 12.h,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8.r),
                     ),
@@ -420,8 +493,11 @@ class _ChitInvitesPageState extends State<ChitInvitesPage> {
                     onPressed: onSecondaryAction,
                     style: OutlinedButton.styleFrom(
                       foregroundColor: KhaataTheme.primaryBlue,
-                      side: BorderSide(color: KhaataTheme.primaryBlue),
-                      padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 12.h),
+                      side: const BorderSide(color: KhaataTheme.primaryBlue),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 4.w,
+                        vertical: 12.h,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8.r),
                       ),
@@ -439,9 +515,9 @@ class _ChitInvitesPageState extends State<ChitInvitesPage> {
                     ),
                   ),
                 ),
-              ]
+              ],
             ],
-          )
+          ),
         ],
       ),
     );

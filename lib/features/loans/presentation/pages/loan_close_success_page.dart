@@ -42,10 +42,7 @@ class LoanCloseSuccessPage extends StatelessWidget {
               SizedBox(height: 16.h),
               Text(
                 'The loan has been successfully closed between the relevant users. All dues are settled.',
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  color: Colors.white70,
-                ),
+                style: TextStyle(fontSize: 16.sp, color: Colors.white70),
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: 48.h),

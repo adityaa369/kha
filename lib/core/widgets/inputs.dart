@@ -68,13 +68,12 @@ class KhaataTextField extends StatelessWidget {
 
 class PanInputFormatter extends TextInputFormatter {
   @override
-  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
     String text = newValue.text.toUpperCase();
     if (text.length > 10) return oldValue;
-    return TextEditingValue(
-      text: text,
-      selection: newValue.selection,
-    );
+    return TextEditingValue(text: text, selection: newValue.selection);
   }
 }
-

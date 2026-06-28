@@ -1,3 +1,4 @@
+import '../../../../core/utils/error_handler.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
@@ -49,7 +50,8 @@ class _PanDetailsPageState extends State<PanDetailsPage> {
     );
     if (picked != null && mounted) {
       setState(() {
-        _dobController.text = '${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}';
+        _dobController.text =
+            '${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}';
       });
     }
   }
@@ -71,9 +73,9 @@ class _PanDetailsPageState extends State<PanDetailsPage> {
           if (state is PanDetailsSaved || state is AuthenticatedFull) {
             context.go(AppConstants.processing);
           } else if (state is AuthError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message)),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(state.message)));
           }
         },
         child: SingleChildScrollView(
@@ -86,7 +88,10 @@ class _PanDetailsPageState extends State<PanDetailsPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    Text('Step 2 of 3', style: Theme.of(context).textTheme.bodyMedium),
+                    Text(
+                      'Step 2 of 3',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
                   ],
                 ),
                 SizedBox(height: 20.h),
@@ -96,7 +101,7 @@ class _PanDetailsPageState extends State<PanDetailsPage> {
                     width: 80.w,
                     height: 80.h,
                     decoration: BoxDecoration(
-                      color: KhaataTheme.accentGreen.withOpacity(0.1),
+                      color: KhaataTheme.accentGreen.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20.r),
                     ),
                     child: Icon(
@@ -142,7 +147,8 @@ class _PanDetailsPageState extends State<PanDetailsPage> {
                   keyboardType: TextInputType.number,
                   validator: (value) {
                     if (value!.isEmpty) return 'Aadhar is required';
-                    if (value.length != 12 || !RegExp(r'^[0-9]+$').hasMatch(value)) {
+                    if (value.length != 12 ||
+                        !RegExp(r'^[0-9]+$').hasMatch(value)) {
                       return 'Aadhar must be 12 digits';
                     }
                     return null;
@@ -156,9 +162,14 @@ class _PanDetailsPageState extends State<PanDetailsPage> {
                       label: 'Date of Birth',
                       hint: 'DD/MM/YYYY',
                       controller: _dobController,
-                      suffix: Icon(Icons.calendar_today, color: KhaataTheme.primaryBlue, size: 20.sp),
+                      suffix: Icon(
+                        Icons.calendar_today,
+                        color: KhaataTheme.primaryBlue,
+                        size: 20.sp,
+                      ),
                       readOnly: true,
-                      validator: (value) => value!.isEmpty ? 'Date of birth is required' : null,
+                      validator: (value) =>
+                          value!.isEmpty ? 'Date of birth is required' : null,
                     ),
                   ),
                 ),
@@ -198,7 +209,10 @@ class _PanDetailsPageState extends State<PanDetailsPage> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.info_outline, color: KhaataTheme.primaryBlue),
+                      const Icon(
+                        Icons.info_outline,
+                        color: KhaataTheme.primaryBlue,
+                      ),
                       SizedBox(width: 12.w),
                       Expanded(
                         child: Text(
@@ -274,7 +288,9 @@ class _GenderButton extends StatelessWidget {
             style: TextStyle(
               fontSize: 14.sp,
               fontWeight: FontWeight.w600,
-              color: isSelected ? KhaataTheme.primaryBlue : KhaataTheme.textGrey,
+              color: isSelected
+                  ? KhaataTheme.primaryBlue
+                  : KhaataTheme.textGrey,
             ),
           ),
         ),
@@ -282,3 +298,4 @@ class _GenderButton extends StatelessWidget {
     );
   }
 }
+

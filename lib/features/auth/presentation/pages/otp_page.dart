@@ -1,3 +1,4 @@
+import '../../../../core/utils/error_handler.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
@@ -22,7 +23,6 @@ class _OtpPageState extends State<OtpPage> {
   StreamController<ErrorAnimationType>? _errorController;
   int _resendTimer = 30;
   bool _canResend = false;
-  final bool _isLoading = false;
   bool _hasError = false;
   String _currentOtp = '';
 
@@ -97,13 +97,15 @@ class _OtpPageState extends State<OtpPage> {
                 height: 80.h,
                 decoration: BoxDecoration(
                   color: _hasError
-                      ? KhaataTheme.dangerRed.withOpacity(0.1)
-                      : KhaataTheme.accentGreen.withOpacity(0.1),
+                      ? KhaataTheme.dangerRed.withValues(alpha: 0.1)
+                      : KhaataTheme.accentGreen.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20.r),
                 ),
                 child: Icon(
                   _hasError ? Icons.error_outline : Icons.lock_outline,
-                  color: _hasError ? KhaataTheme.dangerRed : KhaataTheme.accentGreen,
+                  color: _hasError
+                      ? KhaataTheme.dangerRed
+                      : KhaataTheme.accentGreen,
                   size: 40.sp,
                 ),
               ),
@@ -111,10 +113,7 @@ class _OtpPageState extends State<OtpPage> {
               SizedBox(height: 32.h),
 
               // Title
-              Text(
-                'Verify OTP',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
+              Text('Verify OTP', style: Theme.of(context).textTheme.titleLarge),
               SizedBox(height: 8.h),
 
               // Subtitle with phone number
@@ -159,7 +158,9 @@ class _OtpPageState extends State<OtpPage> {
                   activeFillColor: Colors.white,
                   inactiveFillColor: Colors.grey[100],
                   selectedFillColor: Colors.blue[50],
-                  activeColor: _hasError ? KhaataTheme.dangerRed : KhaataTheme.primaryBlue,
+                  activeColor: _hasError
+                      ? KhaataTheme.dangerRed
+                      : KhaataTheme.primaryBlue,
                   inactiveColor: Colors.grey[300],
                   selectedColor: KhaataTheme.primaryBlue,
                   errorBorderColor: KhaataTheme.dangerRed,
@@ -208,34 +209,37 @@ class _OtpPageState extends State<OtpPage> {
               // Resend Section
               _canResend
                   ? TextButton(
-                onPressed: () {
-                  _otpController.clear();
-                  context.read<AuthCubit>().sendOtp(widget.phone);
-                  _startResendTimer();
-                },
-                child: Text(
-                  'Resend OTP',
-                  style: TextStyle(
-                    color: KhaataTheme.primaryBlue,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14.sp,
-                  ),
-                ),
-              )
+                      onPressed: () {
+                        _otpController.clear();
+                        context.read<AuthCubit>().sendOtp(widget.phone);
+                        _startResendTimer();
+                      },
+                      child: Text(
+                        'Resend OTP',
+                        style: TextStyle(
+                          color: KhaataTheme.primaryBlue,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14.sp,
+                        ),
+                      ),
+                    )
                   : Text(
-                'Resend OTP in $_resendTimer seconds',
-                style: TextStyle(
-                  color: KhaataTheme.textGrey,
-                  fontSize: 14.sp,
-                ),
-              ),
+                      'Resend OTP in $_resendTimer seconds',
+                      style: TextStyle(
+                        color: KhaataTheme.textGrey,
+                        fontSize: 14.sp,
+                      ),
+                    ),
 
               SizedBox(height: 40.h),
 
               // Verify Button
               BlocConsumer<AuthCubit, AuthState>(
                 listener: (context, state) {
-                  if (state is AuthenticatedFull || state is AuthenticatedUnverified) {
+                  if (state is PasswordResetRequired) {
+                    context.go('/reset-password');
+                  } else if (state is AuthenticatedFull ||
+                      state is AuthenticatedUnverified) {
                     context.go(AppConstants.home);
                   } else if (state is OtpVerified) {
                     context.push(AppConstants.personalDetails);
@@ -244,9 +248,9 @@ class _OtpPageState extends State<OtpPage> {
                       _hasError = true;
                       _errorController?.add(ErrorAnimationType.shake);
                     });
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(state.message)),
-                    );
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text(state.message)));
                   }
                 },
                 builder: (context, state) {
@@ -281,14 +285,20 @@ class _OtpPageState extends State<OtpPage> {
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
                           SizedBox(height: 16.h),
-                          _buildHelpItem('1. Check your mobile number',
-                              'Ensure +91 98765 43210 is correct'),
+                          _buildHelpItem(
+                            '1. Check your mobile number',
+                            'Ensure +91 98765 43210 is correct',
+                          ),
                           SizedBox(height: 12.h),
-                          _buildHelpItem('2. Check SMS inbox/spam',
-                              'The OTP might be in your spam folder'),
+                          _buildHelpItem(
+                            '2. Check SMS inbox/spam',
+                            'The OTP might be in your spam folder',
+                          ),
                           SizedBox(height: 12.h),
-                          _buildHelpItem('3. Wait before resending',
-                              'You can request a new OTP after 30 seconds'),
+                          _buildHelpItem(
+                            '3. Wait before resending',
+                            'You can request a new OTP after 30 seconds',
+                          ),
                           SizedBox(height: 24.h),
                           SizedBox(
                             width: double.infinity,
@@ -326,19 +336,14 @@ class _OtpPageState extends State<OtpPage> {
       children: [
         Text(
           title,
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 14.sp,
-          ),
+          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14.sp),
         ),
         Text(
           subtitle,
-          style: TextStyle(
-            color: KhaataTheme.textGrey,
-            fontSize: 12.sp,
-          ),
+          style: TextStyle(color: KhaataTheme.textGrey, fontSize: 12.sp),
         ),
       ],
     );
   }
 }
+

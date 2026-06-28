@@ -32,7 +32,9 @@ class ChitFundRepository {
   Future<List<ChitFundModel>> getVacantChits() async {
     final response = await _apiClient.get('/chits/vacant');
     final data = response.data;
-    final List list = (data is Map && data['chits'] is List) ? data['chits'] : [];
+    final List list = (data is Map && data['chits'] is List)
+        ? data['chits']
+        : [];
     try {
       await SecureStorage.saveCachedVacantChits(jsonEncode(list));
     } catch (_) {}
@@ -85,7 +87,9 @@ class ChitFundRepository {
   Future<List<Map<String, dynamic>>> getMyChits() async {
     final response = await _apiClient.get('/chits/my');
     final data = response.data;
-    final List list = (data is Map && data['myChits'] is List) ? data['myChits'] : [];
+    final List list = (data is Map && data['myChits'] is List)
+        ? data['myChits']
+        : [];
     try {
       await SecureStorage.saveCachedMyChits(jsonEncode(list));
     } catch (_) {}
@@ -133,23 +137,21 @@ class ChitFundRepository {
   }) async {
     final response = await _apiClient.post(
       '/chits/$chitId/finalize-auction',
-      data: {
-        'winnerUserId': winnerUserId,
-        'bidDiscount': bidDiscount,
-      },
+      data: {'winnerUserId': winnerUserId, 'bidDiscount': bidDiscount},
     );
     final data = response.data;
     return (data is Map) ? Map<String, dynamic>.from(data) : {};
   }
 
   // Open Auction for a month
-  Future<bool> openAuctionMonth(String chitId, int monthNumber, double baseAmount) async {
+  Future<bool> openAuctionMonth(
+    String chitId,
+    int monthNumber,
+    double baseAmount,
+  ) async {
     await _apiClient.post(
       '/chits/$chitId/auction/open',
-      data: {
-        'monthNumber': monthNumber,
-        'baseAmount': baseAmount,
-      },
+      data: {'monthNumber': monthNumber, 'baseAmount': baseAmount},
     );
     return true;
   }
@@ -158,29 +160,34 @@ class ChitFundRepository {
   Future<bool> submitBid(String chitId, double bidDiscount) async {
     await _apiClient.post(
       '/chits/$chitId/auction/bid',
-      data: {
-        'bidDiscount': bidDiscount,
-      },
+      data: {'bidDiscount': bidDiscount},
     );
     return true;
   }
 
   // Get Bids for Month
-  Future<List<Map<String, dynamic>>> getAuctionBids(String chitId, int monthNumber) async {
-    final response = await _apiClient.get('/chits/$chitId/auction/$monthNumber/bids');
+  Future<List<Map<String, dynamic>>> getAuctionBids(
+    String chitId,
+    int monthNumber,
+  ) async {
+    final response = await _apiClient.get(
+      '/chits/$chitId/auction/$monthNumber/bids',
+    );
     final data = response.data;
     final List list = (data is Map && data['bids'] is List) ? data['bids'] : [];
     return List<Map<String, dynamic>>.from(list);
   }
 
   // Verify Month Payment
-  Future<bool> verifyMonthPayment(String chitId, int monthNumber, String subscriberId, bool isPaid) async {
+  Future<bool> verifyMonthPayment(
+    String chitId,
+    int monthNumber,
+    String subscriberId,
+    bool isPaid,
+  ) async {
     await _apiClient.post(
       '/chits/$chitId/auction/$monthNumber/verify-payment',
-      data: {
-        'subscriberId': subscriberId,
-        'isPaid': isPaid,
-      },
+      data: {'subscriberId': subscriberId, 'isPaid': isPaid},
     );
     return true;
   }

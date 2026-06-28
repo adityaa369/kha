@@ -65,6 +65,10 @@ class AuthenticatedFull extends AuthState {
   List<Object?> get props => [user];
 }
 
+class PasswordResetRequired extends AuthState {
+  const PasswordResetRequired();
+}
+
 class RegistrationOtpSent extends AuthState {
   final String phone;
   const RegistrationOtpSent({required this.phone});

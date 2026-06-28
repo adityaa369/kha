@@ -59,30 +59,40 @@ class InsightsPage extends StatelessWidget {
                       String totalAccounts = '0';
                       String age = '0 days';
                       String limit = '₹ 10,000'; // Default base limit
-                      
+
                       if (loanState is LoansLoaded) {
                         // Calculate typical monthly payments
                         double monthlyPayment = 0;
                         for (var loan in loanState.myLoans) {
-                          if (loan.status == 'active' && loan.durationMonths != null && loan.durationMonths! > 0) {
-                            monthlyPayment += (loan.amount / loan.durationMonths!);
+                          if (loan.status == 'active' &&
+                              loan.durationMonths != null &&
+                              loan.durationMonths! > 0) {
+                            monthlyPayment +=
+                                (loan.amount / loan.durationMonths!);
                           }
                         }
-                        startPayment = '₹ ${(monthlyPayment).toStringAsFixed(0)}';
-                        
+                        startPayment =
+                            '₹ ${(monthlyPayment).toStringAsFixed(0)}';
+
                         // Total Accounts
-                        totalAccounts = (loanState.myLoans.length + loanState.givenLoans.length).toString();
-                        
+                        totalAccounts =
+                            (loanState.myLoans.length +
+                                    loanState.givenLoans.length)
+                                .toString();
+
                         final authState = context.read<AuthCubit>().state;
-                        if (authState is AuthenticatedFull && authState.user.createdAt != null) {
-                           age = '${DateTime.now().difference(authState.user.createdAt!).inDays} days';
+                        if (authState is AuthenticatedFull &&
+                            authState.user.createdAt != null) {
+                          age =
+                              '${DateTime.now().difference(authState.user.createdAt!).inDays} days';
                         } else {
-                           age = '0 days';
+                          age = '0 days';
                         }
-                        
+
                         // Dynamic limit based on accounts
                         if (loanState.myLoans.isNotEmpty) {
-                           limit = '₹ 50,000'; // Increase limit if user has history
+                          limit =
+                              '₹ 50,000'; // Increase limit if user has history
                         }
                       }
 
@@ -106,8 +116,8 @@ class InsightsPage extends StatelessWidget {
                           _FactorCard(
                             title: 'Limit',
                             subtitle: 'High Impact',
-                             value: limit,
-                             detailLabel: 'Credit limit available',
+                            value: limit,
+                            detailLabel: 'Credit limit available',
                             valueColor: KhaataTheme.textGrey,
                             isGood: true,
                             icon: Icons.show_chart,
@@ -132,7 +142,7 @@ class InsightsPage extends StatelessWidget {
                           ),
                         ],
                       );
-                    }
+                    },
                   ),
                 ],
               ),
@@ -199,23 +209,17 @@ class _FactorCard extends StatelessWidget {
           SizedBox(height: 12.h),
           Text(
             title,
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: 14.sp,
-            ),
+            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14.sp),
           ),
           Text(
             subtitle,
-            style: TextStyle(
-              fontSize: 11.sp,
-              color: Colors.grey,
-            ),
+            style: TextStyle(fontSize: 11.sp, color: Colors.grey),
           ),
           const Spacer(),
           Container(
             padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 8.w),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.6),
+              color: Colors.white.withValues(alpha: 0.6),
               borderRadius: BorderRadius.circular(6.r),
             ),
             child: Row(
@@ -256,4 +260,4 @@ class _FactorCard extends StatelessWidget {
       ),
     );
   }
-}
+}

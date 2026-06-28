@@ -16,10 +16,7 @@ class LoansLoaded extends LoanState {
   final List<LoanModel> myLoans;
   final List<LoanModel> givenLoans;
 
-  const LoansLoaded({
-    required this.myLoans,
-    required this.givenLoans,
-  });
+  const LoansLoaded({required this.myLoans, required this.givenLoans});
 
   @override
   List<Object?> get props => [myLoans, givenLoans];

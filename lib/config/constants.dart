@@ -27,12 +27,11 @@ class AppConstants {
   static const String loanSuccess = '/loan-success';
   static const String loanCloseSuccess = '/loan-close-success';
   static const String loanDetails = '/loan-details';
+  static const String lenderLoanDetails = '/lender-loan-details';
   static const String chitSuccess = '/chit-success';
   static const String chitAdminDashboard = '/chit-admin-dashboard';
 
   // API Configurations
-  // Use your computer's local IP for physical devices
-  static const String _localIp = '192.168.1.58'; 
   static const String _prodUrl = 'https://khataa-backend.onrender.com';
 
   // MSG91 Configurations

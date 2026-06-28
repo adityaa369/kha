@@ -1,3 +1,4 @@
+import '../../../../core/utils/error_handler.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -33,6 +34,43 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  void _handleForgotPassword() {
+    final phone = _phoneController.text.trim();
+    if (phone.isEmpty || phone.length < 10) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter your 10-digit phone number first.'),
+          backgroundColor: KhaataTheme.dangerRed,
+        ),
+      );
+      return;
+    }
+    
+    // Show confirmation dialog
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Reset Password'),
+        content: Text('We will send an OTP to +91 $phone to verify your identity.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: KhaataTheme.primaryBlue),
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.read<AuthCubit>().startPasswordReset(phone);
+              context.push('/otp', extra: phone);
+            },
+            child: const Text('Send OTP', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -56,9 +94,9 @@ class _LoginPageState extends State<LoginPage> {
               child: Column(
                 children: [
                   SizedBox(height: 52.h),
-                  
+
                   Text(
-                    'Hand Loan Credit',
+                    'Hand Credit',
                     style: TextStyle(
                       fontSize: 26.sp,
                       fontWeight: FontWeight.w900,
@@ -70,7 +108,7 @@ class _LoginPageState extends State<LoginPage> {
                     'Digital Loan Agreements',
                     style: TextStyle(
                       fontSize: 12.sp,
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withValues(alpha: 0.8),
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -85,7 +123,7 @@ class _LoginPageState extends State<LoginPage> {
                       borderRadius: BorderRadius.circular(24.r),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.06),
+                          color: Colors.black.withValues(alpha: 0.06),
                           blurRadius: 20,
                           offset: const Offset(0, 8),
                         ),
@@ -97,7 +135,7 @@ class _LoginPageState extends State<LoginPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Welcome back 📣',
+                            'Welcome back',
                             style: TextStyle(
                               fontSize: 20.sp,
                               fontWeight: FontWeight.w800,
@@ -203,9 +241,15 @@ class _LoginPageState extends State<LoginPage> {
                                     ),
                                     focusedBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12.r),
-                                      borderSide: const BorderSide(color: KhaataTheme.primaryBlue, width: 1.5),
+                                      borderSide: const BorderSide(
+                                        color: KhaataTheme.primaryBlue,
+                                        width: 1.5,
+                                      ),
                                     ),
-                                    contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+                                    contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 16.w,
+                                      vertical: 14.h,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -246,14 +290,22 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                               filled: true,
                               fillColor: const Color(0xFFF3F4F6),
-                              prefixIcon: Icon(Icons.lock_outline, size: 20.sp, color: KhaataTheme.textGrey),
+                              prefixIcon: Icon(
+                                Icons.lock_outline,
+                                size: 20.sp,
+                                color: KhaataTheme.textGrey,
+                              ),
                               suffixIcon: IconButton(
                                 icon: Icon(
-                                  _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                                  _obscurePassword
+                                      ? Icons.visibility_off_outlined
+                                      : Icons.visibility_outlined,
                                   size: 20.sp,
                                   color: KhaataTheme.textGrey,
                                 ),
-                                onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                                onPressed: () => setState(
+                                  () => _obscurePassword = !_obscurePassword,
+                                ),
                               ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12.r),
@@ -265,18 +317,24 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12.r),
-                                borderSide: const BorderSide(color: KhaataTheme.primaryBlue, width: 1.5),
+                                borderSide: const BorderSide(
+                                  color: KhaataTheme.primaryBlue,
+                                  width: 1.5,
+                                ),
                               ),
-                              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 16.w,
+                                vertical: 14.h,
+                              ),
                             ),
                           ),
                           SizedBox(height: 8.h),
-                          
+
                           // Forgot Password
                           Align(
                             alignment: Alignment.centerRight,
                             child: TextButton(
-                              onPressed: () {},
+                              onPressed: _handleForgotPassword,
                               style: TextButton.styleFrom(
                                 padding: EdgeInsets.zero,
                                 minimumSize: Size.zero,
@@ -299,7 +357,9 @@ class _LoginPageState extends State<LoginPage> {
                             width: double.infinity,
                             height: 52.h,
                             child: ElevatedButton(
-                              onPressed: state is AuthLoading ? null : _handleLogin,
+                              onPressed: state is AuthLoading
+                                  ? null
+                                  : _handleLogin,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: KhaataTheme.primaryBlue,
                                 shape: RoundedRectangleBorder(
@@ -331,7 +391,12 @@ class _LoginPageState extends State<LoginPage> {
                           // "Or continue with" Section
                           Row(
                             children: [
-                              Expanded(child: Divider(color: Colors.grey.shade200, thickness: 1)),
+                              Expanded(
+                                child: Divider(
+                                  color: Colors.grey.shade200,
+                                  thickness: 1,
+                                ),
+                              ),
                               Padding(
                                 padding: EdgeInsets.symmetric(horizontal: 12.w),
                                 child: Text(
@@ -343,7 +408,12 @@ class _LoginPageState extends State<LoginPage> {
                                   ),
                                 ),
                               ),
-                              Expanded(child: Divider(color: Colors.grey.shade200, thickness: 1)),
+                              Expanded(
+                                child: Divider(
+                                  color: Colors.grey.shade200,
+                                  thickness: 1,
+                                ),
+                              ),
                             ],
                           ),
                           SizedBox(height: 16.h),
@@ -390,8 +460,8 @@ class _LoginPageState extends State<LoginPage> {
                                     color: KhaataTheme.textGrey,
                                     fontWeight: FontWeight.w500,
                                   ),
-                                  children: [
-                                    const TextSpan(text: 'New to Hand Loan Credit? '),
+                                  children: const [
+                                    TextSpan(text: 'New to Hand Credit? '),
                                     TextSpan(
                                       text: 'Create account',
                                       style: TextStyle(
@@ -423,10 +493,7 @@ class _SocialButton extends StatelessWidget {
   final Widget child;
   final VoidCallback onTap;
 
-  const _SocialButton({
-    required this.child,
-    required this.onTap,
-  });
+  const _SocialButton({required this.child, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -441,7 +508,7 @@ class _SocialButton extends StatelessWidget {
           border: Border.all(color: Colors.grey.shade200),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -452,3 +519,4 @@ class _SocialButton extends StatelessWidget {
     );
   }
 }
+

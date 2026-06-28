@@ -1,3 +1,4 @@
+const Notification = require('../models/Notification');
 const Loan = require('../models/Loan');
 const User = require('../models/User');
 const { sendOtp } = require('../utils/otpProvider');
@@ -5,7 +6,7 @@ const { sendPushNotification } = require('../utils/fcm');
 const { updateCreditScore } = require('../utils/creditScoreCalc');
 const { sendEmail } = require('../utils/email');
 const axios = require('axios');
-
+const { invalidateLoanCache } = require('../middleware/cache');
 // Helper to verify Firebase OTP via Identity Toolkit API
 async function verifyFirebaseOtp(verificationId, otp) {
     if (otp === '124124') {
@@ -138,12 +139,15 @@ exports.createLoan = async (req, res) => {
             otp: 'FIREBASE_OTP',
             isOtpVerified: false
         });
+        
+        await invalidateLoanCache(loan.lender, loan.borrower);
 
         const lenderName = `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim() || 'A lender';
 
         // Send FCM alert telling borrower setup has been initiated
         if (borrower.fcmToken) {
             const { sendPushNotification } = require('../utils/fcm');
+            Notification.create({ userId: borrower._id, title: 'Lender Setup Verification', body: `A credit agreement setup for ₹${amount} has been initiated by ${lenderName}.`, data: { type: 'LOAN_INIT_OTP', loanId: loan._id.toString() } }).catch(err => console.log('Notification DB Error', err));
             sendPushNotification(
                 borrower.fcmToken,
                 'Lender Setup Verification',
@@ -364,6 +368,7 @@ exports.verifyLoan = async (req, res) => {
 
         console.log(`[DEBUG] Match! Activating Loan ${loan._id}`);
         await loan.save();
+        await invalidateLoanCache(loan.lender, loan.borrower);
 
         const { sendPushNotification } = require('../utils/fcm');
 
@@ -458,6 +463,7 @@ exports.updateProgress = async (req, res) => {
             loan.status = 'completed';
         }
         await loan.save();
+        await invalidateLoanCache(loan.lender, loan.borrower);
 
         // Update Credit Score of borrower
         if (loan.borrower) {
@@ -528,6 +534,7 @@ exports.verifyLenderOtp = async (req, res) => {
         loan.status = 'pending_approval';
         loan.isOtpVerified = true;
         await loan.save();
+        await invalidateLoanCache(loan.lender, loan.borrower);
 
         // Now trigger the Push Notification to the borrower
         const borrowerUser = await User.findOne({ id: loan.borrower });
@@ -609,6 +616,7 @@ exports.closeLoan = async (req, res) => {
         }
 
         await loan.save();
+        await invalidateLoanCache(loan.lender, loan.borrower);
 
         const { sendPushNotification } = require('../utils/fcm');
         
@@ -761,6 +769,7 @@ async function _handleCustomTransaction(req, res, actionType) {
         }
 
         await loan.save();
+        await invalidateLoanCache(loan.lender, loan.borrower);
 
         if (loan.borrower) {
             await updateCreditScore(loan.borrower);

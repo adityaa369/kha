@@ -1,16 +1,72 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../config/theme.dart';
-import '../../../../config/constants.dart';
-import '../../../../core/blocs/loans/loan_cubit.dart';
-import '../../../../core/blocs/loans/loan_state.dart';
-import '../../../../data/models/loan_model.dart';
 import 'package:intl/intl.dart';
+import '../../../../config/theme.dart';
+import '../../../../core/network/api_client.dart';
+import '../../../../data/models/notification_model.dart';
+import '../../../../core/utils/error_handler.dart';
 
-class NotificationsPage extends StatelessWidget {
+class NotificationsPage extends StatefulWidget {
   const NotificationsPage({super.key});
+
+  @override
+  State<NotificationsPage> createState() => _NotificationsPageState();
+}
+
+class _NotificationsPageState extends State<NotificationsPage> {
+  final ApiClient _api = ApiClient();
+  List<NotificationModel> _notifications = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchNotifications();
+  }
+
+  Future<void> _fetchNotifications() async {
+    try {
+      final res = await _api.get('/notifications');
+      if (res.data != null && res.data is List) {
+        setState(() {
+          _notifications = (res.data as List)
+              .map((e) => NotificationModel.fromJson(e))
+              .toList();
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ErrorHandler.showError(context, e);
+      }
+    }
+  }
+
+  Future<void> _markAsRead(NotificationModel notif, int index) async {
+    if (notif.isRead) return;
+
+    try {
+      setState(() {
+        _notifications[index] = NotificationModel(
+          id: notif.id,
+          title: notif.title,
+          body: notif.body,
+          type: notif.type,
+          isRead: true,
+          createdAt: notif.createdAt,
+          data: notif.data,
+        );
+      });
+      await _api.put('/notifications/${notif.id}/read', data: {});
+    } catch (e) {
+      // Revert if failed
+      setState(() {
+        _notifications[index] = notif;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,165 +79,169 @@ class NotificationsPage extends StatelessWidget {
         backgroundColor: Colors.white,
         foregroundColor: KhaataTheme.textDark,
       ),
-      body: BlocBuilder<LoanCubit, LoanState>(
-        builder: (context, state) {
-          if (state is LoanLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          List<LoanModel> pendingLoans = [];
-          if (state is LoansLoaded) {
-            pendingLoans = state.myLoans
-                .where((l) => l.status == 'pending_approval' || l.status == 'pending_otp')
-                .toList();
-          }
-
-          if (pendingLoans.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.notifications_off_outlined,
-                      size: 64.sp, color: Colors.grey),
-                  SizedBox(height: 16.h),
-                  Text(
-                    'No new notifications',
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      color: KhaataTheme.textGrey,
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+              onRefresh: _fetchNotifications,
+              color: KhaataTheme.primaryBlue,
+              child: _notifications.isEmpty
+                  ? ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: [
+                        SizedBox(height: 100.h),
+                        Icon(
+                          Icons.notifications_off_outlined,
+                          size: 64.sp,
+                          color: Colors.grey,
+                        ),
+                        SizedBox(height: 16.h),
+                        Center(
+                          child: Text(
+                            'No new notifications',
+                            style: TextStyle(
+                              fontSize: 16.sp,
+                              color: KhaataTheme.textGrey,
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
+                  : ListView.builder(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: EdgeInsets.all(16.w),
+                      itemCount: _notifications.length,
+                      itemBuilder: (context, index) {
+                        final notif = _notifications[index];
+                        return _NotificationTile(
+                          notification: notif,
+                          onTap: () => _markAsRead(notif, index),
+                        );
+                      },
                     ),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          return ListView.builder(
-            padding: EdgeInsets.all(16.w),
-            itemCount: pendingLoans.length,
-            itemBuilder: (context, index) {
-              final loan = pendingLoans[index];
-              return _NotificationCard(loan: loan);
-            },
-          );
-        },
-      ),
+            ),
     );
   }
 }
 
-class _NotificationCard extends StatelessWidget {
-  final LoanModel loan;
+class _NotificationTile extends StatelessWidget {
+  final NotificationModel notification;
+  final VoidCallback onTap;
 
-  const _NotificationCard({required this.loan});
+  const _NotificationTile({required this.notification, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
+    final bool isRead = notification.isRead;
     return GestureDetector(
-      onTap: () {
-        if (loan.status == 'pending_otp') {
-            showDialog(
-              context: context,
-              builder: (context) => AlertDialog(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-                title: Text('Setup Passcode', style: TextStyle(color: KhaataTheme.textDark, fontWeight: FontWeight.bold)),
-                content: Text(
-                  'A lender is currently setting up a loan for you of ₹${NumberFormat('#,##0').format(loan.amount)}.\n\nProvide them this Secure OTP: ${loan.otp ?? "N/A"}\n\nIt is required to finalize the draft before you can digitally sign it.',
-                  style: TextStyle(fontSize: 14.sp, height: 1.5),
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: Text('OK', style: TextStyle(color: KhaataTheme.primaryBlue)),
-                  )
-                ],
-              ),
-            );
-        } else {
-            context.push(AppConstants.loanApproval, extra: loan);
-        }
-      },
+      onTap: onTap,
       child: Container(
         margin: EdgeInsets.only(bottom: 12.h),
+        padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12.r),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+          color: isRead ? Colors.white : const Color(0xFFF0F7FF), // slight blue tint if unread
+          borderRadius: BorderRadius.circular(16.r),
+          border: Border.all(
+            color: isRead ? Colors.grey.shade200 : KhaataTheme.primaryBlue.withOpacity(0.3),
+          ),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: EdgeInsets.all(10.w),
+              decoration: BoxDecoration(
+                color: isRead ? Colors.grey.shade100 : KhaataTheme.primaryBlue.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                _getIcon(notification.type),
+                color: isRead ? Colors.grey : KhaataTheme.primaryBlue,
+                size: 24.sp,
+              ),
+            ),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          notification.title,
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            fontWeight: isRead ? FontWeight.w600 : FontWeight.bold,
+                            color: KhaataTheme.textDark,
+                          ),
+                        ),
+                      ),
+                      if (!isRead)
+                        Container(
+                          width: 8.w,
+                          height: 8.w,
+                          decoration: const BoxDecoration(
+                            color: KhaataTheme.primaryBlue,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                    ],
+                  ),
+                  SizedBox(height: 6.h),
+                  Text(
+                    notification.body,
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      color: isRead ? Colors.grey.shade600 : Colors.black87,
+                      height: 1.4,
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  Text(
+                    _formatTime(notification.createdAt),
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: Colors.grey.shade500,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
-        child: Padding(
-          padding: EdgeInsets.all(16.w),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: EdgeInsets.all(10.w),
-                decoration: BoxDecoration(
-                  color: loan.status == 'pending_otp' ? KhaataTheme.warningYellow.withOpacity(0.1) : KhaataTheme.primaryBlue.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  loan.status == 'pending_otp' ? Icons.lock_outline : Icons.description_outlined,
-                  color: loan.status == 'pending_otp' ? KhaataTheme.warningYellow : KhaataTheme.primaryBlue,
-                  size: 24.sp,
-                ),
-              ),
-              SizedBox(width: 16.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      loan.status == 'pending_otp' ? 'Action Required: Setup OTP' : 'New Loan Agreement',
-                      style: TextStyle(
-                        fontSize: 15.sp,
-                        fontWeight: FontWeight.w700,
-                        color: KhaataTheme.textDark,
-                      ),
-                    ),
-                    SizedBox(height: 4.h),
-                    Text(
-                      loan.status == 'pending_otp'
-                          ? '${loan.lenderName} is drafting an agreement of ₹${NumberFormat('#,##0').format(loan.amount)}.'
-                          : '${loan.lenderName} has sent you a loan agreement of ₹${NumberFormat('#,##0').format(loan.amount)}.',
-                      style: TextStyle(
-                        fontSize: 13.sp,
-                        color: KhaataTheme.textGrey,
-                      ),
-                    ),
-                    SizedBox(height: 8.h),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          DateFormat('MMM dd, yyyy').format(loan.createdAt ?? DateTime.now()),
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            color: Colors.grey,
-                          ),
-                        ),
-                        Text(
-                          'Tap to review',
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.w600,
-                            color: KhaataTheme.primaryBlue,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
+  }
+
+  IconData _getIcon(String type) {
+    switch (type) {
+      case 'LOAN_INIT_OTP':
+      case 'OTP':
+        return Icons.security;
+      case 'PAYMENT':
+        return Icons.payment;
+      case 'CREDIT':
+        return Icons.account_balance_wallet;
+      case 'LOAN_APPROVED':
+        return Icons.check_circle_outline;
+      default:
+        return Icons.notifications_none;
+    }
+  }
+
+  String _formatTime(DateTime date) {
+    final now = DateTime.now();
+    final diff = now.difference(date);
+    if (diff.inDays == 0) {
+      if (diff.inHours == 0) {
+        return '${diff.inMinutes}m ago';
+      }
+      return '${diff.inHours}h ago';
+    }
+    if (diff.inDays < 7) {
+      return '${diff.inDays}d ago';
+    }
+    return DateFormat('MMM d, yyyy').format(date);
   }
 }

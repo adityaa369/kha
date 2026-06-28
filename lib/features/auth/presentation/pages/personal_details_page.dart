@@ -1,3 +1,4 @@
+import '../../../../core/utils/error_handler.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
@@ -57,9 +58,9 @@ class _PersonalDetailsPageState extends State<PersonalDetailsPage> {
           if (state is PersonalDetailsSaved || state is AuthenticatedFull) {
             context.go(AppConstants.panDetails);
           } else if (state is AuthError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message)),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(state.message)));
           }
         },
         child: SingleChildScrollView(
@@ -72,7 +73,10 @@ class _PersonalDetailsPageState extends State<PersonalDetailsPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    Text('Step 1 of 3', style: Theme.of(context).textTheme.bodyMedium),
+                    Text(
+                      'Step 1 of 3',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
                   ],
                 ),
                 SizedBox(height: 20.h),
@@ -81,7 +85,7 @@ class _PersonalDetailsPageState extends State<PersonalDetailsPage> {
                     width: 80.w,
                     height: 80.h,
                     decoration: BoxDecoration(
-                      color: KhaataTheme.accentGreen.withOpacity(0.1),
+                      color: KhaataTheme.accentGreen.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20.r),
                     ),
                     child: Icon(
@@ -106,14 +110,16 @@ class _PersonalDetailsPageState extends State<PersonalDetailsPage> {
                   label: 'First Name',
                   hint: 'Enter first name',
                   controller: _firstNameController,
-                  validator: (value) => value!.isEmpty ? 'First name is required' : null,
+                  validator: (value) =>
+                      value!.isEmpty ? 'First name is required' : null,
                 ),
                 SizedBox(height: 20.h),
                 KhaataTextField(
                   label: 'Last Name',
                   hint: 'Enter last name',
                   controller: _lastNameController,
-                  validator: (value) => value!.isEmpty ? 'Last name is required' : null,
+                  validator: (value) =>
+                      value!.isEmpty ? 'Last name is required' : null,
                 ),
                 SizedBox(height: 20.h),
                 KhaataTextField(
@@ -123,7 +129,9 @@ class _PersonalDetailsPageState extends State<PersonalDetailsPage> {
                   keyboardType: TextInputType.emailAddress,
                   validator: (value) {
                     if (value!.isEmpty) return 'Email is required';
-                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                    if (!RegExp(
+                      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                    ).hasMatch(value)) {
                       return 'Enter valid email';
                     }
                     return null;
@@ -138,7 +146,10 @@ class _PersonalDetailsPageState extends State<PersonalDetailsPage> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.info_outline, color: KhaataTheme.primaryBlue),
+                      const Icon(
+                        Icons.info_outline,
+                        color: KhaataTheme.primaryBlue,
+                      ),
                       SizedBox(width: 12.w),
                       Expanded(
                         child: Text(
@@ -180,3 +191,4 @@ class _PersonalDetailsPageState extends State<PersonalDetailsPage> {
     );
   }
 }
+

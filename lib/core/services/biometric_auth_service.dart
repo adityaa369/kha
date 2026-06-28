@@ -21,7 +21,7 @@ class BiometricAuthService {
       final canCheckBiometrics = await _auth.canCheckBiometrics;
       // If we can't check (e.g. no hardware), we allow access
       // If we can check but no fingerprints, authenticate() handles that
-      if (!canCheckBiometrics) return true; 
+      if (!canCheckBiometrics) return true;
 
       return await _auth.authenticate(
         localizedReason: 'Please authenticate to access Khaata',
@@ -31,7 +31,9 @@ class BiometricAuthService {
         ),
       );
     } on PlatformException catch (e) {
-      if (e.code == auth_error.notAvailable || e.code == auth_error.passcodeNotSet || e.code == auth_error.notEnrolled) {
+      if (e.code == auth_error.notAvailable ||
+          e.code == auth_error.passcodeNotSet ||
+          e.code == auth_error.notEnrolled) {
         // Biometrics/PIN not available on device -> Allow access
         return true;
       }

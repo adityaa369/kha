@@ -8,20 +8,22 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 }
 
 class NotificationService {
-  static final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
+  static final FirebaseMessaging _firebaseMessaging =
+      FirebaseMessaging.instance;
   static final FlutterLocalNotificationsPlugin _localNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
-      
-  static final StreamController<Map<String, dynamic>> onMessageStream = StreamController.broadcast();
+
+  static final StreamController<Map<String, dynamic>> onMessageStream =
+      StreamController.broadcast();
 
   static Future<void> initialize() async {
     // Request permission (Apple & Web)
-    NotificationSettings settings = await _firebaseMessaging.requestPermission(
+    await _firebaseMessaging.requestPermission(
       alert: true,
       badge: true,
       sound: true,
     );
-    
+
     // Background execution handling
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
@@ -30,18 +32,23 @@ class NotificationService {
         AndroidInitializationSettings('@mipmap/ic_launcher');
     const InitializationSettings initializationSettings =
         InitializationSettings(android: initializationSettingsAndroid);
-    
-    await _localNotificationsPlugin.initialize(settings: initializationSettings);
+
+    await _localNotificationsPlugin.initialize(
+      settings: initializationSettings,
+    );
 
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       log('Got a message whilst in the foreground!');
       log('Message data: ${message.data}');
-      
+
       onMessageStream.add(message.data);
 
       if (message.notification != null) {
         log('Message also contained a notification: ${message.notification}');
-        _showNotification(message.notification!.title, message.notification!.body);
+        _showNotification(
+          message.notification!.title,
+          message.notification!.body,
+        );
       }
     });
   }
@@ -49,15 +56,21 @@ class NotificationService {
   static Future<void> _showNotification(String? title, String? body) async {
     const AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(
-            'khatha_high_importance_channel', // id
-            'High Importance Notifications', // name
-            importance: Importance.max,
-            priority: Priority.high,
-            showWhen: false);
-    const NotificationDetails platformChannelSpecifics =
-        NotificationDetails(android: androidPlatformChannelSpecifics);
+          'khatha_high_importance_channel', // id
+          'High Importance Notifications', // name
+          importance: Importance.max,
+          priority: Priority.high,
+          showWhen: false,
+        );
+    const NotificationDetails platformChannelSpecifics = NotificationDetails(
+      android: androidPlatformChannelSpecifics,
+    );
     await _localNotificationsPlugin.show(
-        id: 0, title: title, body: body, notificationDetails: platformChannelSpecifics);
+      id: 0,
+      title: title,
+      body: body,
+      notificationDetails: platformChannelSpecifics,
+    );
   }
 
   static Future<String?> getToken() async {

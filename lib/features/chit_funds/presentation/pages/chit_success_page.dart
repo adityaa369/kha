@@ -42,10 +42,7 @@ class ChitSuccessPage extends StatelessWidget {
               SizedBox(height: 16.h),
               Text(
                 'Your Chit Fund action has been processed successfully. Notifications have been dispatched accordingly.',
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  color: Colors.white70,
-                ),
+                style: TextStyle(fontSize: 16.sp, color: Colors.white70),
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: 48.h),

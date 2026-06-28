@@ -147,7 +147,8 @@ class _CreateChitGroupPageState extends State<CreateChitGroupPage> {
             ),
           ),
           keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-          validator: (val) => val == null || val.isEmpty ? 'Required field' : null,
+          validator: (val) =>
+              val == null || val.isEmpty ? 'Required field' : null,
           onSaved: onSaved,
         ),
       ],

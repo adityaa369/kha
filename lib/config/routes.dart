@@ -9,6 +9,7 @@ import '../features/auth/presentation/pages/registration_otp_page.dart';
 import '../features/auth/presentation/pages/welcome_page.dart';
 import '../features/auth/presentation/pages/signup_page.dart';
 import '../features/auth/presentation/pages/processing_page.dart';
+import '../features/auth/presentation/pages/reset_password_page.dart';
 import '../features/home/presentation/pages/home_page.dart';
 import '../features/insights/presentation/pages/insights_page.dart';
 import '../features/loans/presentation/pages/loans_given_page.dart';
@@ -19,6 +20,7 @@ import '../features/loans/presentation/pages/loan_confirmation_page.dart';
 import '../features/loans/presentation/pages/loan_success_page.dart';
 import '../features/loans/presentation/pages/loan_close_success_page.dart';
 import '../features/loans/presentation/pages/loan_details_page.dart';
+import '../features/loans/presentation/pages/lender_loan_details_page.dart';
 import '../features/splash/presentation/pages/splash_page.dart';
 import '../features/auth/presentation/pages/auth_choice_page.dart';
 import '../features/chit_funds/presentation/pages/chit_invites_page.dart';
@@ -29,6 +31,8 @@ import '../features/chit_funds/presentation/pages/chit_success_page.dart';
 import '../features/chit_funds/presentation/pages/chit_group_admin_page.dart';
 import '../features/home/presentation/pages/notifications_page.dart';
 import '../features/loans/presentation/pages/loan_approval_page.dart';
+import '../features/chit_funds/presentation/pages/chit_live_auction_page.dart';
+import '../features/chit_funds/presentation/pages/chit_home_page.dart';
 import '../data/models/loan_model.dart';
 import 'constants.dart';
 
@@ -36,7 +40,7 @@ final router = GoRouter(
   initialLocation: AppConstants.splash,
   redirect: (context, state) {
     final authState = context.read<AuthCubit>().state;
-    
+
     final isAuthRoute = [
       AppConstants.login,
       '/signup',
@@ -55,12 +59,23 @@ final router = GoRouter(
 
     if (state.uri.path == AppConstants.splash) return null;
 
-    if (authState is Unauthenticated || authState is AuthInitial || authState is RegistrationSuccess) {
-      if (!isAuthRoute) return AppConstants.login;
+    if (authState is Unauthenticated ||
+        authState is AuthInitial ||
+        authState is RegistrationSuccess) {
+      if (!isAuthRoute && state.uri.path != '/reset-password') return AppConstants.login;
       return null;
     }
-    
-    if (authState is OtpVerified || authState is RegistrationOtpVerified || authState is AuthenticatedUnverified) {
+
+    if (authState is PasswordResetRequired) {
+      if (state.uri.path != '/reset-password') {
+        return '/reset-password';
+      }
+      return null;
+    }
+
+    if (authState is OtpVerified ||
+        authState is RegistrationOtpVerified ||
+        authState is AuthenticatedUnverified) {
       final user = authState is AuthenticatedUnverified ? authState.user : null;
       if (user != null && user.firstName.isNotEmpty) {
         if (state.uri.path != AppConstants.panDetails) {
@@ -73,7 +88,7 @@ final router = GoRouter(
       }
       return null;
     }
-    
+
     if (authState is PersonalDetailsSaved) {
       if (state.uri.path != AppConstants.panDetails) {
         return AppConstants.panDetails;
@@ -87,7 +102,7 @@ final router = GoRouter(
       }
       return null;
     }
-    
+
     if (authState is AuthenticatedFull) {
       if (isAuthRoute || isOnboardingRoute) return AppConstants.home;
       return null;
@@ -96,9 +111,18 @@ final router = GoRouter(
     return null;
   },
   routes: [
-    GoRoute(path: AppConstants.splash, builder: (context, state) => const SplashPage()),
-    GoRoute(path: AppConstants.welcome, builder: (context, state) => const WelcomePage()),
-    GoRoute(path: AppConstants.login, builder: (context, state) => const LoginPage()),
+    GoRoute(
+      path: AppConstants.splash,
+      builder: (context, state) => const SplashPage(),
+    ),
+    GoRoute(
+      path: AppConstants.welcome,
+      builder: (context, state) => const WelcomePage(),
+    ),
+    GoRoute(
+      path: AppConstants.login,
+      builder: (context, state) => const LoginPage(),
+    ),
     GoRoute(path: '/signup', builder: (context, state) => const SignupPage()),
     GoRoute(
       path: AppConstants.otp,
@@ -107,8 +131,14 @@ final router = GoRouter(
         return OtpPage(phone: phone);
       },
     ),
-    GoRoute(path: AppConstants.personalDetails, builder: (context, state) => const PersonalDetailsPage()),
-    GoRoute(path: AppConstants.panDetails, builder: (context, state) => const PanDetailsPage()),
+    GoRoute(
+      path: AppConstants.personalDetails,
+      builder: (context, state) => const PersonalDetailsPage(),
+    ),
+    GoRoute(
+      path: AppConstants.panDetails,
+      builder: (context, state) => const PanDetailsPage(),
+    ),
     GoRoute(
       path: AppConstants.registrationOtp,
       builder: (context, state) {
@@ -130,13 +160,38 @@ final router = GoRouter(
         return LoanConfirmationPage(loanData: loanData);
       },
     ),
-    GoRoute(path: AppConstants.processing, builder: (context, state) => const ProcessingPage()),
-    GoRoute(path: AppConstants.home, builder: (context, state) => const HomePage()),
-    GoRoute(path: AppConstants.myLoans, builder: (context, state) => const MyLoansPage()),
-    GoRoute(path: AppConstants.loansGiven, builder: (context, state) => const LoansGivenPage()),
-    GoRoute(path: AppConstants.insights, builder: (context, state) => const InsightsPage()),
-    GoRoute(path: AppConstants.profile, builder: (context, state) => const ProfilePage()),
-    GoRoute(path: AppConstants.notifications, builder: (context, state) => const NotificationsPage()),
+    GoRoute(
+      path: AppConstants.processing,
+      builder: (context, state) => const ProcessingPage(),
+    ),
+    GoRoute(
+      path: '/reset-password',
+      builder: (context, state) => const ResetPasswordPage(),
+    ),
+    GoRoute(
+      path: AppConstants.home,
+      builder: (context, state) => const HomePage(),
+    ),
+    GoRoute(
+      path: AppConstants.myLoans,
+      builder: (context, state) => const MyLoansPage(),
+    ),
+    GoRoute(
+      path: AppConstants.loansGiven,
+      builder: (context, state) => const LoansGivenPage(),
+    ),
+    GoRoute(
+      path: AppConstants.insights,
+      builder: (context, state) => const InsightsPage(),
+    ),
+    GoRoute(
+      path: AppConstants.profile,
+      builder: (context, state) => const ProfilePage(),
+    ),
+    GoRoute(
+      path: AppConstants.notifications,
+      builder: (context, state) => const NotificationsPage(),
+    ),
     GoRoute(
       path: AppConstants.loanApproval,
       builder: (context, state) {
@@ -144,8 +199,14 @@ final router = GoRouter(
         return LoanApprovalPage(loan: loan);
       },
     ),
-    GoRoute(path: AppConstants.loanSuccess, builder: (context, state) => const LoanSuccessPage()),
-    GoRoute(path: AppConstants.loanCloseSuccess, builder: (context, state) => const LoanCloseSuccessPage()),
+    GoRoute(
+      path: AppConstants.loanSuccess,
+      builder: (context, state) => const LoanSuccessPage(),
+    ),
+    GoRoute(
+      path: AppConstants.loanCloseSuccess,
+      builder: (context, state) => const LoanCloseSuccessPage(),
+    ),
     GoRoute(
       path: AppConstants.loanDetails,
       builder: (context, state) {
@@ -153,12 +214,49 @@ final router = GoRouter(
         return LoanDetailsPage(loan: loan);
       },
     ),
-    GoRoute(path: '/auth-choice', builder: (context, state) => const AuthChoicePage()),
-    GoRoute(path: AppConstants.chitInvites, builder: (context, state) => const ChitInvitesPage()),
-    GoRoute(path: AppConstants.myChits, builder: (context, state) => const MyChitsPage()),
-    GoRoute(path: AppConstants.createChit, builder: (context, state) => const CreateChitGroupPage()),
-    GoRoute(path: AppConstants.bidAuth, builder: (context, state) => const BidAuthorizationPage()),
-    GoRoute(path: AppConstants.chitSuccess, builder: (context, state) => const ChitSuccessPage()),
+    GoRoute(
+      path: AppConstants.lenderLoanDetails,
+      builder: (context, state) {
+        final loan = state.extra as LoanModel;
+        return LenderLoanDetailsPage(loan: loan);
+      },
+    ),
+    GoRoute(
+      path: '/auth-choice',
+      builder: (context, state) => const AuthChoicePage(),
+    ),
+    GoRoute(
+      path: '/chit-live-auction',
+      builder: (context, state) {
+        // Fallback ledger ID if not provided (for deep link demo)
+        final ledgerId = state.uri.queryParameters['ledgerId'] ?? 'demo_ledger_123';
+        return ChitLiveAuctionPage(ledgerId: ledgerId);
+      },
+    ),
+    GoRoute(
+      path: '/chit-home',
+      builder: (context, state) => const ChitHomePage(),
+    ),
+    GoRoute(
+      path: AppConstants.chitInvites,
+      builder: (context, state) => const ChitInvitesPage(),
+    ),
+    GoRoute(
+      path: AppConstants.myChits,
+      builder: (context, state) => const MyChitsPage(),
+    ),
+    GoRoute(
+      path: AppConstants.createChit,
+      builder: (context, state) => const CreateChitGroupPage(),
+    ),
+    GoRoute(
+      path: AppConstants.bidAuth,
+      builder: (context, state) => const BidAuthorizationPage(),
+    ),
+    GoRoute(
+      path: AppConstants.chitSuccess,
+      builder: (context, state) => const ChitSuccessPage(),
+    ),
     GoRoute(
       path: AppConstants.chitAdminDashboard,
       builder: (context, state) {
