@@ -8,6 +8,7 @@ import '../../../../core/widgets/buttons.dart';
 import '../../../../core/widgets/inputs.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/blocs/auth/auth_cubit.dart';
+import '../../../../core/utils/date_input_formatter.dart';
 
 class PanDetailsPage extends StatefulWidget {
   const PanDetailsPage({super.key});
@@ -155,23 +156,22 @@ class _PanDetailsPageState extends State<PanDetailsPage> {
                   },
                 ),
                 SizedBox(height: 20.h),
-                GestureDetector(
-                  onTap: () => _selectDate(context),
-                  child: AbsorbPointer(
-                    child: KhaataTextField(
-                      label: 'Date of Birth',
-                      hint: 'DD/MM/YYYY',
-                      controller: _dobController,
-                      suffix: Icon(
-                        Icons.calendar_today,
-                        color: KhaataTheme.primaryBlue,
-                        size: 20.sp,
-                      ),
-                      readOnly: true,
-                      validator: (value) =>
-                          value!.isEmpty ? 'Date of birth is required' : null,
-                    ),
+                KhaataTextField(
+                  label: 'Date of Birth',
+                  hint: 'DD/MM/YYYY',
+                  controller: _dobController,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [DateInputFormatter()],
+                  suffix: Icon(
+                    Icons.calendar_today,
+                    color: KhaataTheme.primaryBlue,
+                    size: 20.sp,
                   ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) return 'Date of birth is required';
+                    if (value.length != 10) return 'Enter valid date (DD/MM/YYYY)';
+                    return null;
+                  },
                 ),
                 SizedBox(height: 20.h),
 

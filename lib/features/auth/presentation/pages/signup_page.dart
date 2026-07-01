@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import '../../../../config/theme.dart';
 import '../../../../core/blocs/auth/auth_cubit.dart';
+import '../../../../core/utils/date_input_formatter.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -985,14 +986,15 @@ class _SignupPageState extends State<SignupPage> {
               ),
             ),
             SizedBox(height: 6.h),
-            GestureDetector(
-              onTap: () => _selectDOB(context),
-              child: AbsorbPointer(
-                child: TextFormField(
-                  controller: _dobController,
-                  validator: (val) => val == null || val.isEmpty
-                      ? 'Date of birth is required'
-                      : null,
+            TextFormField(
+              controller: _dobController,
+              keyboardType: TextInputType.number,
+              inputFormatters: [DateInputFormatter()],
+              validator: (val) {
+                if (val == null || val.isEmpty) return 'Date of birth is required';
+                if (val.length != 10) return 'Enter a valid date (DD/MM/YYYY)';
+                return null;
+              },
                   style: TextStyle(
                     fontSize: 13.sp,
                     fontWeight: FontWeight.w600,
@@ -1026,8 +1028,6 @@ class _SignupPageState extends State<SignupPage> {
                       vertical: 12.h,
                     ),
                   ),
-                ),
-              ),
             ),
             SizedBox(height: 14.h),
 
