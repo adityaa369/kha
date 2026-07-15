@@ -375,7 +375,7 @@ class HandLoanDetailsPage extends StatelessWidget {
     );
   }
 
-  // ─── EMI Overview Card (gradient) ─────────────────────────────────────────
+  // ─── Credit Overview Card (gradient) ─────────────────────────────────────────
 
   Widget _emiOverviewCard(LoanModel loan) {
     final duration = loan.durationMonths ?? 0;
@@ -408,7 +408,7 @@ class HandLoanDetailsPage extends StatelessWidget {
               ),
               SizedBox(width: 6.w),
               Text(
-                'EMI Overview',
+                'Credit Overview',
                 style: TextStyle(
                   color: Colors.white70,
                   fontSize: 12.sp,
@@ -422,7 +422,7 @@ class HandLoanDetailsPage extends StatelessWidget {
             children: [
               Expanded(
                 child: _gradientStat(
-                  'Monthly EMI',
+                  'Next Credit',
                   emi > 0 ? '₹${_fmt(emi)}' : '-',
                 ),
               ),
