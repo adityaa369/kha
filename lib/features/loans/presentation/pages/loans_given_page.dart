@@ -560,4 +560,3 @@ String _getMonthName(int month) {
   ];
   return months[month - 1];
 }
-

@@ -18,9 +18,9 @@ class InterestLoanDetailsPage extends StatelessWidget {
 
   // ─── Theme ───────────────────────────────────────────────────────────────────
 
-  static const _primary    = Color(0xFFE65100);
-  static const _bg         = Color(0xFFFFF3E0);
-  static const _accent     = Color(0xFFEF6C00);
+  static const _primary = Color(0xFFE65100);
+  static const _bg = Color(0xFFFFF3E0);
+  static const _accent = Color(0xFFEF6C00);
 
   // ─── Build ───────────────────────────────────────────────────────────────────
 
@@ -29,8 +29,10 @@ class InterestLoanDetailsPage extends StatelessWidget {
     return BlocBuilder<LoanCubit, LoanState>(
       builder: (context, state) {
         final activeLoan = state is LoansLoaded
-            ? (state.myLoans + state.givenLoans)
-                .firstWhere((l) => l.id == loan.id, orElse: () => loan)
+            ? (state.myLoans + state.givenLoans).firstWhere(
+                (l) => l.id == loan.id,
+                orElse: () => loan,
+              )
             : loan;
 
         return Scaffold(
@@ -84,15 +86,16 @@ class InterestLoanDetailsPage extends StatelessWidget {
     try {
       final authState = context.read<AuthCubit>().state;
       if (authState is AuthenticatedFull) currentUserId = authState.user.id;
-      if (authState is AuthenticatedUnverified) currentUserId = authState.user.id;
+      if (authState is AuthenticatedUnverified)
+        currentUserId = authState.user.id;
     } catch (_) {}
 
-    final isLender  = loan.lenderId == currentUserId;
-    final phone     = isLender ? (loan.mobile ?? '') : (loan.lenderPhone ?? '');
-    final name      = isLender
+    final isLender = loan.lenderId == currentUserId;
+    final phone = isLender ? (loan.mobile ?? '') : (loan.lenderPhone ?? '');
+    final name = isLender
         ? (loan.borrowerName.isNotEmpty ? loan.borrowerName : 'Borrower')
         : (loan.lenderName?.isNotEmpty == true ? loan.lenderName! : 'Lender');
-    final initials  = name.isNotEmpty ? name[0].toUpperCase() : 'U';
+    final initials = name.isNotEmpty ? name[0].toUpperCase() : 'U';
     final roleLabel = isLender ? 'Borrower' : 'Lender';
 
     return Container(
@@ -152,7 +155,11 @@ class InterestLoanDetailsPage extends StatelessWidget {
                   SizedBox(height: 2.h),
                   Row(
                     children: [
-                      Icon(Icons.phone_outlined, size: 12.sp, color: Colors.grey),
+                      Icon(
+                        Icons.phone_outlined,
+                        size: 12.sp,
+                        color: Colors.grey,
+                      ),
                       SizedBox(width: 4.w),
                       Flexible(
                         child: Text(
@@ -192,7 +199,10 @@ class InterestLoanDetailsPage extends StatelessWidget {
                   onTap: () async {
                     final uri = Uri.parse('https://wa.me/91$phone');
                     if (await canLaunchUrl(uri)) {
-                      await launchUrl(uri, mode: LaunchMode.externalApplication);
+                      await launchUrl(
+                        uri,
+                        mode: LaunchMode.externalApplication,
+                      );
                     }
                   },
                 ),
@@ -239,8 +249,9 @@ class InterestLoanDetailsPage extends StatelessWidget {
   // ─── Stats Card ───────────────────────────────────────────────────────────
 
   Widget _statsCard(LoanModel loan) {
-    final startStr = '${loan.startDate.day} ${_month(loan.startDate.month)} ${loan.startDate.year}';
-    final endStr   = loan.endDate != null
+    final startStr =
+        '${loan.startDate.day} ${_month(loan.startDate.month)} ${loan.startDate.year}';
+    final endStr = loan.endDate != null
         ? '${loan.endDate!.day} ${_month(loan.endDate!.month)} ${loan.endDate!.year}'
         : '-';
     final duration = loan.durationMonths ?? 0;
@@ -263,7 +274,10 @@ class InterestLoanDetailsPage extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 12.w,
+                    vertical: 6.h,
+                  ),
                   decoration: BoxDecoration(
                     color: _bg,
                     borderRadius: BorderRadius.circular(20.r),
@@ -285,7 +299,10 @@ class InterestLoanDetailsPage extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 10.w,
+                    vertical: 4.h,
+                  ),
                   decoration: BoxDecoration(
                     color: _statusColor(loan.status).withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(12.r),
@@ -312,7 +329,12 @@ class InterestLoanDetailsPage extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Expanded(child: _statItem('Principal Amount', '₹${_fmt(loan.amount)}')),
+                    Expanded(
+                      child: _statItem(
+                        'Principal Amount',
+                        '₹${_fmt(loan.amount)}',
+                      ),
+                    ),
                     Expanded(child: _statItem('Duration', '$duration Months')),
                   ],
                 ),
@@ -326,8 +348,18 @@ class InterestLoanDetailsPage extends StatelessWidget {
                 SizedBox(height: 12.h),
                 Row(
                   children: [
-                    Expanded(child: _statItem('Paid Months', '$paidMonths / $duration')),
-                    Expanded(child: _statItem('Progress', '${(progress * 100).toStringAsFixed(0)}%')),
+                    Expanded(
+                      child: _statItem(
+                        'Paid Months',
+                        '$paidMonths / $duration',
+                      ),
+                    ),
+                    Expanded(
+                      child: _statItem(
+                        'Progress',
+                        '${(progress * 100).toStringAsFixed(0)}%',
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -362,13 +394,13 @@ class InterestLoanDetailsPage extends StatelessWidget {
   // ─── Interest Info Card ───────────────────────────────────────────────────
 
   Widget _interestInfoCard(LoanModel loan) {
-    final rate           = loan.interestRate ?? 0.0;
-    final monthly        = loan.amount * rate / 100;
-    final duration       = loan.durationMonths ?? 0;
-    final totalInterest  = monthly * duration;
-    final totalPayable   = loan.amount + totalInterest;
-    final progress       = loan.progress.clamp(0.0, 1.0);
-    final received       = monthly * (duration * progress).floor();
+    final rate = loan.interestRate ?? 0.0;
+    final monthly = loan.amount * rate / 100;
+    final duration = loan.durationMonths ?? 0;
+    final totalInterest = monthly * duration;
+    final totalPayable = loan.amount + totalInterest;
+    final progress = loan.progress.clamp(0.0, 1.0);
+    final received = monthly * (duration * progress).floor();
 
     return Container(
       padding: EdgeInsets.all(16.w),
@@ -400,22 +432,43 @@ class InterestLoanDetailsPage extends StatelessWidget {
           SizedBox(height: 16.h),
           Row(
             children: [
-              Expanded(child: _interestStat('Interest Rate', '${rate.toStringAsFixed(1)}% / month')),
-              Expanded(child: _interestStat('Monthly Interest', '₹${_fmt(monthly)}')),
+              Expanded(
+                child: _interestStat(
+                  'Interest Rate',
+                  '${rate.toStringAsFixed(1)}% / month',
+                ),
+              ),
+              Expanded(
+                child: _interestStat('Monthly Interest', '₹${_fmt(monthly)}'),
+              ),
             ],
           ),
           SizedBox(height: 12.h),
           Row(
             children: [
-              Expanded(child: _interestStat('Total Interest', '₹${_fmt(totalInterest)}')),
-              Expanded(child: _interestStat('Total Payable', '₹${_fmt(totalPayable)}')),
+              Expanded(
+                child: _interestStat(
+                  'Total Interest',
+                  '₹${_fmt(totalInterest)}',
+                ),
+              ),
+              Expanded(
+                child: _interestStat('Total Payable', '₹${_fmt(totalPayable)}'),
+              ),
             ],
           ),
           SizedBox(height: 12.h),
           Row(
             children: [
-              Expanded(child: _interestStat('Interest Paid', '₹${_fmt(received)}')),
-              Expanded(child: _interestStat('Interest Pending', '₹${_fmt(totalInterest - received)}')),
+              Expanded(
+                child: _interestStat('Interest Paid', '₹${_fmt(received)}'),
+              ),
+              Expanded(
+                child: _interestStat(
+                  'Interest Pending',
+                  '₹${_fmt(totalInterest - received)}',
+                ),
+              ),
             ],
           ),
         ],
@@ -427,7 +480,10 @@ class InterestLoanDetailsPage extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: TextStyle(color: Colors.white60, fontSize: 10.sp)),
+        Text(
+          label,
+          style: TextStyle(color: Colors.white60, fontSize: 10.sp),
+        ),
         SizedBox(height: 4.h),
         Text(
           value,
@@ -489,73 +545,83 @@ class InterestLoanDetailsPage extends StatelessWidget {
 
           // Month checklist
           if (duration > 0)
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: duration,
-              separatorBuilder: (_, __) => Divider(
-                height: 1,
-                color: Colors.grey.shade100,
-              ),
-              itemBuilder: (context, index) {
-                final isPaid = index < paidMonths;
-                final dueDate = loan.startDate.add(Duration(days: (index + 1) * 30));
-                final dueDateStr =
-                    '${dueDate.day} ${_month(dueDate.month)} ${dueDate.year}';
-
-                return Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8.h),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 28.w,
-                        height: 28.w,
-                        decoration: BoxDecoration(
-                          color: isPaid ? _bg : Colors.grey.shade100,
-                          shape: BoxShape.circle,
-                        ),
-                        alignment: Alignment.center,
-                        child: Icon(
-                          isPaid ? Icons.check : Icons.calendar_today_outlined,
-                          size: 14.sp,
-                          color: isPaid ? _primary : Colors.grey,
-                        ),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              child: Row(
+                children: List.generate(duration, (index) {
+                  final isPaid = index < paidMonths;
+                  final dueDate = loan.startDate.add(
+                    Duration(days: (index + 1) * 30),
+                  );
+                  return Container(
+                    width: 140.w,
+                    margin: EdgeInsets.only(right: 12.w, bottom: 8.h),
+                    padding: EdgeInsets.all(12.w),
+                    decoration: BoxDecoration(
+                      color: isPaid ? _bg.withOpacity(0.5) : Colors.white,
+                      border: Border.all(
+                        color: isPaid
+                            ? _primary.withOpacity(0.3)
+                            : Colors.grey.shade200,
                       ),
-                      SizedBox(width: 12.w),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'Month ${index + 1} — ${_month(dueDate.month)} ${dueDate.year}',
+                              'Month ${index + 1}',
                               style: TextStyle(
-                                fontSize: 13.sp,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black87,
+                                fontSize: 12.sp,
+                                fontWeight: FontWeight.bold,
+                                color: isPaid ? _primary : Colors.grey.shade700,
                               ),
                             ),
-                            Text(
-                              'Due: $dueDateStr',
-                              style: TextStyle(
-                                fontSize: 11.sp,
-                                color: Colors.grey.shade500,
-                              ),
+                            Icon(
+                              isPaid
+                                  ? Icons.check_circle
+                                  : Icons.radio_button_unchecked,
+                              size: 16.sp,
+                              color: isPaid ? _primary : Colors.grey.shade400,
                             ),
                           ],
                         ),
-                      ),
-                      Text(
-                        '₹${_fmt(monthly)}',
-                        style: TextStyle(
-                          fontSize: 13.sp,
-                          fontWeight: FontWeight.w700,
-                          color: isPaid ? Colors.green.shade700 : Colors.black54,
+                        SizedBox(height: 8.h),
+                        Text(
+                          '${_month(dueDate.month)} ${dueDate.year}',
+                          style: TextStyle(
+                            fontSize: 11.sp,
+                            color: Colors.grey.shade600,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                );
-              },
+                        SizedBox(height: 2.h),
+                        Text(
+                          'Due: ${dueDate.day}',
+                          style: TextStyle(
+                            fontSize: 10.sp,
+                            color: Colors.grey.shade400,
+                          ),
+                        ),
+                        SizedBox(height: 6.h),
+                        Text(
+                          '₹${_fmt(monthly)}',
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.bold,
+                            color: isPaid
+                                ? Colors.green.shade700
+                                : Colors.black87,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              ),
             ),
         ],
       ),
@@ -571,7 +637,8 @@ class InterestLoanDetailsPage extends StatelessWidget {
 
     final url = loan.documentUrl!;
     final lowercaseUrl = url.toLowerCase();
-    final isPdf = lowercaseUrl.contains('.pdf') ||
+    final isPdf =
+        lowercaseUrl.contains('.pdf') ||
         lowercaseUrl.split('?').first.endsWith('.pdf');
 
     return Container(
@@ -672,11 +739,7 @@ class InterestLoanDetailsPage extends StatelessWidget {
                       ],
                     ),
                   ),
-                  Icon(
-                    Icons.visibility_outlined,
-                    color: _primary,
-                    size: 18.sp,
-                  ),
+                  Icon(Icons.visibility_outlined, color: _primary, size: 18.sp),
                 ],
               ),
             ),
@@ -706,7 +769,9 @@ class InterestLoanDetailsPage extends StatelessWidget {
                 padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  border: Border(bottom: BorderSide(color: Colors.grey.shade100)),
+                  border: Border(
+                    bottom: BorderSide(color: Colors.grey.shade100),
+                  ),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -736,7 +801,9 @@ class InterestLoanDetailsPage extends StatelessWidget {
                   color: Colors.grey.shade50,
                   width: double.infinity,
                   padding: EdgeInsets.all(16.w),
-                  child: isPdf ? _pdfPreview(context, url) : _imagePreview(context, url),
+                  child: isPdf
+                      ? _pdfPreview(context, url)
+                      : _imagePreview(context, url),
                 ),
               ),
               // Footer
@@ -753,11 +820,17 @@ class InterestLoanDetailsPage extends StatelessWidget {
                         onPressed: () async {
                           final uri = Uri.parse(url);
                           if (await canLaunchUrl(uri)) {
-                            await launchUrl(uri, mode: LaunchMode.externalApplication);
+                            await launchUrl(
+                              uri,
+                              mode: LaunchMode.externalApplication,
+                            );
                           }
                         },
                         icon: Icon(Icons.open_in_new, size: 16.sp),
-                        label: Text('Open External', style: TextStyle(fontSize: 13.sp)),
+                        label: Text(
+                          'Open External',
+                          style: TextStyle(fontSize: 13.sp),
+                        ),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: _primary,
                           side: const BorderSide(color: _primary),
@@ -783,7 +856,10 @@ class InterestLoanDetailsPage extends StatelessWidget {
                         ),
                         child: Text(
                           'Close',
-                          style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            fontSize: 13.sp,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
@@ -812,7 +888,9 @@ class InterestLoanDetailsPage extends StatelessWidget {
             cacheWidth: 1080,
             loadingBuilder: (context, child, progress) {
               if (progress == null) return child;
-              return const Center(child: CircularProgressIndicator(color: _primary));
+              return const Center(
+                child: CircularProgressIndicator(color: _primary),
+              );
             },
             errorBuilder: (_, __, ___) => const Center(
               child: Column(
@@ -820,7 +898,10 @@ class InterestLoanDetailsPage extends StatelessWidget {
                 children: [
                   Icon(Icons.broken_image, color: Colors.grey, size: 48),
                   SizedBox(height: 8),
-                  Text('Failed to load image', style: TextStyle(color: Colors.grey)),
+                  Text(
+                    'Failed to load image',
+                    style: TextStyle(color: Colors.grey),
+                  ),
                 ],
               ),
             ),
@@ -829,7 +910,6 @@ class InterestLoanDetailsPage extends StatelessWidget {
       ),
     );
   }
-
 
   Widget _pdfPreview(BuildContext context, String url) {
     return Container(
@@ -859,13 +939,21 @@ class InterestLoanDetailsPage extends StatelessWidget {
           SizedBox(height: 20.h),
           Text(
             'PDF Document',
-            style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold, color: Colors.black87),
+            style: TextStyle(
+              fontSize: 16.sp,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
           ),
           SizedBox(height: 8.h),
           Text(
             'This document is in PDF format. Tap "Open External" to view it in your browser or PDF reader.',
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 12.sp, color: Colors.grey.shade600, height: 1.4),
+            style: TextStyle(
+              fontSize: 12.sp,
+              color: Colors.grey.shade600,
+              height: 1.4,
+            ),
           ),
         ],
       ),
@@ -876,16 +964,28 @@ class InterestLoanDetailsPage extends StatelessWidget {
 
   String _fmt(double v) {
     if (v.isNaN || v.isInfinite) return '0';
-    return v.toStringAsFixed(0).replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (m) => '${m[1]},',
-    );
+    return v
+        .toStringAsFixed(0)
+        .replaceAllMapped(
+          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (m) => '${m[1]},',
+        );
   }
 
   String _month(int m) {
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     if (m < 1 || m > 12) return 'Jan';
     return months[m - 1];
@@ -893,21 +993,30 @@ class InterestLoanDetailsPage extends StatelessWidget {
 
   Color _statusColor(String status) {
     switch (status.toLowerCase()) {
-      case 'active':       return Colors.green.shade700;
-      case 'closed':       return Colors.grey.shade600;
+      case 'active':
+        return Colors.green.shade700;
+      case 'closed':
+        return Colors.grey.shade600;
       case 'pending_otp':
-      case 'pending_approval': return const Color(0xFFD97706);
-      default:             return Colors.blueGrey;
+      case 'pending_approval':
+        return const Color(0xFFD97706);
+      default:
+        return Colors.blueGrey;
     }
   }
 
   String _statusLabel(String status) {
     switch (status.toLowerCase()) {
-      case 'active':           return 'Active';
-      case 'closed':           return 'Closed';
-      case 'pending_otp':      return 'Pending OTP';
-      case 'pending_approval': return 'Pending Approval';
-      default:                 return status;
+      case 'active':
+        return 'Active';
+      case 'closed':
+        return 'Closed';
+      case 'pending_otp':
+        return 'Pending OTP';
+      case 'pending_approval':
+        return 'Pending Approval';
+      default:
+        return status;
     }
   }
 }

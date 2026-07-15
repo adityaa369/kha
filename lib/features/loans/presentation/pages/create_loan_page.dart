@@ -226,7 +226,9 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
         final ref = FirebaseStorage.instance
             .ref()
             .child('documents')
-            .child('${DateTime.now().millisecondsSinceEpoch}_${_selectedDocumentName ?? 'doc'}');
+            .child(
+              '${DateTime.now().millisecondsSinceEpoch}_${_selectedDocumentName ?? 'doc'}',
+            );
         final uploadTask = ref.putFile(_selectedDocumentFile!);
         final snapshot = await uploadTask;
         final documentUrl = await snapshot.ref.getDownloadURL();
