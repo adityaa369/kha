@@ -422,15 +422,12 @@ class HandLoanDetailsPage extends StatelessWidget {
             children: [
               Expanded(
                 child: _gradientStat(
-                  'Next Credit',
-                  emi > 0 ? '₹${_fmt(emi)}' : '-',
-                ),
-              ),
-              Expanded(
-                child: _gradientStat(
                   'Total Payable',
                   totalPayable > 0 ? '₹${_fmt(totalPayable)}' : '-',
                 ),
+              ),
+              Expanded(
+                child: _gradientStat('Amount Paid', '₹${_fmt(amountPaid)}'),
               ),
             ],
           ),
@@ -438,14 +435,12 @@ class HandLoanDetailsPage extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: _gradientStat('Amount Paid', '₹${_fmt(amountPaid)}'),
-              ),
-              Expanded(
                 child: _gradientStat(
                   'Amount Pending',
                   '₹${_fmt(amountPending)}',
                 ),
               ),
+              Expanded(child: const SizedBox()),
             ],
           ),
           SizedBox(height: 12.h),
