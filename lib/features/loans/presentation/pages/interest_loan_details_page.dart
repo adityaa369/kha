@@ -606,17 +606,6 @@ class InterestLoanDetailsPage extends StatelessWidget {
                             color: Colors.grey.shade400,
                           ),
                         ),
-                        SizedBox(height: 6.h),
-                        Text(
-                          '₹${_fmt(monthly)}',
-                          style: TextStyle(
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.bold,
-                            color: isPaid
-                                ? Colors.green.shade700
-                                : Colors.black87,
-                          ),
-                        ),
                       ],
                     ),
                   );

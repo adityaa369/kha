@@ -587,17 +587,6 @@ class HandLoanDetailsPage extends StatelessWidget {
                             color: Colors.grey.shade400,
                           ),
                         ),
-                        SizedBox(height: 6.h),
-                        Text(
-                          emi > 0 ? '₹${_fmt(emi)}' : '-',
-                          style: TextStyle(
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.bold,
-                            color: isPaid
-                                ? Colors.green.shade700
-                                : Colors.black87,
-                          ),
-                        ),
                       ],
                     ),
                   );

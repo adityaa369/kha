@@ -564,17 +564,6 @@ class LenderLoanDetailsPage extends StatelessWidget {
                               color: Colors.grey.shade400,
                             ),
                           ),
-                          SizedBox(height: 6.h),
-                          Text(
-                            monthly > 0 ? '₹${_fmt(monthly)}' : '-',
-                            style: TextStyle(
-                              fontSize: 14.sp,
-                              fontWeight: FontWeight.bold,
-                              color: isPaid
-                                  ? Colors.green.shade700
-                                  : Colors.black87,
-                            ),
-                          ),
                         ],
                       ),
                     ),
