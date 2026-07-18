@@ -118,4 +118,59 @@ class ChitFundRepository {
     final List list = (data is Map && data['bids'] is List) ? data['bids'] : [];
     return List<Map<String, dynamic>>.from(list);
   }
+
+  // Get Admin Dashboard (Members & Auctions)
+  Future<Map<String, dynamic>> getAdminDashboard(String chitId) async {
+    final response = await _apiClient.get('/chitfunds/$chitId');
+    final data = response.data;
+    return (data is Map) ? Map<String, dynamic>.from(data) : {};
+  }
+
+  // Delete Chit Fund
+  Future<bool> deleteChitFund(String chitId) async {
+    await _apiClient.delete('/chitfunds/$chitId');
+    return true;
+  }
+
+  // Finalize Manual Auction
+  Future<Map<String, dynamic>> finalizeAuction({
+    required String chitId,
+    required String winnerUserId,
+    required double bidDiscount,
+  }) async {
+    final response = await _apiClient.post(
+      '/chitfunds/$chitId/declare-winner',
+      data: {'winnerUserId': winnerUserId, 'winningDiscount': bidDiscount},
+    );
+    final data = response.data;
+    return (data is Map) ? Map<String, dynamic>.from(data) : {};
+  }
+
+  // Open Auction for a month
+  Future<bool> openAuctionMonth(
+    String chitId,
+    int monthNumber,
+    double baseAmount,
+  ) async {
+    await _apiClient.post('/chitfunds/$chitId/start', data: {});
+    return true;
+  }
+
+  // Get Bids for Month (Legacy name mapping)
+  Future<List<Map<String, dynamic>>> getAuctionBids(
+    String chitId,
+    int monthNumber,
+  ) async {
+    return getBids(chitId);
+  }
+
+  // Verify Month Payment
+  Future<bool> verifyMonthPayment(
+    String chitId,
+    int monthNumber,
+    String subscriberId,
+    bool isPaid,
+  ) async {
+    return true; // Stub for now
+  }
 }
