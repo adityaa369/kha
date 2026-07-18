@@ -535,16 +535,21 @@ class BusinessLoanDetailsPage extends StatelessWidget {
                   final dueDate = loan.startDate.add(
                     Duration(days: (index + 1) * 30),
                   );
+                  final isOverdue = !isPaid && dueDate.isBefore(DateTime.now());
                   return Container(
                     width: 140.w,
                     margin: EdgeInsets.only(right: 12.w, bottom: 8.h),
                     padding: EdgeInsets.all(12.w),
                     decoration: BoxDecoration(
-                      color: isPaid ? _bg.withOpacity(0.5) : Colors.white,
+                      color: isPaid
+                          ? _bg.withOpacity(0.5)
+                          : (isOverdue ? Colors.red.shade50 : Colors.white),
                       border: Border.all(
                         color: isPaid
                             ? _primary.withOpacity(0.3)
-                            : Colors.grey.shade200,
+                            : (isOverdue
+                                  ? Colors.red.withOpacity(0.3)
+                                  : Colors.grey.shade200),
                       ),
                       borderRadius: BorderRadius.circular(12.r),
                     ),
@@ -559,15 +564,25 @@ class BusinessLoanDetailsPage extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 12.sp,
                                 fontWeight: FontWeight.bold,
-                                color: isPaid ? _primary : Colors.grey.shade700,
+                                color: isPaid
+                                    ? _primary
+                                    : (isOverdue
+                                          ? Colors.red.shade700
+                                          : Colors.grey.shade700),
                               ),
                             ),
                             Icon(
                               isPaid
                                   ? Icons.check_circle
-                                  : Icons.radio_button_unchecked,
+                                  : (isOverdue
+                                        ? Icons.cancel
+                                        : Icons.radio_button_unchecked),
                               size: 16.sp,
-                              color: isPaid ? _primary : Colors.grey.shade400,
+                              color: isPaid
+                                  ? _primary
+                                  : (isOverdue
+                                        ? Colors.red.shade400
+                                        : Colors.grey.shade400),
                             ),
                           ],
                         ),

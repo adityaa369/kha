@@ -493,6 +493,7 @@ class LenderLoanDetailsPage extends StatelessWidget {
                   final dueDate = loan.startDate.add(
                     Duration(days: (index + 1) * 30),
                   );
+                  final isOverdue = !isPaid && dueDate.isBefore(DateTime.now());
                   final rate = loan.interestRate ?? 0.0;
                   final monthly = rate > 0
                       ? loan.amount * rate / 100
@@ -513,11 +514,13 @@ class LenderLoanDetailsPage extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: isPaid
                             ? theme.primary.withOpacity(0.08)
-                            : Colors.white,
+                            : (isOverdue ? Colors.red.shade50 : Colors.white),
                         border: Border.all(
                           color: isPaid
                               ? theme.primary.withOpacity(0.3)
-                              : Colors.grey.shade200,
+                              : (isOverdue
+                                    ? Colors.red.withOpacity(0.3)
+                                    : Colors.grey.shade200),
                         ),
                         borderRadius: BorderRadius.circular(12.r),
                       ),
@@ -534,17 +537,23 @@ class LenderLoanDetailsPage extends StatelessWidget {
                                   fontWeight: FontWeight.bold,
                                   color: isPaid
                                       ? theme.primary
-                                      : Colors.grey.shade700,
+                                      : (isOverdue
+                                            ? Colors.red.shade700
+                                            : Colors.grey.shade700),
                                 ),
                               ),
                               Icon(
                                 isPaid
                                     ? Icons.check_circle
-                                    : Icons.radio_button_unchecked,
+                                    : (isOverdue
+                                          ? Icons.cancel
+                                          : Icons.radio_button_unchecked),
                                 size: 16.sp,
                                 color: isPaid
                                     ? theme.primary
-                                    : Colors.grey.shade400,
+                                    : (isOverdue
+                                          ? Colors.red.shade400
+                                          : Colors.grey.shade400),
                               ),
                             ],
                           ),
@@ -974,7 +983,7 @@ class LenderLoanDetailsPage extends StatelessWidget {
           _actionButton(
             context,
             loan,
-            'Record Payment',
+            'Record Principal Payment',
             Icons.payment,
             theme.primary,
             'record_payment',
@@ -987,7 +996,7 @@ class LenderLoanDetailsPage extends StatelessWidget {
           _actionButton(
             context,
             loan,
-            'Record Payment',
+            'Record Principal Payment',
             Icons.payment,
             theme.primary,
             'record_payment',
@@ -1010,7 +1019,7 @@ class LenderLoanDetailsPage extends StatelessWidget {
           _actionButton(
             context,
             loan,
-            'Record Payment',
+            'Record Principal Payment',
             Icons.payment,
             theme.primary,
             'record_payment',
