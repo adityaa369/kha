@@ -1058,7 +1058,7 @@ class LenderLoanDetailsPage extends StatelessWidget {
           borderRadius: BorderRadius.circular(12.r),
         ),
         padding: EdgeInsets.symmetric(vertical: 14.h),
-        alignment: Alignment.centerLeft,
+        alignment: Alignment.center,
       ),
     );
   }
