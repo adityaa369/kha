@@ -527,17 +527,9 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _NumberedHeader(
+              const _NumberedHeader(
                 number: 2,
                 title: 'Interest Details',
-                trailing: Text(
-                  '%',
-                  style: TextStyle(
-                    color: Colors.green.shade700,
-                    fontSize: 24.sp,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
               ),
               SizedBox(height: 16.h),
               Row(
