@@ -33,7 +33,7 @@ class _ChitLiveAuctionPageState extends State<ChitLiveAuctionPage> {
   }
 
   void _initSocket() {
-    final serverUrl = dotenv.env['API_URL']?.replaceAll('/api', '') ?? 'http://10.0.2.2:5000';
+    final serverUrl = dotenv.env['BASE_URL']?.replaceAll('/api', '') ?? 'https://khataa-backend.onrender.com';
     
     _socket = io.io(serverUrl, io.OptionBuilder()
       .setTransports(['websocket'])
