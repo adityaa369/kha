@@ -297,9 +297,7 @@ class _TopBarState extends State<_TopBar> {
         }
       } catch (_) {}
       if (mounted) {
-        setState(
-          () => locationText = 'Location Unavailable',
-        );
+        setState(() => locationText = 'Location Unavailable');
       }
     }
   }
@@ -846,17 +844,10 @@ class _PaymentsSection extends StatelessWidget {
         }
 
         final loans = state.myLoans;
-
-        LoanModel? nearestUpcomingLoan;
-        DateTime? nearestUpcomingDate;
-        double upcomingAmount = 0;
-
-        LoanModel? mostUrgentDueLoan;
-        DateTime? mostUrgentDueDate;
-        double dueAmount = 0;
-        int dueDaysDifference = 0;
-
         final now = DateTime.now();
+
+        // 1. Gather all active taken loans with their upcoming/due details
+        List<Map<String, dynamic>> dueList = [];
 
         for (final loan in loans) {
           if (loan.status == 'completed' ||
@@ -867,6 +858,7 @@ class _PaymentsSection extends StatelessWidget {
           }
 
           final type = loan.type.toLowerCase().replaceAll('_', '');
+          // Usually business credit / chitfund are handled differently or don't have standard EMIs
           if (type == 'businesscredit' ||
               type == 'business' ||
               type == 'chitfund') {
@@ -891,136 +883,81 @@ class _PaymentsSection extends StatelessWidget {
             installment = loan.amount / duration;
           }
 
-          if (nextDueDate.isAfter(now)) {
-            if (nearestUpcomingDate == null ||
-                nextDueDate.isBefore(nearestUpcomingDate)) {
-              nearestUpcomingDate = nextDueDate;
-              nearestUpcomingLoan = loan;
-              upcomingAmount = installment;
-            }
-          } else {
-            if (mostUrgentDueDate == null ||
-                nextDueDate.isBefore(mostUrgentDueDate)) {
-              mostUrgentDueDate = nextDueDate;
-              mostUrgentDueLoan = loan;
-              dueAmount = installment;
-              dueDaysDifference = nextDueDate.difference(now).inDays;
-            }
-          }
+          final daysDifference = nextDueDate.difference(now).inDays;
+
+          dueList.add({
+            'loan': loan,
+            'dueDate': nextDueDate,
+            'amount': installment,
+            'daysDifference': daysDifference,
+          });
         }
 
-        // Check for upcoming due soon if no overdue
-        if (mostUrgentDueLoan == null) {
-          for (final loan in loans) {
-            if (loan.status == 'completed' ||
-                loan.status == 'closed' ||
-                loan.status == 'pending_otp' ||
-                loan.status == 'pending_approval') {
-              continue;
-            }
-            final type = loan.type.toLowerCase().replaceAll('_', '');
-            if (type == 'businesscredit' ||
-                type == 'business' ||
-                type == 'chitfund') {
-              continue;
-            }
-            final duration =
-                (loan.durationMonths == null || loan.durationMonths == 0)
-                ? 6
-                : loan.durationMonths!;
-            final progressVal = loan.progress.clamp(0.0, 1.0);
-            final completedMonths = (duration * progressVal).round();
-            final nextDueDate = loan.startDate.add(
-              Duration(days: (completedMonths + 1) * 30),
-            );
+        // 2. Sort by most urgent first
+        dueList.sort(
+          (a, b) =>
+              (a['dueDate'] as DateTime).compareTo(b['dueDate'] as DateTime),
+        );
 
-            final daysToDue = nextDueDate.difference(now).inDays;
-            if (daysToDue >= 0 && daysToDue <= 7) {
-              double installment = 0;
-              if (type == 'interestcredit' || type == 'home') {
-                installment = loan.amount * (loan.interestRate ?? 0) / 100;
-              } else {
-                installment = loan.amount / duration;
-              }
-
-              if (mostUrgentDueDate == null ||
-                  nextDueDate.isBefore(mostUrgentDueDate)) {
-                mostUrgentDueDate = nextDueDate;
-                mostUrgentDueLoan = loan;
-                dueAmount = installment;
-                dueDaysDifference = daysToDue;
-              }
-            }
-          }
+        if (dueList.isEmpty) {
+          return Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
+            child: Center(
+              child: Text(
+                'No upcoming payments',
+                style: TextStyle(color: Colors.grey.shade500, fontSize: 13.sp),
+              ),
+            ),
+          );
         }
 
-        String upcomingAmountStr = '₹0';
-        String upcomingSubtitle = 'No upcoming payments';
-        if (nearestUpcomingLoan != null && nearestUpcomingDate != null) {
-          upcomingAmountStr = '₹${_formatCurrency(upcomingAmount)}';
-          upcomingSubtitle =
-              'Due on ${nearestUpcomingDate.day} ${_getMonthName(nearestUpcomingDate.month)} ${nearestUpcomingDate.year}';
-        }
-
-        String dueAmountStr = '₹0';
-        String dueSubtitle = 'No payments due';
-        double progressIndicatorVal = 0.0;
-        bool hasDue = false;
-
-        if (mostUrgentDueLoan != null && mostUrgentDueDate != null) {
-          hasDue = true;
-          dueAmountStr = '₹${_formatCurrency(dueAmount)}';
-          progressIndicatorVal = mostUrgentDueLoan.progress.clamp(0.0, 1.0);
-
-          if (dueDaysDifference < 0) {
-            final daysPast = dueDaysDifference.abs();
-            dueSubtitle = "Overdue by $daysPast Day${daysPast > 1 ? 's' : ''}";
-          } else if (dueDaysDifference == 0) {
-            dueSubtitle = "Due Today";
-          } else {
-            dueSubtitle =
-                "Due in $dueDaysDifference Day${dueDaysDifference > 1 ? 's' : ''}";
-          }
-        }
-
+        // 3. Render the list of cards
         return Padding(
           padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
           child: Column(
-            children: [
-              _PaymentCard(
-                icon: Icons.calendar_month,
-                iconBg: Colors.green.shade600,
-                title: 'Upcoming Payment',
-                amount: upcomingAmountStr,
-                subtitle: upcomingSubtitle,
-                onTap: nearestUpcomingLoan != null
-                    ? () {
-                        context.push(
-                          AppConstants.loanDetails,
-                          extra: nearestUpcomingLoan,
-                        );
-                      }
-                    : null,
-              ),
-              SizedBox(height: 12.h),
-              _PaymentCard(
-                icon: Icons.receipt_long,
-                iconBg: Colors.blue.shade600,
-                title: 'Payment Due',
-                amount: dueAmountStr,
-                subtitle: dueSubtitle,
-                showProgress: hasDue,
-                progressValue: progressIndicatorVal,
-                onTap: mostUrgentDueLoan != null
-                    ? () {
-                        context.push(
-                          AppConstants.loanDetails,
-                          extra: mostUrgentDueLoan,
-                        );
-                      }
-                    : null,
-              ),
-            ],
+            children: dueList.map((item) {
+              final loan = item['loan'] as LoanModel;
+              final dueDate = item['dueDate'] as DateTime;
+              final amount = item['amount'] as double;
+              final daysDiff = item['daysDifference'] as int;
+
+              String subtitle;
+              Color iconBg;
+              IconData icon;
+              bool isOverdue = false;
+
+              if (daysDiff < 0) {
+                final daysPast = daysDiff.abs();
+                subtitle = "Overdue by $daysPast Day${daysPast > 1 ? 's' : ''}";
+                iconBg = Colors.red.shade600;
+                icon = Icons.warning_amber_rounded;
+                isOverdue = true;
+              } else if (daysDiff == 0) {
+                subtitle = "Due Today";
+                iconBg = Colors.orange.shade600;
+                icon = Icons.today;
+              } else {
+                subtitle = "Due in $daysDiff Day${daysDiff > 1 ? 's' : ''}";
+                iconBg = Colors.blue.shade600;
+                icon = Icons.calendar_month;
+              }
+
+              return Padding(
+                padding: EdgeInsets.only(bottom: 12.h),
+                child: _PaymentCard(
+                  icon: icon,
+                  iconBg: iconBg,
+                  title: 'Pay to ${loan.lenderName}',
+                  amount: '₹${_formatCurrency(amount)}',
+                  subtitle: subtitle,
+                  showProgress: isOverdue,
+                  progressValue: loan.progress.clamp(0.0, 1.0),
+                  onTap: () {
+                    context.push(AppConstants.loanDetails, extra: loan);
+                  },
+                ),
+              );
+            }).toList(),
           ),
         );
       },
