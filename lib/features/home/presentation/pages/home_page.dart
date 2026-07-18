@@ -1141,7 +1141,7 @@ class _ExploreMoreSection extends StatelessWidget {
                 iconColor: const Color(0xFF880E4F), // Dark Pinkish
                 bgColor: const Color(0xFFFCE4EC),
                 badges: const ['Trusted Groups'],
-                onTap: () => context.push('/chit-invites'),
+                onTap: () => context.push('/chit-home'),
               ),
             ],
           ),
