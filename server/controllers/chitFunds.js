@@ -653,7 +653,7 @@ exports.placeBid = async (req, res) => {
         const minBid = chit.monthlyContribution * 0.5; // at least 50% of monthly
         const maxBid = chit.totalValue;
         if (amount < minBid || amount > maxBid) {
-            return res.status(400).json({ success: false, message: "Bid must be between ?$"{minBid} and ?$"{maxBid}" });
+            return res.status(400).json({ success: false, message: `Bid must be between ₹${minBid} and ₹${maxBid}` });
         }
 
         // Add bid to auction
@@ -717,7 +717,7 @@ exports.declareWinner = async (req, res) => {
             const winner = await User.findOne({ id: winnerBid.userId });
             if (winner && winner.fcmToken) {
                 const { sendNotification } = require('../utils/notifications');
-                await sendNotification(winner.fcmToken, 'Congratulations! ??', "You won the auction for $"{chit.name}! Amount: ?$"{winnerBid.amount}");
+                await sendNotification(winner.fcmToken, 'Congratulations! 🎉', `You won the auction for ${chit.name}! Amount: ₹${winnerBid.amount}`);
             }
         } catch (_) {}
 
