@@ -52,3 +52,20 @@ class ChitAdminDashboardLoaded extends ChitFundState {
   @override
   List<Object?> get props => [dashboardData];
 }
+
+class ChitMemberDetailLoaded extends ChitFundState {
+  final Map<String, dynamic> memberData; // subscription info
+  final List<Map<String, dynamic>> auctionHistory;
+  final List<Map<String, dynamic>> paymentHistory;
+  final Map<String, dynamic> chitInfo; // group name, totalValue, etc.
+
+  const ChitMemberDetailLoaded({
+    required this.memberData,
+    required this.auctionHistory,
+    required this.paymentHistory,
+    required this.chitInfo,
+  });
+
+  @override
+  List<Object?> get props => [memberData, auctionHistory, paymentHistory, chitInfo];
+}

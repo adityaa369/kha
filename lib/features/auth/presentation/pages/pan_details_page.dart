@@ -1,4 +1,3 @@
-import '../../../../core/utils/error_handler.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
@@ -9,6 +8,7 @@ import '../../../../core/widgets/inputs.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/blocs/auth/auth_cubit.dart';
 import '../../../../core/utils/date_input_formatter.dart';
+import '../../../../core/utils/dialog_utils.dart';
 
 class PanDetailsPage extends StatefulWidget {
   const PanDetailsPage({super.key});
@@ -32,36 +32,18 @@ class _PanDetailsPageState extends State<PanDetailsPage> {
     super.dispose();
   }
 
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now().subtract(const Duration(days: 365 * 25)),
-      firstDate: DateTime(1950),
-      lastDate: DateTime.now(),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: KhaataTheme.primaryBlue,
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-    if (picked != null && mounted) {
-      setState(() {
-        _dobController.text =
-            '${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}';
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) {
+          context.read<AuthCubit>().resetToInitial();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
@@ -71,12 +53,14 @@ class _PanDetailsPageState extends State<PanDetailsPage> {
       ),
       body: BlocListener<AuthCubit, AuthState>(
         listener: (context, state) {
+          if (!mounted) return;
           if (state is PanDetailsSaved || state is AuthenticatedFull) {
             context.go(AppConstants.processing);
           } else if (state is AuthError) {
             ScaffoldMessenger.of(
               context,
-            ).showSnackBar(SnackBar(content: Text(state.message)));
+            );
+DialogUtils.showErrorDialog(context, state.message);
           }
         },
         child: SingleChildScrollView(
@@ -250,6 +234,7 @@ class _PanDetailsPageState extends State<PanDetailsPage> {
               ],
             ),
           ),
+        ),
         ),
       ),
     );

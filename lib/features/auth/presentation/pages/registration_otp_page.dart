@@ -1,4 +1,3 @@
-import '../../../../core/utils/error_handler.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
@@ -9,6 +8,7 @@ import 'dart:async';
 import '../../../../config/constants.dart';
 import '../../../../config/theme.dart';
 import '../../../../core/widgets/buttons.dart';
+import '../../../../core/utils/dialog_utils.dart';
 
 class RegistrationOtpPage extends StatefulWidget {
   final String phone;
@@ -225,7 +225,8 @@ class _RegistrationOtpPageState extends State<RegistrationOtpPage> {
                     });
                     ScaffoldMessenger.of(
                       context,
-                    ).showSnackBar(SnackBar(content: Text(state.message)));
+                    );
+DialogUtils.showErrorDialog(context, state.message);
                   }
                 },
                 builder: (context, state) {

@@ -5,15 +5,25 @@ const { sendOtp } = require('../utils/otpProvider');
 const { sendPushNotification } = require('../utils/fcm');
 const { updateCreditScore } = require('../utils/creditScoreCalc');
 const { sendEmail } = require('../utils/email');
+const { loanGivenTemplate, paymentRecordedTemplate, loanClosedTemplate } = require('../utils/emailTemplates');
 const axios = require('axios');
 const { invalidateLoanCache } = require('../middleware/cache');
+const { cacheGet, cacheSet, cacheInvalidate } = require('../config/redis');
+
+function sendError(res, err, status = 500) {
+    const isProd = process.env.NODE_ENV === 'production';
+    return res.status(status).json({
+        success: false,
+        message: isProd && status === 500 ? 'An internal error occurred' : err.message
+    });
+}
+
 // Helper to verify Firebase OTP via Identity Toolkit API
 async function verifyFirebaseOtp(verificationId, otp) {
-    if (otp === '124124') {
-        return { success: true, phone: null, isBackdoor: true };
+    const apiKey = process.env.FIREBASE_API_KEY;
+    if (!apiKey) {
+        return { success: false, message: 'Firebase API key not configured on server' };
     }
-
-    const apiKey = process.env.FIREBASE_API_KEY || 'AIzaSyDWwG-t0JdGQ98rmkIsWQSZsCRRJhzMoAw';
     const url = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPhoneNumber?key=${apiKey}`;
 
     try {
@@ -141,6 +151,7 @@ exports.createLoan = async (req, res) => {
         });
         
         await invalidateLoanCache(loan.lender, loan.borrower);
+        await cacheInvalidate(`loans:given:${loan.lender}`, `loans:taken:${loan.borrower}`);
 
         const lenderName = `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim() || 'A lender';
 
@@ -167,10 +178,7 @@ exports.createLoan = async (req, res) => {
         });
     } catch (err) {
         console.error('[Loans] createLoan Error:', err.message);
-        res.status(500).json({
-            success: false,
-            message: err.message
-        });
+        sendError(res, err);
     }
 };
 
@@ -179,6 +187,10 @@ exports.createLoan = async (req, res) => {
 // @access  Private
 exports.getGivenLoans = async (req, res) => {
     try {
+        const cacheKey = `loans:given:${req.user.id}`;
+        const cached = await cacheGet(cacheKey);
+        if (cached) return res.status(200).json(cached);
+
         const loans = await Loan.find({ lender: req.user.id });
         const loansMapped = [];
         const User = require('../models/User'); // Import User model
@@ -228,9 +240,10 @@ exports.getGivenLoans = async (req, res) => {
             return bDate - aDate;
         });
 
+        await cacheSet(cacheKey, { success: true, loans: loansMapped }, 120);
         res.status(200).json({ success: true, loans: loansMapped });
     } catch (err) {
-        res.status(500).json({ success: false, message: err.message });
+        sendError(res, err);
     }
 };
 
@@ -239,6 +252,10 @@ exports.getGivenLoans = async (req, res) => {
 // @access  Private
 exports.getTakenLoans = async (req, res) => {
     try {
+        const cacheKey = `loans:taken:${req.user.id}`;
+        const cached = await cacheGet(cacheKey);
+        if (cached) return res.status(200).json(cached);
+
         // Sanitize phone for query consistency
         const phone = req.user.phone.toString().replace(/^\+?91/, '');
         const loans = await Loan.find({
@@ -301,9 +318,10 @@ exports.getTakenLoans = async (req, res) => {
             return bDate - aDate;
         });
 
+        await cacheSet(cacheKey, { success: true, loans: loansWithLender }, 120);
         res.status(200).json({ success: true, loans: loansWithLender });
     } catch (err) {
-        res.status(500).json({ success: false, message: err.message });
+        sendError(res, err);
     }
 };
 
@@ -381,8 +399,43 @@ exports.verifyLoan = async (req, res) => {
         }
 
         console.log(`[DEBUG] Match! Activating Loan ${loan._id}`);
+        // Seed initial loan_given transaction
+        if (!loan.transactions) loan.transactions = [];
+        if (loan.transactions.length === 0) {
+            loan.transactions.push({
+                type: 'loan_given',
+                amount: loan.amount,
+                note: 'Loan disbursed to borrower',
+                recordedAt: new Date(loan.startDate || Date.now()),
+                recordedBy: loan.lender
+            });
+        }
+        loan.paidAmount = 0;
         await loan.save();
+
+        // Send email notification to borrower
+        try {
+            if (req.user.email) {
+                const lenderUser = await User.findOne({ id: loan.lender });
+                await sendEmail({
+                    to: req.user.email,
+                    subject: `Credit Agreement Activated — ₹${loan.amount.toLocaleString('en-IN')}`,
+                    html: loanGivenTemplate({
+                        lenderName: lenderUser ? `${lenderUser.firstName || ''} ${lenderUser.lastName || ''}`.trim() : 'Your Lender',
+                        borrowerName: `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim() || req.user.phone,
+                        amount: loan.amount,
+                        loanType: loan.loanType || 'Credit',
+                        duration: loan.durationMonths,
+                        interestRate: loan.interestRate || 0,
+                        startDate: new Date(loan.startDate).toLocaleDateString('en-IN')
+                    })
+                });
+            }
+        } catch (emailErr) {
+            console.error('[Loans] verifyLoan email failed:', emailErr.message);
+        }
         await invalidateLoanCache(loan.lender, loan.borrower);
+        await cacheInvalidate(`loans:given:${loan.lender}`, `loans:taken:${loan.borrower}`);
 
         const { sendPushNotification } = require('../utils/fcm');
 
@@ -410,7 +463,7 @@ exports.verifyLoan = async (req, res) => {
         res.status(200).json({ success: true, loan });
     } catch (err) {
         console.error('[Loans] verifyLoan Error:', err.message);
-        res.status(500).json({ success: false, message: err.message });
+        sendError(res, err);
     }
 };
 
@@ -427,7 +480,7 @@ exports.resendLoanOtp = async (req, res) => {
 
         res.status(200).json({ success: true, message: 'Firebase SMS OTP verification should be handled client-side.' });
     } catch (err) {
-        res.status(500).json({ success: false, message: err.message });
+        sendError(res, err);
     }
 };
 
@@ -452,7 +505,7 @@ exports.requestClosureOtp = async (req, res) => {
 
         res.status(200).json({ success: true, message: 'Firebase SMS OTP verification should be handled client-side.' });
     } catch (err) {
-        res.status(500).json({ success: false, message: err.message });
+        sendError(res, err);
     }
 };
 
@@ -478,6 +531,7 @@ exports.updateProgress = async (req, res) => {
         }
         await loan.save();
         await invalidateLoanCache(loan.lender, loan.borrower);
+        await cacheInvalidate(`loans:given:${loan.lender}`, `loans:taken:${loan.borrower}`);
 
         // Update Credit Score of borrower
         if (loan.borrower) {
@@ -499,7 +553,7 @@ exports.updateProgress = async (req, res) => {
 
         res.status(200).json({ success: true, loan });
     } catch (err) {
-        res.status(500).json({ success: false, message: err.message });
+        sendError(res, err);
     }
 };
 
@@ -525,7 +579,7 @@ exports.verifyLenderOtp = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Loan is not in OTP pending state' });
         }
 
-        if (!verificationId && otp !== '124124') {
+        if (!verificationId) {
             return res.status(400).json({ success: false, message: 'verificationId is required' });
         }
 
@@ -534,21 +588,20 @@ exports.verifyLenderOtp = async (req, res) => {
             return res.status(400).json({ success: false, message: verificationResult.message || 'Invalid OTP' });
         }
 
-        if (!verificationResult.isBackdoor) {
-            const returnedPhone = verificationResult.phone.replace(/\D/g, '').slice(-10);
-            const loanPhone = loan.borrowerPhone.replace(/\D/g, '').slice(-10);
-            if (returnedPhone !== loanPhone) {
-                return res.status(400).json({
-                    success: false,
-                    message: `OTP verified phone (+91${returnedPhone}) does not match borrower phone (+91${loanPhone})`
-                });
-            }
+        const returnedPhone = verificationResult.phone.replace(/\D/g, '').slice(-10);
+        const loanPhone = loan.borrowerPhone.replace(/\D/g, '').slice(-10);
+        if (returnedPhone !== loanPhone) {
+            return res.status(400).json({
+                success: false,
+                message: `OTP verified phone (+91${returnedPhone}) does not match borrower phone (+91${loanPhone})`
+            });
         }
 
         loan.status = 'pending_approval';
         loan.isOtpVerified = true;
         await loan.save();
         await invalidateLoanCache(loan.lender, loan.borrower);
+        await cacheInvalidate(`loans:given:${loan.lender}`, `loans:taken:${loan.borrower}`);
 
         // Now trigger the Push Notification to the borrower
         const borrowerUser = await User.findOne({ id: loan.borrower });
@@ -569,7 +622,7 @@ exports.verifyLenderOtp = async (req, res) => {
         });
     } catch (err) {
         console.error('[Loans] verifyLenderOtp Error:', err.message);
-        res.status(500).json({ success: false, message: err.message });
+        sendError(res, err);
     }
 };
 
@@ -593,7 +646,7 @@ exports.closeLoan = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Loan is already closed' });
         }
 
-        if (!verificationId && otp !== '124124') {
+        if (!verificationId) {
             return res.status(400).json({ success: false, message: 'verificationId is required' });
         }
 
@@ -602,15 +655,13 @@ exports.closeLoan = async (req, res) => {
             return res.status(400).json({ success: false, message: verificationResult.message || 'Invalid OTP' });
         }
 
-        if (!verificationResult.isBackdoor) {
-            const returnedPhone = verificationResult.phone.replace(/\D/g, '').slice(-10);
-            const loanPhone = loan.borrowerPhone.replace(/\D/g, '').slice(-10);
-            if (returnedPhone !== loanPhone) {
-                return res.status(400).json({
-                    success: false,
-                    message: `OTP verified phone (+91${returnedPhone}) does not match borrower phone (+91${loanPhone})`
-                });
-            }
+        const returnedPhone = verificationResult.phone.replace(/\D/g, '').slice(-10);
+        const loanPhone = loan.borrowerPhone.replace(/\D/g, '').slice(-10);
+        if (returnedPhone !== loanPhone) {
+            return res.status(400).json({
+                success: false,
+                message: `OTP verified phone (+91${returnedPhone}) does not match borrower phone (+91${loanPhone})`
+            });
         }
 
         loan.status = 'completed';
@@ -630,7 +681,28 @@ exports.closeLoan = async (req, res) => {
         }
 
         await loan.save();
+
+        // Send closure confirmation email
+        try {
+            const borrowerUserEmail = await User.findOne({ id: loan.borrower });
+            if (borrowerUserEmail && borrowerUserEmail.email) {
+                await sendEmail({
+                    to: borrowerUserEmail.email,
+                    subject: `Credit Agreement Closed — ₹${loan.amount.toLocaleString('en-IN')}`,
+                    html: loanClosedTemplate({
+                        borrowerName: `${borrowerUserEmail.firstName || ''} ${borrowerUserEmail.lastName || ''}`.trim() || borrowerUserEmail.phone,
+                        lenderName: req.user ? `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim() : 'Your Lender',
+                        amount: loan.amount,
+                        closedDate: new Date().toLocaleDateString('en-IN'),
+                        loanId: loan._id.toString()
+                    })
+                });
+            }
+        } catch (emailErr) {
+            console.error('[Loans] closure email failed:', emailErr.message);
+        }
         await invalidateLoanCache(loan.lender, loan.borrower);
+        await cacheInvalidate(`loans:given:${loan.lender}`, `loans:taken:${loan.borrower}`);
 
         const { sendPushNotification } = require('../utils/fcm');
         
@@ -656,7 +728,7 @@ exports.closeLoan = async (req, res) => {
         res.status(200).json({ success: true, message: 'Loan successfully closed.', loan });
     } catch (err) {
         console.error('[Loans] closeLoan Error:', err.message);
-        res.status(500).json({ success: false, message: err.message });
+        sendError(res, err);
     }
 };
 
@@ -666,6 +738,40 @@ exports.closeLoan = async (req, res) => {
 exports.uploadDocument = async (req, res) => {
     try {
         const { fileName, fileType, base64Data } = req.body;
+
+        // Security: validate file extension
+        const ALLOWED_EXTENSIONS = ['.pdf', '.jpg', '.jpeg', '.png'];
+        const ALLOWED_MIME_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
+        
+        // Sanitize filename — strip directory traversal, allow only safe chars
+        const sanitizedName = (fileName || 'document')
+            .replace(/[^a-zA-Z0-9._\-]/g, '_')
+            .replace(/\.\./g, '')
+            .substring(0, 100);
+        
+        const ext = require('path').extname(sanitizedName).toLowerCase();
+        if (!ALLOWED_EXTENSIONS.includes(ext)) {
+            return res.status(400).json({
+                success: false,
+                message: `File type not allowed. Allowed: ${ALLOWED_EXTENSIONS.join(', ')}`
+            });
+        }
+        
+        if (!ALLOWED_MIME_TYPES.includes(fileType)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid file MIME type'
+            });
+        }
+        
+        // Validate base64 size (max 4MB decoded)
+        const estimatedSize = (base64Data.length * 3) / 4;
+        if (estimatedSize > 4 * 1024 * 1024) {
+            return res.status(400).json({
+                success: false,
+                message: 'File too large. Maximum size is 4MB.'
+            });
+        }
 
         if (!fileName || !fileType || !base64Data) {
             return res.status(400).json({ success: false, message: 'Please provide fileName, fileType and base64Data' });
@@ -696,7 +802,7 @@ exports.uploadDocument = async (req, res) => {
                 fs.mkdirSync(uploadsDir, { recursive: true });
             }
 
-            const localFilename = `${Date.now()}_${fileName || 'document.jpg'}`;
+            const localFilename = `${Date.now()}_${sanitizedName}`;
             const localPath = path.join(uploadsDir, localFilename);
             fs.writeFileSync(localPath, buffer);
 
@@ -710,7 +816,7 @@ exports.uploadDocument = async (req, res) => {
         }
     } catch (err) {
         console.error('[Upload] Controller Error:', err.message);
-        return res.status(500).json({ success: false, message: err.message });
+        return sendError(res, err);
     }
 };
 
@@ -729,7 +835,7 @@ async function _handleCustomTransaction(req, res, actionType) {
         
         if (!amount || amount <= 0) return res.status(400).json({ success: false, message: 'Invalid amount' });
 
-        if (!verificationId && otp !== '124124') {
+        if (!verificationId) {
             return res.status(400).json({ success: false, message: 'verificationId is required' });
         }
 
@@ -738,12 +844,10 @@ async function _handleCustomTransaction(req, res, actionType) {
             return res.status(400).json({ success: false, message: verificationResult.message || 'Invalid OTP' });
         }
 
-        if (!verificationResult.isBackdoor) {
-            const returnedPhone = verificationResult.phone.replace(/\D/g, '').slice(-10);
-            const loanPhone = loan.borrowerPhone.replace(/\D/g, '').slice(-10);
-            if (returnedPhone !== loanPhone) {
-                return res.status(400).json({ success: false, message: 'OTP verified phone does not match borrower phone' });
-            }
+        const returnedPhone = verificationResult.phone.replace(/\D/g, '').slice(-10);
+        const loanPhone = loan.borrowerPhone.replace(/\D/g, '').slice(-10);
+        if (returnedPhone !== loanPhone) {
+            return res.status(400).json({ success: false, message: 'OTP verified phone does not match borrower phone' });
         }
 
         let notifTitle = 'Transaction Complete';
@@ -751,12 +855,29 @@ async function _handleCustomTransaction(req, res, actionType) {
 
         if (actionType === 'recordPayment' || actionType === 'recordInterest') {
             loan.totalPayable = Math.max(0, loan.totalPayable - amount);
+            loan.paidAmount = (loan.paidAmount || 0) + amount;
             notifTitle = 'Payment Recorded';
             notifBody = `Your lender recorded a payment of ₹${amount}. Your remaining balance is ₹${loan.totalPayable}.`;
+            if (!loan.transactions) loan.transactions = [];
+            loan.transactions.push({
+                type: actionType === 'recordInterest' ? 'interest_payment' : 'payment',
+                amount,
+                note: actionType === 'recordInterest' ? 'Interest payment recorded' : 'Principal payment recorded',
+                recordedAt: new Date(),
+                recordedBy: req.user.id
+            });
         } else if (actionType === 'addCredit') {
             loan.totalPayable += amount;
             notifTitle = 'Credit Added';
             notifBody = `Your lender added a credit of ₹${amount}. Your total payable is now ₹${loan.totalPayable}.`;
+            if (!loan.transactions) loan.transactions = [];
+            loan.transactions.push({
+                type: 'credit_added',
+                amount,
+                note: 'Credit added by lender',
+                recordedAt: new Date(),
+                recordedBy: req.user.id
+            });
         }
 
         if (loan.totalPayable <= 0) {
@@ -783,6 +904,30 @@ async function _handleCustomTransaction(req, res, actionType) {
         }
 
         await loan.save();
+
+        // Send payment confirmation email to borrower
+        if (actionType === 'recordPayment' || actionType === 'recordInterest') {
+            try {
+                const borrowerUserForEmail = await User.findOne({ id: loan.borrower });
+                const lenderUserForEmail = await User.findOne({ id: loan.lender });
+                if (borrowerUserForEmail && borrowerUserForEmail.email) {
+                    await sendEmail({
+                        to: borrowerUserForEmail.email,
+                        subject: `Payment Recorded — ₹${amount.toLocaleString('en-IN')} on your credit`,
+                        html: paymentRecordedTemplate({
+                            borrowerName: `${borrowerUserForEmail.firstName || ''} ${borrowerUserForEmail.lastName || ''}`.trim() || borrowerUserForEmail.phone,
+                            lenderName: lenderUserForEmail ? `${lenderUserForEmail.firstName || ''} ${lenderUserForEmail.lastName || ''}`.trim() : 'Your Lender',
+                            amountPaid: amount,
+                            remainingBalance: loan.totalPayable,
+                            paymentDate: new Date().toLocaleDateString('en-IN'),
+                            loanId: loan._id.toString()
+                        })
+                    });
+                }
+            } catch (emailErr) {
+                console.error('[Loans] payment email failed:', emailErr.message);
+            }
+        }
         await invalidateLoanCache(loan.lender, loan.borrower);
 
         if (loan.borrower) {
@@ -801,10 +946,10 @@ async function _handleCustomTransaction(req, res, actionType) {
             }
         }
 
-        res.status(200).json({ success: true, loan });
+        res.status(200).json({ success: true, loan, transactions: loan.transactions || [] });
     } catch (err) {
         console.error('[Loans] customTransaction Error:', err.message);
-        res.status(500).json({ success: false, message: err.message });
+        sendError(res, err);
     }
 }
 

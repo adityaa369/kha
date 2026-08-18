@@ -377,4 +377,7 @@ class AuthCubit extends Cubit<AuthState> {
     await Future.delayed(const Duration(seconds: 2));
     emit(const CreditScoreProcessed());
   }
+
+  /// Resets cubit to initial state — call when user cancels registration mid-flow
+  void resetToInitial() => emit(AuthInitial());
 }

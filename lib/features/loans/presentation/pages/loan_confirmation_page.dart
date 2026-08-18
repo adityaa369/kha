@@ -11,6 +11,7 @@ import '../../../../core/blocs/loans/loan_state.dart';
 import '../../../../core/widgets/buttons.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../../../core/utils/dialog_utils.dart';
 
 class LoanConfirmationPage extends StatefulWidget {
   final Map<String, dynamic> loanData;
@@ -230,9 +231,7 @@ class _LoanConfirmationPageState extends State<LoanConfirmationPage> {
       } catch (e) {
         if (!mounted) return;
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to confirm agreement: $e')),
-        );
+        DialogUtils.showErrorDialog(context, 'Failed to confirm agreement: $e');
       }
     }
   }

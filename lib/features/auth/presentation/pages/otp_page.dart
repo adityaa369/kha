@@ -1,4 +1,3 @@
-import '../../../../core/utils/error_handler.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
@@ -9,6 +8,7 @@ import 'dart:async';
 import '../../../../config/constants.dart';
 import '../../../../config/theme.dart';
 import '../../../../core/widgets/buttons.dart';
+import '../../../../core/utils/dialog_utils.dart';
 
 class OtpPage extends StatefulWidget {
   final String phone;
@@ -236,6 +236,7 @@ class _OtpPageState extends State<OtpPage> {
               // Verify Button
               BlocConsumer<AuthCubit, AuthState>(
                 listener: (context, state) {
+                  if (!mounted) return;
                   if (state is PasswordResetRequired) {
                     context.go('/reset-password');
                   } else if (state is AuthenticatedFull ||
@@ -250,7 +251,8 @@ class _OtpPageState extends State<OtpPage> {
                     });
                     ScaffoldMessenger.of(
                       context,
-                    ).showSnackBar(SnackBar(content: Text(state.message)));
+                    );
+DialogUtils.showErrorDialog(context, state.message);
                   }
                 },
                 builder: (context, state) {

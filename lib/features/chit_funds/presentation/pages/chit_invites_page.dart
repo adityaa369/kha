@@ -10,6 +10,7 @@ import '../../../../core/blocs/chit_funds/chit_fund_state.dart';
 import '../../../../data/models/chit_fund_model.dart';
 import '../../../../data/models/chit_invite_model.dart';
 import '../../../../core/services/biometric_auth_service.dart';
+import '../../../../core/utils/dialog_utils.dart';
 
 class ChitInvitesPage extends StatefulWidget {
   const ChitInvitesPage({super.key});
@@ -157,12 +158,7 @@ class _ChitInvitesPageState extends State<ChitInvitesPage> {
           if (state is ChitFundActionSuccess) {
             context.push(AppConstants.chitSuccess);
           } else if (state is ChitFundError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Error: ${state.message}'),
-                backgroundColor: Colors.red,
-              ),
-            );
+            DialogUtils.showErrorDialog(context, 'Error: ${state.message}');
           }
         },
         builder: (context, state) {

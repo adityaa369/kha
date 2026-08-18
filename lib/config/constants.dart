@@ -30,13 +30,10 @@ class AppConstants {
   static const String lenderLoanDetails = '/lender-loan-details';
   static const String chitSuccess = '/chit-success';
   static const String chitAdminDashboard = '/chit-admin-dashboard';
+  static const String chitMemberDetail = '/chit-member-detail';
 
   // API Configurations
   static const String _prodUrl = 'https://khataa-backend.onrender.com';
-
-  // MSG91 Configurations
-  static const String msg91WidgetId = '36626e6d4150393836303137';
-  static const String msg91AuthToken = '493750AHbH3T8dp69907788P1';
 
   static String get baseUrl {
     return dotenv.env['BASE_URL'] ?? '$_prodUrl/api';

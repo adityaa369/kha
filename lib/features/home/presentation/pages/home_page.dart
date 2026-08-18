@@ -11,6 +11,8 @@ import '../../../insights/presentation/pages/insights_page.dart';
 import '../../../../core/blocs/auth/auth_cubit.dart';
 import '../../../../core/blocs/loans/loan_cubit.dart';
 import '../../../../core/blocs/loans/loan_state.dart';
+import '../cubit/notification_cubit.dart';
+import '../cubit/notification_state.dart';
 import '../../../loans/presentation/pages/my_loans_page.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../../core/widgets/looping_avatar.dart';
@@ -436,18 +438,20 @@ class _TopBarState extends State<_TopBar> {
           SizedBox(width: 12.w),
           Row(
             children: [
-              BlocBuilder<LoanCubit, LoanState>(
+              BlocBuilder<NotificationCubit, NotificationState>(
                 builder: (context, state) {
-                  int pendingCount = 0;
-                  if (state is LoansLoaded) {
-                    pendingCount = state.myLoans
-                        .where((l) => l.status == 'pending_approval')
+                  int unreadCount = 0;
+                  if (state is NotificationLoaded) {
+                    unreadCount = state.notifications
+                        .where((n) => !n.isRead)
                         .length;
                   }
-                  if (pendingCount == 0) pendingCount = 3;
 
                   return GestureDetector(
-                    onTap: () => context.push('/notifications'),
+                    onTap: () {
+                      context.push('/notifications');
+                      context.read<NotificationCubit>().fetchNotifications();
+                    },
                     child: Stack(
                       clipBehavior: Clip.none,
                       children: [
@@ -464,7 +468,7 @@ class _TopBarState extends State<_TopBar> {
                             size: 20.sp,
                           ),
                         ),
-                        if (pendingCount > 0)
+                        if (unreadCount > 0)
                           Positioned(
                             right: -2,
                             top: -2,
@@ -475,7 +479,7 @@ class _TopBarState extends State<_TopBar> {
                                 shape: BoxShape.circle,
                               ),
                               child: Text(
-                                '$pendingCount',
+                                '$unreadCount',
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 10.sp,
@@ -813,25 +817,6 @@ class _PaymentsSection extends StatelessWidget {
         );
   }
 
-  static String _getMonthName(int month) {
-    if (month < 1 || month > 12) return 'Jan';
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    return months[month - 1];
-  }
-
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<LoanCubit, LoanState>(
@@ -917,7 +902,6 @@ class _PaymentsSection extends StatelessWidget {
           child: Column(
             children: dueList.map((item) {
               final loan = item['loan'] as LoanModel;
-              final dueDate = item['dueDate'] as DateTime;
               final amount = item['amount'] as double;
               final daysDiff = item['daysDifference'] as int;
 
@@ -1280,3 +1264,4 @@ class _ExploreCard extends StatelessWidget {
     );
   }
 }
+

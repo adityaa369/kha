@@ -1,4 +1,3 @@
-import '../../../../core/utils/error_handler.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
@@ -8,6 +7,7 @@ import '../../../../core/widgets/buttons.dart';
 import '../../../../core/widgets/inputs.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/blocs/auth/auth_cubit.dart';
+import '../../../../core/utils/dialog_utils.dart';
 
 class PersonalDetailsPage extends StatefulWidget {
   const PersonalDetailsPage({super.key});
@@ -43,9 +43,16 @@ class _PersonalDetailsPageState extends State<PersonalDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) {
+          context.read<AuthCubit>().resetToInitial();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
@@ -55,12 +62,14 @@ class _PersonalDetailsPageState extends State<PersonalDetailsPage> {
       ),
       body: BlocListener<AuthCubit, AuthState>(
         listener: (context, state) {
+          if (!mounted) return;
           if (state is PersonalDetailsSaved || state is AuthenticatedFull) {
             context.go(AppConstants.panDetails);
           } else if (state is AuthError) {
             ScaffoldMessenger.of(
               context,
-            ).showSnackBar(SnackBar(content: Text(state.message)));
+            );
+DialogUtils.showErrorDialog(context, state.message);
           }
         },
         child: SingleChildScrollView(
@@ -187,8 +196,10 @@ class _PersonalDetailsPageState extends State<PersonalDetailsPage> {
             ),
           ),
         ),
+        ),
       ),
     );
   }
 }
+
 

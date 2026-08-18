@@ -58,6 +58,8 @@ class ChitFundCubit extends Cubit<ChitFundState> {
     required String name,
     required double totalValue,
     required int totalMonths,
+    double commissionPercent = 5.0,
+    String branchName = 'KPHB-CAO',
   }) async {
     try {
       emit(ChitFundLoading());
@@ -65,6 +67,8 @@ class ChitFundCubit extends Cubit<ChitFundState> {
         name: name,
         totalValue: totalValue,
         totalMonths: totalMonths,
+        commissionPercent: commissionPercent,
+        branchName: branchName,
       );
       emit(const ChitFundActionSuccess('Chit Group Created Successfully!'));
       await loadInvitesAndOwned();
@@ -204,6 +208,43 @@ class ChitFundCubit extends Cubit<ChitFundState> {
         isPaid,
       );
       // Silently reload dashboard to show updated UI without showing success snackbar every single time
+      final data = await _repository.getAdminDashboard(chitId);
+      emit(ChitAdminDashboardLoaded(data));
+    } catch (e) {
+      emit(ChitFundError(e.toString()));
+    }
+  }
+
+  // Load Member Detail (member's own view of a chit)
+  Future<void> loadMemberDetail(String chitId) async {
+    try {
+      emit(ChitFundLoading());
+      final result = await _repository.getMemberDetail(chitId);
+      emit(ChitMemberDetailLoaded(
+        memberData: Map<String, dynamic>.from(result['subscription'] ?? {}),
+        auctionHistory: List<Map<String, dynamic>>.from(
+          (result['auctionHistory'] ?? []).map((e) => Map<String, dynamic>.from(e))
+        ),
+        paymentHistory: List<Map<String, dynamic>>.from(
+          (result['paymentHistory'] ?? []).map((e) => Map<String, dynamic>.from(e))
+        ),
+        chitInfo: Map<String, dynamic>.from(result['chitInfo'] ?? {}),
+      ));
+    } catch (e) {
+      emit(ChitFundError(e.toString()));
+    }
+  }
+
+  // Mark payment paid/unpaid (owner action)
+  Future<void> markPaymentPaid({
+    required String chitId,
+    required int monthNumber,
+    required String subscriberId,
+    required bool isPaid,
+  }) async {
+    try {
+      await _repository.verifyMonthPayment(chitId, monthNumber, subscriberId, isPaid);
+      // Silently reload dashboard
       final data = await _repository.getAdminDashboard(chitId);
       emit(ChitAdminDashboardLoaded(data));
     } catch (e) {

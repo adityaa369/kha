@@ -1,9 +1,9 @@
-import '../../../../core/utils/error_handler.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/blocs/auth/auth_cubit.dart';
+import '../../../../core/utils/dialog_utils.dart';
 import '../../../../config/theme.dart';
 
 class LoginPage extends StatefulWidget {
@@ -37,12 +37,7 @@ class _LoginPageState extends State<LoginPage> {
   void _handleForgotPassword() {
     final phone = _phoneController.text.trim();
     if (phone.isEmpty || phone.length < 10) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter your 10-digit phone number first.'),
-          backgroundColor: KhaataTheme.dangerRed,
-        ),
-      );
+      DialogUtils.showErrorDialog(context, 'Please enter your 10-digit phone number first.');
       return;
     }
     
@@ -77,13 +72,9 @@ class _LoginPageState extends State<LoginPage> {
       backgroundColor: KhaataTheme.primaryBlue,
       body: BlocConsumer<AuthCubit, AuthState>(
         listener: (context, state) {
+          if (!mounted) return;
           if (state is AuthError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: KhaataTheme.dangerRed,
-              ),
-            );
+            DialogUtils.showErrorDialog(context, state.message);
           } else if (state is AuthenticatedFull) {
             context.go('/home');
           }

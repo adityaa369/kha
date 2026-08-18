@@ -289,26 +289,32 @@ class BusinessLoanDetailsPage extends StatelessWidget {
             child: Column(
               children: [
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
                       child: _stat('Principal Amount', '₹${_fmt(loan.amount)}'),
                     ),
+                    SizedBox(width: 12.w),
                     Expanded(child: _stat('Duration', '$duration Months')),
                   ],
                 ),
                 SizedBox(height: 12.h),
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(child: _stat('Start Date', startStr)),
+                    SizedBox(width: 12.w),
                     Expanded(child: _stat('End Date', endStr)),
                   ],
                 ),
                 SizedBox(height: 12.h),
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
                       child: _stat('Paid Months', '$paidMonths / $duration'),
                     ),
+                    SizedBox(width: 12.w),
                     Expanded(
                       child: _stat(
                         'Progress',
@@ -338,19 +344,28 @@ class BusinessLoanDetailsPage extends StatelessWidget {
   Widget _stat(String label, String value, {Color? valueColor}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           label,
-          style: TextStyle(fontSize: 11.sp, color: Colors.grey.shade500),
+          style: TextStyle(
+            fontSize: 11.sp,
+            color: Colors.grey.shade500,
+            fontWeight: FontWeight.w400,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
-        SizedBox(height: 4.h),
+        SizedBox(height: 3.h),
         Text(
           value,
           style: TextStyle(
             fontSize: 14.sp,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
             color: valueColor ?? Colors.black87,
           ),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
         ),
       ],
     );
@@ -419,6 +434,7 @@ class BusinessLoanDetailsPage extends StatelessWidget {
           ),
           SizedBox(height: 16.h),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: _gradientStat(
@@ -426,6 +442,7 @@ class BusinessLoanDetailsPage extends StatelessWidget {
                   totalPayable > 0 ? '₹${_fmt(totalPayable)}' : '-',
                 ),
               ),
+              SizedBox(width: 12.w),
               Expanded(
                 child: _gradientStat('Amount Paid', '₹${_fmt(amountPaid)}'),
               ),
@@ -433,6 +450,7 @@ class BusinessLoanDetailsPage extends StatelessWidget {
           ),
           SizedBox(height: 12.h),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: _gradientStat(
@@ -440,15 +458,18 @@ class BusinessLoanDetailsPage extends StatelessWidget {
                   '₹${_fmt(amountPending)}',
                 ),
               ),
+              SizedBox(width: 12.w),
               Expanded(child: const SizedBox()),
             ],
           ),
           SizedBox(height: 12.h),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: _gradientStat('Paid Months', '$paidMonths / $duration'),
               ),
+              SizedBox(width: 12.w),
               Expanded(
                 child: _gradientStat(
                   'Remaining',
@@ -465,19 +486,24 @@ class BusinessLoanDetailsPage extends StatelessWidget {
   Widget _gradientStat(String label, String value) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           label,
-          style: TextStyle(color: Colors.white60, fontSize: 10.sp),
+          style: TextStyle(color: Colors.white60, fontSize: 11.sp, fontWeight: FontWeight.w400),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
-        SizedBox(height: 4.h),
+        SizedBox(height: 3.h),
         Text(
           value,
           style: TextStyle(
             color: Colors.white,
             fontSize: 14.sp,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w600,
           ),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
         ),
       ],
     );
@@ -489,8 +515,7 @@ class BusinessLoanDetailsPage extends StatelessWidget {
     final duration = loan.durationMonths ?? 0;
     final progress = loan.progress.clamp(0.0, 1.0);
     final paidMonths = (duration * progress).round();
-    final emi = loan.emiAmount ?? 0.0;
-
+    
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
@@ -542,13 +567,13 @@ class BusinessLoanDetailsPage extends StatelessWidget {
                     padding: EdgeInsets.all(12.w),
                     decoration: BoxDecoration(
                       color: isPaid
-                          ? _bg.withOpacity(0.5)
+                          ? _bg.withValues(alpha: 0.5)
                           : (isOverdue ? Colors.red.shade50 : Colors.white),
                       border: Border.all(
                         color: isPaid
-                            ? _primary.withOpacity(0.3)
+                            ? _primary.withValues(alpha: 0.3)
                             : (isOverdue
-                                  ? Colors.red.withOpacity(0.3)
+                                  ? Colors.red.withValues(alpha: 0.3)
                                   : Colors.grey.shade200),
                       ),
                       borderRadius: BorderRadius.circular(12.r),
@@ -988,3 +1013,5 @@ class BusinessLoanDetailsPage extends StatelessWidget {
     }
   }
 }
+
+

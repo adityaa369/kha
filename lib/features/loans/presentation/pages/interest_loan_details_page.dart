@@ -328,6 +328,7 @@ class InterestLoanDetailsPage extends StatelessWidget {
             child: Column(
               children: [
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
                       child: _statItem(
@@ -335,18 +336,22 @@ class InterestLoanDetailsPage extends StatelessWidget {
                         '₹${_fmt(loan.amount)}',
                       ),
                     ),
+                    SizedBox(width: 12.w),
                     Expanded(child: _statItem('Duration', '$duration Months')),
                   ],
                 ),
                 SizedBox(height: 12.h),
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(child: _statItem('Start Date', startStr)),
+                    SizedBox(width: 12.w),
                     Expanded(child: _statItem('End Date', endStr)),
                   ],
                 ),
                 SizedBox(height: 12.h),
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
                       child: _statItem(
@@ -354,6 +359,7 @@ class InterestLoanDetailsPage extends StatelessWidget {
                         '$paidMonths / $duration',
                       ),
                     ),
+                    SizedBox(width: 12.w),
                     Expanded(
                       child: _statItem(
                         'Progress',
@@ -373,19 +379,28 @@ class InterestLoanDetailsPage extends StatelessWidget {
   Widget _statItem(String label, String value) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           label,
-          style: TextStyle(fontSize: 11.sp, color: Colors.grey.shade500),
+          style: TextStyle(
+            fontSize: 11.sp,
+            color: Colors.grey.shade500,
+            fontWeight: FontWeight.w400,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
-        SizedBox(height: 4.h),
+        SizedBox(height: 3.h),
         Text(
           value,
           style: TextStyle(
             fontSize: 14.sp,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
             color: Colors.black87,
           ),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
         ),
       ],
     );
@@ -395,8 +410,10 @@ class InterestLoanDetailsPage extends StatelessWidget {
 
   Widget _interestInfoCard(LoanModel loan) {
     final rate = loan.interestRate ?? 0.0;
-    final monthly = loan.amount * rate / 100;
     final duration = loan.durationMonths ?? 0;
+    final monthly = rate > 0
+        ? loan.amount * rate / 100
+        : (loan.emiAmount ?? 0.0);
     final totalInterest = monthly * duration;
     final totalPayable = loan.amount + totalInterest;
     final progress = loan.progress.clamp(0.0, 1.0);
@@ -431,6 +448,7 @@ class InterestLoanDetailsPage extends StatelessWidget {
           ),
           SizedBox(height: 16.h),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: _interestStat(
@@ -438,6 +456,7 @@ class InterestLoanDetailsPage extends StatelessWidget {
                   '${rate.toStringAsFixed(1)}% / month',
                 ),
               ),
+              SizedBox(width: 12.w),
               Expanded(
                 child: _interestStat('Monthly Interest', '₹${_fmt(monthly)}'),
               ),
@@ -445,6 +464,7 @@ class InterestLoanDetailsPage extends StatelessWidget {
           ),
           SizedBox(height: 12.h),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: _interestStat(
@@ -452,6 +472,7 @@ class InterestLoanDetailsPage extends StatelessWidget {
                   '₹${_fmt(totalInterest)}',
                 ),
               ),
+              SizedBox(width: 12.w),
               Expanded(
                 child: _interestStat('Total Payable', '₹${_fmt(totalPayable)}'),
               ),
@@ -459,10 +480,12 @@ class InterestLoanDetailsPage extends StatelessWidget {
           ),
           SizedBox(height: 12.h),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: _interestStat('Interest Paid', '₹${_fmt(received)}'),
               ),
+              SizedBox(width: 12.w),
               Expanded(
                 child: _interestStat(
                   'Interest Pending',
@@ -479,19 +502,24 @@ class InterestLoanDetailsPage extends StatelessWidget {
   Widget _interestStat(String label, String value) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           label,
-          style: TextStyle(color: Colors.white60, fontSize: 10.sp),
+          style: TextStyle(color: Colors.white60, fontSize: 11.sp, fontWeight: FontWeight.w400),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
-        SizedBox(height: 4.h),
+        SizedBox(height: 3.h),
         Text(
           value,
           style: TextStyle(
             color: Colors.white,
             fontSize: 14.sp,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w600,
           ),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
         ),
       ],
     );
@@ -503,9 +531,7 @@ class InterestLoanDetailsPage extends StatelessWidget {
     final duration = loan.durationMonths ?? 0;
     final progress = loan.progress.clamp(0.0, 1.0);
     final paidMonths = (duration * progress).round();
-    final rate = loan.interestRate ?? 0.0;
-    final monthly = loan.amount * rate / 100;
-
+    
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
@@ -561,13 +587,13 @@ class InterestLoanDetailsPage extends StatelessWidget {
                     padding: EdgeInsets.all(12.w),
                     decoration: BoxDecoration(
                       color: isPaid
-                          ? _bg.withOpacity(0.5)
+                          ? _bg.withValues(alpha: 0.5)
                           : (isOverdue ? Colors.red.shade50 : Colors.white),
                       border: Border.all(
                         color: isPaid
-                            ? _primary.withOpacity(0.3)
+                            ? _primary.withValues(alpha: 0.3)
                             : (isOverdue
-                                  ? Colors.red.withOpacity(0.3)
+                                  ? Colors.red.withValues(alpha: 0.3)
                                   : Colors.grey.shade200),
                       ),
                       borderRadius: BorderRadius.circular(12.r),
@@ -1024,3 +1050,5 @@ class InterestLoanDetailsPage extends StatelessWidget {
     }
   }
 }
+
+

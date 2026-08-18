@@ -20,7 +20,7 @@ class LenderLoanDetailsPage extends StatelessWidget {
 
   // ─── Theme by loan type ──────────────────────────────────────────────────
 
-  static const _typeColors = {
+  static final Map<String, _TypeTheme> _typeColors = {
     'hand_credit': _TypeTheme(
       Color(0xFF1B5E20),
       Color(0xFFE8F5E9),
@@ -123,19 +123,15 @@ class LenderLoanDetailsPage extends StatelessWidget {
                         duration,
                         paidMonths,
                       ),
+                      SizedBox(height: 14.h),
+                      _loanProgressCard(activeLoan, theme, duration, paidMonths, progress),
+                      SizedBox(height: 14.h),
+                      _recentTransactions(activeLoan, theme),
+                      SizedBox(height: 14.h),
                       if (activeLoan.documentUrl != null &&
                           activeLoan.documentUrl!.isNotEmpty) ...[
                         _documentSection(context, activeLoan, theme),
                         SizedBox(height: 16.h),
-                      ],
-                      if (!isClosed && !isPending) ...[
-                        _transactionButtons(
-                          context,
-                          activeLoan,
-                          theme,
-                          isLoading,
-                        ),
-                        SizedBox(height: 24.h),
                       ],
                     ],
                     if (isPending) _pendingCard(activeLoan),
@@ -198,15 +194,6 @@ class LenderLoanDetailsPage extends StatelessWidget {
                     color: Colors.black87,
                   ),
                 ),
-                SizedBox(height: 2.h),
-                Text(
-                  'Borrower',
-                  style: TextStyle(
-                    fontSize: 11.sp,
-                    color: theme.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
                 if (phone.isNotEmpty) ...[
                   SizedBox(height: 2.h),
                   Row(
@@ -234,20 +221,19 @@ class LenderLoanDetailsPage extends StatelessWidget {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _iconBtn(Icons.phone, Colors.blue.shade600, () {
+                _iconActionBtn(Icons.phone, 'Call', Colors.green.shade600, () {
                   Clipboard.setData(ClipboardData(text: phone));
                 }),
-                SizedBox(width: 10.w),
-                _iconBtn(
+                SizedBox(width: 16.w),
+                _iconActionBtn(
                   Icons.chat_bubble_outline,
+                  'WhatsApp',
                   Colors.green.shade600,
                   () async {
                     final uri = Uri.parse('https://wa.me/91$phone');
-                    if (await canLaunchUrl(uri))
-                      await launchUrl(
-                        uri,
-                        mode: LaunchMode.externalApplication,
-                      );
+                    if (await canLaunchUrl(uri)) {
+                      await launchUrl(uri, mode: LaunchMode.externalApplication);
+                    }
                   },
                 ),
               ],
@@ -257,16 +243,23 @@ class LenderLoanDetailsPage extends StatelessWidget {
     );
   }
 
-  Widget _iconBtn(IconData icon, Color color, VoidCallback onTap) {
+  Widget _iconActionBtn(IconData icon, String label, Color color, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.all(8.w),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(8.r),
-        ),
-        child: Icon(icon, size: 20.sp, color: color),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 22.sp, color: color),
+          SizedBox(height: 2.h),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10.sp,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -286,11 +279,16 @@ class LenderLoanDetailsPage extends StatelessWidget {
     final monthly = rate > 0
         ? loan.amount * rate / 100
         : (loan.emiAmount ?? 0.0);
-    final totalPayable = (loan.totalPayableAmount ?? 0.0) > 0
-        ? loan.totalPayableAmount!
-        : loan.amount + (monthly * duration);
-    final collected = monthly * paidMonths;
-    final remaining = totalPayable - collected;
+    // originalTotal = what was owed at activation
+    final originalTotal = (loan.totalPayableAmount != null && loan.paidAmount != null && loan.paidAmount! > 0)
+        ? loan.totalPayableAmount! + loan.paidAmount!
+        : ((loan.totalPayableAmount ?? 0.0) > 0
+            ? loan.totalPayableAmount!
+            : loan.amount + (monthly * duration));
+    // remaining = what the backend says is still owed (totalPayableAmount is updated on each payment)
+    final remaining = loan.totalPayableAmount ?? (originalTotal * (1 - progress));
+    final collected = originalTotal - remaining;
+    final isInterest = loan.type.toLowerCase().contains('interest') || loan.type.toLowerCase().contains('home');
 
     return Container(
       decoration: BoxDecoration(
@@ -299,82 +297,93 @@ class LenderLoanDetailsPage extends StatelessWidget {
         border: Border.all(color: Colors.grey.shade200),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Badge row
+          // Badges
           Padding(
-            padding: EdgeInsets.all(14.w),
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [_badge(theme, loan.type), _statusChip(loan.status)],
+              children: [
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                  decoration: BoxDecoration(
+                    color: theme.bg,
+                    borderRadius: BorderRadius.circular(20.r),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (isInterest) ...[
+                         Text('% Interest Credit', style: TextStyle(color: theme.primary, fontSize: 12.sp, fontWeight: FontWeight.bold)),
+                      ] else ...[
+                         Text('💰 Hand Credit', style: TextStyle(color: theme.primary, fontSize: 12.sp, fontWeight: FontWeight.bold)),
+                      ],
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade50,
+                    borderRadius: BorderRadius.circular(20.r),
+                  ),
+                  child: Text(
+                    'Active Loan',
+                    style: TextStyle(
+                      color: Colors.green.shade700,
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           Divider(height: 1, color: Colors.grey.shade100),
-
+          // Amounts Row
           Padding(
             padding: EdgeInsets.all(14.w),
-            child: Column(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: _stat('Principal', '₹${_fmt(loan.amount)}'),
-                    ),
-                    Expanded(child: _stat('Duration', '$duration months')),
-                  ],
-                ),
-                SizedBox(height: 12.h),
-                Row(
-                  children: [
-                    Expanded(child: _stat('Start Date', start)),
-                    Expanded(child: _stat('End Date', end)),
-                  ],
-                ),
-                SizedBox(height: 12.h),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _stat('Paid Months', '$paidMonths / $duration'),
-                    ),
-                    Expanded(
-                      child: _stat(
-                        'Progress',
-                        '${(progress * 100).toStringAsFixed(0)}%',
-                      ),
-                    ),
-                  ],
-                ),
-                if (monthly > 0) ...[
-                  SizedBox(height: 12.h),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _stat(
-                          'Collected',
-                          '₹${_fmt(collected)}',
-                          valueColor: Colors.green.shade700,
-                        ),
-                      ),
-                      Expanded(
-                        child: _stat(
-                          'Remaining',
-                          '₹${_fmt(remaining)}',
-                          valueColor: Colors.red.shade600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-                SizedBox(height: 16.h),
-                // Progress bar
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8.r),
-                  child: LinearProgressIndicator(
-                    value: progress,
-                    backgroundColor: Colors.grey.shade100,
-                    valueColor: AlwaysStoppedAnimation<Color>(theme.primary),
-                    minHeight: 8.h,
+                Expanded(
+                  child: _stat(
+                    isInterest ? 'Principal' : 'Given Amount',
+                    '₹${_fmt(loan.amount)}',
                   ),
                 ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: _stat(
+                    isInterest ? 'Monthly Interest' : 'Received Amount',
+                    isInterest ? '₹${_fmt(monthly)}' : '₹${_fmt(collected)}',
+                    valueColor: isInterest ? theme.primary : Colors.green.shade700,
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: _stat(
+                    isInterest ? 'Total Interest' : 'Remaining Amount',
+                    isInterest ? '₹${_fmt(monthly * duration)}' : '₹${_fmt(remaining)}',
+                    valueColor: isInterest ? Colors.black87 : Colors.red.shade600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Divider(height: 1, color: Colors.grey.shade100),
+          // Dates Row
+          Padding(
+            padding: EdgeInsets.all(14.w),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: _stat('Start Date', start)),
+                SizedBox(width: 12.w),
+                Expanded(child: _stat('Duration', '$duration Months')),
+                SizedBox(width: 12.w),
+                Expanded(child: _stat('End Date', end)),
               ],
             ),
           ),
@@ -383,39 +392,235 @@ class LenderLoanDetailsPage extends StatelessWidget {
     );
   }
 
-  Widget _badge(_TypeTheme theme, String type) {
+  Widget _loanProgressCard(LoanModel loan, _TypeTheme theme, int duration, int paidMonths, double progress) {
+    final nextDue = loan.startDate.add(Duration(days: (paidMonths + 1) * 30));
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
+      padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: theme.bg,
-        borderRadius: BorderRadius.circular(20.r),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: Colors.grey.shade200),
       ),
-      child: Text(
-        theme.label,
-        style: TextStyle(
-          color: theme.primary,
-          fontSize: 11.sp,
-          fontWeight: FontWeight.w700,
-        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Loan Progress',
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black87,
+                ),
+              ),
+              Text(
+                '$paidMonths of $duration months completed',
+                style: TextStyle(fontSize: 11.sp, color: Colors.grey.shade600),
+              ),
+            ],
+          ),
+          SizedBox(height: 12.h),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8.r),
+            child: LinearProgressIndicator(
+              value: progress,
+              backgroundColor: Colors.grey.shade100,
+              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF22C55E)), // Green
+              minHeight: 8.h,
+            ),
+          ),
+          SizedBox(height: 16.h),
+          Divider(height: 1, color: Colors.grey.shade100),
+          SizedBox(height: 16.h),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: 'Next Payment Due Date: ',
+                        style: TextStyle(fontSize: 11.sp, color: Colors.grey.shade600),
+                      ),
+                      TextSpan(
+                        text: _dateStr(nextDue),
+                        style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.w700, color: Colors.black87),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(width: 8.w),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(color: Colors.green.shade200),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.calendar_today, size: 12.sp, color: Colors.red.shade600),
+                    SizedBox(width: 4.w),
+                    Text(
+                      'View Schedule',
+                      style: TextStyle(
+                        fontSize: 11.sp,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green.shade700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 
-  Widget _statusChip(String status) {
-    final color = _statusColor(status);
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(12.r),
-      ),
-      child: Text(
-        _statusLabel(status),
-        style: TextStyle(
-          color: color,
-          fontSize: 11.sp,
-          fontWeight: FontWeight.w700,
+  Widget _recentTransactions(LoanModel loan, _TypeTheme theme) {
+    final txns = loan.transactions.reversed.toList(); // newest first
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Recent Transactions',
+              style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w700, color: Colors.black87),
+            ),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+              decoration: BoxDecoration(
+                color: theme.bg,
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+              child: Text(
+                '${txns.length} records',
+                style: TextStyle(fontSize: 11.sp, color: theme.primary, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
         ),
+        SizedBox(height: 12.h),
+        if (txns.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.all(20.w),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(color: Colors.grey.shade200),
+            ),
+            child: Column(
+              children: [
+                Icon(Icons.receipt_long_outlined, color: Colors.grey.shade400, size: 32.sp),
+                SizedBox(height: 8.h),
+                Text('No transactions recorded yet', style: TextStyle(color: Colors.grey, fontSize: 12.sp)),
+                SizedBox(height: 4.h),
+                Text('Use Record Payment below to log payments', style: TextStyle(color: Colors.grey.shade400, fontSize: 11.sp)),
+              ],
+            ),
+          )
+        else
+          ...txns.map((tx) => _txItem(
+            _txIcon(tx['type'] as String? ?? ''),
+            _txColor(tx['type'] as String? ?? ''),
+            _txTitle(tx['type'] as String? ?? ''),
+            tx['note'] as String? ?? '',
+            _txAmountStr(tx['type'] as String? ?? '', (tx['amount'] as num?)?.toDouble() ?? 0),
+            _txDateStr(tx['recordedAt']),
+            _txIsPositive(tx['type'] as String? ?? ''),
+          )),
+      ],
+    );
+  }
+
+  IconData _txIcon(String type) {
+    switch (type) {
+      case 'payment': return Icons.arrow_downward;
+      case 'interest_payment': return Icons.percent;
+      case 'credit_added': return Icons.add_circle_outline;
+      case 'loan_given': return Icons.arrow_upward;
+      default: return Icons.swap_horiz;
+    }
+  }
+
+  Color _txColor(String type) {
+    switch (type) {
+      case 'payment': return Colors.green.shade600;
+      case 'interest_payment': return Colors.teal.shade600;
+      case 'credit_added': return Colors.orange.shade600;
+      case 'loan_given': return Colors.red.shade400;
+      default: return Colors.grey;
+    }
+  }
+
+  String _txTitle(String type) {
+    switch (type) {
+      case 'payment': return 'Payment Received';
+      case 'interest_payment': return 'Interest Received';
+      case 'credit_added': return 'Credit Added';
+      case 'loan_given': return 'Loan Disbursed';
+      default: return 'Transaction';
+    }
+  }
+
+  String _txAmountStr(String type, double amount) {
+    final sign = type == 'loan_given' ? '-' : '+';
+    return '$sign₹${_fmt(amount)}';
+  }
+
+  bool _txIsPositive(String type) => type != 'loan_given';
+
+  String _txDateStr(dynamic rawDate) {
+    if (rawDate == null) return '';
+    try {
+      final dt = DateTime.parse(rawDate.toString()).toLocal();
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      return '${dt.day.toString().padLeft(2, '0')} ${months[dt.month - 1]} ${dt.year}';
+    } catch (_) {
+      return '';
+    }
+  }
+
+  Widget _txItem(IconData icon, Color color, String title, String subtitle, String amount, String date, bool isPositive) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 12.h),
+      child: Row(
+        children: [
+          Container(
+            padding: EdgeInsets.all(10.w),
+            decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
+            child: Icon(icon, color: color, size: 16.sp),
+          ),
+          SizedBox(width: 12.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.sp, color: Colors.black87)),
+                SizedBox(height: 2.h),
+                Text(subtitle, style: TextStyle(color: Colors.grey, fontSize: 11.sp)),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(amount, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.sp, color: isPositive ? Colors.green.shade700 : Colors.red.shade600)),
+              SizedBox(height: 2.h),
+              Text(date, style: TextStyle(color: Colors.grey, fontSize: 11.sp)),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -423,19 +628,28 @@ class LenderLoanDetailsPage extends StatelessWidget {
   Widget _stat(String label, String value, {Color? valueColor}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           label,
-          style: TextStyle(fontSize: 11.sp, color: Colors.grey.shade500),
+          style: TextStyle(
+            fontSize: 11.sp,
+            color: Colors.grey.shade500,
+            fontWeight: FontWeight.w400,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
         SizedBox(height: 3.h),
         Text(
           value,
           style: TextStyle(
             fontSize: 14.sp,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
             color: valueColor ?? Colors.black87,
           ),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
         ),
       ],
     );
@@ -460,27 +674,15 @@ class LenderLoanDetailsPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Monthly Repayment',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.black87,
-                ),
-              ),
-              Text(
-                '$paidMonths of $duration paid',
-                style: TextStyle(fontSize: 11.sp, color: Colors.grey.shade500),
-              ),
-            ],
-          ),
-          SizedBox(height: 4.h),
           Text(
-            'Tap a month to toggle paid / unpaid',
-            style: TextStyle(fontSize: 10.sp, color: Colors.grey.shade400),
+            loan.type.toLowerCase().contains('interest') || loan.type.toLowerCase().contains('home')
+                ? 'Monthly Interest Overview'
+                : 'Monthly Payment Overview',
+            style: TextStyle(
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w700,
+              color: Colors.black87,
+            ),
           ),
           SizedBox(height: 12.h),
           if (duration > 0)
@@ -493,11 +695,6 @@ class LenderLoanDetailsPage extends StatelessWidget {
                   final dueDate = loan.startDate.add(
                     Duration(days: (index + 1) * 30),
                   );
-                  final isOverdue = !isPaid && dueDate.isBefore(DateTime.now());
-                  final rate = loan.interestRate ?? 0.0;
-                  final monthly = rate > 0
-                      ? loan.amount * rate / 100
-                      : (loan.emiAmount ?? 0.0);
 
                   return GestureDetector(
                     onTap: () => _toggleMonth(
@@ -508,69 +705,30 @@ class LenderLoanDetailsPage extends StatelessWidget {
                       duration,
                     ),
                     child: Container(
-                      width: 140.w,
-                      margin: EdgeInsets.only(right: 12.w, bottom: 8.h),
-                      padding: EdgeInsets.all(12.w),
-                      decoration: BoxDecoration(
-                        color: isPaid
-                            ? theme.primary.withOpacity(0.08)
-                            : (isOverdue ? Colors.red.shade50 : Colors.white),
-                        border: Border.all(
-                          color: isPaid
-                              ? theme.primary.withOpacity(0.3)
-                              : (isOverdue
-                                    ? Colors.red.withOpacity(0.3)
-                                    : Colors.grey.shade200),
-                        ),
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
+                      margin: EdgeInsets.only(right: 12.w),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Month ${index + 1}',
-                                style: TextStyle(
-                                  fontSize: 12.sp,
-                                  fontWeight: FontWeight.bold,
-                                  color: isPaid
-                                      ? theme.primary
-                                      : (isOverdue
-                                            ? Colors.red.shade700
-                                            : Colors.grey.shade700),
-                                ),
-                              ),
-                              Icon(
-                                isPaid
-                                    ? Icons.check_circle
-                                    : (isOverdue
-                                          ? Icons.cancel
-                                          : Icons.radio_button_unchecked),
-                                size: 16.sp,
-                                color: isPaid
-                                    ? theme.primary
-                                    : (isOverdue
-                                          ? Colors.red.shade400
-                                          : Colors.grey.shade400),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: 8.h),
                           Text(
                             '${_monthName(dueDate.month)} ${dueDate.year}',
-                            style: TextStyle(
-                              fontSize: 11.sp,
-                              color: Colors.grey.shade600,
-                            ),
+                            style: TextStyle(fontSize: 10.sp, color: Colors.grey.shade600),
                           ),
-                          SizedBox(height: 2.h),
-                          Text(
-                            'Due: ${dueDate.day}',
-                            style: TextStyle(
-                              fontSize: 10.sp,
-                              color: Colors.grey.shade400,
+                          SizedBox(height: 6.h),
+                          Container(
+                            width: 50.w,
+                            height: 55.h,
+                            decoration: BoxDecoration(
+                              color: isPaid ? Colors.green.shade50 : Colors.white,
+                              border: Border.all(
+                                color: isPaid ? Colors.green : Colors.red.shade200,
+                                width: 1.5,
+                              ),
+                              borderRadius: BorderRadius.circular(8.r),
+                            ),
+                            alignment: Alignment.center,
+                            child: Icon(
+                              isPaid ? Icons.check : Icons.close,
+                              color: isPaid ? Colors.green : Colors.red.shade300,
+                              size: 20.sp,
                             ),
                           ),
                         ],
@@ -580,6 +738,17 @@ class LenderLoanDetailsPage extends StatelessWidget {
                 }),
               ),
             ),
+          SizedBox(height: 16.h),
+          Row(
+            children: [
+              Icon(Icons.info_outline, size: 12.sp, color: Colors.grey),
+              SizedBox(width: 4.w),
+              Text(
+                'Tick (✓) if paid, Cross (✗) if not paid.',
+                style: TextStyle(fontSize: 10.sp, color: Colors.grey),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -955,123 +1124,6 @@ class LenderLoanDetailsPage extends StatelessWidget {
     );
   }
 
-  // ─── Transaction Buttons ──────────────────────────────────────────────────
-
-  Widget _transactionButtons(
-    BuildContext context,
-    LoanModel loan,
-    _TypeTheme theme,
-    bool isLoading,
-  ) {
-    final t = loan.type.toLowerCase();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          'Manage Payments',
-          style: TextStyle(
-            fontSize: 14.sp,
-            fontWeight: FontWeight.w700,
-            color: Colors.black87,
-          ),
-        ),
-        SizedBox(height: 12.h),
-
-        // Hand Credit
-        if (t.contains('personal') || t.contains('hand')) ...[
-          _actionButton(
-            context,
-            loan,
-            'Record Principal Payment',
-            Icons.payment,
-            theme.primary,
-            'record_payment',
-            isLoading,
-          ),
-        ],
-
-        // Business Credit
-        if (t.contains('business')) ...[
-          _actionButton(
-            context,
-            loan,
-            'Record Principal Payment',
-            Icons.payment,
-            theme.primary,
-            'record_payment',
-            isLoading,
-          ),
-          SizedBox(height: 12.h),
-          _actionButton(
-            context,
-            loan,
-            'Add Credit',
-            Icons.add_card,
-            theme.primary,
-            'add_credit',
-            isLoading,
-          ),
-        ],
-
-        // Interest Credit
-        if (t.contains('interest') || t.contains('home')) ...[
-          _actionButton(
-            context,
-            loan,
-            'Record Principal Payment',
-            Icons.payment,
-            theme.primary,
-            'record_payment',
-            isLoading,
-          ),
-          SizedBox(height: 12.h),
-          _actionButton(
-            context,
-            loan,
-            'Record Interest Payment',
-            Icons.percent,
-            theme.primary,
-            'record_interest',
-            isLoading,
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _actionButton(
-    BuildContext context,
-    LoanModel loan,
-    String label,
-    IconData icon,
-    Color color,
-    String actionType,
-    bool isLoading,
-  ) {
-    return ElevatedButton.icon(
-      onPressed: isLoading
-          ? null
-          : () => FlexiblePaymentSheet.show(context, loan, label, actionType),
-      icon: Icon(icon, size: 18.sp),
-      label: Text(
-        label,
-        style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.bold),
-      ),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.white,
-        foregroundColor: color,
-        side: BorderSide(color: color.withValues(alpha: 0.5)),
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12.r),
-        ),
-        padding: EdgeInsets.symmetric(vertical: 14.h),
-        alignment: Alignment.center,
-      ),
-    );
-  }
-
   // ─── Pending Card ─────────────────────────────────────────────────────────
 
   Widget _pendingCard(LoanModel loan) {
@@ -1123,6 +1175,10 @@ class LenderLoanDetailsPage extends StatelessWidget {
     bool isClosed,
     bool isPending,
   ) {
+    if (isClosed || isPending) return const SizedBox.shrink();
+    
+    final t = loan.type.toLowerCase();
+    
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
       decoration: BoxDecoration(
@@ -1132,54 +1188,54 @@ class LenderLoanDetailsPage extends StatelessWidget {
       child: SafeArea(
         child: Row(
           children: [
+            if (t.contains('interest') || t.contains('home')) ...[
+              Expanded(
+                child: _bottomActionButton(context, loan, '% Record Interest Payment', theme.primary, theme.bg, 'record_interest'),
+              ),
+              SizedBox(width: 8.w),
+              Expanded(
+                child: _bottomActionButton(context, loan, '💳 Record Principal Payment', Colors.blue.shade700, Colors.blue.shade50, 'record_payment'),
+              ),
+            ] else ...[
+              Expanded(
+                child: _bottomActionButton(context, loan, '💳 Record Payment', Colors.green.shade700, Colors.green.shade50, 'record_payment'),
+              ),
+            ],
+            SizedBox(width: 8.w),
             Expanded(
-              child: OutlinedButton(
-                onPressed: () => context.pop(),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.black54,
-                  side: BorderSide(color: Colors.grey.shade300),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
+              child: ElevatedButton.icon(
+                onPressed: () => _initiateLoanClose(context, loan),
+                icon: Icon(Icons.delete, size: 14.sp),
+                label: Text('Close Loan', style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.bold)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red.shade50,
+                  foregroundColor: Colors.red.shade700,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
                   padding: EdgeInsets.symmetric(vertical: 14.h),
-                ),
-                child: Text(
-                  'Back',
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w600,
-                  ),
                 ),
               ),
             ),
-            if (!isClosed && !isPending) ...[
-              SizedBox(width: 12.w),
-              Expanded(
-                flex: 2,
-                child: ElevatedButton.icon(
-                  onPressed: () => _initiateLoanClose(context, loan),
-                  icon: Icon(Icons.lock_outline, size: 16.sp),
-                  label: Text(
-                    'Close Loan',
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red.shade700,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12.r),
-                    ),
-                    padding: EdgeInsets.symmetric(vertical: 14.h),
-                  ),
-                ),
-              ),
-            ],
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _bottomActionButton(BuildContext context, LoanModel loan, String label, Color color, Color bgColor, String actionType) {
+    return ElevatedButton(
+      onPressed: () => FlexiblePaymentSheet.show(context, loan, label.replaceAll(RegExp(r'[^a-zA-Z\s]'), '').trim(), actionType),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: bgColor,
+        foregroundColor: color,
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+        padding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 4.w),
+      ),
+      child: Text(
+        label,
+        textAlign: TextAlign.center,
+        style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -1353,38 +1409,8 @@ class LenderLoanDetailsPage extends StatelessWidget {
     return months[m - 1];
   }
 
-  Color _statusColor(String s) {
-    switch (s.toLowerCase()) {
-      case 'active':
-        return Colors.green.shade700;
-      case 'closed':
-      case 'completed':
-        return Colors.grey.shade600;
-      case 'pending_otp':
-      case 'pending_approval':
-        return const Color(0xFFD97706);
-      default:
-        return Colors.blueGrey;
-    }
-  }
-
-  String _statusLabel(String s) {
-    switch (s.toLowerCase()) {
-      case 'active':
-        return 'Active';
-      case 'closed':
-        return 'Closed';
-      case 'completed':
-        return 'Completed';
-      case 'pending_otp':
-        return 'Pending OTP';
-      case 'pending_approval':
-        return 'Pending Approval';
-      default:
-        return s;
-    }
-  }
 }
+
 
 // ─── Theme helper class ───────────────────────────────────────────────────────
 
@@ -1394,3 +1420,4 @@ class _TypeTheme {
   final String label;
   const _TypeTheme(this.primary, this.bg, this.label);
 }
+

@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../config/theme.dart';
+import 'package:intl/intl.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../config/constants.dart';
 import '../../../../core/blocs/chit_funds/chit_fund_cubit.dart';
 import '../../../../core/blocs/chit_funds/chit_fund_state.dart';
 import '../../../../data/models/chit_fund_model.dart';
 import '../../../../data/models/chit_invite_model.dart';
+import '../../../home/presentation/cubit/notification_cubit.dart';
+import '../../../home/presentation/cubit/notification_state.dart';
 
 class ChitHomePage extends StatefulWidget {
   const ChitHomePage({super.key});
@@ -18,13 +21,24 @@ class ChitHomePage extends StatefulWidget {
 
 class _ChitHomePageState extends State<ChitHomePage> with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  int _bottomNavIndex = 0;
+  final NumberFormat _currencyFormat = NumberFormat.currency(locale: 'en_IN', symbol: '₹', decimalDigits: 0);
+  
+  final Color _primaryColor = const Color(0xFF059669);
+  final Color _secondaryColor = const Color(0xFF10B981);
+  final Color _bgColor = const Color(0xFFF8FAFC);
+  final Color _textColorDark = const Color(0xFF1F2937);
+  final Color _textColorGrey = const Color(0xFF6B7280);
+  final Color _borderColor = const Color(0xFFE5E7EB);
+  final Color _dangerColor = const Color(0xFFEF4444);
+  final Color _warningColor = const Color(0xFFF59E0B);
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    context.read<ChitFundCubit>().loadInvitesAndOwned();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ChitFundCubit>().loadInvitesAndOwned();
+    });
   }
 
   @override
@@ -35,265 +49,658 @@ class _ChitHomePageState extends State<ChitHomePage> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: KhaataTheme.backgroundGrey,
-      appBar: AppBar(
-        title: Text(
-          'Chit Funds Hub',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 20.sp,
-          ),
-        ),
-        backgroundColor: KhaataTheme.primaryBlue,
-        iconTheme: const IconThemeData(color: Colors.white),
-        elevation: 0,
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: Colors.white,
-          indicatorWeight: 3,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
-          labelStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.sp),
-          tabs: const [
-            Tab(text: 'My Joined Groups'),
-            Tab(text: 'Groups Manage'),
-            Tab(text: 'Pending Invites'),
-          ],
-        ),
-      ),
-      body: BlocBuilder<ChitFundCubit, ChitFundState>(
-        builder: (context, state) {
-          if (state is ChitFundLoading) {
-            return const Center(child: CircularProgressIndicator(color: KhaataTheme.primaryBlue));
-          } else if (state is ChitFundError) {
-            return Center(child: Text(state.message, style: TextStyle(color: KhaataTheme.dangerRed)));
-          } else if (state is ChitFundInvitesLoaded) {
-            return TabBarView(
-              controller: _tabController,
+    return BlocListener<ChitFundCubit, ChitFundState>(
+      listener: (context, state) {
+        if (state is ChitFundActionSuccess) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message, style: GoogleFonts.inter(color: Colors.white)),
+              backgroundColor: _primaryColor,
+            ),
+          );
+        } else if (state is ChitFundError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message, style: GoogleFonts.inter(color: Colors.white)),
+              backgroundColor: _dangerColor,
+            ),
+          );
+        }
+      },
+
+      child: Scaffold(
+        backgroundColor: _bgColor,
+        appBar: _buildAppBar(),
+        body: BlocBuilder<ChitFundCubit, ChitFundState>(
+          builder: (context, state) {
+            int activeGroups = 0;
+            double totalPoolValue = 0;
+            int pendingInvitesCount = 0;
+
+            List<Map<String, dynamic>> mySubscriptions = [];
+            List<ChitFundModel> ownedChits = [];
+            List<ChitInviteModel> pendingInvites = [];
+
+            if (state is ChitFundInvitesLoaded) {
+              mySubscriptions = state.mySubscriptions
+                  .map((e) => Map<String, dynamic>.from(e))
+                  .toList();
+              ownedChits = state.ownedChits;
+              pendingInvites = state.pendingInvites;
+              activeGroups = mySubscriptions.length;
+              for (var sub in mySubscriptions) {
+                totalPoolValue += (sub['totalValue'] as num?)?.toDouble() ?? 0.0;
+              }
+              pendingInvitesCount = pendingInvites.length;
+            }
+
+            return Column(
               children: [
-                _buildJoinedList(
-                  items: state.mySubscriptions,
+                _buildSummaryBanner(activeGroups, totalPoolValue, pendingInvitesCount),
+                _buildTabBar(pendingInvitesCount),
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildMyJoinedTab(mySubscriptions),
+                      _buildIManageTab(ownedChits),
+                      _buildInvitesTab(pendingInvites),
+                    ],
+                  ),
                 ),
-                _buildList(
-                  items: state.ownedChits,
-                  emptyMessage: 'You do not manage any Chit Funds.',
-                  emptyIcon: Icons.admin_panel_settings,
-                  isManaged: true,
-                ),
-                _buildInvitesList(state.pendingInvites),
               ],
             );
-          }
-          return const SizedBox.shrink();
-        },
+          },
+        ),
+        bottomNavigationBar: _buildBottomNav(),
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: () {
+            context.push(AppConstants.createChit);
+          },
+          backgroundColor: _primaryColor,
+          icon: const Icon(Icons.add, color: Colors.white),
+          label: Text(
+            'New Group',
+            style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w600),
+          ),
+        ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push(AppConstants.createChit),
-        backgroundColor: KhaataTheme.primaryBlue,
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text('New Group', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+    );
+  }
+
+  AppBar _buildAppBar() {
+    return AppBar(
+      backgroundColor: _primaryColor,
+      elevation: 0,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back, color: Colors.white),
+        onPressed: () => context.pop(),
       ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
+      title: Text(
+        'Chit Funds Hub',
+        style: GoogleFonts.inter(
           color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, -5),
-            ),
-          ],
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: EdgeInsets.symmetric(vertical: 8.h),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildNavItem(icon: Icons.home_rounded, label: 'Home', index: 0),
-                _buildNavItem(icon: Icons.gavel_rounded, label: 'Bid', index: 1),
-                _buildNavItem(icon: Icons.notifications_rounded, label: 'Notifications', index: 2),
-                _buildNavItem(icon: Icons.person_rounded, label: 'Profile', index: 3),
-              ],
-            ),
-          ),
+          fontSize: 18.sp,
+          fontWeight: FontWeight.w600,
         ),
       ),
+      actions: [
+        BlocBuilder<NotificationCubit, NotificationState>(
+          builder: (context, state) {
+            int unreadCount = 0;
+            if (state.runtimeType.toString().contains('Loaded')) {
+              try {
+                unreadCount = (state as dynamic).unreadCount ?? 0;
+              } catch (_) {}
+            }
+            return Stack(
+              alignment: Alignment.center,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.notifications_outlined, color: Colors.white),
+                  onPressed: () {
+                    context.push(AppConstants.notifications);
+                  },
+                ),
+                if (unreadCount > 0)
+                  Positioned(
+                    top: 12.h,
+                    right: 12.w,
+                    child: Container(
+                      padding: EdgeInsets.all(4.r),
+                      decoration: const BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        unreadCount > 9 ? '9+' : unreadCount.toString(),
+                        style: GoogleFonts.inter(
+                          color: Colors.white,
+                          fontSize: 8.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
+      ],
     );
   }
 
-  Widget _buildList({required List<ChitFundModel> items, required String emptyMessage, required IconData emptyIcon, required bool isManaged}) {
-    if (items.isEmpty) return _buildEmptyState(emptyMessage, emptyIcon);
-    
-    return ListView.builder(
-      padding: EdgeInsets.all(16.w),
-      itemCount: items.length,
-      itemBuilder: (context, index) {
-        final chit = items[index];
-        return Card(
-          margin: EdgeInsets.only(bottom: 12.h),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-          child: ListTile(
-            contentPadding: EdgeInsets.all(16.w),
-            leading: CircleAvatar(
-              backgroundColor: KhaataTheme.primaryBlue.withValues(alpha: 0.1),
-              child: Icon(isManaged ? Icons.admin_panel_settings : Icons.group, color: KhaataTheme.primaryBlue),
-            ),
-            title: Text(chit.name, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp)),
-            subtitle: Text('Pot: ₹${chit.totalValue} • ${chit.totalMonths} Months'),
-            trailing: Icon(Icons.arrow_forward_ios, size: 16.sp, color: Colors.grey),
-            onTap: () {
-                if (isManaged) {
-                    context.push(AppConstants.chitAdminDashboard, extra: chit.id);
-                } else {
-                    context.push(AppConstants.myChits); 
-                }
-            },
+  Widget _buildSummaryBanner(int activeGroups, double totalPoolValue, int pendingInvitesCount) {
+    return Container(
+      width: double.infinity,
+      margin: EdgeInsets.all(16.r),
+      padding: EdgeInsets.all(16.r),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16.r),
+        gradient: LinearGradient(
+          colors: [Colors.white, _bgColor],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
-        );
-      },
-    );
-  }
-  
-  Widget _buildJoinedList({required List<Map<String, dynamic>> items}) {
-    if (items.isEmpty) return _buildEmptyState('You are not part of any Chit Funds yet.', Icons.groups);
-    
-    return ListView.builder(
-      padding: EdgeInsets.all(16.w),
-      itemCount: items.length,
-      itemBuilder: (context, index) {
-        final chitMap = items[index];
-        final name = chitMap['name'] ?? 'Chit Fund';
-        final val = chitMap['totalValue'] ?? 0;
-        final months = chitMap['totalMonths'] ?? 0;
-        
-        return Card(
-          margin: EdgeInsets.only(bottom: 12.h),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-          child: ListTile(
-            contentPadding: EdgeInsets.all(16.w),
-            leading: CircleAvatar(
-              backgroundColor: KhaataTheme.primaryBlue.withValues(alpha: 0.1),
-              child: Icon(Icons.group, color: KhaataTheme.primaryBlue),
-            ),
-            title: Text(name, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp)),
-            subtitle: Text('Pot: ₹$val • $months Months'),
-            trailing: Icon(Icons.arrow_forward_ios, size: 16.sp, color: Colors.grey),
-            onTap: () {
-                context.push(AppConstants.myChits); 
-            },
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildInvitesList(List<ChitInviteModel> invites) {
-    if (invites.isEmpty) return _buildEmptyState('No pending invites.', Icons.mail_outline);
-    
-    return ListView.builder(
-      padding: EdgeInsets.all(16.w),
-      itemCount: invites.length,
-      itemBuilder: (context, index) {
-        final invite = invites[index];
-        
-        return Card(
-          margin: EdgeInsets.only(bottom: 12.h),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-          child: ListTile(
-            contentPadding: EdgeInsets.all(16.w),
-            title: Text(invite.chitFund?.name ?? 'Chit Invite', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp)),
-            subtitle: const Text('You have been invited to join this chit fund.'),
-            trailing: ElevatedButton(
-              onPressed: () {
-                  context.read<ChitFundCubit>().respondToInvite(invite.id, 'accepted');
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: KhaataTheme.primaryBlue),
-              child: const Text('Accept', style: TextStyle(color: Colors.white)),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildEmptyState(String message, IconData icon) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Container(
-            padding: EdgeInsets.all(24.w),
-            decoration: BoxDecoration(
-              color: KhaataTheme.primaryBlue.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, size: 64.sp, color: KhaataTheme.primaryBlue),
-          ),
-          SizedBox(height: 24.h),
-          Text(
-            message,
-            style: TextStyle(
-              fontSize: 16.sp,
-              color: KhaataTheme.textGrey,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          if (icon == Icons.groups) ...[
-            SizedBox(height: 24.h),
-            ElevatedButton(
-              onPressed: () => context.push(AppConstants.createChit),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: KhaataTheme.primaryBlue,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-                padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 12.h),
-              ),
-              child: Text(
-                'Create a New Group',
-                style: TextStyle(color: Colors.white, fontSize: 16.sp, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ]
+          _buildStatColumn('Active Groups', activeGroups.toString()),
+          Container(height: 40.h, width: 1.w, color: _borderColor),
+          _buildStatColumn('Total Pool', _currencyFormat.format(totalPoolValue)),
+          Container(height: 40.h, width: 1.w, color: _borderColor),
+          _buildStatColumn('Invites', pendingInvitesCount.toString(), showDot: pendingInvitesCount > 0),
         ],
       ),
     );
   }
 
-  Widget _buildNavItem({required IconData icon, required String label, required int index}) {
-    final isSelected = _bottomNavIndex == index;
-    return GestureDetector(
-      onTap: () {
-        if (index == 2) {
-            context.push(AppConstants.notifications);
-        } else if (index == 3) {
-            context.push(AppConstants.profile);
-        } else if (index == 0) {
-            context.go(AppConstants.home);
-        } else {
-            setState(() => _bottomNavIndex = index);
-        }
-      },
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            color: isSelected ? KhaataTheme.primaryBlue : Colors.grey,
-            size: 24.sp,
+  Widget _buildStatColumn(String label, String value, {bool showDot = false}) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Text(
+              label,
+              style: GoogleFonts.inter(color: _textColorGrey, fontSize: 12.sp),
+            ),
+            if (showDot) ...[
+              SizedBox(width: 4.w),
+              Container(
+                width: 6.r,
+                height: 6.r,
+                decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+              )
+            ]
+          ],
+        ),
+        SizedBox(height: 4.h),
+        Text(
+          value,
+          style: GoogleFonts.inter(
+            color: _textColorDark,
+            fontSize: 16.sp,
+            fontWeight: FontWeight.w700,
           ),
-          SizedBox(height: 4.h),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12.sp,
-              color: isSelected ? KhaataTheme.primaryBlue : Colors.grey,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTabBar(int pendingInvitesCount) {
+    return Container(
+      color: _primaryColor,
+      child: TabBar(
+        controller: _tabController,
+        indicatorColor: Colors.white,
+        indicatorWeight: 3,
+        labelColor: Colors.white,
+        unselectedLabelColor: Colors.white.withValues(alpha: 0.08),
+        labelStyle: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14.sp),
+        tabs: [
+          const Tab(text: 'My Joined'),
+          const Tab(text: 'I Manage'),
+          Tab(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text('Invites'),
+                if (pendingInvitesCount > 0) ...[
+                  SizedBox(width: 4.w),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                    decoration: BoxDecoration(
+                      color: _dangerColor,
+                      borderRadius: BorderRadius.circular(10.r),
+                    ),
+                    child: Text(
+                      pendingInvitesCount.toString(),
+                      style: GoogleFonts.inter(color: Colors.white, fontSize: 10.sp),
+                    ),
+                  ),
+                ]
+              ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMyJoinedTab(List<Map<String, dynamic>> subscriptions) {
+    if (subscriptions.isEmpty) {
+      return Center(
+        child: Text('No joined groups yet', style: GoogleFonts.inter(color: _textColorGrey)),
+      );
+    }
+    return ListView.builder(
+      padding: EdgeInsets.all(16.r),
+      itemCount: subscriptions.length,
+      itemBuilder: (context, index) {
+        final sub = subscriptions[index];
+        final chitName = sub['chitName'] as String? ?? 'Unknown Group';
+        final status = sub['status'] as String? ?? 'FORMING';
+        final completedMonths = (sub['completedMonths'] as num?)?.toInt() ?? 0;
+        final totalMonths = (sub['totalMonths'] as num?)?.toInt() ?? 1;
+        final totalValue = (sub['totalValue'] as num?)?.toDouble() ?? 0.0;
+        final dueAmount = (sub['dueAmount'] as num?)?.toDouble() ?? 0.0;
+        final activeAuctionMonth = sub['activeAuctionMonth'];
+        final isLive = status == 'LIVE' || activeAuctionMonth != null;
+
+        return GestureDetector(
+          onTap: () => context.push('/chit-member-detail', extra: sub['chitId']),
+          child: Container(
+            margin: EdgeInsets.only(bottom: 12.h),
+            padding: EdgeInsets.all(16.r),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16.r),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.08),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        chitName,
+                        style: GoogleFonts.inter(
+                          color: _textColorDark,
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    _buildStatusChip(status, isLive: isLive),
+                  ],
+                ),
+                if (isLive) ...[
+                  SizedBox(height: 4.h),
+                  Text(
+                    'Live Auction Month ${activeAuctionMonth ?? completedMonths + 1}',
+                    style: GoogleFonts.inter(color: _warningColor, fontSize: 12.sp, fontWeight: FontWeight.w600),
+                  ),
+                ],
+                SizedBox(height: 12.h),
+                Text(
+                  'Pot Value: ${_currencyFormat.format(totalValue)}',
+                  style: GoogleFonts.inter(color: _textColorGrey, fontSize: 13.sp),
+                ),
+                SizedBox(height: 8.h),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(4.r),
+                        child: LinearProgressIndicator(
+                          value: totalMonths > 0 ? completedMonths / totalMonths : 0,
+                          backgroundColor: _borderColor,
+                          valueColor: AlwaysStoppedAnimation<Color>(_primaryColor),
+                          minHeight: 6.h,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 8.w),
+                    Text(
+                      '$completedMonths/$totalMonths months',
+                      style: GoogleFonts.inter(color: _textColorGrey, fontSize: 12.sp, fontWeight: FontWeight.w500),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 16.h),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Due: ${_currencyFormat.format(dueAmount)}',
+                      style: GoogleFonts.inter(color: _dangerColor, fontSize: 14.sp, fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      'View Details →',
+                      style: GoogleFonts.inter(color: _primaryColor, fontSize: 14.sp, fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildIManageTab(List<ChitFundModel> ownedChits) {
+    if (ownedChits.isEmpty) {
+      return Center(
+        child: Text('You don\'t manage any groups', style: GoogleFonts.inter(color: _textColorGrey)),
+      );
+    }
+    return ListView.builder(
+      padding: EdgeInsets.all(16.r),
+      itemCount: ownedChits.length,
+      itemBuilder: (context, index) {
+        final chit = ownedChits[index];
+        final currentSubscribersCount = chit.currentSubscribersCount;
+        final totalMonths = chit.totalMonths;
+        final name = chit.name;
+        final status = chit.status;
+
+        return GestureDetector(
+          onTap: () => context.push(AppConstants.chitAdminDashboard, extra: chit.id),
+          child: Container(
+            margin: EdgeInsets.only(bottom: 12.h),
+            padding: EdgeInsets.all(16.r),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16.r),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.08),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        name,
+                        style: GoogleFonts.inter(
+                          color: _textColorDark,
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    _buildStatusChip(status),
+                  ],
+                ),
+                SizedBox(height: 12.h),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '$currentSubscribersCount/$totalMonths members joined',
+                            style: GoogleFonts.inter(color: _textColorGrey, fontSize: 13.sp),
+                          ),
+                          SizedBox(height: 6.h),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(4.r),
+                            child: LinearProgressIndicator(
+                              value: totalMonths > 0 ? currentSubscribersCount / totalMonths : 0,
+                              backgroundColor: _borderColor,
+                              valueColor: AlwaysStoppedAnimation<Color>(_secondaryColor),
+                              minHeight: 4.h,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(width: 16.w),
+                    Text(
+                      status == 'registration' ? 'Invite Members →' : 'Manage Group →',
+                      style: GoogleFonts.inter(color: _primaryColor, fontSize: 13.sp, fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildInvitesTab(List<ChitInviteModel> invites) {
+    if (invites.isEmpty) {
+      return Center(
+        child: Text('No pending invites', style: GoogleFonts.inter(color: _textColorGrey)),
+      );
+    }
+    return ListView.builder(
+      padding: EdgeInsets.all(16.r),
+      itemCount: invites.length,
+      itemBuilder: (context, index) {
+        final invite = invites[index];
+        final senderName = invite.senderName;
+        final chitFund = invite.chitFund;
+        final chitName = chitFund.name;
+        final potValue = chitFund.totalValue;
+        final monthlyAmount = chitFund.monthlySubscription;
+        final duration = chitFund.totalMonths;
+
+        return Container(
+          margin: EdgeInsets.only(bottom: 12.h),
+          padding: EdgeInsets.all(16.r),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16.r),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                chitName,
+                style: GoogleFonts.inter(
+                  color: _textColorDark,
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4.h),
+              Text(
+                'Invited by $senderName',
+                style: GoogleFonts.inter(color: _textColorGrey, fontSize: 13.sp),
+              ),
+              SizedBox(height: 12.h),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _buildInviteInfoCol('Pot Value', _currencyFormat.format(potValue)),
+                  _buildInviteInfoCol('Monthly', _currencyFormat.format(monthlyAmount)),
+                  _buildInviteInfoCol('Duration', '$duration months'),
+                ],
+              ),
+              SizedBox(height: 16.h),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: _dangerColor),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                        padding: EdgeInsets.symmetric(vertical: 14.h),
+                      ),
+                      onPressed: () => context.read<ChitFundCubit>().respondToInvite(invite.id, 'declined'),
+                      child: Text(
+                        'Decline',
+                        style: GoogleFonts.inter(color: _dangerColor, fontWeight: FontWeight.w600, fontSize: 14.sp),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _primaryColor,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                        padding: EdgeInsets.symmetric(vertical: 14.h),
+                        elevation: 0,
+                      ),
+                      onPressed: () => context.read<ChitFundCubit>().respondToInvite(invite.id, 'accepted'),
+                      child: Text(
+                        'Accept & Join',
+                        style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14.sp),
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildInviteInfoCol(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.inter(color: _textColorGrey, fontSize: 12.sp),
+        ),
+        SizedBox(height: 2.h),
+        Text(
+          value,
+          style: GoogleFonts.inter(color: _textColorDark, fontSize: 14.sp, fontWeight: FontWeight.w600),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatusChip(String status, {bool isLive = false}) {
+    Color bg;
+    Color fg;
+    String text = status;
+
+    if (isLive || status == 'LIVE') {
+      bg = _dangerColor.withValues(alpha: 0.08);
+      fg = _dangerColor;
+      text = '🔴 LIVE';
+    } else if (status == 'FORMING' || status == 'REGISTERING') {
+      bg = _warningColor.withValues(alpha: 0.08);
+      fg = _warningColor;
+    } else {
+      bg = _primaryColor.withValues(alpha: 0.08);
+      fg = _primaryColor;
+    }
+
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(8.r),
+      ),
+      child: Text(
+        text.toUpperCase(),
+        style: GoogleFonts.inter(
+          color: fg,
+          fontSize: 10.sp,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomNav() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            offset: const Offset(0, -4),
+            blurRadius: 10,
+          ),
+        ],
+      ),
+      child: BottomNavigationBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        type: BottomNavigationBarType.fixed,
+        selectedItemColor: _primaryColor,
+        unselectedItemColor: _textColorGrey,
+        showSelectedLabels: true,
+        showUnselectedLabels: true,
+        selectedLabelStyle: GoogleFonts.inter(fontSize: 10.sp, fontWeight: FontWeight.w600),
+        unselectedLabelStyle: GoogleFonts.inter(fontSize: 10.sp, fontWeight: FontWeight.w500),
+        onTap: (index) {
+          switch (index) {
+            case 0:
+              context.go(AppConstants.home);
+              break;
+            case 1:
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('No active auction to bid in', style: GoogleFonts.inter(color: Colors.white)),
+                  backgroundColor: _dangerColor,
+                ),
+              );
+              break;
+            case 2:
+              context.push(AppConstants.notifications);
+              break;
+            case 3:
+              context.push(AppConstants.profile);
+              break;
+          }
+        },
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home_outlined), activeIcon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.gavel_outlined), activeIcon: Icon(Icons.gavel), label: 'Bid'),
+          BottomNavigationBarItem(icon: Icon(Icons.notifications_outlined), activeIcon: Icon(Icons.notifications), label: 'Alerts'),
+          BottomNavigationBarItem(icon: Icon(Icons.person_outline), activeIcon: Icon(Icons.person), label: 'Profile'),
         ],
       ),
     );
   }
 }
+

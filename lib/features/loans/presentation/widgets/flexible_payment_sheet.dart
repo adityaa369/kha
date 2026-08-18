@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import '../../../../data/models/loan_model.dart';
 import '../../../../core/blocs/loans/loan_cubit.dart';
 import '../../../../core/utils/error_handler.dart';
+import '../../../../core/utils/dialog_utils.dart';
 class FlexiblePaymentSheet extends StatefulWidget {
   final LoanModel loan;
   final String title;
@@ -88,9 +89,7 @@ class _FlexiblePaymentSheetState extends State<FlexiblePaymentSheet> {
       verificationFailed: (e) {
         if (!mounted) return;
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(backgroundColor: Colors.red, content: Text('OTP failed: ${e.message}')),
-        );
+        DialogUtils.showErrorDialog(context, 'OTP failed: ${e.message}');
       },
       codeSent: (String vId, int? _) {
         if (!mounted) return;
@@ -114,11 +113,11 @@ class _FlexiblePaymentSheetState extends State<FlexiblePaymentSheet> {
     bool success = false;
 
     if (widget.actionType == 'record_payment') {
-      success = await cubit.recordPayment(widget.loan.id!, _enteredAmount, otp, _verificationId);
+      success = await cubit.recordPayment(widget.loan.id, _enteredAmount, otp, _verificationId);
     } else if (widget.actionType == 'add_credit') {
-      success = await cubit.addCredit(widget.loan.id!, _enteredAmount, otp, _verificationId);
+      success = await cubit.addCredit(widget.loan.id, _enteredAmount, otp, _verificationId);
     } else if (widget.actionType == 'record_interest') {
-      success = await cubit.recordInterest(widget.loan.id!, _enteredAmount, otp, _verificationId);
+      success = await cubit.recordInterest(widget.loan.id, _enteredAmount, otp, _verificationId);
     }
 
     if (!mounted) return;

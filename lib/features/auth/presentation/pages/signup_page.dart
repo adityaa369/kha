@@ -1,9 +1,9 @@
-import '../../../../core/utils/error_handler.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:khatha/core/utils/dialog_utils.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import '../../../../config/theme.dart';
 import '../../../../core/blocs/auth/auth_cubit.dart';
@@ -124,14 +124,7 @@ class _SignupPageState extends State<SignupPage> {
   void _submitStep3() {
     if (_step3Key.currentState?.validate() ?? false) {
       if (!_termsAccepted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Please accept the Terms of Service & Privacy Policy',
-            ),
-            backgroundColor: KhaataTheme.dangerRed,
-          ),
-        );
+        DialogUtils.showErrorDialog(context, 'Please accept the Terms of Service & Privacy Policy');
         return;
       }
 
@@ -183,31 +176,6 @@ class _SignupPageState extends State<SignupPage> {
     return 'Medium';
   }
 
-  Future<void> _selectDOB(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now().subtract(const Duration(days: 365 * 25)),
-      firstDate: DateTime(1950),
-      lastDate: DateTime.now(),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: KhaataTheme.primaryBlue,
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-    if (picked != null) {
-      setState(() {
-        _dobController.text =
-            '${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}';
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final strength = _getPasswordStrength();
@@ -217,21 +185,11 @@ class _SignupPageState extends State<SignupPage> {
       body: BlocConsumer<AuthCubit, AuthState>(
         listener: (context, state) {
           if (state is AuthError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: KhaataTheme.dangerRed,
-              ),
-            );
+            DialogUtils.showErrorDialog(context, state.message);
           } else if (state is RegistrationSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text(
+            DialogUtils.showSuccessDialog(context, 
                   'Registration successful! Please login with your credentials.',
-                ),
-                backgroundColor: Colors.green,
-              ),
-            );
+                );
             context.go('/login');
           } else if (state is AuthenticatedUnverified) {
             context.go('/home'); // Fallback direct home routing

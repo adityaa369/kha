@@ -559,7 +559,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
                   SizedBox(width: 16.w),
                   Expanded(
                     child: KhaataTextField(
-                      label: 'Rate of Interest (%)',
+                      label: 'Rate of Interest',
                       hint: 'Enter rate',
                       controller: _interestController,
                       prefixIcon: Container(

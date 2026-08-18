@@ -27,6 +27,8 @@ class LoanModel extends Equatable {
   final double? emiAmount;
   final double? totalPayableAmount;
   final String? documentUrl;
+  final double? paidAmount;
+  final List<Map<String, dynamic>> transactions;
 
   const LoanModel({
     required this.id,
@@ -53,6 +55,8 @@ class LoanModel extends Equatable {
     this.emiAmount,
     this.totalPayableAmount,
     this.documentUrl,
+    this.paidAmount,
+    this.transactions = const [],
   });
 
   factory LoanModel.fromJson(Map<String, dynamic> json) {
@@ -97,6 +101,10 @@ class LoanModel extends Equatable {
           _parseDouble(json['totalPayable']) ?? _parseDouble(json['total_payable']),
       documentUrl:
           json['documentUrl']?.toString() ?? json['document_url']?.toString(),
+      paidAmount: _parseDouble(json['paidAmount']),
+      transactions: (json['transactions'] as List<dynamic>? ?? [])
+          .map((t) => Map<String, dynamic>.from(t as Map))
+          .toList(),
     );
   }
 
@@ -267,7 +275,18 @@ class LoanModel extends Equatable {
   }
 
   // Calculate remaining amount
-  double get remainingAmount => amount * (1 - progress);
+  double get remainingAmount {
+    // If backend has already computed remaining totalPayable, use it
+    if (totalPayableAmount != null && totalPayableAmount! > 0 && paidAmount != null && paidAmount! > 0) {
+      // totalPayableAmount from backend is already the REMAINING balance after deductions
+      return totalPayableAmount!;
+    }
+    // Fallback: use progress
+    if (totalPayableAmount != null && totalPayableAmount! > 0) {
+      return totalPayableAmount! * (1 - progress);
+    }
+    return amount * (1 - progress);
+  }
 
   // Check if loan is overdue
   bool get isOverdue {
@@ -305,6 +324,8 @@ class LoanModel extends Equatable {
     double? emiAmount,
     double? totalPayableAmount,
     String? documentUrl,
+    double? paidAmount,
+    List<Map<String, dynamic>>? transactions,
   }) {
     return LoanModel(
       id: id ?? this.id,
@@ -330,6 +351,8 @@ class LoanModel extends Equatable {
       emiAmount: emiAmount ?? this.emiAmount,
       totalPayableAmount: totalPayableAmount ?? this.totalPayableAmount,
       documentUrl: documentUrl ?? this.documentUrl,
+      paidAmount: paidAmount ?? this.paidAmount,
+      transactions: transactions ?? this.transactions,
     );
   }
 
@@ -349,6 +372,8 @@ class LoanModel extends Equatable {
     emiAmount,
     totalPayableAmount,
     documentUrl,
+    paidAmount,
+    transactions,
   ];
 }
 

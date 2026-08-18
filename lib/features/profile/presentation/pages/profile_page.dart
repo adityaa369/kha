@@ -77,12 +77,19 @@ class ProfilePage extends StatelessWidget {
                         builder: (context, state) {
                           String fullName = 'Loading...';
                           String? gender;
+                          String? email;
+                          bool isEmailVerified = false;
 
                           if (state is AuthenticatedFull) {
                             fullName = state.user.displayName;
                             gender = state.user.gender;
+                            email = state.user.email;
+                            isEmailVerified = state.user.isEmailVerified;
                           } else if (state is AuthenticatedUnverified) {
                             fullName = 'Verified User';
+                            gender = state.user.gender;
+                            email = state.user.email;
+                            isEmailVerified = state.user.isEmailVerified;
                           }
 
                           return Column(
@@ -107,6 +114,90 @@ class ProfilePage extends StatelessWidget {
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
+                              if (email != null && email.isNotEmpty) ...[
+                                SizedBox(height: 4.h),
+                                Text(
+                                  email,
+                                  style: TextStyle(
+                                    fontSize: 13.sp,
+                                    color: KhaataTheme.textGrey,
+                                  ),
+                                ),
+                                SizedBox(height: 8.h),
+                                isEmailVerified
+                                    ? Container(
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: 10.w,
+                                          vertical: 4.h,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.green.withValues(
+                                            alpha: 0.1,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            12.r,
+                                          ),
+                                          border: Border.all(
+                                            color: Colors.green.withValues(
+                                              alpha: 0.3,
+                                            ),
+                                          ),
+                                        ),
+                                        child: Text(
+                                          '✓ Verified',
+                                          style: TextStyle(
+                                            fontSize: 11.sp,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.green[700],
+                                          ),
+                                        ),
+                                      )
+                                    : InkWell(
+                                        onTap: () {
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            const SnackBar(
+                                              content: Text(
+                                                'Check your email inbox to verify your email address',
+                                              ),
+                                              behavior:
+                                                  SnackBarBehavior.floating,
+                                            ),
+                                          );
+                                        },
+                                        borderRadius: BorderRadius.circular(
+                                          12.r,
+                                        ),
+                                        child: Container(
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: 10.w,
+                                            vertical: 4.h,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Colors.amber.withValues(
+                                              alpha: 0.15,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              12.r,
+                                            ),
+                                            border: Border.all(
+                                              color: Colors.amber.withValues(
+                                                alpha: 0.5,
+                                              ),
+                                            ),
+                                          ),
+                                          child: Text(
+                                            '⚠ Unverified',
+                                            style: TextStyle(
+                                              fontSize: 11.sp,
+                                              fontWeight: FontWeight.w600,
+                                              color: Colors.amber[900],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                              ],
                             ],
                           );
                         },

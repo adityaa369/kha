@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/blocs/auth/auth_cubit.dart';
 import '../../../../config/constants.dart';
 import '../../../../config/theme.dart';
+import '../../../../core/utils/dialog_utils.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -121,12 +122,7 @@ class _SplashPageState extends State<SplashPage>
     if (authenticated && mounted) {
       context.go(AppConstants.home);
     } else if (mounted && showFailureMessage) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Authentication failed. Please try again.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      DialogUtils.showErrorDialog(context, 'Authentication failed. Please try again.');
     }
   }
 

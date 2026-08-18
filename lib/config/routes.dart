@@ -33,6 +33,7 @@ import '../features/home/presentation/pages/notifications_page.dart';
 import '../features/loans/presentation/pages/loan_approval_page.dart';
 import '../features/chit_funds/presentation/pages/chit_live_auction_page.dart';
 import '../features/chit_funds/presentation/pages/chit_home_page.dart';
+import '../features/chit_funds/presentation/pages/chit_member_detail_page.dart';
 import '../data/models/loan_model.dart';
 import 'constants.dart';
 
@@ -262,6 +263,13 @@ final router = GoRouter(
       builder: (context, state) {
         final chitId = state.extra as String;
         return ChitGroupAdminPage(chitId: chitId);
+      },
+    ),
+    GoRoute(
+      path: '/chit-member-detail',
+      builder: (context, state) {
+        final chitId = state.extra as String;
+        return ChitMemberDetailPage(chitId: chitId);
       },
     ),
   ],

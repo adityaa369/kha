@@ -1,72 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../config/theme.dart';
-import '../../../../core/network/api_client.dart';
 import '../../../../data/models/notification_model.dart';
-import '../../../../core/utils/error_handler.dart';
+import '../cubit/notification_cubit.dart';
+import '../cubit/notification_state.dart';
 
-class NotificationsPage extends StatefulWidget {
+class NotificationsPage extends StatelessWidget {
   const NotificationsPage({super.key});
-
-  @override
-  State<NotificationsPage> createState() => _NotificationsPageState();
-}
-
-class _NotificationsPageState extends State<NotificationsPage> {
-  final ApiClient _api = ApiClient();
-  List<NotificationModel> _notifications = [];
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchNotifications();
-  }
-
-  Future<void> _fetchNotifications() async {
-    try {
-      final res = await _api.get('/notifications');
-      if (res.data != null && res.data is List) {
-        setState(() {
-          _notifications = (res.data as List)
-              .map((e) => NotificationModel.fromJson(e))
-              .toList();
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isLoading = false);
-        ErrorHandler.showError(context, e);
-      }
-    }
-  }
-
-  Future<void> _markAsRead(NotificationModel notif, int index) async {
-    if (notif.isRead) return;
-
-    try {
-      setState(() {
-        _notifications[index] = NotificationModel(
-          id: notif.id,
-          title: notif.title,
-          body: notif.body,
-          type: notif.type,
-          isRead: true,
-          createdAt: notif.createdAt,
-          data: notif.data,
-        );
-      });
-      await _api.put('/notifications/${notif.id}/read', data: {});
-    } catch (e) {
-      // Revert if failed
-      setState(() {
-        _notifications[index] = notif;
-      });
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -79,46 +21,57 @@ class _NotificationsPageState extends State<NotificationsPage> {
         backgroundColor: Colors.white,
         foregroundColor: KhaataTheme.textDark,
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _fetchNotifications,
-              color: KhaataTheme.primaryBlue,
-              child: _notifications.isEmpty
-                  ? ListView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      children: [
-                        SizedBox(height: 100.h),
-                        Icon(
-                          Icons.notifications_off_outlined,
-                          size: 64.sp,
-                          color: Colors.grey,
-                        ),
-                        SizedBox(height: 16.h),
-                        Center(
-                          child: Text(
-                            'No new notifications',
-                            style: TextStyle(
-                              fontSize: 16.sp,
-                              color: KhaataTheme.textGrey,
-                            ),
+      body: BlocBuilder<NotificationCubit, NotificationState>(
+        builder: (context, state) {
+          if (state is NotificationLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          List<NotificationModel> _notifications = [];
+          if (state is NotificationLoaded) {
+            _notifications = state.notifications;
+          }
+
+          return RefreshIndicator(
+            onRefresh: () => context.read<NotificationCubit>().fetchNotifications(),
+            color: KhaataTheme.primaryBlue,
+            child: _notifications.isEmpty
+                ? ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    children: [
+                      SizedBox(height: 100.h),
+                      Icon(
+                        Icons.notifications_off_outlined,
+                        size: 64.sp,
+                        color: Colors.grey,
+                      ),
+                      SizedBox(height: 16.h),
+                      Center(
+                        child: Text(
+                          'No new notifications',
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            color: KhaataTheme.textGrey,
                           ),
                         ),
-                      ],
-                    )
-                  : ListView.builder(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      padding: EdgeInsets.all(16.w),
-                      itemCount: _notifications.length,
-                      itemBuilder: (context, index) {
-                        final notif = _notifications[index];
-                        return _NotificationTile(
-                          notification: notif,
-                          onTap: () => _markAsRead(notif, index),
-                        );
-                      },
-                    ),
-            ),
+                      ),
+                    ],
+                  )
+                : ListView.builder(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: EdgeInsets.all(16.w),
+                    itemCount: _notifications.length,
+                    itemBuilder: (context, index) {
+                      final notif = _notifications[index];
+                      return _NotificationTile(
+                        notification: notif,
+                        onTap: () => context.read<NotificationCubit>().markAsRead(notif, index),
+                      );
+                    },
+                  ),
+          );
+        },
+      ),
     );
   }
 }

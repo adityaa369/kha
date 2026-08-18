@@ -10,6 +10,8 @@ import 'core/blocs/auth/auth_cubit.dart';
 import 'core/blocs/loans/loan_cubit.dart';
 import 'core/blocs/chit_funds/chit_fund_cubit.dart';
 import 'data/repositories/chit_fund_repository.dart';
+import 'features/home/presentation/cubit/notification_cubit.dart';
+import 'core/network/api_client.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
@@ -117,6 +119,7 @@ class KhaataApp extends StatelessWidget {
         BlocProvider(create: (_) => AuthCubit()..checkAuthStatus()),
         BlocProvider(create: (_) => LoanCubit()),
         BlocProvider(create: (_) => ChitFundCubit(ChitFundRepository())),
+        BlocProvider(create: (_) => NotificationCubit(ApiClient())..fetchNotifications()),
       ],
       child: NotificationListenerWidget(
         child: ScreenUtilInit(
@@ -174,6 +177,7 @@ class _NotificationListenerWidgetState
       if (!mounted) return;
       context.read<LoanCubit>().fetchLoans();
       context.read<ChitFundCubit>().loadInvitesAndOwned();
+      context.read<NotificationCubit>().fetchNotifications();
     });
 
     _openSub = FirebaseMessaging.onMessageOpenedApp.listen((
