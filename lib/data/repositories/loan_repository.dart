@@ -1,4 +1,5 @@
-import 'dart:convert';
+﻿import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import '../models/loan_model.dart';
 import '../models/user_model.dart';
 import '../../core/network/api_client.dart';
@@ -42,7 +43,7 @@ class LoanRepository extends BaseRepository {
           .map((json) => LoanModel.fromJson(json))
           .toList();
 
-      // Real loans are fetched from backend — no mock data needed
+      // Real loans are fetched from backend â€” no mock data needed
       return {'myLoans': myLoans, 'givenLoans': givenLoans};
     });
   }
@@ -51,7 +52,8 @@ class LoanRepository extends BaseRepository {
     try {
       final cachedJsonStr = await SecureStorage.getCachedLoans();
       if (cachedJsonStr != null) {
-        final Map<String, dynamic> cachedMap = jsonDecode(cachedJsonStr);
+        final Map<String, dynamic> cachedMap = await compute(
+          (String s) => jsonDecode(s) as Map<String, dynamic>, cachedJsonStr);
         final List myLoansJson = cachedMap['myLoans'] ?? [];
         final List givenLoansJson = cachedMap['givenLoans'] ?? [];
 
@@ -142,11 +144,11 @@ class LoanRepository extends BaseRepository {
     });
   }
 
-  Future<bool> recordPayment(String loanId, double amount, String otp, String verificationId) async {
+  Future<bool> recordPayment(String loanId, double amount) async {
     return await handleApiCall(() async {
       final response = await _api.post(
         '/loans/$loanId/record-payment',
-        data: {'amount': amount, 'otp': otp, 'verificationId': verificationId},
+        data: {'amount': amount},
       );
       final data = response.data;
       if (data is Map && data['success'] == true) return true;
@@ -155,11 +157,11 @@ class LoanRepository extends BaseRepository {
     });
   }
 
-  Future<bool> recordInterest(String loanId, double amount, String otp, String verificationId) async {
+  Future<bool> recordInterest(String loanId, double amount) async {
     return await handleApiCall(() async {
       final response = await _api.post(
         '/loans/$loanId/record-interest',
-        data: {'amount': amount, 'otp': otp, 'verificationId': verificationId},
+        data: {'amount': amount},
       );
       final data = response.data;
       if (data is Map && data['success'] == true) return true;
@@ -168,11 +170,11 @@ class LoanRepository extends BaseRepository {
     });
   }
 
-  Future<bool> addCredit(String loanId, double amount, String otp, String verificationId) async {
+  Future<bool> addCredit(String loanId, double amount) async {
     return await handleApiCall(() async {
       final response = await _api.post(
         '/loans/$loanId/add-credit',
-        data: {'amount': amount, 'otp': otp, 'verificationId': verificationId},
+        data: {'amount': amount},
       );
       final data = response.data;
       if (data is Map && data['success'] == true) return true;
@@ -232,3 +234,4 @@ class LoanRepository extends BaseRepository {
     });
   }
 }
+

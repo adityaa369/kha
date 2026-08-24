@@ -1,4 +1,4 @@
-import 'package:flutter_bloc/flutter_bloc.dart';
+﻿import 'package:flutter_bloc/flutter_bloc.dart';
 import 'loan_state.dart';
 import '../../../../data/repositories/loan_repository.dart';
 import '../../error/failures.dart';
@@ -164,9 +164,9 @@ class LoanCubit extends Cubit<LoanState> {
     }
   }
 
-  Future<bool> recordPayment(String loanId, double amount, String otp, String verificationId) async {
+  Future<bool> recordPayment(String loanId, double amount) async {
     try {
-      final success = await _repository.recordPayment(loanId, amount, otp, verificationId);
+      final success = await _repository.recordPayment(loanId, amount);
       if (success) await fetchLoans();
       return success;
     } on Failure catch (f) {
@@ -178,9 +178,9 @@ class LoanCubit extends Cubit<LoanState> {
     }
   }
 
-  Future<bool> recordInterest(String loanId, double amount, String otp, String verificationId) async {
+  Future<bool> recordInterest(String loanId, double amount) async {
     try {
-      final success = await _repository.recordInterest(loanId, amount, otp, verificationId);
+      final success = await _repository.recordInterest(loanId, amount);
       if (success) await fetchLoans();
       return success;
     } on Failure catch (f) {
@@ -192,9 +192,9 @@ class LoanCubit extends Cubit<LoanState> {
     }
   }
 
-  Future<bool> addCredit(String loanId, double amount, String otp, String verificationId) async {
+  Future<bool> addCredit(String loanId, double amount) async {
     try {
-      final success = await _repository.addCredit(loanId, amount, otp, verificationId);
+      final success = await _repository.addCredit(loanId, amount);
       if (success) await fetchLoans();
       return success;
     } on Failure catch (f) {
@@ -257,3 +257,4 @@ class LoanCubit extends Cubit<LoanState> {
     }
   }
 }
+
