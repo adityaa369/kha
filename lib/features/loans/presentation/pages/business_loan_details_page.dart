@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -73,15 +73,16 @@ class BusinessLoanDetailsPage extends StatelessWidget {
     );
   }
 
-  // ─── Profile Card ─────────────────────────────────────────────────────────
+  // â”€â”€â”€ Profile Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Widget _profileCard(BuildContext context, LoanModel loan) {
     String? currentUserId;
     try {
       final authState = context.read<AuthCubit>().state;
       if (authState is AuthenticatedFull) currentUserId = authState.user.id;
-      if (authState is AuthenticatedUnverified)
+      if (authState is AuthenticatedUnverified) {
         currentUserId = authState.user.id;
+      }
     } catch (_) {}
 
     final isLender = loan.lenderId == currentUserId;
@@ -182,11 +183,12 @@ class BusinessLoanDetailsPage extends StatelessWidget {
                   color: Colors.green.shade600,
                   onTap: () async {
                     final uri = Uri.parse('https://wa.me/91$phone');
-                    if (await canLaunchUrl(uri))
+                    if (await canLaunchUrl(uri)) {
                       await launchUrl(
                         uri,
                         mode: LaunchMode.externalApplication,
                       );
+                    }
                   },
                 ),
               ],
@@ -228,7 +230,7 @@ class BusinessLoanDetailsPage extends StatelessWidget {
     );
   }
 
-  // ─── Stats Card ───────────────────────────────────────────────────────────
+  // â”€â”€â”€ Stats Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Widget _statsCard(LoanModel loan) {
     final startStr = _dateStr(loan.startDate);
@@ -292,7 +294,7 @@ class BusinessLoanDetailsPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
-                      child: _stat('Principal Amount', '₹${_fmt(loan.amount)}'),
+                      child: _stat('Principal Amount', 'â‚¹${_fmt(loan.amount)}'),
                     ),
                     SizedBox(width: 12.w),
                     Expanded(child: _stat('Duration', '$duration Months')),
@@ -390,7 +392,7 @@ class BusinessLoanDetailsPage extends StatelessWidget {
     );
   }
 
-  // ─── Credit Overview Card (gradient) ─────────────────────────────────────────
+  // â”€â”€â”€ Credit Overview Card (gradient) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Widget _emiOverviewCard(LoanModel loan) {
     final duration = loan.durationMonths ?? 0;
@@ -398,8 +400,8 @@ class BusinessLoanDetailsPage extends StatelessWidget {
     final totalPayable = loan.totalPayableAmount ?? (emi * duration);
     final progress = loan.progress.clamp(0.0, 1.0);
     final paidMonths = (duration * progress).round();
-    final amountPaid = emi * paidMonths;
-    final amountPending = totalPayable - amountPaid;
+    final amountPaid = loan.paidAmount;
+    final amountPending = loan.remainingAmount;
 
     return Container(
       padding: EdgeInsets.all(16.w),
@@ -439,12 +441,12 @@ class BusinessLoanDetailsPage extends StatelessWidget {
               Expanded(
                 child: _gradientStat(
                   'Total Payable',
-                  totalPayable > 0 ? '₹${_fmt(totalPayable)}' : '-',
+                  totalPayable > 0 ? 'â‚¹${_fmt(totalPayable)}' : '-',
                 ),
               ),
               SizedBox(width: 12.w),
               Expanded(
-                child: _gradientStat('Amount Paid', '₹${_fmt(amountPaid)}'),
+                child: _gradientStat('Amount Paid', 'â‚¹${_fmt(amountPaid)}'),
               ),
             ],
           ),
@@ -455,11 +457,11 @@ class BusinessLoanDetailsPage extends StatelessWidget {
               Expanded(
                 child: _gradientStat(
                   'Amount Pending',
-                  '₹${_fmt(amountPending)}',
+                  'â‚¹${_fmt(amountPending)}',
                 ),
               ),
               SizedBox(width: 12.w),
-              Expanded(child: const SizedBox()),
+              const Expanded(child: SizedBox()),
             ],
           ),
           SizedBox(height: 12.h),
@@ -509,7 +511,7 @@ class BusinessLoanDetailsPage extends StatelessWidget {
     );
   }
 
-  // ─── Payment Checklist ────────────────────────────────────────────────────
+  // â”€â”€â”€ Payment Checklist â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Widget _paymentChecklist(LoanModel loan) {
     final duration = loan.durationMonths ?? 0;
@@ -638,11 +640,12 @@ class BusinessLoanDetailsPage extends StatelessWidget {
     );
   }
 
-  // ─── Proof Document Section ───────────────────────────────────────────────
+  // â”€â”€â”€ Proof Document Section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Widget _proofDocumentSection(BuildContext context, LoanModel loan) {
-    if (loan.documentUrl == null || loan.documentUrl!.trim().isEmpty)
+    if (loan.documentUrl == null || loan.documentUrl!.trim().isEmpty) {
       return const SizedBox.shrink();
+    }
 
     final url = loan.documentUrl!;
     final isPdf = url.toLowerCase().contains('.pdf');
@@ -811,11 +814,12 @@ class BusinessLoanDetailsPage extends StatelessWidget {
                     child: OutlinedButton.icon(
                       onPressed: () async {
                         final uri = Uri.parse(url);
-                        if (await canLaunchUrl(uri))
+                        if (await canLaunchUrl(uri)) {
                           await launchUrl(
                             uri,
                             mode: LaunchMode.externalApplication,
                           );
+                        }
                       },
                       icon: Icon(Icons.open_in_new, size: 16.sp),
                       label: Text(
@@ -948,7 +952,7 @@ class BusinessLoanDetailsPage extends StatelessWidget {
     );
   }
 
-  // ─── Helpers ──────────────────────────────────────────────────────────────
+  // â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   String _fmt(double v) {
     if (v.isNaN || v.isInfinite) return '0';
@@ -1013,5 +1017,7 @@ class BusinessLoanDetailsPage extends StatelessWidget {
     }
   }
 }
+
+
 
 

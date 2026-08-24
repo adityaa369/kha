@@ -1,13 +1,13 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../data/models/loan_model.dart';
 import '../../../../core/blocs/loans/loan_cubit.dart';
 import '../../../../core/utils/error_handler.dart';
-import '../../../../core/utils/dialog_utils.dart';
+import '../../../../core/error/failures.dart';
+
 class FlexiblePaymentSheet extends StatefulWidget {
   final LoanModel loan;
   final String title;
@@ -34,32 +34,27 @@ class FlexiblePaymentSheet extends StatefulWidget {
 }
 
 class _FlexiblePaymentSheetState extends State<FlexiblePaymentSheet> {
-  int _step = 0; // 0: Amount, 1: OTP, 2: Success
+  int _step = 0; // 0: Amount, 1: Success
   bool _isLoading = false;
-  String _verificationId = '';
   
   final _amountCtrl = TextEditingController();
-  final _otpCtrl = TextEditingController();
-
   final _currencyFmt = NumberFormat('#,##0', 'en_IN');
 
   @override
   void initState() {
     super.initState();
     _amountCtrl.addListener(() => setState(() {}));
-    _otpCtrl.addListener(() => setState(() {}));
   }
 
   @override
   void dispose() {
     _amountCtrl.dispose();
-    _otpCtrl.dispose();
     super.dispose();
   }
 
   double get _enteredAmount => double.tryParse(_amountCtrl.text.replaceAll(',', '')) ?? 0;
 
-  double get _currentBalance => widget.loan.totalPayable ?? widget.loan.amount;
+  double get _currentBalance => widget.loan.remainingAmount;
 
   double get _newBalance {
     if (widget.actionType == 'add_credit') {
@@ -70,64 +65,56 @@ class _FlexiblePaymentSheetState extends State<FlexiblePaymentSheet> {
 
   double get _totalReceived {
     if (widget.actionType == 'add_credit') return 0;
-    final originalAmount = widget.loan.amount;
-    final totalReceivedSoFar = (originalAmount - _currentBalance).clamp(0, double.infinity);
-    return totalReceivedSoFar + _enteredAmount;
+    return widget.loan.paidAmount + _enteredAmount;
   }
 
-  void _requestOtp() {
+  Future<void> _processPayment() async {
     if (_enteredAmount <= 0) return;
     
-    setState(() => _isLoading = true);
-    
-    final phone = widget.loan.mobile ?? '';
-    final formatted = phone.startsWith('+') ? phone : '+91$phone';
-
-    FirebaseAuth.instance.verifyPhoneNumber(
-      phoneNumber: formatted,
-      verificationCompleted: (_) {},
-      verificationFailed: (e) {
-        if (!mounted) return;
-        setState(() => _isLoading = false);
-        DialogUtils.showErrorDialog(context, 'OTP failed: ${e.message}');
-      },
-      codeSent: (String vId, int? _) {
-        if (!mounted) return;
-        setState(() {
-          _verificationId = vId;
-          _isLoading = false;
-          _step = 1;
-        });
-      },
-      codeAutoRetrievalTimeout: (_) {},
-    );
-  }
-
-  Future<void> _verifyOtp() async {
-    final otp = _otpCtrl.text.trim();
-    if (otp.length != 6) return;
-
     setState(() => _isLoading = true);
 
     final cubit = context.read<LoanCubit>();
     bool success = false;
 
-    if (widget.actionType == 'record_payment') {
-      success = await cubit.recordPayment(widget.loan.id, _enteredAmount, otp, _verificationId);
-    } else if (widget.actionType == 'add_credit') {
-      success = await cubit.addCredit(widget.loan.id, _enteredAmount, otp, _verificationId);
-    } else if (widget.actionType == 'record_interest') {
-      success = await cubit.recordInterest(widget.loan.id, _enteredAmount, otp, _verificationId);
-    }
+    try {
+      if (widget.actionType == 'record_payment') {
+        success = await cubit.recordPayment(widget.loan.id, (_enteredAmount * 100).toInt());
+      } else if (widget.actionType == 'add_credit') {
+        success = await cubit.addCredit(widget.loan.id, (_enteredAmount * 100).toInt());
+      } else if (widget.actionType == 'record_interest') {
+        success = await cubit.recordInterest(widget.loan.id, (_enteredAmount * 100).toInt());
+      }
 
-    if (!mounted) return;
+      if (!mounted) return;
+      setState(() => _isLoading = false);
 
-    setState(() => _isLoading = false);
+      if (success) {
+        setState(() => _step = 1);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      
+      // F.3 Financial UX Alignment: Differentiate error states
+      String errorMsg = 'An unexpected error occurred.';
+      if (e is ServerFailure) {
+        // Distinguish Kill Switch / 503
+        if (e.message.contains('temporarily suspended') || e.message.contains('503')) {
+          errorMsg = 'Service Paused: Financial operations are temporarily suspended. Your funds are safe.';
+        } else {
+          errorMsg = 'Server Error: ${e.message}';
+        }
+      } else if (e is ValidationFailure) {
+        errorMsg = 'Validation Error: ${e.message}';
+      } else if (e is AuthFailure) {
+        errorMsg = 'Authentication Error: Please log in again.';
+      } else if (e is NetworkFailure) {
+        errorMsg = 'Network Error: Please check your internet connection.';
+      } else {
+        errorMsg = e.toString();
+      }
 
-    if (success) {
-      setState(() => _step = 2);
-    } else {
-      ErrorHandler.showError(context, 'Transaction failed. Invalid OTP.');
+      ErrorHandler.showError(context, errorMsg);
     }
   }
 
@@ -186,7 +173,7 @@ class _FlexiblePaymentSheetState extends State<FlexiblePaymentSheet> {
                         Text(isAddCredit ? 'Current Balance' : 'Total Received', style: TextStyle(fontSize: 11.sp, color: Colors.grey.shade600)),
                         SizedBox(height: 4.h),
                         Text(
-                          '₹${_currencyFmt.format(isAddCredit ? _currentBalance : _totalReceived)}',
+                          '₹${_currencyFmt.format(isAddCredit ? _currentBalance : widget.loan.paidAmount)}',
                           style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold, color: Colors.green.shade700),
                         ),
                       ],
@@ -213,7 +200,7 @@ class _FlexiblePaymentSheetState extends State<FlexiblePaymentSheet> {
         ),
         SizedBox(height: 24.h),
         ElevatedButton(
-          onPressed: (_enteredAmount > 0 && !_isLoading) ? _requestOtp : null,
+          onPressed: (_enteredAmount > 0 && !_isLoading) ? _processPayment : null,
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.green.shade700,
             foregroundColor: Colors.white,
@@ -223,96 +210,7 @@ class _FlexiblePaymentSheetState extends State<FlexiblePaymentSheet> {
           ),
           child: _isLoading 
               ? SizedBox(width: 20.w, height: 20.w, child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-              : Text('Request OTP Confirmation', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold)),
-        ),
-        SizedBox(height: 8.h),
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text('Cancel', style: TextStyle(color: Colors.grey.shade600)),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildOtpStep() {
-    final borrowerName = widget.loan.borrowerName.isNotEmpty ? widget.loan.borrowerName : 'Borrower';
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text('OTP Sent to Borrower', style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)),
-            IconButton(
-              icon: const Icon(Icons.close),
-              onPressed: () => Navigator.pop(context),
-            ),
-          ],
-        ),
-        SizedBox(height: 16.h),
-        Center(
-          child: Container(
-            padding: EdgeInsets.all(16.w),
-            decoration: BoxDecoration(color: Colors.green.shade50, shape: BoxShape.circle),
-            child: Icon(Icons.mobile_friendly, color: Colors.green.shade700, size: 40.sp),
-          ),
-        ),
-        SizedBox(height: 16.h),
-        Center(
-          child: Text('OTP has been sent to $borrowerName', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold, color: Colors.black87)),
-        ),
-        SizedBox(height: 4.h),
-        Center(
-          child: Text('Ask the borrower to share the OTP with you.', style: TextStyle(fontSize: 12.sp, color: Colors.grey.shade600)),
-        ),
-        SizedBox(height: 24.h),
-        Container(
-          padding: EdgeInsets.all(16.w),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade50,
-            borderRadius: BorderRadius.circular(12.r),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Enter OTP', style: TextStyle(fontSize: 12.sp, color: Colors.grey.shade600, fontWeight: FontWeight.bold)),
-              SizedBox(height: 12.h),
-              TextField(
-                controller: _otpCtrl,
-                keyboardType: TextInputType.number,
-                maxLength: 6,
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 24.sp, letterSpacing: 16.w, fontWeight: FontWeight.bold),
-                decoration: InputDecoration(
-                  counterText: '',
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide(color: Colors.grey.shade300)),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide(color: Colors.grey.shade300)),
-                ),
-                onChanged: (val) {
-                  if (val.length == 6) {
-                    FocusScope.of(context).unfocus();
-                  }
-                },
-              ),
-            ],
-          ),
-        ),
-        SizedBox(height: 24.h),
-        ElevatedButton(
-          onPressed: (_otpCtrl.text.length == 6 && !_isLoading) ? _verifyOtp : null,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.green.shade700,
-            foregroundColor: Colors.white,
-            padding: EdgeInsets.symmetric(vertical: 14.h),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-            elevation: 0,
-          ),
-          child: _isLoading 
-              ? SizedBox(width: 20.w, height: 20.w, child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-              : Text('Verify OTP', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold)),
+              : Text('Record Transaction', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold)),
         ),
         SizedBox(height: 8.h),
         TextButton(
@@ -434,11 +332,10 @@ class _FlexiblePaymentSheetState extends State<FlexiblePaymentSheet> {
         ),
         child: AnimatedSwitcher(
           duration: const Duration(milliseconds: 300),
-          child: _step == 0 
-              ? _buildAmountStep() 
-              : (_step == 1 ? _buildOtpStep() : _buildSuccessStep()),
+          child: _step == 0 ? _buildAmountStep() : _buildSuccessStep(),
         ),
       ),
     );
   }
 }
+

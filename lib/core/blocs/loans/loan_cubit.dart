@@ -164,23 +164,23 @@ class LoanCubit extends Cubit<LoanState> {
     }
   }
 
-  Future<bool> recordPayment(String loanId, double amount) async {
-    try {
-      final success = await _repository.recordPayment(loanId, amount);
-      if (success) await fetchLoans();
-      return success;
-    } on Failure catch (f) {
-      emit(LoanError(f.message));
-      return false;
-    } catch (e) {
-      emit(LoanError('Failed to record payment: $e'));
-      return false;
+  Future<bool> recordPayment(String loanId, int amountPaise) async {
+      try {
+        final success = await _repository.recordPayment(loanId, amountPaise);
+        if (success) await fetchLoans();
+        return success;
+      } on Failure catch (f) {
+        emit(LoanError(f.message));
+        rethrow;
+      } catch (e) {
+        emit(LoanError('Failed to record payment: $e'));
+        throw ServerFailure(e.toString());
+      }
     }
-  }
 
-  Future<bool> recordInterest(String loanId, double amount) async {
+  Future<bool> recordInterest(String loanId, int amountPaise) async {
     try {
-      final success = await _repository.recordInterest(loanId, amount);
+      final success = await _repository.recordInterest(loanId, amountPaise);
       if (success) await fetchLoans();
       return success;
     } on Failure catch (f) {
@@ -192,19 +192,19 @@ class LoanCubit extends Cubit<LoanState> {
     }
   }
 
-  Future<bool> addCredit(String loanId, double amount) async {
-    try {
-      final success = await _repository.addCredit(loanId, amount);
-      if (success) await fetchLoans();
-      return success;
-    } on Failure catch (f) {
-      emit(LoanError(f.message));
-      return false;
-    } catch (e) {
-      emit(LoanError('Failed to add credit: $e'));
-      return false;
+  Future<bool> addCredit(String loanId, int amountPaise) async {
+      try {
+        final success = await _repository.addCredit(loanId, amountPaise);
+        if (success) await fetchLoans();
+        return success;
+      } on Failure catch (f) {
+        emit(LoanError(f.message));
+        rethrow;
+      } catch (e) {
+        emit(LoanError('Failed to add credit: $e'));
+        throw ServerFailure(e.toString());
+      }
     }
-  }
 
   // Resend Loan OTP
   Future<bool> resendOtp(String loanId) async {
@@ -257,4 +257,6 @@ class LoanCubit extends Cubit<LoanState> {
     }
   }
 }
+
+
 

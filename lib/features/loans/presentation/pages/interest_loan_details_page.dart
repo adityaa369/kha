@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
@@ -16,13 +16,13 @@ class InterestLoanDetailsPage extends StatelessWidget {
 
   const InterestLoanDetailsPage({super.key, required this.loan});
 
-  // ─── Theme ───────────────────────────────────────────────────────────────────
+  // â”€â”€â”€ Theme â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   static const _primary = Color(0xFFE65100);
   static const _bg = Color(0xFFFFF3E0);
   static const _accent = Color(0xFFEF6C00);
 
-  // ─── Build ───────────────────────────────────────────────────────────────────
+  // â”€â”€â”€ Build â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   @override
   Widget build(BuildContext context) {
@@ -79,15 +79,16 @@ class InterestLoanDetailsPage extends StatelessWidget {
     );
   }
 
-  // ─── Profile Card ─────────────────────────────────────────────────────────
+  // â”€â”€â”€ Profile Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Widget _profileCard(BuildContext context, LoanModel loan) {
     String? currentUserId;
     try {
       final authState = context.read<AuthCubit>().state;
       if (authState is AuthenticatedFull) currentUserId = authState.user.id;
-      if (authState is AuthenticatedUnverified)
+      if (authState is AuthenticatedUnverified) {
         currentUserId = authState.user.id;
+      }
     } catch (_) {}
 
     final isLender = loan.lenderId == currentUserId;
@@ -246,7 +247,7 @@ class InterestLoanDetailsPage extends StatelessWidget {
     );
   }
 
-  // ─── Stats Card ───────────────────────────────────────────────────────────
+  // â”€â”€â”€ Stats Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Widget _statsCard(LoanModel loan) {
     final startStr =
@@ -298,21 +299,25 @@ class InterestLoanDetailsPage extends StatelessWidget {
                     ],
                   ),
                 ),
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 10.w,
-                    vertical: 4.h,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _statusColor(loan.status).withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  child: Text(
-                    _statusLabel(loan.status),
-                    style: TextStyle(
-                      color: _statusColor(loan.status),
-                      fontSize: 11.sp,
-                      fontWeight: FontWeight.w700,
+                Flexible(
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 10.w,
+                      vertical: 4.h,
+                    ),
+                    decoration: BoxDecoration(
+                      color: _statusColor(loan.status).withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                    child: Text(
+                      _statusLabel(loan.status),
+                      style: TextStyle(
+                        color: _statusColor(loan.status),
+                        fontSize: 11.sp,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ),
@@ -333,7 +338,7 @@ class InterestLoanDetailsPage extends StatelessWidget {
                     Expanded(
                       child: _statItem(
                         'Principal Amount',
-                        '₹${_fmt(loan.amount)}',
+                        'â‚¹${_fmt(loan.amount)}',
                       ),
                     ),
                     SizedBox(width: 12.w),
@@ -406,7 +411,7 @@ class InterestLoanDetailsPage extends StatelessWidget {
     );
   }
 
-  // ─── Interest Info Card ───────────────────────────────────────────────────
+  // â”€â”€â”€ Interest Info Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Widget _interestInfoCard(LoanModel loan) {
     final rate = loan.interestRate ?? 0.0;
@@ -458,7 +463,7 @@ class InterestLoanDetailsPage extends StatelessWidget {
               ),
               SizedBox(width: 12.w),
               Expanded(
-                child: _interestStat('Monthly Interest', '₹${_fmt(monthly)}'),
+                child: _interestStat('Monthly Interest', 'â‚¹${_fmt(monthly)}'),
               ),
             ],
           ),
@@ -469,12 +474,12 @@ class InterestLoanDetailsPage extends StatelessWidget {
               Expanded(
                 child: _interestStat(
                   'Total Interest',
-                  '₹${_fmt(totalInterest)}',
+                  'â‚¹${_fmt(totalInterest)}',
                 ),
               ),
               SizedBox(width: 12.w),
               Expanded(
-                child: _interestStat('Total Payable', '₹${_fmt(totalPayable)}'),
+                child: _interestStat('Total Payable', 'â‚¹${_fmt(totalPayable)}'),
               ),
             ],
           ),
@@ -483,13 +488,13 @@ class InterestLoanDetailsPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: _interestStat('Interest Paid', '₹${_fmt(received)}'),
+                child: _interestStat('Interest Paid', 'â‚¹${_fmt(received)}'),
               ),
               SizedBox(width: 12.w),
               Expanded(
                 child: _interestStat(
                   'Interest Pending',
-                  '₹${_fmt(totalInterest - received)}',
+                  'â‚¹${_fmt(totalInterest - received)}',
                 ),
               ),
             ],
@@ -525,7 +530,7 @@ class InterestLoanDetailsPage extends StatelessWidget {
     );
   }
 
-  // ─── Payment Progress Card ────────────────────────────────────────────────
+  // â”€â”€â”€ Payment Progress Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Widget _paymentProgressCard(LoanModel loan) {
     final duration = loan.durationMonths ?? 0;
@@ -658,7 +663,7 @@ class InterestLoanDetailsPage extends StatelessWidget {
     );
   }
 
-  // ─── Proof Document Section ──────────────────────────────────────────────
+  // â”€â”€â”€ Proof Document Section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Widget _proofDocumentSection(BuildContext context, LoanModel loan) {
     if (loan.documentUrl == null || loan.documentUrl!.trim().isEmpty) {
@@ -990,7 +995,7 @@ class InterestLoanDetailsPage extends StatelessWidget {
     );
   }
 
-  // ─── Helpers ──────────────────────────────────────────────────────────────
+  // â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   String _fmt(double v) {
     if (v.isNaN || v.isInfinite) return '0';
@@ -1050,5 +1055,7 @@ class InterestLoanDetailsPage extends StatelessWidget {
     }
   }
 }
+
+
 
 

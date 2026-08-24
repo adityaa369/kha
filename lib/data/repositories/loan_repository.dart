@@ -144,11 +144,11 @@ class LoanRepository extends BaseRepository {
     });
   }
 
-  Future<bool> recordPayment(String loanId, double amount) async {
+  Future<bool> recordPayment(String loanId, int amountPaise) async {
     return await handleApiCall(() async {
       final response = await _api.post(
         '/loans/$loanId/record-payment',
-        data: {'amount': amount},
+        data: {'amount': amountPaise},
       );
       final data = response.data;
       if (data is Map && data['success'] == true) return true;
@@ -157,11 +157,11 @@ class LoanRepository extends BaseRepository {
     });
   }
 
-  Future<bool> recordInterest(String loanId, double amount) async {
+  Future<bool> recordInterest(String loanId, int amountPaise) async {
     return await handleApiCall(() async {
       final response = await _api.post(
         '/loans/$loanId/record-interest',
-        data: {'amount': amount},
+        data: {'amount': amountPaise},
       );
       final data = response.data;
       if (data is Map && data['success'] == true) return true;
@@ -170,11 +170,11 @@ class LoanRepository extends BaseRepository {
     });
   }
 
-  Future<bool> addCredit(String loanId, double amount) async {
+  Future<bool> addCredit(String loanId, int amountPaise) async {
     return await handleApiCall(() async {
       final response = await _api.post(
         '/loans/$loanId/add-credit',
-        data: {'amount': amount},
+        data: {'amount': amountPaise},
       );
       final data = response.data;
       if (data is Map && data['success'] == true) return true;
@@ -234,4 +234,5 @@ class LoanRepository extends BaseRepository {
     });
   }
 }
+
 
