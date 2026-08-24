@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -10,6 +10,7 @@ import '../../../../config/constants.dart';
 import '../../../../config/theme.dart';
 import '../../../../data/models/loan_model.dart';
 import '../../../../core/blocs/loans/loan_cubit.dart';
+import '../../../../core/blocs/system/system_state_cubit.dart';
 import '../../../../core/utils/error_handler.dart';
 import '../../../../core/blocs/loans/loan_state.dart';
 import '../widgets/flexible_payment_sheet.dart';
@@ -18,20 +19,20 @@ class LenderLoanDetailsPage extends StatelessWidget {
   final LoanModel loan;
   const LenderLoanDetailsPage({super.key, required this.loan});
 
-  // ─── Theme by loan type ──────────────────────────────────────────────────
+  // â”€â”€â”€ Theme by loan type â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   static final Map<String, _TypeTheme> _typeColors = {
-    'hand_credit': _TypeTheme(
+    'hand_credit': const _TypeTheme(
       Color(0xFF1B5E20),
       Color(0xFFE8F5E9),
       'Hand Credit',
     ),
-    'business_credit': _TypeTheme(
+    'business_credit': const _TypeTheme(
       Color(0xFF1565C0),
       Color(0xFFE3F2FD),
       'Business Credit',
     ),
-    'interest_credit': _TypeTheme(
+    'interest_credit': const _TypeTheme(
       Color(0xFFE65100),
       Color(0xFFFFF3E0),
       'Interest Credit',
@@ -42,7 +43,7 @@ class LenderLoanDetailsPage extends StatelessWidget {
       _typeColors[type] ??
       const _TypeTheme(Color(0xFF37474F), Color(0xFFECEFF1), 'Loan');
 
-  // ─── Build ───────────────────────────────────────────────────────────────
+  // â”€â”€â”€ Build â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   @override
   Widget build(BuildContext context) {
@@ -82,7 +83,7 @@ class LenderLoanDetailsPage extends StatelessWidget {
               onPressed: () => context.pop(),
             ),
             title: Text(
-              '${theme.label} — Lender View',
+              '${theme.label} â€” Lender View',
               style: TextStyle(
                 color: theme.primary,
                 fontSize: 15.sp,
@@ -151,7 +152,7 @@ class LenderLoanDetailsPage extends StatelessWidget {
     );
   }
 
-  // ─── Borrower Card ────────────────────────────────────────────────────────
+  // â”€â”€â”€ Borrower Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Widget _borrowerCard(LoanModel loan, _TypeTheme theme) {
     final name = loan.borrowerName.isNotEmpty ? loan.borrowerName : 'Borrower';
@@ -264,7 +265,7 @@ class LenderLoanDetailsPage extends StatelessWidget {
     );
   }
 
-  // ─── Summary Card ─────────────────────────────────────────────────────────
+  // â”€â”€â”€ Summary Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Widget _summaryCard(
     LoanModel loan,
@@ -317,7 +318,7 @@ class LenderLoanDetailsPage extends StatelessWidget {
                       if (isInterest) ...[
                          Text('% Interest Credit', style: TextStyle(color: theme.primary, fontSize: 12.sp, fontWeight: FontWeight.bold)),
                       ] else ...[
-                         Text('💰 Hand Credit', style: TextStyle(color: theme.primary, fontSize: 12.sp, fontWeight: FontWeight.bold)),
+                         Text('ðŸ’° Hand Credit', style: TextStyle(color: theme.primary, fontSize: 12.sp, fontWeight: FontWeight.bold)),
                       ],
                     ],
                   ),
@@ -350,14 +351,14 @@ class LenderLoanDetailsPage extends StatelessWidget {
                 Expanded(
                   child: _stat(
                     isInterest ? 'Principal' : 'Given Amount',
-                    '₹${_fmt(loan.amount)}',
+                    'â‚¹${_fmt(loan.amount)}',
                   ),
                 ),
                 SizedBox(width: 12.w),
                 Expanded(
                   child: _stat(
                     isInterest ? 'Monthly Interest' : 'Received Amount',
-                    isInterest ? '₹${_fmt(monthly)}' : '₹${_fmt(collected)}',
+                    isInterest ? 'â‚¹${_fmt(monthly)}' : 'â‚¹${_fmt(collected)}',
                     valueColor: isInterest ? theme.primary : Colors.green.shade700,
                   ),
                 ),
@@ -365,7 +366,7 @@ class LenderLoanDetailsPage extends StatelessWidget {
                 Expanded(
                   child: _stat(
                     isInterest ? 'Total Interest' : 'Remaining Amount',
-                    isInterest ? '₹${_fmt(monthly * duration)}' : '₹${_fmt(remaining)}',
+                    isInterest ? 'â‚¹${_fmt(monthly * duration)}' : 'â‚¹${_fmt(remaining)}',
                     valueColor: isInterest ? Colors.black87 : Colors.red.shade600,
                   ),
                 ),
@@ -575,7 +576,7 @@ class LenderLoanDetailsPage extends StatelessWidget {
 
   String _txAmountStr(String type, double amount) {
     final sign = type == 'loan_given' ? '-' : '+';
-    return '$sign₹${_fmt(amount)}';
+    return '$signâ‚¹${_fmt(amount)}';
   }
 
   bool _txIsPositive(String type) => type != 'loan_given';
@@ -655,7 +656,7 @@ class LenderLoanDetailsPage extends StatelessWidget {
     );
   }
 
-  // ─── Repayment Checklist ──────────────────────────────────────────────────
+  // â”€â”€â”€ Repayment Checklist â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Widget _repaymentChecklist(
     BuildContext context,
@@ -744,7 +745,7 @@ class LenderLoanDetailsPage extends StatelessWidget {
               Icon(Icons.info_outline, size: 12.sp, color: Colors.grey),
               SizedBox(width: 4.w),
               Text(
-                'Tick (✓) if paid, Cross (✗) if not paid.',
+                'Tick (âœ“) if paid, Cross (âœ—) if not paid.',
                 style: TextStyle(fontSize: 10.sp, color: Colors.grey),
               ),
             ],
@@ -765,7 +766,7 @@ class LenderLoanDetailsPage extends StatelessWidget {
     double newProgress;
 
     if (monthIndex < currentPaid) {
-      // Mark this month and all after it as unpaid → set progress to monthIndex/duration
+      // Mark this month and all after it as unpaid â†’ set progress to monthIndex/duration
       newProgress = monthIndex / duration;
     } else {
       // Mark up to and including this month as paid
@@ -782,7 +783,7 @@ class LenderLoanDetailsPage extends StatelessWidget {
             : Colors.orange.shade700,
         content: Text(
           newProgress > loan.progress
-              ? 'Month ${monthIndex + 1} marked as paid ✓'
+              ? 'Month ${monthIndex + 1} marked as paid âœ“'
               : 'Month ${monthIndex + 1} marked as unpaid',
         ),
         duration: const Duration(seconds: 2),
@@ -790,7 +791,7 @@ class LenderLoanDetailsPage extends StatelessWidget {
     );
   }
 
-  // ─── Document Section ─────────────────────────────────────────────────────
+  // â”€â”€â”€ Document Section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Widget _documentSection(
     BuildContext context,
@@ -996,11 +997,12 @@ class LenderLoanDetailsPage extends StatelessWidget {
                     child: OutlinedButton.icon(
                       onPressed: () async {
                         final uri = Uri.parse(url);
-                        if (await canLaunchUrl(uri))
+                        if (await canLaunchUrl(uri)) {
                           await launchUrl(
                             uri,
                             mode: LaunchMode.externalApplication,
                           );
+                        }
                       },
                       icon: Icon(Icons.open_in_new, size: 15.sp),
                       label: Text(
@@ -1124,7 +1126,7 @@ class LenderLoanDetailsPage extends StatelessWidget {
     );
   }
 
-  // ─── Pending Card ─────────────────────────────────────────────────────────
+  // â”€â”€â”€ Pending Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Widget _pendingCard(LoanModel loan) {
     return Container(
@@ -1166,7 +1168,7 @@ class LenderLoanDetailsPage extends StatelessWidget {
     );
   }
 
-  // ─── Bottom Bar ───────────────────────────────────────────────────────────
+  // â”€â”€â”€ Bottom Bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Widget _bottomBar(
     BuildContext context,
@@ -1194,11 +1196,11 @@ class LenderLoanDetailsPage extends StatelessWidget {
               ),
               SizedBox(width: 8.w),
               Expanded(
-                child: _bottomActionButton(context, loan, '💳 Record Principal Payment', Colors.blue.shade700, Colors.blue.shade50, 'record_payment'),
+                child: _bottomActionButton(context, loan, 'ðŸ’³ Record Principal Payment', Colors.blue.shade700, Colors.blue.shade50, 'record_payment'),
               ),
             ] else ...[
               Expanded(
-                child: _bottomActionButton(context, loan, '💳 Record Payment', Colors.green.shade700, Colors.green.shade50, 'record_payment'),
+                child: _bottomActionButton(context, loan, 'ðŸ’³ Record Payment', Colors.green.shade700, Colors.green.shade50, 'record_payment'),
               ),
             ],
             SizedBox(width: 8.w),
@@ -1240,7 +1242,7 @@ class LenderLoanDetailsPage extends StatelessWidget {
     );
   }
 
-  // ─── Close Loan (OTP) ─────────────────────────────────────────────────────
+  // â”€â”€â”€ Close Loan (OTP) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   void _initiateLoanClose(BuildContext context, LoanModel loan) {
     final loanCubit = context.read<LoanCubit>();
@@ -1355,8 +1357,9 @@ class LenderLoanDetailsPage extends StatelessWidget {
                 otpCtrl.text,
                 vId,
               );
-              if (context.mounted)
+              if (context.mounted) {
                 Navigator.of(context, rootNavigator: true).pop();
+              }
 
               if (success && context.mounted) {
                 context.go(AppConstants.loanCloseSuccess);
@@ -1376,7 +1379,7 @@ class LenderLoanDetailsPage extends StatelessWidget {
     );
   }
 
-  // ─── Helpers ──────────────────────────────────────────────────────────────
+  // â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   String _fmt(double v) {
     if (v.isNaN || v.isInfinite) return '0';
@@ -1412,7 +1415,7 @@ class LenderLoanDetailsPage extends StatelessWidget {
 }
 
 
-// ─── Theme helper class ───────────────────────────────────────────────────────
+// â”€â”€â”€ Theme helper class â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _TypeTheme {
   final Color primary;
@@ -1420,4 +1423,5 @@ class _TypeTheme {
   final String label;
   const _TypeTheme(this.primary, this.bg, this.label);
 }
+
 

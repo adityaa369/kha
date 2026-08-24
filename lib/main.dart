@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -12,17 +12,21 @@ import 'core/blocs/chit_funds/chit_fund_cubit.dart';
 import 'data/repositories/chit_fund_repository.dart';
 import 'features/home/presentation/cubit/notification_cubit.dart';
 import 'core/network/api_client.dart';
+import 'core/utils/secure_storage.dart';
+import 'core/blocs/admin/admin_cubit.dart';
+import 'core/blocs/system/system_state_cubit.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'core/services/notification_service.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'core/services/biometric_auth_service.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'firebase_options.dart';
+
+final systemStateCubit = SystemStateCubit();
 
 void main() async {
   try {
@@ -52,6 +56,19 @@ void main() async {
 
     await dotenv.load(fileName: ".env");
 
+    // Wire up global auth error handlers â€” clears session and redirects to login
+    ApiClient.onMaintenanceMode = () {
+      systemStateCubit.pauseFinancialOperations();
+    };
+    ApiClient.onUnauthorized = () async {
+      await SecureStorage.clearAuthData();
+      router.go('/login');
+    };
+    ApiClient.onTokenExpired = () async {
+      await SecureStorage.clearAuthData();
+      router.go('/login');
+    };
+
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
@@ -73,7 +90,7 @@ void main() async {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.error_outline, color: KhaataTheme.primaryBlue, size: 60),
+                const Icon(Icons.error_outline, color: KhaataTheme.primaryBlue, size: 60),
                 const SizedBox(height: 16),
                 const Text('Something went wrong', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
                 const SizedBox(height: 8),
@@ -88,7 +105,7 @@ void main() async {
     await SentryFlutter.init((options) {
       options.dsn = dotenv.env['SENTRY_DSN'] ?? '';
       options.tracesSampleRate = 1.0;
-    }, appRunner: () => runApp(const KhaataApp()));
+    }, appRunner: () => runApp(KhaataApp(systemStateCubit: systemStateCubit)));
   } catch (globalError, stackTrace) {
     runApp(
       MaterialApp(
@@ -120,6 +137,7 @@ class KhaataApp extends StatelessWidget {
         BlocProvider(create: (_) => LoanCubit()),
         BlocProvider(create: (_) => ChitFundCubit(ChitFundRepository())),
         BlocProvider(create: (_) => NotificationCubit(ApiClient())..fetchNotifications()),
+        BlocProvider<AdminCubit>(create: (_) => AdminCubit()),
       ],
       child: NotificationListenerWidget(
         child: ScreenUtilInit(
@@ -127,11 +145,73 @@ class KhaataApp extends StatelessWidget {
           minTextAdapt: true,
           splitScreenMode: true,
           builder: (context, child) {
-            return MaterialApp.router(
-              debugShowCheckedModeBanner: false,
-              title: 'Khaata',
-              theme: KhaataTheme.lightTheme,
-              routerConfig: router,
+            return BlocBuilder<SystemStateCubit, SystemState>(
+              builder: (context, systemState) {
+                return Stack(
+                  children: [
+                    if (child != null) child,
+                    if (systemState == SystemState.financialOperationsPaused)
+                      Positioned(
+                        top: 40.h,
+                        left: 16.w,
+                        right: 16.w,
+                        child: Material(
+                          color: Colors.transparent,
+                          child: Container(
+                            padding: EdgeInsets.all(16.w),
+                            decoration: BoxDecoration(
+                              color: Colors.red.shade900,
+                              borderRadius: BorderRadius.circular(12.r),
+                              boxShadow: [
+                                BoxShadow(color: Colors.black26, blurRadius: 8, offset: Offset(0, 4))
+                              ]
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(Icons.warning_amber_rounded, color: Colors.white, size: 24.sp),
+                                    SizedBox(width: 12.w),
+                                    Expanded(
+                                      child: Text(
+                                        '🔴 SERVICE PAUSED\nFinancial operations are temporarily unavailable. Your funds are safe.',
+                                        style: TextStyle(color: Colors.white, fontSize: 13.sp, fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 12.h),
+                                ElevatedButton(
+                                  onPressed: () async {
+                                    // Controlled retry to check backend status
+                                    try {
+                                      final response = await ApiClient().get('/health/live');
+                                      if (response.statusCode == 200) {
+                                        context.read<SystemStateCubit>().resumeOperations();
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(content: Text('Operations resumed successfully!'))
+                                        );
+                                      }
+                                    } catch (e) {
+                                      // If it fails again, the interceptor will keep it paused, or we just silently fail the refresh
+                                    }
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.white,
+                                    foregroundColor: Colors.red.shade900,
+                                    minimumSize: Size(double.infinity, 36.h),
+                                  ),
+                                  child: const Text('Check Status / Retry'),
+                                )
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              }
             );
           },
         ),
@@ -155,18 +235,15 @@ class _NotificationListenerWidgetState
   StreamSubscription? _openSub;
 
   Future<void> _handleNotificationRouting(RemoteMessage message) async {
-    final authenticated = await BiometricAuthService.authenticate();
-    if (authenticated) {
-      if (message.data['type'] == 'LOAN_CREATED') {
-        router.go(AppConstants.myLoans);
-      } else if (message.data['type'] == 'LOAN_OTP' ||
-          message.data['type'] == 'LOAN_INIT_OTP') {
-        router.go(AppConstants.notifications);
-      } else if (message.data['type'] == 'CHIT_AUCTION_START') {
-        // Deep link into the live auction room immediately
-        final ledgerId = message.data['ledgerId'] ?? '';
-        router.go('/chit-live-auction?ledgerId=$ledgerId');
-      }
+    if (message.data['type'] == 'LOAN_CREATED') {
+      router.go(AppConstants.myLoans);
+    } else if (message.data['type'] == 'LOAN_OTP' ||
+        message.data['type'] == 'LOAN_INIT_OTP') {
+      router.go(AppConstants.notifications);
+    } else if (message.data['type'] == 'CHIT_AUCTION_START') {
+      // Deep link into the live auction room â€” use push so back button works
+      final ledgerId = message.data['ledgerId'] ?? '';
+      router.push('/chit-live-auction?ledgerId=$ledgerId');
     }
   }
 
@@ -209,3 +286,5 @@ class _NotificationListenerWidgetState
   @override
   Widget build(BuildContext context) => widget.child;
 }
+
+

@@ -13,6 +13,7 @@ class ApiClient {
 
   static void Function()? onUnauthorized;
   static void Function()? onTokenExpired;
+  static void Function()? onMaintenanceMode;
 
   bool _isRefreshing = false;
   final List<Completer<bool>> _refreshQueue = [];
@@ -94,7 +95,15 @@ class ApiClient {
                 } else if (responseData is String) {
                   msg = responseData;
                 }
-                final statusCode = e.response?.statusCode ?? 500;
+                                final statusCode = e.response?.statusCode ?? 500;
+                
+                // F.2 Emergency UX: Trap 503 Kill Switch response
+                if (statusCode == 503) {
+                  onMaintenanceMode?.call();
+                  myException = e.copyWith(error: ServerFailure(msg ?? 'Financial operations are temporarily suspended.'));
+                  break;
+                }
+                
                 if (statusCode >= 500) {
                   myException = e.copyWith(error: ServerFailure(msg ?? 'Internal Server Error'));
                 } else if (statusCode == 403) {
@@ -200,4 +209,5 @@ class ApiClient {
   Future<Response> patch(String path, {dynamic data}) async => await _dio.patch(path, data: data);
   Future<Response> delete(String path, {dynamic data}) async => await _dio.delete(path, data: data);
 }
+
 
