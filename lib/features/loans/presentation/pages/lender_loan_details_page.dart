@@ -11,6 +11,7 @@ import '../../../../config/theme.dart';
 import '../../../../data/models/loan_model.dart';
 import '../../../../core/blocs/loans/loan_cubit.dart';
 import '../../../../core/blocs/system/system_state_cubit.dart';
+import '../widgets/repayment_timeline_widget.dart';
 import '../../../../core/utils/error_handler.dart';
 import '../../../../core/blocs/loans/loan_state.dart';
 import '../widgets/flexible_payment_sheet.dart';
@@ -274,7 +275,7 @@ class LenderLoanDetailsPage extends StatelessWidget {
     int paidMonths,
     double progress,
   ) {
-    final start = _dateStr(loan.startDate);
+    final start = loan.startDate != null ? _dateStr(loan.startDate!) : '-';
     final end = loan.endDate != null ? _dateStr(loan.endDate!) : '-';
     final rate = loan.interestRate ?? 0.0;
     final monthly = rate > 0
@@ -532,13 +533,13 @@ class LenderLoanDetailsPage extends StatelessWidget {
           )
         else
           ...txns.map((tx) => _txItem(
-            _txIcon(tx['type'] as String? ?? ''),
-            _txColor(tx['type'] as String? ?? ''),
-            _txTitle(tx['type'] as String? ?? ''),
-            tx['note'] as String? ?? '',
-            _txAmountStr(tx['type'] as String? ?? '', (tx['amount'] as num?)?.toDouble() ?? 0),
+            _txIcon(tx.type as String? ?? ''),
+            _txColor(tx.type as String? ?? ''),
+            _txTitle(tx.type as String? ?? ''),
+            tx.note as String? ?? '',
+            _txAmountStr(tx.type as String? ?? '', (tx.amount as num?)?.toDouble() ?? 0),
             _txDateStr(tx['recordedAt']),
-            _txIsPositive(tx['type'] as String? ?? ''),
+            _txIsPositive(tx.type as String? ?? ''),
           )),
       ],
     );

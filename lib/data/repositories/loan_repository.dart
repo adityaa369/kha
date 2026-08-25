@@ -166,6 +166,23 @@ class LoanRepository extends BaseRepository {
     });
   }
 
+  Future<void> sendPaymentNudge(String loanId) async {
+    try {
+      final response = await _apiClient.post(
+        '/loans/$loanId/payment-nudge',
+        data: {},
+      );
+      if (response.data['success'] != true) {
+        throw Exception(response.data['message'] ?? 'Failed to send nudge');
+      }
+    } catch (e) {
+      if (e.toString().contains('429') || e.toString().contains('recently')) {
+        throw Exception('A payment nudge was already sent recently. Please wait 24 hours.');
+      }
+      rethrow;
+    }
+  }
+
   Future<bool> recordPayment(String loanId, int amountPaise) async {
     return await handleApiCall(() async {
       final response = await _api.post(
@@ -256,6 +273,7 @@ class LoanRepository extends BaseRepository {
     });
   }
 }
+
 
 
 

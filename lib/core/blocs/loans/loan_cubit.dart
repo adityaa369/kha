@@ -164,6 +164,15 @@ class LoanCubit extends Cubit<LoanState> {
     }
   }
 
+  Future<void> sendPaymentNudge(String loanId) async {
+    try {
+      // Don't emit loading state to avoid rebuilding the whole page
+      await _repository.sendPaymentNudge(loanId);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<bool> recordPayment(String loanId, int amountPaise) async {
       try {
         final success = await _repository.recordPayment(loanId, amountPaise);
