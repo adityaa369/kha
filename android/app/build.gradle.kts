@@ -33,6 +33,20 @@ android {
         multiDexEnabled = true
     }
 
+        flavorDimensions += "env"
+
+    productFlavors {
+        create("production") {
+            dimension = "env"
+            resValue("string", "app_name", "Khataa")
+        }
+        create("staging") {
+            dimension = "env"
+            applicationIdSuffix = ".staging"
+            resValue("string", "app_name", "Khataa Staging")
+        }
+    }
+
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.

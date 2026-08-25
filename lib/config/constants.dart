@@ -1,3 +1,4 @@
+import '../core/config/env_config.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AppConstants {
@@ -33,9 +34,9 @@ class AppConstants {
   static const String chitMemberDetail = '/chit-member-detail';
 
   // API Configurations
-  static const String _prodUrl = 'https://api.khataa.in'; // F.7: Bound to Render via CNAME
+  
 
   static String get baseUrl {
-    return dotenv.env['BASE_URL'] ?? '$_prodUrl/api';
+    return '${EnvConfig.apiUrl}/api';
   }
 }
