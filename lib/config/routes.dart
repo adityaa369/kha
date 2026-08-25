@@ -34,6 +34,13 @@ import '../features/loans/presentation/pages/loan_approval_page.dart';
 import '../features/chit_funds/presentation/pages/chit_live_auction_page.dart';
 import '../features/chit_funds/presentation/pages/chit_home_page.dart';
 import '../features/chit_funds/presentation/pages/chit_member_detail_page.dart';
+import '../features/admin/presentation/pages/admin_dashboard_page.dart';
+import '../features/profile/presentation/pages/security_hub_page.dart';
+import '../core/blocs/security/security_cubit.dart';
+import '../data/repositories/security_repository.dart';
+import '../core/network/api_client.dart';
+
+
 import '../data/models/loan_model.dart';
 import 'constants.dart';
 
@@ -271,6 +278,17 @@ final router = GoRouter(
         final chitId = state.extra as String;
         return ChitMemberDetailPage(chitId: chitId);
       },
+    ),
+    GoRoute(
+      path: '/profile/security',
+      builder: (context, state) => BlocProvider(
+        create: (ctx) => SecurityCubit(SecurityRepository(ctx.read<ApiClient>())),
+        child: const SecurityHubPage(),
+      ),
+    ),
+    GoRoute(
+      path: '/admin',
+      builder: (context, state) => const AdminDashboardPage(),
     ),
   ],
 );

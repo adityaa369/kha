@@ -203,7 +203,7 @@ class ApiClient {
   }
 
   Dio get dio => _dio;
-  Future<Response> get(String path, {Map<String, dynamic>? queryParameters}) async => await _dio.get(path, queryParameters: queryParameters);
+  Future<Response> get(String path, {Map<String, dynamic>? queryParameters, Options? options}) async => await _dio.get(path, queryParameters: queryParameters, options: options);
   Future<Response> post(String path, {dynamic data}) async => await _dio.post(path, data: data);
   Future<Response> put(String path, {dynamic data}) async => await _dio.put(path, data: data);
   Future<Response> patch(String path, {dynamic data}) async => await _dio.patch(path, data: data);

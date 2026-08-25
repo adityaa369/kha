@@ -14,6 +14,14 @@ class ProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final authState = context.watch<AuthCubit>().state;
+    bool isAdmin = false;
+    if (authState is AuthenticatedFull) {
+      isAdmin = authState.user.isAdmin;
+    } else if (authState is AuthenticatedUnverified) {
+      isAdmin = authState.user.isAdmin;
+    }
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       body: SafeArea(
@@ -220,12 +228,33 @@ class ProfilePage extends StatelessWidget {
                       ),
                       child: Column(
                         children: [
+                          if (isAdmin) ...[
+                            SizedBox(height: 8.h),
+                            ListTile(
+                              leading: Container(
+                                padding: EdgeInsets.all(8.w),
+                                decoration: BoxDecoration(color: const Color(0xFFD1FAE5), borderRadius: BorderRadius.circular(8.r)),
+                                child: const Icon(Icons.admin_panel_settings, color: Color(0xFF059669), size: 20),
+                              ),
+                              title: const Text('Admin Dashboard', style: TextStyle(fontWeight: FontWeight.w600)),
+                              subtitle: const Text('Platform management'),
+                              trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+                              onTap: () => context.push('/admin'),
+                            ),
+                            Divider(color: Colors.grey.shade200),
+                          ],
                           _MenuTile(
                             icon: Icons.person_outline,
                             title: 'Personal Details',
                             subtitle: 'Email, Gender, Pan, DOB, Address',
-                            onTap: () =>
-                                _showComingSoon(context, 'Personal Details'),
+                            onTap: () => context.push('/profile/edit'),
+                          ),
+                          _MenuTile(
+                            icon: Icons.security,
+                            title: 'Security & Sessions',
+                            subtitle: 'Manage your active devices and security logs',
+                            onTap: () => context.push('/profile/security'),
+                          ),
                           ),
                           Divider(
                             height: 1,
