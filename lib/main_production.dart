@@ -11,7 +11,7 @@ void main() async {
   
   EnvConfig.init(
     flavor: AppFlavor.production,
-    apiUrl: 'https://api.khataa.in',
+    apiUrl: 'https://khataa-backend.onrender.com',
     appName: 'Khataa',
   );
 
