@@ -1,13 +1,25 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../../config/theme.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../core/blocs/loans/loan_cubit.dart';
-import '../../../../core/blocs/loans/loan_state.dart';
-import '../../../../core/blocs/auth/auth_cubit.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:intl/intl.dart';
+import '../../../../config/theme.dart';
+import '../../../../core/blocs/loans/portfolio_cubit.dart';
 
-class InsightsPage extends StatelessWidget {
+class InsightsPage extends StatefulWidget {
   const InsightsPage({super.key});
+
+  @override
+  State<InsightsPage> createState() => _InsightsPageState();
+}
+
+class _InsightsPageState extends State<InsightsPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<PortfolioCubit>().fetchPortfolioSummary();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,29 +27,31 @@ class InsightsPage extends StatelessWidget {
       backgroundColor: KhaataTheme.backgroundGrey,
       body: Column(
         children: [
-          // Header
           Container(
             width: double.infinity,
             color: KhaataTheme.primaryBlue,
-            padding: EdgeInsets.fromLTRB(16.w, 20.h, 16.w, 0),
-            child: SafeArea(
-              bottom: false,
-              child: Column(
-                children: [
-                  Text(
-                    'Financial Insights',
-                    style: TextStyle(
-                      fontSize: 18.sp,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
+            padding: EdgeInsets.fromLTRB(16.w, 40.h, 16.w, 20.h),
+            child: Column(
+              children: [
+                Text(
+                  'Lender Portfolio',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 24.sp,
+                    fontWeight: FontWeight.w800,
                   ),
-                  SizedBox(height: 16.h),
-                ],
-              ),
+                ),
+                SizedBox(height: 8.h),
+                Text(
+                  'Your lending performance at a glance',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.8),
+                    fontSize: 14.sp,
+                  ),
+                ),
+              ],
             ),
           ),
-
           Expanded(
             child: SingleChildScrollView(
               padding: EdgeInsets.all(16.w),
@@ -45,103 +59,71 @@ class InsightsPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Your Activity',
+                    'Portfolio Summary',
                     style: TextStyle(
                       fontSize: 16.sp,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                   SizedBox(height: 16.h),
+                  BlocBuilder<PortfolioCubit, PortfolioState>(
+                    builder: (context, state) {
+                      if (state is PortfolioLoading) {
+                        return const Center(child: CircularProgressIndicator());
+                      } else if (state is PortfolioError) {
+                        return Center(child: Text(state.message, style: TextStyle(color: Colors.red)));
+                      } else if (state is PortfolioLoaded) {
+                        final summary = state.summary;
+                        final fmt = NumberFormat('#,##0', 'en_IN');
 
-                  BlocBuilder<LoanCubit, LoanState>(
-                    builder: (context, loanState) {
-                      String startPayment = '₹ 0';
-                      String totalAccounts = '0';
-                      String age = '0 days';
-                      String limit = '₹ 10,000'; // Default base limit
-
-                      if (loanState is LoansLoaded) {
-                        // Calculate typical monthly payments
-                        double monthlyPayment = 0;
-                        for (var loan in loanState.myLoans) {
-                          if (loan.status == 'active' &&
-                              loan.durationMonths != null &&
-                              loan.durationMonths! > 0) {
-                            monthlyPayment +=
-                                (loan.amount / loan.durationMonths!);
-                          }
-                        }
-                        startPayment =
-                            '₹ ${(monthlyPayment).toStringAsFixed(0)}';
-
-                        // Total Accounts
-                        totalAccounts =
-                            (loanState.myLoans.length +
-                                    loanState.givenLoans.length)
-                                .toString();
-
-                        final authState = context.read<AuthCubit>().state;
-                        if (authState is AuthenticatedFull &&
-                            authState.user.createdAt != null) {
-                          age =
-                              '${DateTime.now().difference(authState.user.createdAt!).inDays} days';
-                        } else {
-                          age = '0 days';
-                        }
-
-                        // Dynamic limit based on accounts
-                        if (loanState.myLoans.isNotEmpty) {
-                          limit =
-                              '₹ 50,000'; // Increase limit if user has history
-                        }
+                        return GridView.count(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 12.h,
+                          crossAxisSpacing: 12.w,
+                          childAspectRatio: 0.85,
+                          children: [
+                            _FactorCard(
+                              title: 'Outstanding',
+                              subtitle: 'Total Remaining',
+                              value: '₹ ${fmt.format(summary.outstanding)}',
+                              detailLabel: 'Across all loans',
+                              valueColor: Colors.orange.shade700,
+                              isGood: null,
+                              icon: Icons.account_balance,
+                            ),
+                            _FactorCard(
+                              title: 'Total Lent',
+                              subtitle: 'Original Principal',
+                              value: '₹ ${fmt.format(summary.totalLent)}',
+                              detailLabel: 'Disbursed',
+                              valueColor: KhaataTheme.textDark,
+                              isGood: true,
+                              icon: Icons.upload,
+                            ),
+                            _FactorCard(
+                              title: 'Collected',
+                              subtitle: 'Total Received',
+                              value: '₹ ${fmt.format(summary.totalCollected)}',
+                              detailLabel: 'Paid back',
+                              valueColor: Colors.green.shade700,
+                              isGood: true,
+                              icon: Icons.download,
+                            ),
+                            _FactorCard(
+                              title: 'Active Loans',
+                              subtitle: 'Current Portfolio',
+                              value: '${summary.activeLoanCount}',
+                              detailLabel: 'Total active',
+                              valueColor: KhaataTheme.textDark,
+                              isGood: null,
+                              icon: Icons.people,
+                            ),
+                          ],
+                        );
                       }
-
-                      return GridView.count(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        crossAxisCount: 2,
-                        mainAxisSpacing: 12.h,
-                        crossAxisSpacing: 12.w,
-                        childAspectRatio: 0.85,
-                        children: [
-                          _FactorCard(
-                            title: 'Payments',
-                            subtitle: 'High Impact',
-                            value: startPayment,
-                            detailLabel: 'Timely payments',
-                            valueColor: KhaataTheme.textGrey,
-                            isGood: true,
-                            icon: Icons.access_time,
-                          ),
-                          _FactorCard(
-                            title: 'Limit',
-                            subtitle: 'High Impact',
-                            value: limit,
-                            detailLabel: 'Credit limit available',
-                            valueColor: KhaataTheme.textGrey,
-                            isGood: true,
-                            icon: Icons.show_chart,
-                          ),
-                          _FactorCard(
-                            title: 'Age',
-                            subtitle: 'Medium Impact',
-                            value: age,
-                            detailLabel: 'Account age',
-                            valueColor: KhaataTheme.textDark,
-                            isGood: true,
-                            icon: Icons.calendar_today,
-                          ),
-                          _FactorCard(
-                            title: 'Accounts',
-                            subtitle: 'Low Impact',
-                            value: totalAccounts,
-                            detailLabel: 'Total accounts',
-                            valueColor: KhaataTheme.textDark,
-                            isGood: true,
-                            icon: Icons.account_balance_wallet,
-                          ),
-                        ],
-                      );
+                      return const SizedBox.shrink();
                     },
                   ),
                 ],
@@ -244,12 +226,6 @@ class _FactorCard extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                         fontSize: 13.sp,
                       ),
-                    ),
-                    SizedBox(width: 4.w),
-                    Icon(
-                      Icons.arrow_forward_ios,
-                      size: 12.sp,
-                      color: Colors.grey,
                     ),
                   ],
                 ),

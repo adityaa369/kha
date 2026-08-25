@@ -8,6 +8,10 @@ import 'config/theme.dart';
 import 'config/constants.dart';
 import 'core/blocs/auth/auth_cubit.dart';
 import 'core/blocs/loans/loan_cubit.dart';
+import 'core/blocs/loans/portfolio_cubit.dart';
+import 'data/repositories/loan_repository.dart';
+import 'core/blocs/loans/portfolio_cubit.dart';
+import 'data/repositories/loan_repository.dart';
 import 'core/blocs/chit_funds/chit_fund_cubit.dart';
 import 'data/repositories/chit_fund_repository.dart';
 import 'features/home/presentation/cubit/notification_cubit.dart';
@@ -135,6 +139,7 @@ class KhaataApp extends StatelessWidget {
       providers: [
         BlocProvider(create: (_) => AuthCubit()..checkAuthStatus()),
         BlocProvider(create: (_) => LoanCubit()),
+        BlocProvider(create: (_) => PortfolioCubit(LoanRepository())),
         BlocProvider(create: (_) => ChitFundCubit(ChitFundRepository())),
         BlocProvider(create: (_) => NotificationCubit(ApiClient())..fetchNotifications()),
         BlocProvider<AdminCubit>(create: (_) => AdminCubit()),
@@ -286,5 +291,7 @@ class _NotificationListenerWidgetState
   @override
   Widget build(BuildContext context) => widget.child;
 }
+
+
 
 
