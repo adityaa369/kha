@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../config/theme.dart';
 import '../../../../data/models/loan_model.dart';
 import '../../../../core/blocs/loans/loan_cubit.dart';
+import '../widgets/repayment_timeline_widget.dart';
 import '../../../../core/blocs/loans/loan_state.dart';
 import '../../../../core/blocs/auth/auth_cubit.dart';
 
@@ -59,9 +60,9 @@ class BusinessLoanDetailsPage extends StatelessWidget {
                 SizedBox(height: 16.h),
                 _statsCard(activeLoan),
                 SizedBox(height: 16.h),
-                _emiOverviewCard(activeLoan),
-                SizedBox(height: 16.h),
-                _paymentChecklist(activeLoan),
+                RepaymentTimelineWidget(loanId: activeLoan.id),
+                  SizedBox(height: 16.h),
+                  _creditOverviewCard(activeLoan),
                 SizedBox(height: 16.h),
                 _proofDocumentSection(context, activeLoan),
                 SizedBox(height: 16.h),
@@ -233,12 +234,10 @@ class BusinessLoanDetailsPage extends StatelessWidget {
   // â”€â”€â”€ Stats Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Widget _statsCard(LoanModel loan) {
-    final startStr = _dateStr(loan.startDate);
+    final startStr = loan.startDate != null ? _dateStr(loan.startDate!) : '-';
     final endStr = loan.endDate != null ? _dateStr(loan.endDate!) : '-';
     final duration = loan.durationMonths ?? 0;
     final progress = loan.progress.clamp(0.0, 1.0);
-    final paidMonths = (duration * progress).round();
-
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -313,10 +312,7 @@ class BusinessLoanDetailsPage extends StatelessWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: _stat('Paid Months', '$paidMonths / $duration'),
-                    ),
-                    SizedBox(width: 12.w),
+                    
                     Expanded(
                       child: _stat(
                         'Progress',
@@ -394,12 +390,11 @@ class BusinessLoanDetailsPage extends StatelessWidget {
 
   // â”€â”€â”€ Credit Overview Card (gradient) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-  Widget _emiOverviewCard(LoanModel loan) {
+  Widget _creditOverviewCard(LoanModel loan) {
     final duration = loan.durationMonths ?? 0;
     final emi = loan.emiAmount ?? 0.0;
     final totalPayable = loan.totalPayableAmount ?? (emi * duration);
     final progress = loan.progress.clamp(0.0, 1.0);
-    final paidMonths = (duration * progress).round();
     final amountPaid = loan.paidAmount;
     final amountPending = loan.remainingAmount;
 
@@ -468,16 +463,8 @@ class BusinessLoanDetailsPage extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: _gradientStat('Paid Months', '$paidMonths / $duration'),
-              ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: _gradientStat(
-                  'Remaining',
-                  '${duration - paidMonths} months',
-                ),
-              ),
+              
+              const Expanded(child: SizedBox()),
             ],
           ),
         ],
@@ -512,135 +499,6 @@ class BusinessLoanDetailsPage extends StatelessWidget {
   }
 
   // â”€â”€â”€ Payment Checklist â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
-  Widget _paymentChecklist(LoanModel loan) {
-    final duration = loan.durationMonths ?? 0;
-    final progress = loan.progress.clamp(0.0, 1.0);
-    final paidMonths = (duration * progress).round();
-    
-    return Container(
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Monthly Payments',
-            style: TextStyle(
-              fontSize: 14.sp,
-              fontWeight: FontWeight.w700,
-              color: Colors.black87,
-            ),
-          ),
-          SizedBox(height: 4.h),
-          Text(
-            '$paidMonths of $duration months paid',
-            style: TextStyle(fontSize: 12.sp, color: Colors.grey.shade500),
-          ),
-          SizedBox(height: 12.h),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8.r),
-            child: LinearProgressIndicator(
-              value: progress,
-              backgroundColor: Colors.grey.shade100,
-              valueColor: const AlwaysStoppedAnimation<Color>(_primary),
-              minHeight: 10.h,
-            ),
-          ),
-          SizedBox(height: 16.h),
-          if (duration > 0)
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              child: Row(
-                children: List.generate(duration, (index) {
-                  final isPaid = index < paidMonths;
-                  final dueDate = loan.startDate.add(
-                    Duration(days: (index + 1) * 30),
-                  );
-                  final isOverdue = !isPaid && dueDate.isBefore(DateTime.now());
-                  return Container(
-                    width: 140.w,
-                    margin: EdgeInsets.only(right: 12.w, bottom: 8.h),
-                    padding: EdgeInsets.all(12.w),
-                    decoration: BoxDecoration(
-                      color: isPaid
-                          ? _bg.withValues(alpha: 0.5)
-                          : (isOverdue ? Colors.red.shade50 : Colors.white),
-                      border: Border.all(
-                        color: isPaid
-                            ? _primary.withValues(alpha: 0.3)
-                            : (isOverdue
-                                  ? Colors.red.withValues(alpha: 0.3)
-                                  : Colors.grey.shade200),
-                      ),
-                      borderRadius: BorderRadius.circular(12.r),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Month ${index + 1}',
-                              style: TextStyle(
-                                fontSize: 12.sp,
-                                fontWeight: FontWeight.bold,
-                                color: isPaid
-                                    ? _primary
-                                    : (isOverdue
-                                          ? Colors.red.shade700
-                                          : Colors.grey.shade700),
-                              ),
-                            ),
-                            Icon(
-                              isPaid
-                                  ? Icons.check_circle
-                                  : (isOverdue
-                                        ? Icons.cancel
-                                        : Icons.radio_button_unchecked),
-                              size: 16.sp,
-                              color: isPaid
-                                  ? _primary
-                                  : (isOverdue
-                                        ? Colors.red.shade400
-                                        : Colors.grey.shade400),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 8.h),
-                        Text(
-                          '${_month(dueDate.month)} ${dueDate.year}',
-                          style: TextStyle(
-                            fontSize: 11.sp,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                        SizedBox(height: 2.h),
-                        Text(
-                          'Due: ${dueDate.day}',
-                          style: TextStyle(
-                            fontSize: 10.sp,
-                            color: Colors.grey.shade400,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  // â”€â”€â”€ Proof Document Section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Widget _proofDocumentSection(BuildContext context, LoanModel loan) {
     if (loan.documentUrl == null || loan.documentUrl!.trim().isEmpty) {

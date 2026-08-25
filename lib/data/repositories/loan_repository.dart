@@ -2,6 +2,7 @@
 import 'package:flutter/foundation.dart';
 import '../models/loan_model.dart';
 import '../models/portfolio_summary_model.dart';
+import '../models/repayment_timeline_model.dart';
 import '../models/user_model.dart';
 import '../../core/network/api_client.dart';
 import '../../core/error/failures.dart';
@@ -12,6 +13,16 @@ class LoanRepository extends BaseRepository {
   final ApiClient _api;
 
   LoanRepository({ApiClient? api}) : _api = api ?? ApiClient();
+
+  Future<RepaymentTimelineModel> getRepaymentTimeline(String loanId) async {
+    return await handleApiCall(() async {
+      final response = await _api.get('/loans/$loanId/repayment-timeline');
+      if (response.data['success'] == true) {
+        return RepaymentTimelineModel.fromJson(response.data);
+      }
+      throw ServerFailure('Failed to load repayment timeline');
+    });
+  }
 
   Future<PortfolioSummaryModel> getPortfolioSummary() async {
     return await handleApiCall(() async {
@@ -245,6 +256,7 @@ class LoanRepository extends BaseRepository {
     });
   }
 }
+
 
 
 

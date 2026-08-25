@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../config/theme.dart';
 import '../../../../data/models/loan_model.dart';
 import '../../../../core/blocs/loans/loan_cubit.dart';
+import '../widgets/repayment_timeline_widget.dart';
 import '../../../../core/blocs/loans/loan_state.dart';
 import '../../../../core/blocs/auth/auth_cubit.dart';
 
@@ -257,8 +258,6 @@ class InterestLoanDetailsPage extends StatelessWidget {
         : '-';
     final duration = loan.durationMonths ?? 0;
     final progress = loan.progress.clamp(0.0, 1.0);
-    final paidMonths = (duration * progress).round();
-
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -535,8 +534,6 @@ class InterestLoanDetailsPage extends StatelessWidget {
   Widget _paymentProgressCard(LoanModel loan) {
     final duration = loan.durationMonths ?? 0;
     final progress = loan.progress.clamp(0.0, 1.0);
-    final paidMonths = (duration * progress).round();
-    
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
@@ -575,89 +572,7 @@ class InterestLoanDetailsPage extends StatelessWidget {
           SizedBox(height: 16.h),
 
           // Month checklist
-          if (duration > 0)
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              child: Row(
-                children: List.generate(duration, (index) {
-                  final isPaid = index < paidMonths;
-                  final dueDate = loan.startDate.add(
-                    Duration(days: (index + 1) * 30),
-                  );
-                  final isOverdue = !isPaid && dueDate.isBefore(DateTime.now());
-                  return Container(
-                    width: 140.w,
-                    margin: EdgeInsets.only(right: 12.w, bottom: 8.h),
-                    padding: EdgeInsets.all(12.w),
-                    decoration: BoxDecoration(
-                      color: isPaid
-                          ? _bg.withValues(alpha: 0.5)
-                          : (isOverdue ? Colors.red.shade50 : Colors.white),
-                      border: Border.all(
-                        color: isPaid
-                            ? _primary.withValues(alpha: 0.3)
-                            : (isOverdue
-                                  ? Colors.red.withValues(alpha: 0.3)
-                                  : Colors.grey.shade200),
-                      ),
-                      borderRadius: BorderRadius.circular(12.r),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Month ${index + 1}',
-                              style: TextStyle(
-                                fontSize: 12.sp,
-                                fontWeight: FontWeight.bold,
-                                color: isPaid
-                                    ? _primary
-                                    : (isOverdue
-                                          ? Colors.red.shade700
-                                          : Colors.grey.shade700),
-                              ),
-                            ),
-                            Icon(
-                              isPaid
-                                  ? Icons.check_circle
-                                  : (isOverdue
-                                        ? Icons.cancel
-                                        : Icons.radio_button_unchecked),
-                              size: 16.sp,
-                              color: isPaid
-                                  ? _primary
-                                  : (isOverdue
-                                        ? Colors.red.shade400
-                                        : Colors.grey.shade400),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 8.h),
-                        Text(
-                          '${_month(dueDate.month)} ${dueDate.year}',
-                          style: TextStyle(
-                            fontSize: 11.sp,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                        SizedBox(height: 2.h),
-                        Text(
-                          'Due: ${dueDate.day}',
-                          style: TextStyle(
-                            fontSize: 10.sp,
-                            color: Colors.grey.shade400,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }),
-              ),
-            ),
+          
         ],
       ),
     );
