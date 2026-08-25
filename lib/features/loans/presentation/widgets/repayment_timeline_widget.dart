@@ -4,17 +4,19 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import '../../../../config/theme.dart';
 import '../../../../core/blocs/loans/repayment_timeline_cubit.dart';
+import '../../../../data/models/loan_model.dart';
+import '../../../../core/utils/pdf_generator.dart';
 import '../../../../data/repositories/loan_repository.dart';
 
 class RepaymentTimelineWidget extends StatelessWidget {
-  final String loanId;
+  final LoanModel loan;
 
-  const RepaymentTimelineWidget({super.key, required this.loanId});
+  const RepaymentTimelineWidget({super.key, required this.loan});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => RepaymentTimelineCubit(LoanRepository())..fetchTimeline(loanId),
+      create: (context) => RepaymentTimelineCubit(LoanRepository())..fetchTimeline(loan.id),
       child: BlocBuilder<RepaymentTimelineCubit, RepaymentTimelineState>(
         builder: (context, state) {
           if (state is RepaymentTimelineLoading) {
@@ -39,13 +41,25 @@ class RepaymentTimelineWidget extends StatelessWidget {
               children: [
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                  child: Text(
-                    'Monthly Tracking',
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w700,
-                      color: KhaataTheme.textDark,
-                    ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Payment Activity',
+                        style: TextStyle(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w700,
+                          color: KhaataTheme.textDark,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.picture_as_pdf, color: KhaataTheme.primaryBlue),
+                        onPressed: () {
+                          PdfGenerator.generateAndShareStatement(loan, model);
+                        },
+                        tooltip: 'Download Statement',
+                      )
+                    ],
                   ),
                 ),
                 ...model.timeline.map((period) => _buildPeriodCard(period)),
@@ -193,3 +207,4 @@ class RepaymentTimelineWidget extends StatelessWidget {
     );
   }
 }
+

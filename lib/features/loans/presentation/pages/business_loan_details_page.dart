@@ -60,7 +60,7 @@ class BusinessLoanDetailsPage extends StatelessWidget {
                 SizedBox(height: 16.h),
                 _statsCard(activeLoan),
                 SizedBox(height: 16.h),
-                RepaymentTimelineWidget(loanId: activeLoan.id),
+                RepaymentTimelineWidget(loan: activeLoan),
                   SizedBox(height: 16.h),
                   _creditOverviewCard(activeLoan),
                 SizedBox(height: 16.h),
