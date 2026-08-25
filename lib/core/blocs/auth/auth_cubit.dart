@@ -365,7 +365,8 @@ class AuthCubit extends Cubit<AuthState> {
   Future<void> logout() async {
     emit(AuthLoading());
     try {
-      await SecureStorage.clearAll();
+      // Preserve loan/chit cache — only wipe auth credentials
+      await SecureStorage.clearAuthData();
       _currentUser = null;
       emit(Unauthenticated());
     } catch (e) {
@@ -373,11 +374,26 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
+  /// Initiates credit score processing via backend.
+  /// Falls back gracefully if the endpoint isn't available yet.
   Future<void> processCreditScore() async {
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      final response = await _api.post('/auth/credit-score');
+      final data = response.data;
+      if (data is Map && data['success'] == true && data['user'] != null) {
+        _currentUser = UserModel.fromJson(data['user']);
+        await SecureStorage.saveUserData(
+          jsonEncode(_currentUser!.toFullJson()),
+        );
+      }
+    } catch (_) {
+      // Non-critical — credit score processing may be async on the backend.
+      // We still proceed to home so registration doesn't get stuck.
+    }
     emit(const CreditScoreProcessed());
   }
 
   /// Resets cubit to initial state — call when user cancels registration mid-flow
   void resetToInitial() => emit(AuthInitial());
 }
+

@@ -1,0 +1,223 @@
+﻿00:00 +0: loading C:/Users/adity/AndroidStudioProjects/khatha/test/all_types_test.dart
+00:00 +0: C:/Users/adity/AndroidStudioProjects/khatha/test/all_types_test.dart: InterestLoanDetailsPage renders without layout errors
+══╡ EXCEPTION CAUGHT BY RENDERING LIBRARY ╞═════════════════════════════════════════════════════════
+The following assertion was thrown during layout:
+A RenderFlex overflowed by 5.1 pixels on the right.
+
+The relevant error-causing widget was:
+  Row
+  Row:file:///C:/Users/adity/AndroidStudioProjects/khatha/lib/features/loans/presentation/pages/interest_loan_details_page.dart:273:20
+
+The overflowing RenderFlex has an orientation of Axis.horizontal.
+The edge of the RenderFlex that is overflowing has been marked in the rendering with a yellow and
+black striped pattern. This is usually caused by the contents being too big for the RenderFlex.
+Consider applying a flex factor (e.g. using an Expanded widget) to force the children of the
+RenderFlex to fit within the available space instead of being sized to their natural size.
+This is considered an error condition because it indicates that there is content that cannot be
+seen. If the content is legitimately bigger than the available space, consider clipping it with a
+ClipRect widget before putting it in the flex, or using a scrollable container rather than a Flex,
+like a ListView.
+The specific RenderFlex in question is: RenderFlex#72a73 relayoutBoundary=up16 OVERFLOWING:
+  creator: Row ← Padding ← Column ← Padding ← DecoratedBox ← Container ← Column ← Padding ←
+    _SingleChildViewport ← IgnorePointer-[GlobalKey#14a73] ← Semantics ← Listener ← ⋯
+  parentData: offset=Offset(34.1, 34.1) (can use size)
+  constraints: BoxConstraints(0.0<=w<=661.5, 0.0<=h<=Infinity)
+  size: Size(661.5, 45.9)
+  direction: horizontal
+  mainAxisAlignment: spaceBetween
+  mainAxisSize: max
+  crossAxisAlignment: center
+  textDirection: ltr
+  verticalDirection: down
+  spacing: 0.0
+◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:01 +0 -1: C:/Users/adity/AndroidStudioProjects/khatha/test/all_types_test.dart: InterestLoanDetailsPage renders without layout errors [E]
+  Test failed. See exception logs above.
+  The test description was: InterestLoanDetailsPage renders without layout errors
+  
+00:01 +0 -1: C:/Users/adity/AndroidStudioProjects/khatha/test/all_types_test.dart: BusinessLoanDetailsPage renders without layout errors
+00:01 +1 -1: C:/Users/adity/AndroidStudioProjects/khatha/test/all_types_test.dart: HandLoanDetailsPage renders without layout errors
+══╡ EXCEPTION CAUGHT BY RENDERING LIBRARY ╞═════════════════════════════════════════════════════════
+The following assertion was thrown during layout:
+A RenderFlex overflowed by 12 pixels on the right.
+
+The relevant error-causing widget was:
+  Row
+  Row:file:///C:/Users/adity/AndroidStudioProjects/khatha/lib/features/loans/presentation/pages/hand_loan_details_page.dart:250:20
+
+The overflowing RenderFlex has an orientation of Axis.horizontal.
+The edge of the RenderFlex that is overflowing has been marked in the rendering with a yellow and
+black striped pattern. This is usually caused by the contents being too big for the RenderFlex.
+Consider applying a flex factor (e.g. using an Expanded widget) to force the children of the
+RenderFlex to fit within the available space instead of being sized to their natural size.
+This is considered an error condition because it indicates that there is content that cannot be
+seen. If the content is legitimately bigger than the available space, consider clipping it with a
+ClipRect widget before putting it in the flex, or using a scrollable container rather than a Flex,
+like a ListView.
+The specific RenderFlex in question is: RenderFlex#14b4b relayoutBoundary=up16 OVERFLOWING:
+  creator: Row ← Padding ← Column ← Padding ← DecoratedBox ← Container ← Column ← Padding ←
+    _SingleChildViewport ← IgnorePointer-[GlobalKey#e6ed9] ← Semantics ← Listener ← ⋯
+  parentData: offset=Offset(29.9, 29.9) (can use size)
+  constraints: BoxConstraints(0.0<=w<=670.0, 0.0<=h<=Infinity)
+  size: Size(670.0, 44.4)
+  direction: horizontal
+  mainAxisAlignment: spaceBetween
+  mainAxisSize: max
+  crossAxisAlignment: center
+  textDirection: ltr
+  verticalDirection: down
+  spacing: 0.0
+◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:01 +1 -2: C:/Users/adity/AndroidStudioProjects/khatha/test/all_types_test.dart: HandLoanDetailsPage renders without layout errors [E]
+  Test failed. See exception logs above.
+  The test description was: HandLoanDetailsPage renders without layout errors
+  
+00:02 +1 -2: C:/Users/adity/AndroidStudioProjects/khatha/test/core/blocs/auth_cubit_test.dart: (setUpAll)
+00:02 +1 -2: C:/Users/adity/AndroidStudioProjects/khatha/test/core/blocs/auth_cubit_test.dart: AuthCubit - savePersonalDetails emits [AuthLoading, PersonalDetailsSaved] when API call is successful
+00:02 +2 -2: C:/Users/adity/AndroidStudioProjects/khatha/test/core/blocs/auth_cubit_test.dart: AuthCubit - savePersonalDetails emits [AuthLoading, AuthError] when API call fails
+00:02 +3 -2: C:/Users/adity/AndroidStudioProjects/khatha/test/core/blocs/auth_cubit_test.dart: (tearDownAll)
+00:15 +3 -2: C:/Users/adity/AndroidStudioProjects/khatha/test/create_loan_test.dart: Test CreateLoanPage Business Credit Layout
+00:16 +3 -2: C:/Users/adity/AndroidStudioProjects/khatha/test/interest_test.dart: Test layout
+══╡ EXCEPTION CAUGHT BY RENDERING LIBRARY ╞═════════════════════════════════════════════════════════
+The following assertion was thrown during layout:
+A RenderFlex overflowed by 5.1 pixels on the right.
+
+The relevant error-causing widget was:
+  Row
+  Row:file:///C:/Users/adity/AndroidStudioProjects/khatha/lib/features/loans/presentation/pages/interest_loan_details_page.dart:273:20
+
+The overflowing RenderFlex has an orientation of Axis.horizontal.
+The edge of the RenderFlex that is overflowing has been marked in the rendering with a yellow and
+black striped pattern. This is usually caused by the contents being too big for the RenderFlex.
+Consider applying a flex factor (e.g. using an Expanded widget) to force the children of the
+RenderFlex to fit within the available space instead of being sized to their natural size.
+This is considered an error condition because it indicates that there is content that cannot be
+seen. If the content is legitimately bigger than the available space, consider clipping it with a
+ClipRect widget before putting it in the flex, or using a scrollable container rather than a Flex,
+like a ListView.
+The specific RenderFlex in question is: RenderFlex#a08e8 relayoutBoundary=up16 OVERFLOWING:
+  creator: Row ← Padding ← Column ← Padding ← DecoratedBox ← Container ← Column ← Padding ←
+    _SingleChildViewport ← IgnorePointer-[GlobalKey#47270] ← Semantics ← Listener ← ⋯
+  parentData: offset=Offset(34.1, 34.1) (can use size)
+  constraints: BoxConstraints(0.0<=w<=661.5, 0.0<=h<=Infinity)
+  size: Size(661.5, 45.9)
+  direction: horizontal
+  mainAxisAlignment: spaceBetween
+  mainAxisSize: max
+  crossAxisAlignment: center
+  textDirection: ltr
+  verticalDirection: down
+  spacing: 0.0
+◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:16 +3 -3: C:/Users/adity/AndroidStudioProjects/khatha/test/create_loan_test.dart: Test CreateLoanPage Business Credit Layout
+00:16 +3 -3: C:/Users/adity/AndroidStudioProjects/khatha/test/interest_test.dart: Test layout [E]
+  Test failed. See exception logs above.
+  The test description was: Test layout
+  
+00:16 +4 -3: C:/Users/adity/AndroidStudioProjects/khatha/test/loan_details_test.dart: Borrower views active Hand Credit loan details - should build without exception
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: at least one matching candidate
+  Actual: _TextWidgetFinder:<Found 0 widgets with text "Given Amount": []>
+   Which: means none were found but some were expected
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///C:/Users/adity/AndroidStudioProjects/khatha/test/loan_details_test.dart:88:7)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///C:/Users/adity/AndroidStudioProjects/khatha/test/loan_details_test.dart line 88
+The test description was:
+  Borrower views active Hand Credit loan details - should build without exception
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:16 +4 -4: C:/Users/adity/AndroidStudioProjects/khatha/test/create_loan_test.dart: Test CreateLoanPage Interest Credit Layout
+00:16 +4 -4: C:/Users/adity/AndroidStudioProjects/khatha/test/loan_details_test.dart: Borrower views active Hand Credit loan details - should build without exception [E]
+  Test failed. See exception logs above.
+  The test description was: Borrower views active Hand Credit loan details - should build without exception
+  
+00:16 +5 -4: C:/Users/adity/AndroidStudioProjects/khatha/test/loan_details_test.dart: Borrower views active Interest Credit loan details - should build without exception
+══╡ EXCEPTION CAUGHT BY RENDERING LIBRARY ╞═════════════════════════════════════════════════════════
+The following assertion was thrown during layout:
+A RenderFlex overflowed by 38 pixels on the right.
+
+The relevant error-causing widget was:
+  Row
+  Row:file:///C:/Users/adity/AndroidStudioProjects/khatha/lib/features/loans/presentation/pages/interest_loan_details_page.dart:273:20
+
+The overflowing RenderFlex has an orientation of Axis.horizontal.
+The edge of the RenderFlex that is overflowing has been marked in the rendering with a yellow and
+black striped pattern. This is usually caused by the contents being too big for the RenderFlex.
+Consider applying a flex factor (e.g. using an Expanded widget) to force the children of the
+RenderFlex to fit within the available space instead of being sized to their natural size.
+This is considered an error condition because it indicates that there is content that cannot be
+seen. If the content is legitimately bigger than the available space, consider clipping it with a
+ClipRect widget before putting it in the flex, or using a scrollable container rather than a Flex,
+like a ListView.
+The specific RenderFlex in question is: RenderFlex#a2fcb relayoutBoundary=up16 OVERFLOWING:
+  creator: Row ← Padding ← Column ← Padding ← DecoratedBox ← Container ← Column ← Padding ←
+    _SingleChildViewport ← IgnorePointer-[GlobalKey#25b80] ← Semantics ← Listener ← ⋯
+  parentData: offset=Offset(35.6, 35.6) (can use size)
+  constraints: BoxConstraints(0.0<=w<=655.8, 0.0<=h<=Infinity)
+  size: Size(655.8, 50.2)
+  direction: horizontal
+  mainAxisAlignment: spaceBetween
+  mainAxisSize: max
+  crossAxisAlignment: center
+  textDirection: ltr
+  verticalDirection: down
+  spacing: 0.0
+◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:16 +5 -5: C:/Users/adity/AndroidStudioProjects/khatha/test/create_loan_test.dart: Test CreateLoanPage Hand Credit Layout
+00:16 +5 -5: C:/Users/adity/AndroidStudioProjects/khatha/test/loan_details_test.dart: Borrower views active Interest Credit loan details - should build without exception [E]
+  Test failed. See exception logs above.
+  The test description was: Borrower views active Interest Credit loan details - should build without exception
+  
+00:16 +6 -5: C:/Users/adity/AndroidStudioProjects/khatha/test/loan_details_test.dart: Borrower views active Interest Credit loan with null duration/interest - should build without exception
+══╡ EXCEPTION CAUGHT BY RENDERING LIBRARY ╞═════════════════════════════════════════════════════════
+The following assertion was thrown during layout:
+A RenderFlex overflowed by 38 pixels on the right.
+
+The relevant error-causing widget was:
+  Row
+  Row:file:///C:/Users/adity/AndroidStudioProjects/khatha/lib/features/loans/presentation/pages/interest_loan_details_page.dart:273:20
+
+The overflowing RenderFlex has an orientation of Axis.horizontal.
+The edge of the RenderFlex that is overflowing has been marked in the rendering with a yellow and
+black striped pattern. This is usually caused by the contents being too big for the RenderFlex.
+Consider applying a flex factor (e.g. using an Expanded widget) to force the children of the
+RenderFlex to fit within the available space instead of being sized to their natural size.
+This is considered an error condition because it indicates that there is content that cannot be
+seen. If the content is legitimately bigger than the available space, consider clipping it with a
+ClipRect widget before putting it in the flex, or using a scrollable container rather than a Flex,
+like a ListView.
+The specific RenderFlex in question is: RenderFlex#58774 relayoutBoundary=up16 OVERFLOWING:
+  creator: Row ← Padding ← Column ← Padding ← DecoratedBox ← Container ← Column ← Padding ←
+    _SingleChildViewport ← IgnorePointer-[GlobalKey#412a9] ← Semantics ← Listener ← ⋯
+  parentData: offset=Offset(35.6, 35.6) (can use size)
+  constraints: BoxConstraints(0.0<=w<=655.8, 0.0<=h<=Infinity)
+  size: Size(655.8, 50.2)
+  direction: horizontal
+  mainAxisAlignment: spaceBetween
+  mainAxisSize: max
+  crossAxisAlignment: center
+  textDirection: ltr
+  verticalDirection: down
+  spacing: 0.0
+◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:16 +6 -6: C:/Users/adity/AndroidStudioProjects/khatha/test/loan_details_test.dart: Borrower views active Interest Credit loan with null duration/interest - should build without exception [E]
+  Test failed. See exception logs above.
+  The test description was: Borrower views active Interest Credit loan with null duration/interest - should build without exception
+  
+00:16 +6 -6: C:/Users/adity/AndroidStudioProjects/khatha/test/loan_details_test.dart: Lender views active Hand Credit loan details - should build without exception
+00:16 +7 -6: Some tests failed.

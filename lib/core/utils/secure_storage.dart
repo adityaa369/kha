@@ -10,6 +10,7 @@ class SecureStorage {
 
   static const String _userKey = 'user_data';
   static const String _tokenKey = 'auth_token';
+  static const String _refreshTokenKey = 'auth_refresh_token';
   static const String _biometricEnabledKey = 'biometric_enabled';
   static const String _lastLoginKey = 'last_login';
   static const String _loansKey = 'cached_loans';
@@ -69,7 +70,7 @@ class SecureStorage {
     await _storage.delete(key: _myChitsKey);
   }
 
-  // Auth token methods
+    // Auth token methods
   static Future<void> saveToken(String token) async {
     await _storage.write(key: _tokenKey, value: token);
   }
@@ -80,6 +81,20 @@ class SecureStorage {
 
   static Future<void> deleteToken() async {
     await _storage.delete(key: _tokenKey);
+    await _storage.delete(key: _refreshTokenKey);
+    await _storage.delete(key: _refreshTokenKey);
+  }
+
+  static Future<void> saveRefreshToken(String token) async {
+    await _storage.write(key: _refreshTokenKey, value: token);
+  }
+
+  static Future<String?> getRefreshToken() async {
+    return await _storage.read(key: _refreshTokenKey);
+  }
+
+  static Future<void> deleteRefreshToken() async {
+    await _storage.delete(key: _refreshTokenKey);
   }
 
   // User data methods
@@ -115,8 +130,20 @@ class SecureStorage {
     return value != null ? DateTime.parse(value) : null;
   }
 
-  // Clear all (useful for logout)
+  // Clear only auth credentials — preserves loan/chit cache for next login
+  static Future<void> clearAuthData() async {
+    await _storage.delete(key: _tokenKey);
+    await _storage.delete(key: _refreshTokenKey);
+    await _storage.delete(key: _refreshTokenKey);
+    await _storage.delete(key: _userKey);
+    await _storage.delete(key: _biometricEnabledKey);
+    await _storage.delete(key: _lastLoginKey);
+  }
+
+  // Clear all (full wipe — use only when user explicitly wants to erase all data)
   static Future<void> clearAll() async {
     await _storage.deleteAll();
   }
 }
+
+

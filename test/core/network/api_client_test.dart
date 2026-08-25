@@ -3,12 +3,22 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:khatha/core/network/api_client.dart';
 import 'package:khatha/config/constants.dart';
 import 'package:uuid/uuid.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+import 'package:flutter/services.dart';
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  HttpOverrides.global = null;
+
+  const MethodChannel channel = MethodChannel('plugins.it_nomads.com/flutter_secure_storage');
+  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(channel, (MethodCall methodCall) async {
+    return null;
+  });
   late HttpServer server;
   late String serverUrl;
 
   setUp(() async {
+    dotenv.testLoad(fileInput: '''API_URL=http://localhost:5000''');
     server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
     serverUrl = 'http://${server.address.host}:${server.port}';
     
@@ -64,3 +74,6 @@ void main() {
     expect(key1, isNot(equals(key2)));
   });
 }
+
+
+

@@ -1,0 +1,25 @@
+﻿Computing fixes in khatha...
+Applying fixes...
+
+lib\features\home\presentation\pages\notifications_page.dart
+  no_leading_underscores_for_local_identifiers - 1 fix
+
+lib\features\loans\presentation\pages\business_loan_details_page.dart
+  curly_braces_in_flow_control_structures - 4 fixes
+  prefer_const_constructors - 1 fix
+
+lib\features\loans\presentation\pages\hand_loan_details_page.dart
+  curly_braces_in_flow_control_structures - 4 fixes
+  prefer_const_constructors - 1 fix
+
+lib\features\loans\presentation\pages\interest_loan_details_page.dart
+  curly_braces_in_flow_control_structures - 1 fix
+
+lib\features\loans\presentation\pages\lender_loan_details_page.dart
+  curly_braces_in_flow_control_structures - 2 fixes
+  prefer_const_constructors - 3 fixes
+
+lib\main.dart
+  prefer_const_constructors - 1 fix
+
+18 fixes made in 6 files.

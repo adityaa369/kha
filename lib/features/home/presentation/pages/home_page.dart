@@ -835,10 +835,8 @@ class _PaymentsSection extends StatelessWidget {
         List<Map<String, dynamic>> dueList = [];
 
         for (final loan in loans) {
-          if (loan.status == 'completed' ||
-              loan.status == 'closed' ||
-              loan.status == 'pending_otp' ||
-              loan.status == 'pending_approval') {
+          if (loan.loanStatus.isFinished ||
+              loan.loanStatus.isPending) {
             continue;
           }
 

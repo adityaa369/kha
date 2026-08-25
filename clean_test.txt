@@ -1,0 +1,23 @@
+﻿00:00 +0: loading C:/Users/adity/AndroidStudioProjects/khatha/test/all_types_test.dart
+00:00 +0: C:/Users/adity/AndroidStudioProjects/khatha/test/all_types_test.dart: InterestLoanDetailsPage renders without layout errors
+00:06 +1: C:/Users/adity/AndroidStudioProjects/khatha/test/all_types_test.dart: BusinessLoanDetailsPage renders without layout errors
+00:06 +2: C:/Users/adity/AndroidStudioProjects/khatha/test/all_types_test.dart: HandLoanDetailsPage renders without layout errors
+00:09 +3: C:/Users/adity/AndroidStudioProjects/khatha/test/interest_test.dart: Test layout
+00:11 +4: C:/Users/adity/AndroidStudioProjects/khatha/test/core/blocs/auth_cubit_test.dart: (setUpAll)
+00:11 +4: C:/Users/adity/AndroidStudioProjects/khatha/test/core/blocs/auth_cubit_test.dart: AuthCubit - savePersonalDetails emits [AuthLoading, PersonalDetailsSaved] when API call is successful
+00:11 +5: C:/Users/adity/AndroidStudioProjects/khatha/test/core/blocs/auth_cubit_test.dart: AuthCubit - savePersonalDetails emits [AuthLoading, AuthError] when API call fails
+00:11 +6: C:/Users/adity/AndroidStudioProjects/khatha/test/core/blocs/auth_cubit_test.dart: (tearDownAll)
+00:12 +6: C:/Users/adity/AndroidStudioProjects/khatha/test/features/chit_funds/chit_fund_lifecycle_test.dart: Chit Fund Full Lifecycle Test Step 1: Admin creates a new Chit Fund group
+00:12 +7: C:/Users/adity/AndroidStudioProjects/khatha/test/create_loan_test.dart: Test CreateLoanPage Business Credit Layout
+00:12 +8: C:/Users/adity/AndroidStudioProjects/khatha/test/create_loan_test.dart: Test CreateLoanPage Business Credit Layout
+00:12 +9: C:/Users/adity/AndroidStudioProjects/khatha/test/create_loan_test.dart: Test CreateLoanPage Business Credit Layout
+00:12 +10: C:/Users/adity/AndroidStudioProjects/khatha/test/create_loan_test.dart: Test CreateLoanPage Business Credit Layout
+00:12 +11: C:/Users/adity/AndroidStudioProjects/khatha/test/create_loan_test.dart: Test CreateLoanPage Business Credit Layout
+00:12 +12: C:/Users/adity/AndroidStudioProjects/khatha/test/create_loan_test.dart: Test CreateLoanPage Business Credit Layout
+00:13 +13: C:/Users/adity/AndroidStudioProjects/khatha/test/create_loan_test.dart: Test CreateLoanPage Business Credit Layout
+00:13 +14: C:/Users/adity/AndroidStudioProjects/khatha/test/loan_details_test.dart: Borrower views active Interest Credit loan details - should build without exception
+00:13 +15: C:/Users/adity/AndroidStudioProjects/khatha/test/create_loan_test.dart: Test CreateLoanPage Interest Credit Layout
+00:13 +16: C:/Users/adity/AndroidStudioProjects/khatha/test/loan_details_test.dart: Borrower views active Interest Credit loan with null duration/interest - should build without exception
+00:13 +17: C:/Users/adity/AndroidStudioProjects/khatha/test/create_loan_test.dart: Test CreateLoanPage Hand Credit Layout
+00:13 +18: C:/Users/adity/AndroidStudioProjects/khatha/test/create_loan_test.dart: Test CreateLoanPage Hand Credit Layout
+00:13 +19: All tests passed!

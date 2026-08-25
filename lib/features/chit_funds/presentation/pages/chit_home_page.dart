@@ -73,6 +73,13 @@ class _ChitHomePageState extends State<ChitHomePage> with SingleTickerProviderSt
         appBar: _buildAppBar(),
         body: BlocBuilder<ChitFundCubit, ChitFundState>(
           builder: (context, state) {
+            if (state is ChitFundLoading) {
+              return Center(child: CircularProgressIndicator(color: _primaryColor));
+            }
+            if (state is ChitFundError) {
+              return Center(child: Text(state.message, style: const TextStyle(color: Colors.red)));
+            }
+
             int activeGroups = 0;
             double totalPoolValue = 0;
             int pendingInvitesCount = 0;

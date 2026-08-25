@@ -184,6 +184,7 @@ class _SignupPageState extends State<SignupPage> {
       backgroundColor: KhaataTheme.primaryBlue,
       body: BlocConsumer<AuthCubit, AuthState>(
         listener: (context, state) {
+          if (!mounted) return;
           if (state is AuthError) {
             DialogUtils.showErrorDialog(context, state.message);
           } else if (state is RegistrationSuccess) {

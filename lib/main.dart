@@ -32,9 +32,9 @@ import 'firebase_options.dart';
 
 final systemStateCubit = SystemStateCubit();
 
-Future<void> runMainApp() async {
+void main() async {
   try {
-    // WidgetsFlutterBinding.ensureInitialized() handled in entry point
+    WidgetsFlutterBinding.ensureInitialized();
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     ).then((_) async {
@@ -58,7 +58,7 @@ Future<void> runMainApp() async {
       }
     });
 
-    // dotenv load handled in entry point
+    await dotenv.load(fileName: ".env");
 
     // Wire up global auth error handlers â€” clears session and redirects to login
     ApiClient.onMaintenanceMode = () {

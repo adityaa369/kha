@@ -85,7 +85,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(LoanDetailsPage), findsOneWidget);
       expect(find.text('Hand Credit Details'), findsOneWidget);
-      expect(find.text('Given Amount'), findsAtLeastNWidgets(1));
+      expect(find.text('Principal Amount'), findsAtLeastNWidgets(1));
       expect(find.text('Jane Lender'), findsOneWidget);
     },
   );

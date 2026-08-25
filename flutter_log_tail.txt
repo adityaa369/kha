@@ -1,0 +1,300 @@
+﻿03-20 17:19:12.570  8802  8874 W emnd    : 	at expq.execute(PG:1)
+03-20 17:19:12.570  8802  8874 W emnd    : 	at exns.d(PG:1)
+03-20 17:19:12.570  8802  8874 W emnd    : 	at exns.j(PG:95)
+03-20 17:19:12.570  8802  8874 W emnd    : 	at exns.n(PG:19)
+03-20 17:19:12.570  8802  8874 W emnd    : 	at exnz.run(PG:86)
+03-20 17:19:12.570  8802  8874 W emnd    : 	at expq.execute(PG:1)
+03-20 17:19:12.570  8802  8874 W emnd    : 	at exns.d(PG:1)
+03-20 17:19:12.570  8802  8874 W emnd    : 	at exns.j(PG:95)
+03-20 17:19:12.570  8802  8874 W emnd    : 	at exns.n(PG:19)
+03-20 17:19:12.570  8802  8874 W emnd    : 	at exnz.run(PG:86)
+03-20 17:19:12.570  8802  8874 W emnd    : 	at expq.execute(PG:1)
+03-20 17:19:12.570  8802  8874 W emnd    : 	at exns.d(PG:1)
+03-20 17:19:12.570  8802  8874 W emnd    : 	at exns.j(PG:95)
+03-20 17:19:12.570  8802  8874 W emnd    : 	at exns.o(PG:29)
+03-20 17:19:12.570  8802  8874 W emnd    : 	at exnr.run(PG:169)
+03-20 17:19:12.570  8802  8874 W emnd    : 	... 5 more
+03-20 17:19:12.570  8802  8874 W emnd    : Caused by: elsi: djuy: Selected account doesn't match the primary search account
+03-20 17:19:12.570  8802  8874 W emnd    : 	at djvl.apply(PG:25)
+03-20 17:19:12.570  8802  8874 W emnd    : 	at eocj.apply(PG:17)
+03-20 17:19:12.570  8802  8874 W emnd    : 	at exny.c(PG:3)
+03-20 17:19:12.570  8802  8874 W emnd    : 	at exnz.run(PG:47)
+03-20 17:19:12.570  8802  8874 W emnd    : 	... 5 more
+03-20 17:19:12.570  8802  8874 W emnd    : Caused by: djuy: Selected account doesn't match the primary search account
+03-20 17:19:12.570  8802  8874 W emnd    : 	at djvl.apply(PG:22)
+03-20 17:19:12.570  8802  8874 W emnd    : 	... 8 more
+03-20 17:19:12.574  8802  8874 W emnd    : Account Worker did not pass Account requirements and will be skipped.
+03-20 17:19:12.574  8802  8874 W emnd    : emmn: Account was no longer valid when task executed.
+03-20 17:19:12.574  8802  8874 W emnd    : 	at emna.apply(PG:5)
+03-20 17:19:12.574  8802  8874 W emnd    : 	at eoce.apply(PG:17)
+03-20 17:19:12.574  8802  8874 W emnd    : 	at exnp.c(PG:3)
+03-20 17:19:12.574  8802  8874 W emnd    : 	at exnr.run(PG:139)
+03-20 17:19:12.574  8802  8874 W emnd    : 	at crkt.run(PG:5)
+03-20 17:19:12.574  8802  8874 W emnd    : 	at ewlo.run(PG:46)
+03-20 17:19:12.574  8802  8874 W emnd    : 	at crkf.run(PG:81)
+03-20 17:19:12.574  8802  8874 W emnd    : 	at java.lang.Thread.run(Thread.java:1563)
+03-20 17:19:12.574  8802  8874 W emnd    : 	at crlx.run(PG:63)
+03-20 17:19:12.574  8802  8874 W emnd    : Caused by: elwf: elsi: djuy: Selected account doesn't match the primary search account
+03-20 17:19:12.574  8802  8874 W emnd    : 	at elss.apply(PG:5)
+03-20 17:19:12.574  8802  8874 W emnd    : 	at eocj.apply(PG:17)
+03-20 17:19:12.574  8802  8874 W emnd    : 	at exnq.c(PG:3)
+03-20 17:19:12.574  8802  8874 W emnd    : 	at exnr.run(PG:139)
+03-20 17:19:12.574  8802  8874 W emnd    : 	at expq.execute(PG:1)
+03-20 17:19:12.574  8802  8874 W emnd    : 	at exns.d(PG:1)
+03-20 17:19:12.574  8802  8874 W emnd    : 	at exns.j(PG:95)
+03-20 17:19:12.574  8802  8874 W emnd    : 	at exns.n(PG:19)
+03-20 17:19:12.574  8802  8874 W emnd    : 	at exnz.run(PG:86)
+03-20 17:19:12.574  8802  8874 W emnd    : 	at expq.execute(PG:1)
+03-20 17:19:12.574  8802  8874 W emnd    : 	at exns.d(PG:1)
+03-20 17:19:12.574  8802  8874 W emnd    : 	at exns.j(PG:95)
+03-20 17:19:12.574  8802  8874 W emnd    : 	at exns.n(PG:19)
+03-20 17:19:12.574  8802  8874 W emnd    : 	at exnz.run(PG:86)
+03-20 17:19:12.574  8802  8874 W emnd    : 	at expq.execute(PG:1)
+03-20 17:19:12.574  8802  8874 W emnd    : 	at exns.d(PG:1)
+03-20 17:19:12.574  8802  8874 W emnd    : 	at exns.j(PG:95)
+03-20 17:19:12.574  8802  8874 W emnd    : 	at exns.o(PG:29)
+03-20 17:19:12.574  8802  8874 W emnd    : 	at exnr.run(PG:169)
+03-20 17:19:12.574  8802  8874 W emnd    : 	... 5 more
+03-20 17:19:12.574  8802  8874 W emnd    : Caused by: elsi: djuy: Selected account doesn't match the primary search account
+03-20 17:19:12.574  8802  8874 W emnd    : 	at djvl.apply(PG:25)
+03-20 17:19:12.574  8802  8874 W emnd    : 	at eocj.apply(PG:17)
+03-20 17:19:12.574  8802  8874 W emnd    : 	at exny.c(PG:3)
+03-20 17:19:12.574  8802  8874 W emnd    : 	at exnz.run(PG:47)
+03-20 17:19:12.574  8802  8874 W emnd    : 	... 5 more
+03-20 17:19:12.574  8802  8874 W emnd    : Caused by: djuy: Selected account doesn't match the primary search account
+03-20 17:19:12.574  8802  8874 W emnd    : 	at djvl.apply(PG:22)
+03-20 17:19:12.574  8802  8874 W emnd    : 	... 8 more
+03-20 17:19:12.575  6094  6130 D RemoteListenableDelegatingWorker: Cleaning up
+03-20 17:19:12.579  6094  6130 D RemoteListenableDelegatingWorker: Cleaning up
+03-20 17:19:12.585  6094  6130 I WM-WorkerWrapper: Worker result FAILURE for Work [ id=92de16de-a73d-4a32-a147-e426790ed0a5, tags={ com.google.apps.tiktok.contrib.work.TikTokListenableWorker,TikTokWorker#com.google.android.libraries.search.suggest.sources.completeserver.CompleteServerZeroPrefixWorker,tiktok_account_work,account_id_9 } ]
+03-20 17:19:12.594  6094  6094 D WM-Processor: oim 92de16de-a73d-4a32-a147-e426790ed0a5 executed; reschedule = false
+03-20 17:19:12.595  6094  6094 D WM-SystemJobService: 92de16de-a73d-4a32-a147-e426790ed0a5 executed on JobScheduler
+03-20 17:19:12.595  6094  6130 I WM-WorkerWrapper: Worker result FAILURE for Work [ id=534373b1-5523-41d1-9c61-b455af6858f4, tags={ com.google.apps.tiktok.contrib.work.TikTokListenableWorker,TikTokWorker#com.google.android.libraries.search.suggest.sources.completeserver.CompleteServerZeroPrefixWorker,tiktok_account_work,account_id_5 } ]
+03-20 17:19:12.601  6094  6130 D WM-GreedyScheduler: Cancelling work ID 92de16de-a73d-4a32-a147-e426790ed0a5
+03-20 17:19:12.612  6094  6130 D WM-SystemJobScheduler: Scheduling work ID 92de16de-a73d-4a32-a147-e426790ed0a5Job ID 166663
+03-20 17:19:12.616  6094  6130 D WM-SystemJobScheduler: Scheduling work ID 534373b1-5523-41d1-9c61-b455af6858f4Job ID 166620
+03-20 17:19:12.618  6094  6094 D WM-SystemJobService: onStopJob for WorkGenerationalId(workSpecId=534373b1-5523-41d1-9c61-b455af6858f4, generation=0)
+03-20 17:19:12.621  6094  6130 D WM-GreedyScheduler: Starting tracking for bc472cc1-36e2-4782-8ad3-027547093140,731ad2f7-ee04-45ec-8e7c-b7e6dbf0630c,1c0fe4fb-fc8f-4dfd-9312-5eaea283805e,e4e8c09c-fab3-4456-b395-21821a617e30,b4cf78af-0a2a-478c-8d8e-b182105cfc8b,b2892bf3-7911-41f3-b6db-e995a23c3e5a
+03-20 17:19:12.624  6094  6094 D WM-Processor: oim 534373b1-5523-41d1-9c61-b455af6858f4 executed; reschedule = false
+03-20 17:19:12.624  6094  6130 D WM-Processor: WorkerWrapper interrupted for 534373b1-5523-41d1-9c61-b455af6858f4
+03-20 17:19:12.624  6094  6130 D WM-StopWorkRunnable: StopWorkRunnable for 534373b1-5523-41d1-9c61-b455af6858f4; Processor.stopWork = true
+03-20 17:19:12.630  6094  6130 D WM-GreedyScheduler: Cancelling work ID 534373b1-5523-41d1-9c61-b455af6858f4
+03-20 17:19:12.635  6094  6130 D WM-GreedyScheduler: Starting tracking for bc472cc1-36e2-4782-8ad3-027547093140,731ad2f7-ee04-45ec-8e7c-b7e6dbf0630c,1c0fe4fb-fc8f-4dfd-9312-5eaea283805e,e4e8c09c-fab3-4456-b395-21821a617e30,b4cf78af-0a2a-478c-8d8e-b182105cfc8b,b2892bf3-7911-41f3-b6db-e995a23c3e5a
+03-20 17:19:12.873 12864 12864 I OutlookAppComponentFactory: instantiateReceiver, com.google.firebase.iid.FirebaseInstanceIdReceiver
+03-20 17:19:12.880 12864 23259 I MSMAM - o.zztf: Recursively tagging intent {0} with identity {1}
+03-20 17:19:12.888 12864 12864 I OutlookAppComponentFactory: instantiateService, com.microsoft.office.outlook.fcm.OutlookFirebaseMessagingService
+03-20 17:19:12.900 12864 23447 I outlook.Notifications: setupNotificationsChannelsIfNeeded - AlreadyDone[true]
+03-20 17:19:12.900 12864 23447 I NotificationDataDispatcher: Received badge count push with value 37
+03-20 17:19:12.905 12864 23275 I BadgeHelper: BadgeCount supported!! (badgeCountSupported=true hasMicrosoftLauncherAsDefault=false)
+03-20 17:19:12.906 12864 23275 I BadgeHelper: updateBadgeCount: push notification unreadCount=37
+03-20 17:19:12.906 12864 23275 I BadgeHelper: updateBadgeCount: unreadCount=37
+03-20 17:19:12.906 12864 23275 I BadgeHelper: updateBadgeCount: Last updated badge count is same :37
+03-20 17:19:12.918 12864 23275 I BadgeHelper: updateBadgeCount: Updated!
+03-20 17:19:13.094  6094 17782 D WM-WorkConstraintsTrack: NetworkRequestConstraintController onCapabilitiesChanged callback
+03-20 17:19:13.173 15926 15963 I Finsky  : [8124] com.snapchat.android: Account determined from installer data - [RcS506RMuSYpktqI05WhwkzYpV4VZs6EuGxLyJzu2rs]
+03-20 17:19:13.174 15926 15963 I Finsky  : [8124] Billing preferred account via installer for com.snapchat.android: [RcS506RMuSYpktqI05WhwkzYpV4VZs6EuGxLyJzu2rs]
+03-20 17:19:13.182 15926 15964 I Finsky  : [8125] com.snapchat.android: Account determined from installer data - [RcS506RMuSYpktqI05WhwkzYpV4VZs6EuGxLyJzu2rs]
+03-20 17:19:13.183 15926 15964 I Finsky  : [8125] Billing preferred account via installer for com.snapchat.android: [RcS506RMuSYpktqI05WhwkzYpV4VZs6EuGxLyJzu2rs]
+03-20 17:19:13.240  7998 13194 E SQLiteLog: (284) automatic index on StorySnaps(storyRowId)
+03-20 17:19:13.241  7998 13194 E SQLiteLog: (284) automatic index on StoryViewActiveSnaps(friendStoryPosterUserId)
+03-20 17:19:13.241  7998 13194 E SQLiteLog: (284) automatic index on StorySnaps(storyRowId)
+03-20 17:19:13.251  7998 13194 D CursorWindow: Inflated: original size 16384, new size 2097152
+03-20 17:19:13.266  7998  8042 D CursorWindow: Inflated: original size 16384, new size 2097152
+03-20 17:19:13.314  7998  8011 I napchat.android: Waiting for a blocking GC ProfileSaver
+03-20 17:19:13.477  7998  8011 I napchat.android: WaitForGcToComplete blocked ProfileSaver on Background for 162.780ms
+03-20 17:19:13.887 12864 23258 W CloudMessagingReceiver: Message ack timed out
+03-20 17:19:14.306 30254 30590 D BufferPoolAccessor2.0: evictor expired: 2, evicted: 0
+03-20 17:19:16.102  6094 17782 D WM-WorkConstraintsTrack: NetworkRequestConstraintController onCapabilitiesChanged callback
+03-20 17:19:18.877 18288 18288 D CellBroadcastReceiver: onReceive Intent { act=android.intent.action.SERVICE_STATE flg=0x1000010 cmp=com.google.android.cellbroadcastreceiver/com.android.cellbroadcastreceiver.CellBroadcastReceiver (has extras) }
+03-20 17:19:18.880 18288 18288 D CellBroadcastReceiver: onServiceStateChanged, ss: 0
+03-20 17:19:18.881 18288 18288 D CellBroadcastReceiver: networkOperator: 40449
+03-20 17:19:18.881 18288 18288 D CellBroadcastReceiver: update supported roaming operator as 
+03-20 17:19:18.896 18288 18288 D CellBroadcastReceiver: onReceive Intent { act=android.intent.action.SERVICE_STATE flg=0x1000010 cmp=com.google.android.cellbroadcastreceiver/com.android.cellbroadcastreceiver.CellBroadcastReceiver (has extras) }
+03-20 17:19:18.899 18288 18288 D CellBroadcastReceiver: onServiceStateChanged, ss: 0
+03-20 17:19:18.899 18288 18288 D CellBroadcastReceiver: networkOperator: 40449
+03-20 17:19:18.900 18288 18288 D CellBroadcastReceiver: update supported roaming operator as 
+03-20 17:19:20.024 11443 11443 W ThreadPoolForeg: type=1400 audit(0.0:424791): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c512,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0 app=com.google.android.gms
+03-20 17:19:20.536  5899  5899 D BoundBrokerSvc: onUnbind: Intent { act=com.google.android.gms.measurement.START pkg=com.google.android.gms }
+03-20 17:19:21.764 26315 26315 W ThreadPoolForeg: type=1400 audit(0.0:424792): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c523,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0
+03-20 17:19:22.186  6094 17782 D WM-WorkConstraintsTrack: NetworkRequestConstraintController onCapabilitiesChanged callback
+03-20 17:19:23.233  7998 13243 E GRPC    : cronet_transport.cc:445] on_failed(0xb400007aaa085a90, -352)
+03-20 17:19:31.348  5899  5899 W ThreadPoolForeg: type=1400 audit(0.0:424794): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c512,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0 app=com.google.android.gms
+03-20 17:19:31.816  5899  5899 W PerfettoTrace: type=1400 audit(0.0:424795): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c512,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0 app=com.google.android.gms
+03-20 17:19:32.988 26267 26267 W ThreadPoolForeg: type=1400 audit(0.0:424796): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c523,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0
+03-20 17:19:33.350 18288 18288 D CellBroadcastReceiver: onReceive Intent { act=android.intent.action.SERVICE_STATE flg=0x1000010 cmp=com.google.android.cellbroadcastreceiver/com.android.cellbroadcastreceiver.CellBroadcastReceiver (has extras) }
+03-20 17:19:33.354 18288 18288 D CellBroadcastReceiver: onServiceStateChanged, ss: 0
+03-20 17:19:33.355 18288 18288 D CellBroadcastReceiver: networkOperator: 40449
+03-20 17:19:33.356 18288 18288 D CellBroadcastReceiver: update supported roaming operator as 
+03-20 17:19:33.928  6094 17782 D WM-WorkConstraintsTrack: NetworkRequestConstraintController onCapabilitiesChanged callback
+03-20 17:19:34.300  6094 17782 D WM-WorkConstraintsTrack: NetworkRequestConstraintController onCapabilitiesChanged callback
+03-20 17:19:37.396  6094 17782 D WM-WorkConstraintsTrack: NetworkRequestConstraintController onCapabilitiesChanged callback
+03-20 17:19:39.954  6094 17782 D WM-WorkConstraintsTrack: NetworkRequestConstraintController onCapabilitiesChanged callback
+03-20 17:19:47.102 11443 11633 I id.gms.unstable: Explicit concurrent copying GC freed 386KB AllocSpace bytes, 0(0B) LOS objects, 28% free, 5044KB/7092KB, paused 605us,116us total 179.631ms
+03-20 17:19:49.629 11437 11437 D WM-DelayedWorkTracker: Scheduling work fbe6f659-b107-4d35-91b9-95b3ee00a07b
+03-20 17:19:49.630 11437 11437 D WM-GreedyScheduler: Starting tracking for fbe6f659-b107-4d35-91b9-95b3ee00a07b
+03-20 17:19:49.636 11437 11558 D WM-ConstraintTracker: j: initial state = NetworkState(isConnected=false, isValidated=false, isMetered=true, isNotRoaming=true)
+03-20 17:19:49.636 11437 11558 D WM-NetworkStateTracker: Registering network callback
+03-20 17:19:49.642 11437 11590 D WM-GreedyScheduler: Constraints not met: Cancelling work ID WorkGenerationalId(workSpecId=fbe6f659-b107-4d35-91b9-95b3ee00a07b, generation=0)
+03-20 17:19:49.646 11437 11584 D WM-NetworkStateTracker: Network capabilities changed: [ Transports: WIFI Capabilities: NOT_METERED&INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN&VALIDATED&NOT_ROAMING&FOREGROUND&NOT_CONGESTED&NOT_SUSPENDED&NOT_VCN_MANAGED LinkUpBandwidth>=12000Kbps LinkDnBandwidth>=30000Kbps TransportInfo: <SSID: <unknown ssid>, BSSID: 02:**:**:**:00:00, MAC: 02:**:**:**:00:00, Security type: 2, Supplicant state: COMPLETED, Wi-Fi standard: 4, RSSI: -73, Link speed: 72Mbps, Tx Link speed: 65Mbps, Max Supported Tx Link speed: 72Mbps, Rx Link speed: 1Mbps, Max Supported Rx Link speed: 72Mbps, Frequency: 2412MHz, Net ID: -1, Metered hint: false, score: 60, isUsable: true, CarrierMerged: false, SubscriptionId: -1, IsPrimary: -1, Trusted: true, Restricted: false, Ephemeral: false, OEM paid: false, OEM private: false, OSU AP: false, FQDN: <none>, Provider friendly name: <none>, Requesting package name: <none><none>MLO Information: , AP MLD Address: <none>, AP MLO Link Id: <none>, AP MLO Affiliated links: <none>> SignalStrength: -73 UnderlyingNetworks: Null]
+03-20 17:19:49.647 11437 11558 D WM-GreedyScheduler: Constraints met: Scheduling work ID WorkGenerationalId(workSpecId=fbe6f659-b107-4d35-91b9-95b3ee00a07b, generation=0)
+03-20 17:19:49.652 11437 11590 D WM-Processor: s: processing WorkGenerationalId(workSpecId=fbe6f659-b107-4d35-91b9-95b3ee00a07b, generation=0)
+03-20 17:19:49.662 11437 11437 D WM-WorkerWrapper: Starting work for com.twitter.analytics.service.core.workmanager.AnalyticsFlushWorker
+03-20 17:19:49.666 11437 11587 I WM-WorkerWrapper: Worker result SUCCESS for Work [ id=fbe6f659-b107-4d35-91b9-95b3ee00a07b, tags={ com.twitter.analytics.service.core.workmanager.AnalyticsFlushWorker } ]
+03-20 17:19:49.670 11437 11437 D WM-Processor: s fbe6f659-b107-4d35-91b9-95b3ee00a07b executed; reschedule = false
+03-20 17:19:49.670 11437 11437 D WM-GreedyScheduler: Stopping tracking for WorkGenerationalId(workSpecId=fbe6f659-b107-4d35-91b9-95b3ee00a07b, generation=0)
+03-20 17:19:49.688 11437 11587 D WM-SystemJobScheduler: Scheduling work ID 3613a35d-aedd-4fa5-b28a-510398ff39bbJob ID 25879
+03-20 17:19:49.702 11437 11587 D WM-GreedyScheduler: Cancelling work ID fbe6f659-b107-4d35-91b9-95b3ee00a07b
+03-20 17:19:49.707 11437 11587 D WM-NetworkStateTracker: Unregistering network callback
+03-20 17:19:50.036 11443 11443 W ThreadPoolForeg: type=1400 audit(0.0:424800): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c512,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0 app=com.google.android.gms
+03-20 17:19:50.899 20057 20157 E msys    : E[N WCIHTTPImplNetworkSession]WCIHTTPTaskImplCreateRegular(556)=>[I] http/task/regular/create/start
+03-20 17:19:50.900 20057 20157 E msys    : E[N WCIHTTPImplNetworkSession]WCIHTTPTaskImplCreateRegular(591)=>[I] http/task/regular/create/execute
+03-20 17:19:50.906 20057 20157 E msys    : E[N WCIHTTPImplNetworkSession]WCIHTTPTaskImplCreateRegular(614)=>[I] http/task/regular/create/success
+03-20 17:19:51.478 20057 20157 E msys    : E[N WCIHTTPImplNetworkSession]WCIHTTPTaskImplCreateRegular(556)=>[I] http/task/regular/create/start
+03-20 17:19:51.478 20057 20157 E msys    : E[N WCIHTTPImplNetworkSession]WCIHTTPTaskImplCreateRegular(591)=>[I] http/task/regular/create/execute
+03-20 17:19:51.479 20057 20157 E msys    : E[N WCIHTTPImplNetworkSession]WCIHTTPTaskImplCreateRegular(614)=>[I] http/task/regular/create/success
+03-20 17:19:51.796 26315 26315 W ThreadPoolForeg: type=1400 audit(0.0:424801): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c523,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0
+03-20 17:19:55.679  6094 17782 D WM-WorkConstraintsTrack: NetworkRequestConstraintController onCapabilitiesChanged callback
+03-20 17:19:58.683  6094 17782 D WM-WorkConstraintsTrack: NetworkRequestConstraintController onCapabilitiesChanged callback
+03-20 17:20:01.356  5899  5899 W ThreadPoolForeg: type=1400 audit(0.0:424803): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c512,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0 app=com.google.android.gms
+03-20 17:20:01.697  6094 17782 D WM-WorkConstraintsTrack: NetworkRequestConstraintController onCapabilitiesChanged callback
+03-20 17:20:01.844  5899  5899 W PerfettoTrace: type=1400 audit(0.0:424804): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c512,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0 app=com.google.android.gms
+03-20 17:20:02.183 12864 12864 I OutlookAppComponentFactory: instantiateReceiver, com.microsoft.office.outlook.notification.NotificationsActionReceiver
+03-20 17:20:02.209 12864 12864 I OutlookAppComponentFactory: instantiateReceiver, com.microsoft.office.outlook.notification.NotificationsActionReceiver
+03-20 17:20:02.225 12864 12864 I OutlookAppComponentFactory: instantiateService, androidx.work.impl.background.systemjob.SystemJobService
+03-20 17:20:02.267 12864 23556 I NotificationActionWorker: onWorkerRun: Action[com.microsoft.office.outlook.action.REMOVE_MESSAGE_NOTIFICATION]
+03-20 17:20:02.269 12864 23557 I NotificationActionWorker: onWorkerRun: Action[com.microsoft.office.outlook.action.REMOVE_MESSAGE_NOTIFICATION]
+03-20 17:20:02.269 12864 23556 I NotificationActionWorker: Removing message notification AccountId[32768] MsgId[AAkALgAAAAAAHYQDEapmEc2byACqAC-EWg0ALgUEjdWM0EegRTLogWlhTwABLYqdVQAA]
+03-20 17:20:02.270 12864 23557 I NotificationActionWorker: Removing message notification AccountId[32768] MsgId[AAkALgAAAAAAHYQDEapmEc2byACqAC-EWg0ALgUEjdWM0EegRTLogWlhTwABLYqdVQAA]
+03-20 17:20:02.293 12864 23556 I NotifHelperV2: removeMessageNotification: NotifTag[AQADAACAAAAAACwyMzgyMDk3QGNvZ25pemFudC5jb21fQWN0aXZlU3luY0V4Y2hhbmdlX0h4Uw==:AQADAAAAMwAJAC4AAAAAAB2EAxGqZhHNm8gAqgAvxFoNAC4FBI3VjNBHoEUy6IFpYU8AAS2KnVUAAA==] FromHx[false]
+03-20 17:20:02.293 12864 23557 I NotifHelperV2: removeMessageNotification: NotifTag[AQADAACAAAAAACwyMzgyMDk3QGNvZ25pemFudC5jb21fQWN0aXZlU3luY0V4Y2hhbmdlX0h4Uw==:AQADAAAAMwAJAC4AAAAAAB2EAxGqZhHNm8gAqgAvxFoNAC4FBI3VjNBHoEUy6IFpYU8AAS2KnVUAAA==] FromHx[false]
+03-20 17:20:02.295 12864 13325 I WM-WorkerWrapper: Worker result SUCCESS for Work [ id=2e63a7a7-1f42-48d8-963f-43b3fd4bc794, tags={ com.microsoft.office.outlook.notification.NotificationActionWorker, OM_PRIMARY_TAG|NotificationActionWorker_Worker, NotificationActionWorker_Worker } ]
+03-20 17:20:02.302 12864 13325 I WM-WorkerWrapper: Worker result SUCCESS for Work [ id=e96e8516-9586-4307-acb7-c19ec00205bf, tags={ com.microsoft.office.outlook.notification.NotificationActionWorker, OM_PRIMARY_TAG|NotificationActionWorker_Worker, NotificationActionWorker_Worker } ]
+03-20 17:20:03.000 26267 26267 W ThreadPoolForeg: type=1400 audit(0.0:424805): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c523,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0
+03-20 17:20:04.752  6094 17782 D WM-WorkConstraintsTrack: NetworkRequestConstraintController onCapabilitiesChanged callback
+03-20 17:20:09.023 15926 15961 I Finsky  : [8122] AIM: AppInfoManager-Perf > Destroying AppInfoManager ...
+03-20 17:20:10.586 15926 15964 I Finsky  : [8125] AIM: AppInfoManager-Perf > Destroying AppInfoManager ...
+03-20 17:20:11.668 11443 11451 W libc    : Access denied finding property "persist.adb.tls_server.enable"
+03-20 17:20:11.669 11443 11451 W libc    : Access denied finding property "service.adb.tls.port"
+03-20 17:20:11.664 11443 11443 W binder:11443_1: type=1400 audit(0.0:424806): avc: denied { read } for name="u:object_r:system_adbd_prop:s0" dev="tmpfs" ino=8598 scontext=u:r:gmscore_app:s0:c512,c768 tcontext=u:object_r:system_adbd_prop:s0 tclass=file permissive=0 app=com.google.android.gms
+03-20 17:20:11.668 11443 11443 W binder:11443_1: type=1400 audit(0.0:424807): avc: denied { read } for name="u:object_r:adbd_prop:s0" dev="tmpfs" ino=8384 scontext=u:r:gmscore_app:s0:c512,c768 tcontext=u:object_r:adbd_prop:s0 tclass=file permissive=0 app=com.google.android.gms
+03-20 17:20:19.964  6094 17782 D WM-WorkConstraintsTrack: NetworkRequestConstraintController onCapabilitiesChanged callback
+03-20 17:20:20.064 11443 11443 W ThreadPoolForeg: type=1400 audit(0.0:424808): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c512,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0 app=com.google.android.gms
+03-20 17:20:21.808 26315 26315 W ThreadPoolForeg: type=1400 audit(0.0:424809): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c523,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0
+03-20 17:20:31.384  5899  5899 W ThreadPoolForeg: type=1400 audit(0.0:424811): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c512,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0 app=com.google.android.gms
+03-20 17:20:31.852  5899  5899 W PerfettoTrace: type=1400 audit(0.0:424812): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c512,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0 app=com.google.android.gms
+03-20 17:20:33.028 26267 26267 W ThreadPoolForeg: type=1400 audit(0.0:424813): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c523,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0
+03-20 17:20:49.677 11437 11437 D WM-DelayedWorkTracker: Scheduling work 3613a35d-aedd-4fa5-b28a-510398ff39bb
+03-20 17:20:49.678 11437 11437 D WM-GreedyScheduler: Starting tracking for 3613a35d-aedd-4fa5-b28a-510398ff39bb
+03-20 17:20:49.683 11437 11558 D WM-ConstraintTracker: j: initial state = NetworkState(isConnected=false, isValidated=false, isMetered=true, isNotRoaming=true)
+03-20 17:20:49.684 11437 11558 D WM-NetworkStateTracker: Registering network callback
+03-20 17:20:49.690 11437 11558 D WM-GreedyScheduler: Constraints not met: Cancelling work ID WorkGenerationalId(workSpecId=3613a35d-aedd-4fa5-b28a-510398ff39bb, generation=0)
+03-20 17:20:49.694 11437 11584 D WM-NetworkStateTracker: Network capabilities changed: [ Transports: WIFI Capabilities: NOT_METERED&INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN&VALIDATED&NOT_ROAMING&FOREGROUND&NOT_CONGESTED&NOT_SUSPENDED&NOT_VCN_MANAGED LinkUpBandwidth>=12000Kbps LinkDnBandwidth>=30000Kbps TransportInfo: <SSID: <unknown ssid>, BSSID: 02:**:**:**:00:00, MAC: 02:**:**:**:00:00, Security type: 2, Supplicant state: COMPLETED, Wi-Fi standard: 4, RSSI: -64, Link speed: 72Mbps, Tx Link speed: 65Mbps, Max Supported Tx Link speed: 72Mbps, Rx Link speed: 1Mbps, Max Supported Rx Link speed: 72Mbps, Frequency: 2412MHz, Net ID: -1, Metered hint: false, score: 60, isUsable: true, CarrierMerged: false, SubscriptionId: -1, IsPrimary: -1, Trusted: true, Restricted: false, Ephemeral: false, OEM paid: false, OEM private: false, OSU AP: false, FQDN: <none>, Provider friendly name: <none>, Requesting package name: <none><none>MLO Information: , AP MLD Address: <none>, AP MLO Link Id: <none>, AP MLO Affiliated links: <none>> SignalStrength: -64 UnderlyingNetworks: Null]
+03-20 17:20:49.695 11437 11587 D WM-GreedyScheduler: Constraints met: Scheduling work ID WorkGenerationalId(workSpecId=3613a35d-aedd-4fa5-b28a-510398ff39bb, generation=0)
+03-20 17:20:49.700 11437 11587 D WM-Processor: s: processing WorkGenerationalId(workSpecId=3613a35d-aedd-4fa5-b28a-510398ff39bb, generation=0)
+03-20 17:20:49.711 11437 11437 D WM-WorkerWrapper: Starting work for com.twitter.analytics.service.core.workmanager.AnalyticsFlushWorker
+03-20 17:20:49.717 11437 11587 I WM-WorkerWrapper: Worker result SUCCESS for Work [ id=3613a35d-aedd-4fa5-b28a-510398ff39bb, tags={ com.twitter.analytics.service.core.workmanager.AnalyticsFlushWorker } ]
+03-20 17:20:49.722 11437 11437 D WM-Processor: s 3613a35d-aedd-4fa5-b28a-510398ff39bb executed; reschedule = false
+03-20 17:20:49.723 11437 11437 D WM-GreedyScheduler: Stopping tracking for WorkGenerationalId(workSpecId=3613a35d-aedd-4fa5-b28a-510398ff39bb, generation=0)
+03-20 17:20:49.734 11437 11587 D WM-GreedyScheduler: Cancelling work ID 3613a35d-aedd-4fa5-b28a-510398ff39bb
+03-20 17:20:49.737 11437 11587 D WM-NetworkStateTracker: Unregistering network callback
+03-20 17:20:50.076 11443 11443 W ThreadPoolForeg: type=1400 audit(0.0:424814): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c512,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0 app=com.google.android.gms
+03-20 17:20:51.840 26315 26315 W ThreadPoolForeg: type=1400 audit(0.0:424815): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c523,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0
+03-20 17:21:01.392  5899  5899 W ThreadPoolForeg: type=1400 audit(0.0:424817): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c512,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0 app=com.google.android.gms
+03-20 17:21:01.880  5899  5899 W PerfettoTrace: type=1400 audit(0.0:424818): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c512,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0 app=com.google.android.gms
+03-20 17:21:03.040 26267 26267 W ThreadPoolForeg: type=1400 audit(0.0:424819): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c523,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0
+03-20 17:21:11.594  6094 17782 D WM-WorkConstraintsTrack: NetworkRequestConstraintController onCapabilitiesChanged callback
+03-20 17:21:20.104 11443 11443 W ThreadPoolForeg: type=1400 audit(0.0:424820): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c512,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0 app=com.google.android.gms
+03-20 17:21:21.852 26315 26315 W ThreadPoolForeg: type=1400 audit(0.0:424821): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c523,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0
+03-20 17:21:27.137 30254 30441 E msys    : E[N mns:TigonMNS]_CacheRefreshTimerCallback(576)=>Start active cache refresh DNS resolution
+03-20 17:21:27.138 30254 30441 E msys    : E[N mns:TigonMNS]_CacheRefreshTimerCallback(576)=>Start active cache refresh DNS resolution
+03-20 17:21:27.138 30254 30441 E msys    : E[N mns:TigonMNS]_CacheRefreshTimerCallback(576)=>Start active cache refresh DNS resolution
+03-20 17:21:27.138 30254 30441 E msys    : E[N mns:TigonMNS]_CacheRefreshTimerCallback(576)=>Start active cache refresh DNS resolution
+03-20 17:21:27.139 30254 30441 E msys    : E[N mns:TigonMNS]_CacheRefreshTimerCallback(576)=>Start active cache refresh DNS resolution
+03-20 17:21:27.139 30254 30441 E msys    : E[N mns:TigonMNS]_CacheRefreshTimerCallback(576)=>Start active cache refresh DNS resolution
+03-20 17:21:27.146 30254 30441 E msys    : E[N mns:TigonMNS]_OnSystemDNSSuccessCallback(465)=>Cache refresh succeeded with system DNS resolver. IP count: 1
+03-20 17:21:27.147 30254 30441 E msys    : E[N mns:TigonMNS]_OnSystemDNSSuccessCallback(465)=>Cache refresh succeeded with system DNS resolver. IP count: 1
+03-20 17:21:27.148 30254 30441 E msys    : E[N mns:TigonMNS]_OnSystemDNSSuccessCallback(465)=>Cache refresh succeeded with system DNS resolver. IP count: 1
+03-20 17:21:27.151 30254 30441 E msys    : E[N mns:TigonMNS]_OnSystemDNSSuccessCallback(465)=>Cache refresh succeeded with system DNS resolver. IP count: 1
+03-20 17:21:27.235 30254 30441 E msys    : E[N mns:TigonMNS]_OnSystemDNSSuccessCallback(465)=>Cache refresh succeeded with system DNS resolver. IP count: 1
+03-20 17:21:27.235 30254 30441 E msys    : E[N mns:TigonMNS]_OnSystemDNSSuccessCallback(465)=>Cache refresh succeeded with system DNS resolver. IP count: 1
+03-20 17:21:30.065 30254 30522 W RealtimeClientManager: Channel state: MqttChannelState{mConnectionState=DISCONNECTED, mDisconnectionReason=null, mLastConnectionMs=363912426, mLastDisconnectMs=365041005}
+03-20 17:21:30.104 30254 30522 W RealtimeClientManager: Channel state: MqttChannelState{mConnectionState=CONNECTING, mDisconnectionReason=null, mLastConnectionMs=363912426, mLastDisconnectMs=365041005}
+03-20 17:21:30.230 30254 30522 W RealtimeClientManager: Channel state: MqttChannelState{mConnectionState=CONNECTED, mDisconnectionReason=null, mLastConnectionMs=363912426, mLastDisconnectMs=365041005}
+03-20 17:21:30.691 30254 30522 W RealtimeClientManager: Channel state: MqttChannelState{mConnectionState=CONNECTED_AND_ACKED, mDisconnectionReason=null, mLastConnectionMs=365041632, mLastDisconnectMs=365041005}
+03-20 17:21:31.420  5899  5899 W ThreadPoolForeg: type=1400 audit(0.0:424823): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c512,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0 app=com.google.android.gms
+03-20 17:21:31.888  5899  5899 W PerfettoTrace: type=1400 audit(0.0:424824): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c512,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0 app=com.google.android.gms
+03-20 17:21:33.072 26267 26267 W ThreadPoolForeg: type=1400 audit(0.0:424825): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c523,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0
+03-20 17:21:50.116 11443 11443 W ThreadPoolForeg: type=1400 audit(0.0:424826): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c512,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0 app=com.google.android.gms
+03-20 17:21:51.880 26315 26315 W ThreadPoolForeg: type=1400 audit(0.0:424827): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c523,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0
+03-20 17:22:01.428  5899  5899 W ThreadPoolForeg: type=1400 audit(0.0:424829): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c512,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0 app=com.google.android.gms
+03-20 17:22:01.916  5899  5899 W PerfettoTrace: type=1400 audit(0.0:424830): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c512,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0 app=com.google.android.gms
+03-20 17:22:03.084 26267 26267 W ThreadPoolForeg: type=1400 audit(0.0:424831): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c523,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0
+03-20 17:22:03.191  6094 17782 D WM-WorkConstraintsTrack: NetworkRequestConstraintController onCapabilitiesChanged callback
+03-20 17:22:06.221  6094 17782 D WM-WorkConstraintsTrack: NetworkRequestConstraintController onCapabilitiesChanged callback
+03-20 17:22:06.333 15926 22531 I PlayCommon: [8197] Preparing logs for uploading
+03-20 17:22:06.337 15926 22531 W PlayCommon: [8197] No account for auth token provided
+03-20 17:22:06.338 15926 22531 I PlayCommon: [8197] Connecting to server: https://play.googleapis.com/play/log?format=raw&proto_v2=true
+03-20 17:22:06.600 15926 22531 I PlayCommon: [8197] Successfully uploaded logs.
+03-20 17:22:12.285 19186 19189 I _client_process: Method exceeds compiler instruction limit: 20429 in java.lang.Object[] com.microsoft.identity.broker4j.workplacejoin.requests.DeviceAttributePatchingParameters$DeviceAttributePatchValue.cancelAll$56e70a9c(int, int, java.lang.Object, int, boolean)
+03-20 17:22:12.288 19186 19186 W binder:19186_4: type=1400 audit(0.0:424834): avc: denied { read } for name="policy" dev="selinuxfs" ino=20 scontext=u:r:untrusted_app:s0:c44,c257,c523,c768 tcontext=u:object_r:selinuxfs:s0 tclass=file permissive=0
+03-20 17:22:12.288 19186 19186 W binder:19186_4: type=1400 audit(0.0:424835): avc: denied { getattr } for path="/sys/kernel/tracing/trace_marker" dev="tracefs" ino=2058 scontext=u:r:untrusted_app:s0:c44,c257,c523,c768 tcontext=u:object_r:debugfs_trace_marker:s0 tclass=file permissive=0
+03-20 17:22:12.404 19186 19186 W binder:19186_4: type=1400 audit(0.0:424836): avc: denied { read } for name="policy" dev="selinuxfs" ino=20 scontext=u:r:untrusted_app:s0:c44,c257,c523,c768 tcontext=u:object_r:selinuxfs:s0 tclass=file permissive=0
+03-20 17:22:12.408 19186 19186 W binder:19186_4: type=1400 audit(0.0:424837): avc: denied { getattr } for path="/sys/kernel/tracing/trace_marker" dev="tracefs" ino=2058 scontext=u:r:untrusted_app:s0:c44,c257,c523,c768 tcontext=u:object_r:debugfs_trace_marker:s0 tclass=file permissive=0
+03-20 17:22:12.628 19186 19186 W binder:19186_4: type=1400 audit(0.0:424838): avc: denied { getattr } for path="/sys/kernel/tracing/trace_marker" dev="tracefs" ino=2058 scontext=u:r:untrusted_app:s0:c44,c257,c523,c768 tcontext=u:object_r:debugfs_trace_marker:s0 tclass=file permissive=0
+03-20 17:22:13.564 30254 22322 W soft_error.cpp: [pando::graphql::PandoGraphQLRequestHybrid::assertValid] : Using a PandoGraphQLRequest after it has been consumed. Query name is ScreenTimeSyncMutation
+03-20 17:22:16.821 30254 30522 W RealtimeClientManager: Channel state: MqttChannelState{mConnectionState=DISCONNECTED, mDisconnectionReason=null, mLastConnectionMs=365041632, mLastDisconnectMs=365087762}
+03-20 17:22:16.824 30254 30522 W RealtimeClientManager: Channel state: MqttChannelState{mConnectionState=DISCONNECTED, mDisconnectionReason=null, mLastConnectionMs=365041632, mLastDisconnectMs=365087765}
+03-20 17:22:20.148 11443 11443 W ThreadPoolForeg: type=1400 audit(0.0:424839): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c512,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0 app=com.google.android.gms
+03-20 17:22:21.394  6094 17782 D WM-WorkConstraintsTrack: NetworkRequestConstraintController onCapabilitiesChanged callback
+03-20 17:22:21.892 26315 26315 W ThreadPoolForeg: type=1400 audit(0.0:424840): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c523,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0
+03-20 17:22:24.443  6094 17782 D WM-WorkConstraintsTrack: NetworkRequestConstraintController onCapabilitiesChanged callback
+03-20 17:22:27.480  6094 17782 D WM-WorkConstraintsTrack: NetworkRequestConstraintController onCapabilitiesChanged callback
+03-20 17:22:31.456  5899  5899 W ThreadPoolForeg: type=1400 audit(0.0:424842): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c512,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0 app=com.google.android.gms
+03-20 17:22:33.112 26267 26267 W ThreadPoolForeg: type=1400 audit(0.0:424844): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c523,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0
+03-20 17:22:33.549  6094 17782 D WM-WorkConstraintsTrack: NetworkRequestConstraintController onCapabilitiesChanged callback
+03-20 17:22:36.576  6094 17782 D WM-WorkConstraintsTrack: NetworkRequestConstraintController onCapabilitiesChanged callback
+03-20 17:22:48.753  6094 17782 D WM-WorkConstraintsTrack: NetworkRequestConstraintController onCapabilitiesChanged callback
+03-20 17:22:50.160 11443 11443 W ThreadPoolForeg: type=1400 audit(0.0:424845): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c512,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0 app=com.google.android.gms
+03-20 17:22:51.920 26315 26315 W ThreadPoolForeg: type=1400 audit(0.0:424846): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c523,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0
+03-20 17:22:52.489 30254 30637 E msys    : E[S MSync]_ModularSyncHandleNetworkResponse(1320)=>DB[223] - Encountered a network error (2002: TransientError domain: MNSQUICConnection code: 1 detail: Local error: 0x40000015: 35 seconds timeout)
+03-20 17:22:52.490 30254 30637 E msys    : E[S MSync]_ModularSyncHandleNetworkErrorResponse(1104)=>DB[223] - handle network error response
+03-20 17:22:52.497 30254 30616 W IrisSyncManager: Iris unsubscribed
+03-20 17:22:52.498 30254 30637 E MDCoreSyncManagerImpl: [userId=-1319993715] Unknown event type: 6
+03-20 17:22:52.498 30254 30637 E IgnitionDebug: [userId=-1319993715] Unknown event type: 6
+03-20 17:22:52.503 30254 30566 E msys    : E[N mns:DGWClient]_OnDiskCacheGetData(859)=>Start post callback cache refresh DNS resolution
+03-20 17:22:52.510 30254 30637 E MDCoreSyncManagerImpl: [userId=-1319993715] Unknown event type: 6
+03-20 17:22:52.510 30254 30637 E IgnitionDebug: [userId=-1319993715] Unknown event type: 6
+03-20 17:22:52.554 30254 30566 E msys    : E[N mns:DGWClient]_OnSystemDNSSuccessCallback(465)=>Cache refresh succeeded with system DNS resolver. IP count: 1
+03-20 17:22:52.584 30254 10701 E msys    : E[C mem.context]_NetworkStateChangedCallbackOnExecutionContext(8108)=>[INFO]skip the network state change source=3
+03-20 17:22:52.584 30254 30626 E msys    : E[N MCCWLigerStream]_NetworkChangedCallbackInternal(57)=>skip the network state change source=3
+03-20 17:22:53.073 30254 30637 E MDCoreSyncManagerImpl: [userId=-1319993715] Unknown event type: 6
+03-20 17:22:53.073 30254 30637 E IgnitionDebug: [userId=-1319993715] Unknown event type: 6
+03-20 17:22:54.801  6094 17782 D WM-WorkConstraintsTrack: NetworkRequestConstraintController onCapabilitiesChanged callback
+03-20 17:23:01.464  5899  5899 W ThreadPoolForeg: type=1400 audit(0.0:424848): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c512,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0 app=com.google.android.gms
+03-20 17:23:01.956  5899  5899 W PerfettoTrace: type=1400 audit(0.0:424849): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c512,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0 app=com.google.android.gms
+03-20 17:23:03.124 26267 26267 W ThreadPoolForeg: type=1400 audit(0.0:424850): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c523,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0
+03-20 17:23:20.188 11443 11443 W ThreadPoolForeg: type=1400 audit(0.0:424851): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c512,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0 app=com.google.android.gms
+03-20 17:23:21.932 26315 26315 W ThreadPoolForeg: type=1400 audit(0.0:424852): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c523,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0
+03-20 17:23:31.273  6094 17782 D WM-WorkConstraintsTrack: NetworkRequestConstraintController onCapabilitiesChanged callback
+03-20 17:23:31.492  5899  5899 W ThreadPoolForeg: type=1400 audit(0.0:424854): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c512,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0 app=com.google.android.gms
+03-20 17:23:31.964  5899  5899 W PerfettoTrace: type=1400 audit(0.0:424855): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c512,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0 app=com.google.android.gms
+03-20 17:23:33.144 26267 26267 W ThreadPoolForeg: type=1400 audit(0.0:424856): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c523,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0
+03-20 17:23:34.319  6094 17782 D WM-WorkConstraintsTrack: NetworkRequestConstraintController onCapabilitiesChanged callback
+03-20 17:23:49.019 15926 15939 I Finsky  : [8101] Stats for Executor: BlockingExecutor vaq@49ede6c[Running, pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 53]
+03-20 17:23:49.020 15926 15939 I Finsky  : [8101] Stats for Executor: LightweightExecutor vaq@16aba3b[Running, pool size = 4, active threads = 0, queued tasks = 0, completed tasks = 237]
+03-20 17:23:49.069 15926 15939 I Finsky  : [8101] Stats for Executor: bgExecutor vaq@e6660ce[Running, pool size = 4, active threads = 0, queued tasks = 0, completed tasks = 499]
+03-20 17:23:49.357 15926 15939 I Finsky  : [8101] Stats for Executor: GrpcBackgroundExecutor vaq@54d3462[Running, pool size = 3, active threads = 0, queued tasks = 0, completed tasks = 3]
+03-20 17:23:50.200 11443 11443 W ThreadPoolForeg: type=1400 audit(0.0:424857): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c512,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0 app=com.google.android.gms
+03-20 17:23:51.964 26315 26315 W ThreadPoolForeg: type=1400 audit(0.0:424858): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c523,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0
+03-20 17:23:55.617  6094 17782 D WM-WorkConstraintsTrack: NetworkRequestConstraintController onCapabilitiesChanged callback
+03-20 17:23:58.625  6094 17782 D WM-WorkConstraintsTrack: NetworkRequestConstraintController onCapabilitiesChanged callback
+03-20 17:24:01.500  5899  5899 W ThreadPoolForeg: type=1400 audit(0.0:424860): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c512,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0 app=com.google.android.gms
+03-20 17:24:01.992  5899  5899 W PerfettoTrace: type=1400 audit(0.0:424861): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c512,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0 app=com.google.android.gms
+03-20 17:24:03.156 26267 26267 W ThreadPoolForeg: type=1400 audit(0.0:424862): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=13840 scontext=u:r:gmscore_app:s0:c523,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0
+03-20 17:24:07.939  7998 13203 W ConnectivityManager.CallbackHandler: callback not found for CALLBACK_AVAILABLE message
+03-20 17:24:07.961 13062 13072 W appmanager:auth: Reducing the number of considered missed Gc histogram windows from 156 to 100
+03-20 17:24:18.613 25415 25415 I GoogleInputMethodService: GoogleInputMethodService.onFinishInput():2114 
+03-20 17:24:18.620 25415 25415 I Module  : DeviceLockedStatusModuleProvider$Module.updateDeviceLockedStatus():103 repeatCheckTimes = 0, locked = false
+03-20 17:24:18.622 25415 25415 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1385 onStartInput(EditorInfo{EditorInfo{packageName=com.android.launcher3, inputType=0, inputTypeString=NULL, enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, fieldId=-1, fieldName=null, extras=null, hintText=null, hintLocales=[]}}, false)
+03-20 17:24:18.624 25415 25415 I AndroidIME: LatinIMEBase.updateInputViewCoverNavigation():314 Update input view padding, extendsTouchBelowSpace=false, bottom inset=132
+03-20 17:24:18.625 25415 25415 I Module  : DeviceLockedStatusModuleProvider$Module.updateDeviceLockedStatus():103 repeatCheckTimes = 1, locked = false

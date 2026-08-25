@@ -7,6 +7,7 @@ class UserModel extends Equatable {
   final String phone;
   final String? email;
   final bool isEmailVerified;
+  final bool isAdmin;
   final String? pan;
   final String? aadhar;
   final String? gender;
@@ -21,6 +22,7 @@ class UserModel extends Equatable {
     required this.phone,
     this.email,
     this.isEmailVerified = false,
+    this.isAdmin = false,
     this.pan,
     this.aadhar,
     this.gender,
@@ -37,6 +39,7 @@ class UserModel extends Equatable {
       phone: json['phone'] ?? '',
       email: json['email'],
       isEmailVerified: json['isEmailVerified'] ?? json['is_email_verified'] ?? false,
+      isAdmin: json['isAdmin'] ?? json['is_admin'] ?? false,
       pan: json['pan'],
       aadhar: json['aadhar'],
       gender: json['gender'],
@@ -58,6 +61,7 @@ class UserModel extends Equatable {
       'phone': phone,
       'email': email,
       'isEmailVerified': isEmailVerified,
+      'isAdmin': isAdmin,
       'pan': pan,
       'aadhar': aadhar,
       'gender': gender,
@@ -82,6 +86,7 @@ class UserModel extends Equatable {
     String? phone,
     String? email,
     bool? isEmailVerified,
+    bool? isAdmin,
     String? pan,
     String? aadhar,
     String? gender,
@@ -96,6 +101,7 @@ class UserModel extends Equatable {
       phone: phone ?? this.phone,
       email: email ?? this.email,
       isEmailVerified: isEmailVerified ?? this.isEmailVerified,
+      isAdmin: isAdmin ?? this.isAdmin,
       pan: pan ?? this.pan,
       aadhar: aadhar ?? this.aadhar,
       gender: gender ?? this.gender,
@@ -130,6 +136,7 @@ class UserModel extends Equatable {
     phone,
     email,
     isEmailVerified,
+    isAdmin,
     pan,
     aadhar,
     gender,

@@ -27,15 +27,15 @@ class NotificationsPage extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
 
-          List<NotificationModel> _notifications = [];
+          List<NotificationModel> notifications = [];
           if (state is NotificationLoaded) {
-            _notifications = state.notifications;
+            notifications = state.notifications;
           }
 
           return RefreshIndicator(
             onRefresh: () => context.read<NotificationCubit>().fetchNotifications(),
             color: KhaataTheme.primaryBlue,
-            child: _notifications.isEmpty
+            child: notifications.isEmpty
                 ? ListView(
                     physics: const AlwaysScrollableScrollPhysics(),
                     children: [
@@ -60,9 +60,9 @@ class NotificationsPage extends StatelessWidget {
                 : ListView.builder(
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding: EdgeInsets.all(16.w),
-                    itemCount: _notifications.length,
+                    itemCount: notifications.length,
                     itemBuilder: (context, index) {
-                      final notif = _notifications[index];
+                      final notif = notifications[index];
                       return _NotificationTile(
                         notification: notif,
                         onTap: () => context.read<NotificationCubit>().markAsRead(notif, index),
@@ -94,7 +94,7 @@ class _NotificationTile extends StatelessWidget {
           color: isRead ? Colors.white : const Color(0xFFF0F7FF), // slight blue tint if unread
           borderRadius: BorderRadius.circular(16.r),
           border: Border.all(
-            color: isRead ? Colors.grey.shade200 : KhaataTheme.primaryBlue.withOpacity(0.3),
+            color: isRead ? Colors.grey.shade200 : KhaataTheme.primaryBlue.withValues(alpha: 0.3),
           ),
         ),
         child: Row(
@@ -103,7 +103,7 @@ class _NotificationTile extends StatelessWidget {
             Container(
               padding: EdgeInsets.all(10.w),
               decoration: BoxDecoration(
-                color: isRead ? Colors.grey.shade100 : KhaataTheme.primaryBlue.withOpacity(0.1),
+                color: isRead ? Colors.grey.shade100 : KhaataTheme.primaryBlue.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(

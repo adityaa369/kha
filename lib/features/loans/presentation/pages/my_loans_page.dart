@@ -456,8 +456,7 @@ class _LoanCard extends StatelessWidget {
                     ],
                   ),
                   SizedBox(height: 12.h),
-                  if (loan.status == 'pending_otp' ||
-                      loan.status == 'pending_approval')
+                  if (loan.loanStatus.isPending)
                     SizedBox(
                       width: double.infinity,
                       height: 48.h,

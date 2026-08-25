@@ -38,6 +38,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
       backgroundColor: KhaataTheme.primaryBlue,
       body: BlocConsumer<AuthCubit, AuthState>(
         listener: (context, state) {
+          if (!mounted) return;
           if (state is AuthError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(

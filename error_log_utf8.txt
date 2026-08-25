@@ -1,0 +1,92 @@
+﻿git : remote: error: 
+GH013: Repository rule 
+violations found for refs/
+heads/feat/chit-dashboard.
+        
+At line:1 char:1
++ git push -u origin 
+feat/chit-dashboard > 
+error_log.txt 2>&1 ; 
+python  ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~
+    + CategoryInfo        
+      : NotSpecified: (r  
+  emote: error: ...hboa   
+ rd.        :String) [    
+], RemoteException
+    + FullyQualifiedError 
+   Id : NativeCommandErr  
+  or
+ 
+remote: 
+remote: - GITHUB PUSH 
+PROTECTION        
+remote:   ΓÇöΓÇöΓÇöΓÇöΓÇöΓ
+ÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇö
+ΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇ
+öΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓ
+ÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇö
+ΓÇö        
+remote:     Resolve the 
+following violations 
+before pushing again      
+  
+remote: 
+remote:     - Push cannot 
+contain secrets        
+remote: 
+remote:             
+remote:      (?) Learn 
+how to resolve a blocked 
+push        
+remote:      https://docs.
+github.com/code-security/s
+ecret-scanning/working-wit
+h-secret-scanning-and-push
+-protection/working-with-p
+ush-protection-from-the-co
+mmand-line#resolving-a-blo
+cked-push        
+remote:             
+remote:             
+remote:       ΓÇöΓÇö 
+Google Cloud Service 
+Account Credentials ΓÇöΓÇö
+ΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇö  
+      
+remote:        locations: 
+       
+remote:          - 
+commit: 5388c681fc4608a1dd
+97a56c2b29225caa8c6b14    
+    
+remote:            path: s
+erver/firebase_env_value.t
+xt:1        
+remote:             
+remote:        (?) To 
+push, remove secret from 
+commit(s) or follow this 
+URL to allow the secret.  
+      
+remote:        https://git
+hub.com/adityaa369/kha/sec
+urity/secret-scanning/unbl
+ock-secret/3BqtgqiGRqj0m8t
+SvAy1OwLKxZs        
+remote:             
+remote: 
+remote: 
+To https://github.com/adit
+yaa369/kha.git
+ ! [remote rejected] 
+feat/chit-dashboard -> 
+feat/chit-dashboard (push 
+declined due to 
+repository rule 
+violations)
+error: failed to push 
+some refs to 'https://gith
+ub.com/adityaa369/kha.git'

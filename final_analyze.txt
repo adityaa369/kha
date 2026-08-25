@@ -1,0 +1,41 @@
+﻿
+ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+Γöé A new version of Flutter is available!                  Γöé
+Γöé                                                         Γöé
+Γöé To update to the latest version, run "flutter upgrade". Γöé
+ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ
+Analyzing khatha...                                             
+
+   info - The local variable '_notifications' starts with an underscore - lib\features\home\presentation\pages\notifications_page.dart:30:35 - no_leading_underscores_for_local_identifiers
+   info - Statements in an if should be enclosed in a block - lib\features\loans\presentation\pages\business_loan_details_page.dart:84:9 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\loans\presentation\pages\business_loan_details_page.dart:186:23 - curly_braces_in_flow_control_structures
+   info - Use 'const' with the constructor to improve performance - lib\features\loans\presentation\pages\business_loan_details_page.dart:462:15 - prefer_const_constructors
+   info - Statements in an if should be enclosed in a block - lib\features\loans\presentation\pages\business_loan_details_page.dart:645:7 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\loans\presentation\pages\business_loan_details_page.dart:815:27 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\loans\presentation\pages\hand_loan_details_page.dart:84:9 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\loans\presentation\pages\hand_loan_details_page.dart:186:23 - curly_braces_in_flow_control_structures
+   info - Use 'const' with the constructor to improve performance - lib\features\loans\presentation\pages\hand_loan_details_page.dart:462:15 - prefer_const_constructors
+   info - Statements in an if should be enclosed in a block - lib\features\loans\presentation\pages\hand_loan_details_page.dart:645:7 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\loans\presentation\pages\hand_loan_details_page.dart:815:27 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\loans\presentation\pages\interest_loan_details_page.dart:90:9 - curly_braces_in_flow_control_structures
+   info - Use 'const' with the constructor to improve performance - lib\features\loans\presentation\pages\lender_loan_details_page.dart:24:20 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\loans\presentation\pages\lender_loan_details_page.dart:25:7 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\loans\presentation\pages\lender_loan_details_page.dart:26:7 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\loans\presentation\pages\lender_loan_details_page.dart:29:24 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\loans\presentation\pages\lender_loan_details_page.dart:30:7 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\loans\presentation\pages\lender_loan_details_page.dart:31:7 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\loans\presentation\pages\lender_loan_details_page.dart:34:24 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\loans\presentation\pages\lender_loan_details_page.dart:35:7 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\loans\presentation\pages\lender_loan_details_page.dart:36:7 - prefer_const_constructors
+   info - Statements in an if should be enclosed in a block - lib\features\loans\presentation\pages\lender_loan_details_page.dart:1000:27 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\loans\presentation\pages\lender_loan_details_page.dart:1359:17 - curly_braces_in_flow_control_structures
+   info - Use 'const' with the constructor to improve performance - lib\main.dart:76:17 - prefer_const_constructors
+warning - Unused import: 'package:khatha/data/models/chit_invite_model.dart' - test\features\chit_funds\chit_fund_lifecycle_test.dart:8:8 - unused_import
+
+flutter : 25 issues found. (ran in 119.1s)
+At line:1 char:1
++ flutter analyze 2>&1 | Out-File -Encoding utf8 final_analyze.txt; Get ...
++ ~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (25 issues found. (ran in 119.1s):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 

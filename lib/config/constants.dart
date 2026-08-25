@@ -1,4 +1,3 @@
-import '../core/config/env_config.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AppConstants {
@@ -36,7 +35,8 @@ class AppConstants {
   // API Configurations
   
 
+  static const String _prodUrl = 'https://khataa-backend.onrender.com';
   static String get baseUrl {
-    return '${EnvConfig.apiUrl}/api';
+    return dotenv.env['BASE_URL'] ?? '$_prodUrl/api';
   }
 }

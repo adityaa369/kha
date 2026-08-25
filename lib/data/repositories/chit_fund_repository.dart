@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import '../../core/network/api_client.dart';
 import '../../core/utils/secure_storage.dart';
 import '../models/chit_fund_model.dart';
@@ -50,7 +51,7 @@ class ChitFundRepository {
     try {
       final cached = await SecureStorage.getCachedVacantChits();
       if (cached == null) return null;
-      final List list = jsonDecode(cached);
+      final List list = await compute((String s) => jsonDecode(s) as List, cached);
       return list.map((e) => ChitFundModel.fromJson(e)).toList();
     } catch (_) {
       return null;
@@ -80,7 +81,7 @@ class ChitFundRepository {
     try {
       final cached = await SecureStorage.getCachedMyInvites();
       if (cached == null) return null;
-      final List list = jsonDecode(cached);
+      final List list = await compute((String s) => jsonDecode(s) as List, cached);
       return list.map((e) => ChitInviteModel.fromJson(e)).toList();
     } catch (_) {
       return null;
@@ -102,7 +103,7 @@ class ChitFundRepository {
     try {
       final cached = await SecureStorage.getCachedMyChits();
       if (cached == null) return null;
-      final List list = jsonDecode(cached);
+      final List list = await compute((String s) => jsonDecode(s) as List, cached);
       return List<Map<String, dynamic>>.from(list);
     } catch (_) {
       return null;
@@ -232,3 +233,4 @@ class ChitFundRepository {
     return true;
   }
 }
+

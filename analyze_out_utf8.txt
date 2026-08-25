@@ -1,24 +1,31 @@
-﻿Analyzing chit_group_admin_page.dart...                         
+﻿Analyzing khatha...                                             
 
-   info - Use 'const' with the constructor to improve performance - lib\features\chit_funds\presentation\pages\chit_group_admin_page.dart:125:20 - prefer_const_constructors
-   info - Use 'const' with the constructor to improve performance - lib\features\chit_funds\presentation\pages\chit_group_admin_page.dart:125:34 - prefer_const_constructors
-   info - Use 'const' with the constructor to improve performance - lib\features\chit_funds\presentation\pages\chit_group_admin_page.dart:125:74 - prefer_const_constructors
-   info - Use 'const' with the constructor to improve performance - lib\features\chit_funds\presentation\pages\chit_group_admin_page.dart:214:77 - prefer_const_constructors
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chit_funds\presentation\pages\chit_group_admin_page.dart:266:60 - deprecated_member_use
-   info - Use 'const' with the constructor to improve performance - lib\features\chit_funds\presentation\pages\chit_group_admin_page.dart:269:28 - prefer_const_constructors
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chit_funds\presentation\pages\chit_group_admin_page.dart:290:50 - deprecated_member_use
-   info - Use 'const' with the constructor to improve performance - lib\features\chit_funds\presentation\pages\chit_group_admin_page.dart:308:30 - prefer_const_constructors
-   info - The local variable '_bidController' starts with an underscore - lib\features\chit_funds\presentation\pages\chit_group_admin_page.dart:354:34 - no_leading_underscores_for_local_identifiers
-   info - The local variable '_formKey' starts with an underscore - lib\features\chit_funds\presentation\pages\chit_group_admin_page.dart:355:12 - no_leading_underscores_for_local_identifiers
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chit_funds\presentation\pages\chit_group_admin_page.dart:492:43 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chit_funds\presentation\pages\chit_group_admin_page.dart:547:44 - deprecated_member_use
-  error - The method 'openAuctionMonth' isn't defined for the type 'ChitFundCubit' - lib\features\chit_funds\presentation\pages\chit_group_admin_page.dart:643:45 - undefined_method
-  error - The method 'getAuctionBids' isn't defined for the type 'ChitFundCubit' - lib\features\chit_funds\presentation\pages\chit_group_admin_page.dart:679:30 - undefined_method
-   info - Use 'const' with the constructor to improve performance - lib\features\chit_funds\presentation\pages\chit_group_admin_page.dart:701:28 - prefer_const_constructors
-   info - Use 'const' with the constructor to improve performance - lib\features\chit_funds\presentation\pages\chit_group_admin_page.dart:701:52 - prefer_const_constructors
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chit_funds\presentation\pages\chit_group_admin_page.dart:718:68 - deprecated_member_use
-   info - Use 'const' with the constructor to improve performance - lib\features\chit_funds\presentation\pages\chit_group_admin_page.dart:719:89 - prefer_const_constructors
-  error - The method 'verifyMonthPayment' isn't defined for the type 'ChitFundCubit' - lib\features\chit_funds\presentation\pages\chit_group_admin_page.dart:771:51 - undefined_method
-   info - Unnecessary use of 'toList' in a spread - lib\features\chit_funds\presentation\pages\chit_group_admin_page.dart:791:12 - unnecessary_to_list_in_spreads
-  error - The method 'submitBid' isn't defined for the type 'ChitFundCubit' - lib\features\chit_funds\presentation\pages\chit_group_admin_page.dart:840:49 - undefined_method
+warning - Unused import: '../../../../data/models/admin_stats_model.dart' - lib\features\admin\presentation\pages\admin_dashboard_page.dart:6:8 - unused_import
+warning - The value of the local variable 'isVerified' isn't used - lib\features\admin\presentation\pages\admin_dashboard_page.dart:321:11 - unused_local_variable
+   info - The local variable '_notifications' starts with an underscore - lib\features\home\presentation\pages\notifications_page.dart:30:35 - no_leading_underscores_for_local_identifiers
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\pages\notifications_page.dart:97:76 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\home\presentation\pages\notifications_page.dart:106:80 - deprecated_member_use
+   info - Statements in an if should be enclosed in a block - lib\features\loans\presentation\pages\business_loan_details_page.dart:84:9 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\loans\presentation\pages\business_loan_details_page.dart:186:23 - curly_braces_in_flow_control_structures
+   info - Use 'const' with the constructor to improve performance - lib\features\loans\presentation\pages\business_loan_details_page.dart:462:15 - prefer_const_constructors
+   info - Statements in an if should be enclosed in a block - lib\features\loans\presentation\pages\business_loan_details_page.dart:645:7 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\loans\presentation\pages\business_loan_details_page.dart:815:27 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\loans\presentation\pages\hand_loan_details_page.dart:84:9 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\loans\presentation\pages\hand_loan_details_page.dart:186:23 - curly_braces_in_flow_control_structures
+   info - Use 'const' with the constructor to improve performance - lib\features\loans\presentation\pages\hand_loan_details_page.dart:462:15 - prefer_const_constructors
+   info - Statements in an if should be enclosed in a block - lib\features\loans\presentation\pages\hand_loan_details_page.dart:645:7 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\loans\presentation\pages\hand_loan_details_page.dart:815:27 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\loans\presentation\pages\interest_loan_details_page.dart:90:9 - curly_braces_in_flow_control_structures
+   info - Use 'const' with the constructor to improve performance - lib\features\loans\presentation\pages\lender_loan_details_page.dart:24:20 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\loans\presentation\pages\lender_loan_details_page.dart:25:7 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\loans\presentation\pages\lender_loan_details_page.dart:26:7 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\loans\presentation\pages\lender_loan_details_page.dart:29:24 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\loans\presentation\pages\lender_loan_details_page.dart:30:7 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\loans\presentation\pages\lender_loan_details_page.dart:31:7 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\loans\presentation\pages\lender_loan_details_page.dart:34:24 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\loans\presentation\pages\lender_loan_details_page.dart:35:7 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\loans\presentation\pages\lender_loan_details_page.dart:36:7 - prefer_const_constructors
+   info - Statements in an if should be enclosed in a block - lib\features\loans\presentation\pages\lender_loan_details_page.dart:1000:27 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\loans\presentation\pages\lender_loan_details_page.dart:1359:17 - curly_braces_in_flow_control_structures
+   info - Use 'const' with the constructor to improve performance - lib\main.dart:77:17 - prefer_const_constructors
 

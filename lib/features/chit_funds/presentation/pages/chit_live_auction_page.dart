@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -48,6 +49,7 @@ class _ChitLiveAuctionPageState extends State<ChitLiveAuctionPage> {
     
     _socket.onConnect((_) {
       if (!mounted) return;
+      _reconnectAttempts = 0; // Reset backoff on successful connect
       setState(() => _isConnected = true);
       final authState = context.read<AuthCubit>().state;
       String userId = 'unknown';
@@ -85,6 +87,20 @@ class _ChitLiveAuctionPageState extends State<ChitLiveAuctionPage> {
     _socket.onDisconnect((_) {
       if (!mounted) return;
       setState(() => _isConnected = false);
+      _scheduleReconnect();
+    });
+  }
+
+  int _reconnectAttempts = 0;
+
+  void _scheduleReconnect() {
+    if (!mounted || _auctionEnded) return;
+    // Exponential backoff: 3s, 6s, 12s, 24s, 30s cap
+    final delay = Duration(seconds: math.min(3 * math.pow(2, _reconnectAttempts).toInt(), 30));
+    Future.delayed(delay, () {
+      if (!mounted || _isConnected || _auctionEnded) return;
+      _reconnectAttempts++;
+      _socket.connect();
     });
   }
 
