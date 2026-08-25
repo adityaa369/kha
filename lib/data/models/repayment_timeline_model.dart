@@ -80,6 +80,7 @@ class RepaymentTimelineModel extends Equatable {
   final String? reason;
   final int? durationMonths;
   final DateTime? startDate;
+  final String? anchorSource;
   final List<RepaymentPeriodModel> timeline;
   final List<RepaymentTransactionModel> postTermTransactions;
 
@@ -88,6 +89,7 @@ class RepaymentTimelineModel extends Equatable {
     this.reason,
     this.durationMonths,
     this.startDate,
+    this.anchorSource,
     required this.timeline,
     required this.postTermTransactions,
   });
@@ -107,6 +109,7 @@ class RepaymentTimelineModel extends Equatable {
       trackingEnabled: true,
       durationMonths: data['durationMonths'] as int?,
       startDate: data['startDate'] != null ? DateTime.parse(data['startDate']) : null,
+      anchorSource: data['anchorSource'] as String?,
       timeline: (data['timeline'] as List?)
               ?.map((e) => RepaymentPeriodModel.fromJson(e))
               .toList() ??
@@ -124,7 +127,9 @@ class RepaymentTimelineModel extends Equatable {
         reason,
         durationMonths,
         startDate,
+        anchorSource,
         timeline,
         postTermTransactions,
       ];
 }
+
