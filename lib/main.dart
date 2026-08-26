@@ -150,14 +150,22 @@ class KhaataApp extends StatelessWidget {
           designSize: const Size(375, 812),
           minTextAdapt: true,
           splitScreenMode: true,
+          child: MaterialApp.router(
+            debugShowCheckedModeBanner: false,
+            title: 'Khaata',
+            theme: KhaataTheme.lightTheme,
+            routerConfig: router,
+          ),
           builder: (context, child) {
             return BlocBuilder<SystemStateCubit, SystemState>(
               builder: (context, systemState) {
-                return Stack(
-                  children: [
-                    if (child != null) child,
-                    if (systemState == SystemState.financialOperationsPaused)
-                      Positioned(
+                return Directionality(
+                  textDirection: TextDirection.ltr,
+                  child: Stack(
+                    children: [
+                      if (child != null) child,
+                      if (systemState == SystemState.financialOperationsPaused)
+                        Positioned(
                         top: 40.h,
                         left: 16.w,
                         right: 16.w,
@@ -216,6 +224,7 @@ class KhaataApp extends StatelessWidget {
                         ),
                       ),
                   ],
+                ),
                 );
               }
             );
