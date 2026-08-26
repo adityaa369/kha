@@ -168,7 +168,7 @@ class LoanRepository extends BaseRepository {
 
   Future<void> sendPaymentNudge(String loanId) async {
     try {
-      final response = await _apiClient.post(
+      final response = await ApiClient().post(
         '/loans/$loanId/payment-nudge',
         data: {},
       );

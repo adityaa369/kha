@@ -395,7 +395,7 @@ class LenderLoanDetailsPage extends StatelessWidget {
   }
 
   Widget _loanProgressCard(LoanModel loan, _TypeTheme theme, int duration, int paidMonths, double progress) {
-    final nextDue = loan.startDate.add(Duration(days: (paidMonths + 1) * 30));
+    final nextDue = (loan.startDate ?? DateTime.now()).add(Duration(days: (paidMonths + 1) * 30));
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
@@ -538,7 +538,7 @@ class LenderLoanDetailsPage extends StatelessWidget {
             _txTitle(tx.type as String? ?? ''),
             tx.note as String? ?? '',
             _txAmountStr(tx.type as String? ?? '', (tx.amount as num?)?.toDouble() ?? 0),
-            _txDateStr(tx['recordedAt']),
+            _txDateStr(tx.recordedAt),
             _txIsPositive(tx.type as String? ?? ''),
           )),
       ],
@@ -694,7 +694,7 @@ class LenderLoanDetailsPage extends StatelessWidget {
               child: Row(
                 children: List.generate(duration, (index) {
                   final isPaid = index < paidMonths;
-                  final dueDate = loan.startDate.add(
+                  final dueDate = (loan.startDate ?? DateTime.now()).add(
                     Duration(days: (index + 1) * 30),
                   );
 

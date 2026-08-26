@@ -855,7 +855,7 @@ class _PaymentsSection extends StatelessWidget {
           final progressVal = loan.progress.clamp(0.0, 1.0);
           final completedMonths = (duration * progressVal).round();
 
-          final nextDueDate = loan.startDate.add(
+          final nextDueDate = (loan.startDate ?? DateTime.now()).add(
             Duration(days: (completedMonths + 1) * 30),
           );
 

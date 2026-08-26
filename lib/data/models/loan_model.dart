@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 ﻿import 'package:equatable/equatable.dart';
 import 'dart:math' as math;
 
@@ -14,6 +15,9 @@ enum LoanStatus {
 
   final String value;
   const LoanStatus(this.value);
+
+  bool get isPending => this == LoanStatus.pendingApproval || this == LoanStatus.pendingOtp;
+  bool get isFinished => this == LoanStatus.completed || this == LoanStatus.closed || this == LoanStatus.defaulted || this == LoanStatus.rejected;
 
   factory LoanStatus.fromString(String status) {
     return LoanStatus.values.firstWhere(
@@ -208,6 +212,29 @@ class LoanModel extends Equatable {
   double get emiAmount => emiAmountPaise / 100;
   double get totalPayableAmount => totalPayablePaise / 100;
   double get paidAmount => paidAmountPaise / 100;
+
+  
+  String? get otp => id.length >= 6 ? id.substring(0, 6) : null;
+  LoanStatus get loanStatus => LoanStatus.fromString(status);
+  double? get totalPayable => totalPayablePaise > 0 ? totalPayableAmount : null;
+  Color get statusColor {
+    switch (status) {
+      case 'pending_approval':
+      case 'pending_otp':
+        return const Color(0xFFF59E0B);
+      case 'active':
+      case 'completed':
+      case 'closed':
+        return const Color(0xFF10B981);
+      case 'due_soon':
+        return const Color(0xFFF59E0B);
+      case 'overdue':
+      case 'defaulted':
+        return const Color(0xFFEF4444);
+      default:
+        return const Color(0xFF10B981);
+    }
+  }
 
   double get remainingAmount {
     // Rely STRICTLY on backend values to avoid conflicting arithmetic.

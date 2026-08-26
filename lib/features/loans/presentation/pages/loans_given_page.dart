@@ -190,7 +190,7 @@ class LoansGivenPage extends StatelessWidget {
           itemBuilder: (context, index) {
             final loan = filteredGivenList[index];
             final dateStr =
-                '${loan.startDate.day} ${_getMonthName(loan.startDate.month)} ${loan.startDate.year}';
+                '${(loan.startDate ?? DateTime.now()).day} ${_getMonthName((loan.startDate ?? DateTime.now()).month)} ${(loan.startDate ?? DateTime.now()).year}';
 
             // Generate initials color dynamically
             final colorPairs = [

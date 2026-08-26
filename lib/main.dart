@@ -109,7 +109,7 @@ void main() async {
     await SentryFlutter.init((options) {
       options.dsn = dotenv.env['SENTRY_DSN'] ?? '';
       options.tracesSampleRate = 1.0;
-    }, appRunner: () => runApp(KhaataApp(systemStateCubit: systemStateCubit)));
+    }, appRunner: () => runApp(const KhaataApp()));
   } catch (globalError, stackTrace) {
     runApp(
       MaterialApp(
@@ -137,6 +137,7 @@ class KhaataApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
+        BlocProvider.value(value: systemStateCubit),
         BlocProvider(create: (_) => AuthCubit()..checkAuthStatus()),
         BlocProvider(create: (_) => LoanCubit()),
         BlocProvider(create: (_) => PortfolioCubit(LoanRepository())),

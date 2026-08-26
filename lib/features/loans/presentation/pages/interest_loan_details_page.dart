@@ -252,7 +252,7 @@ class InterestLoanDetailsPage extends StatelessWidget {
 
   Widget _statsCard(LoanModel loan) {
     final startStr =
-        '${loan.startDate.day} ${_month(loan.startDate.month)} ${loan.startDate.year}';
+        '${(loan.startDate ?? DateTime.now()).day} ${_month((loan.startDate ?? DateTime.now()).month)} ${(loan.startDate ?? DateTime.now()).year}';
     final endStr = loan.endDate != null
         ? '${loan.endDate!.day} ${_month(loan.endDate!.month)} ${loan.endDate!.year}'
         : '-';
@@ -360,7 +360,7 @@ class InterestLoanDetailsPage extends StatelessWidget {
                     Expanded(
                       child: _statItem(
                         'Paid Months',
-                        '$paidMonths / $duration',
+                        '0 / $duration',
                       ),
                     ),
                     SizedBox(width: 12.w),
@@ -554,7 +554,7 @@ class InterestLoanDetailsPage extends StatelessWidget {
           ),
           SizedBox(height: 4.h),
           Text(
-            '$paidMonths of $duration months paid',
+            '0 of $duration months paid',
             style: TextStyle(fontSize: 12.sp, color: Colors.grey.shade500),
           ),
           SizedBox(height: 12.h),

@@ -255,7 +255,6 @@ class ProfilePage extends StatelessWidget {
                             subtitle: 'Manage your active devices and security logs',
                             onTap: () => context.push('/profile/security'),
                           ),
-                          ),
                           Divider(
                             height: 1,
                             indent: 56.w,
