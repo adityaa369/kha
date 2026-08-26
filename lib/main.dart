@@ -197,7 +197,7 @@ class KhaataApp extends StatelessWidget {
                                     ElevatedButton(
                                       onPressed: () async {
                                         try {
-                                          final response = await ApiClient().get('/health/live');
+                                          final response = await ApiClient().dio.get('https://khataa-backend.onrender.com/health/live');
                                           if (response.statusCode == 200) {
                                             if (context.mounted) {
                                               context.read<SystemStateCubit>().resumeOperations();
