@@ -63,11 +63,9 @@ class _HomeViewState extends State<_HomeView> {
       }
     });
 
-    // Trigger immediately if already AuthenticatedFull
-    if (context.read<AuthCubit>().state is AuthenticatedFull) {
-      if (context.read<LoanCubit>().state is LoanInitial) {
-        context.read<LoanCubit>().fetchLoans();
-      }
+    // Trigger immediately
+    if (context.read<LoanCubit>().state is LoanInitial) {
+      context.read<LoanCubit>().fetchLoans();
     }
   }
 
@@ -820,13 +818,32 @@ class _PaymentsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<LoanCubit, LoanState>(
-      builder: (context, state) {
-        if (state is! LoansLoaded) {
-          return Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
-            child: const Center(child: CircularProgressIndicator()),
-          );
-        }
+        builder: (context, state) {
+          if (state is LoanError) {
+            return Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('Failed to load loans', style: TextStyle(color: Colors.red, fontSize: 14.sp)),
+                    SizedBox(height: 8.h),
+                    TextButton(
+                      onPressed: () => context.read<LoanCubit>().fetchLoans(),
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+          
+          if (state is! LoansLoaded) {
+            return Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
+              child: const Center(child: CircularProgressIndicator()),
+            );
+          }
 
         final loans = state.myLoans;
         final now = DateTime.now();

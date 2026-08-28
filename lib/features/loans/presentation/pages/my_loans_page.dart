@@ -153,10 +153,7 @@ class _MyLoansPageState extends State<MyLoansPage>
             child: BlocBuilder<LoanCubit, LoanState>(
               builder: (context, state) {
                 if (state is LoanInitial) {
-                  final authState = context.read<AuthCubit>().state;
-                  if (authState is AuthenticatedFull) {
-                    context.read<LoanCubit>().fetchLoans();
-                  }
+                  context.read<LoanCubit>().fetchLoans();
                   return const Center(child: CircularProgressIndicator());
                 }
 

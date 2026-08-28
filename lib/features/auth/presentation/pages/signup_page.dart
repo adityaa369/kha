@@ -66,7 +66,8 @@ class _SignupPageState extends State<SignupPage> {
     _dobController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
-    _otpController.dispose();
+    final otpCtrl = _otpController;
+    Future.delayed(const Duration(milliseconds: 500), () => otpCtrl.dispose());
     _resendTimer?.cancel();
     super.dispose();
   }

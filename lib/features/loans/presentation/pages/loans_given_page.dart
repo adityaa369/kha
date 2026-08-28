@@ -131,10 +131,7 @@ class LoansGivenPage extends StatelessWidget {
 
   Widget _buildLoanList(BuildContext context, LoanState state) {
     if (state is LoanInitial) {
-      final authState = context.read<AuthCubit>().state;
-      if (authState is AuthenticatedFull) {
-        context.read<LoanCubit>().fetchLoans();
-      }
+      context.read<LoanCubit>().fetchLoans();
       return const Center(child: CircularProgressIndicator());
     }
 
