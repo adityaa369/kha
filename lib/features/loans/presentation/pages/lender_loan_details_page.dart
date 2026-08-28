@@ -1205,7 +1205,12 @@ class LenderLoanDetailsPage extends StatelessWidget {
               if (loan.status == 'pending_otp') ...[
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () => context.push(AppConstants.loanConfirmation, extra: loan),
+                    onPressed: () => context.push('/loan-confirmation', extra: {
+                        'loan_id': loan.id,
+                        'borrower_name': loan.borrowerName,
+                        'borrower_phone': loan.mobile,
+                        'amount': loan.amountPaise,
+                      }),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFD97706),
                       foregroundColor: Colors.white,

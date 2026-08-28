@@ -115,7 +115,7 @@ class LoanRepository extends BaseRepository {
   }
 
     Future<void> deleteLoan(String loanId) async {
-    final response = await _apiClient.delete('/loans/$loanId');
+    final response = await _api.delete('/loans/$loanId');
     if (response.statusCode != 200) {
       throw Exception('Failed to delete loan');
     }
