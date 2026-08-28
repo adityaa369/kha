@@ -70,6 +70,32 @@ class TransactionModel extends Equatable {
   List<Object?> get props => [type, amountPaise, note, recordedAt, recordedBy];
 }
 
+class MonthTrackingModel extends Equatable {
+  final int monthIndex;
+  final String status;
+  final DateTime? markedPaidAt;
+  final String? markedBy;
+
+  const MonthTrackingModel({
+    required this.monthIndex,
+    required this.status,
+    this.markedPaidAt,
+    this.markedBy,
+  });
+
+  factory MonthTrackingModel.fromJson(Map<String, dynamic> json) {
+    return MonthTrackingModel(
+      monthIndex: json['monthIndex'] as int? ?? 1,
+      status: json['status'] as String? ?? 'unpaid',
+      markedPaidAt: json['markedPaidAt'] != null ? DateTime.tryParse(json['markedPaidAt'].toString()) : null,
+      markedBy: json['markedBy'] as String?,
+    );
+  }
+
+  @override
+  List<Object?> get props => [monthIndex, status, markedPaidAt, markedBy];
+}
+
 class LoanModel extends Equatable {
   final String id;
   final String? lenderId;
@@ -98,6 +124,7 @@ class LoanModel extends Equatable {
 
   final String? documentUrl;
   final List<TransactionModel> transactions;
+  final List<MonthTrackingModel> monthsTracking;
 
   const LoanModel({
     required this.id,
@@ -125,6 +152,7 @@ class LoanModel extends Equatable {
     this.paidAmountPaise = 0,
     this.documentUrl,
     this.transactions = const [],
+    this.monthsTracking = const [],
   });
 
   factory LoanModel.fromJson(Map<String, dynamic> json) {
@@ -138,6 +166,13 @@ class LoanModel extends Equatable {
     List<TransactionModel> parseTransactions(dynamic txns) {
       if (txns is List) {
         return txns.map((t) => TransactionModel.fromJson(t as Map<String, dynamic>)).toList();
+      }
+      return [];
+    }
+
+    List<MonthTrackingModel> parseMonthsTracking(dynamic months) {
+      if (months is List) {
+        return months.map((m) => MonthTrackingModel.fromJson(m as Map<String, dynamic>)).toList();
       }
       return [];
     }
@@ -170,6 +205,7 @@ class LoanModel extends Equatable {
       paidAmountPaise: parsePaise('paidAmountPaise', 'paidAmount'),
       documentUrl: json['documentUrl'] ?? json['document_url'],
       transactions: parseTransactions(json['transactions']),
+      monthsTracking: parseMonthsTracking(json['monthsTracking']),
     );
   }
 
@@ -301,7 +337,7 @@ class LoanModel extends Equatable {
   List<Object?> get props => [
     id, lenderId, userId, borrowerName, lenderName, lenderPhone,
     amountPaise, status, progress, startDate, type, emiAmountPaise,
-    totalPayablePaise, documentUrl, paidAmountPaise, transactions,
+    totalPayablePaise, documentUrl, paidAmountPaise, transactions, monthsTracking
   ];
 }
 

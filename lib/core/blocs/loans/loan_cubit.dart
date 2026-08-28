@@ -1,4 +1,4 @@
-﻿import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'loan_state.dart';
 import '../../../../data/repositories/loan_repository.dart';
 import '../../error/failures.dart';
@@ -173,9 +173,9 @@ class LoanCubit extends Cubit<LoanState> {
     }
   }
 
-  Future<bool> recordPayment(String loanId, int amountPaise) async {
+  Future<bool> recordPayment(String loanId, int amount, String otp, String verificationId) async {
       try {
-        final success = await _repository.recordPayment(loanId, amountPaise);
+        final success = await _repository.recordPayment(loanId, amount, otp, verificationId);
         if (success) await fetchLoans();
         return success;
       } on Failure catch (f) {
@@ -187,9 +187,9 @@ class LoanCubit extends Cubit<LoanState> {
       }
     }
 
-  Future<bool> recordInterest(String loanId, int amountPaise) async {
+  Future<bool> recordInterest(String loanId, int amount, String otp, String verificationId) async {
     try {
-      final success = await _repository.recordInterest(loanId, amountPaise);
+      final success = await _repository.recordInterest(loanId, amount, otp, verificationId);
       if (success) await fetchLoans();
       return success;
     } on Failure catch (f) {
@@ -197,6 +197,20 @@ class LoanCubit extends Cubit<LoanState> {
       return false;
     } catch (e) {
       emit(LoanError('Failed to record interest payment: $e'));
+      return false;
+    }
+  }
+
+  Future<bool> toggleMonthStatus(String loanId, int monthIndex, String status) async {
+    try {
+      final success = await _repository.toggleMonthStatus(loanId, monthIndex, status);
+      if (success) await fetchLoans();
+      return success;
+    } on Failure catch (f) {
+      emit(LoanError(f.message));
+      return false;
+    } catch (e) {
+      emit(LoanError('Failed to toggle month status: $e'));
       return false;
     }
   }

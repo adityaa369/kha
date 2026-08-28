@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import '../models/loan_model.dart';
 import '../models/portfolio_summary_model.dart';
@@ -183,11 +183,11 @@ class LoanRepository extends BaseRepository {
     }
   }
 
-  Future<bool> recordPayment(String loanId, int amountPaise) async {
+  Future<bool> recordPayment(String loanId, int amount, String otp, String verificationId) async {
     return await handleApiCall(() async {
       final response = await _api.post(
         '/loans/$loanId/record-payment',
-        data: {'amount': amountPaise},
+        data: {'amount': amount, 'otp': otp, 'verificationId': verificationId},
       );
       final data = response.data;
       if (data is Map && data['success'] == true) return true;
@@ -196,16 +196,29 @@ class LoanRepository extends BaseRepository {
     });
   }
 
-  Future<bool> recordInterest(String loanId, int amountPaise) async {
+  Future<bool> recordInterest(String loanId, int amount, String otp, String verificationId) async {
     return await handleApiCall(() async {
       final response = await _api.post(
         '/loans/$loanId/record-interest',
-        data: {'amount': amountPaise},
+        data: {'amount': amount, 'otp': otp, 'verificationId': verificationId},
       );
       final data = response.data;
       if (data is Map && data['success'] == true) return true;
       final errMsg = (data is Map) ? data['message']?.toString() : null;
       throw ServerFailure(errMsg ?? 'Failed to record interest payment');
+    });
+  }
+  
+  Future<bool> toggleMonthStatus(String loanId, int monthIndex, String status) async {
+    return await handleApiCall(() async {
+      final response = await _api.patch(
+        '/loans/$loanId/months/$monthIndex',
+        data: {'status': status},
+      );
+      final data = response.data;
+      if (data is Map && data['success'] == true) return true;
+      final errMsg = (data is Map) ? data['message']?.toString() : null;
+      throw ServerFailure(errMsg ?? 'Failed to toggle month status');
     });
   }
 

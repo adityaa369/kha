@@ -27,10 +27,15 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _handleLogin() {
+    debugPrint('[_handleLogin] Button clicked. Validating...');
     if (_formKey.currentState?.validate() ?? false) {
+      debugPrint('[_handleLogin] Validation passed. Calling loginWithPassword...');
       final phone = _phoneController.text.trim();
       final password = _passwordController.text;
       context.read<AuthCubit>().loginWithPassword(phone, password);
+    } else {
+      debugPrint('[_handleLogin] Validation FAILED!');
+      debugPrint('[_handleLogin] Phone: ${_phoneController.text}, Password length: ${_passwordController.text.length}');
     }
   }
 
@@ -73,13 +78,16 @@ class _LoginPageState extends State<LoginPage> {
       body: BlocConsumer<AuthCubit, AuthState>(
         listener: (context, state) {
           if (!mounted) return;
-          if (state is AuthError) {
+          if (state is AuthError) {
             DialogUtils.showErrorDialog(context, state.message);
           } else if (state is AuthenticatedFull) {
+            context.go('/home');
+          } else if (state is AuthenticatedUnverified) {
             context.go('/home');
           }
         },
         builder: (context, state) {
+            debugPrint('[LoginPage build] Current AuthState: $state');
           return SafeArea(
             child: SingleChildScrollView(
               child: Column(
@@ -510,4 +518,8 @@ class _SocialButton extends StatelessWidget {
     );
   }
 }
+
+
+
+
 
