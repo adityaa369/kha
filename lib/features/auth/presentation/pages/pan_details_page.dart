@@ -55,7 +55,7 @@ class _PanDetailsPageState extends State<PanDetailsPage> {
         listener: (context, state) {
           if (!mounted) return;
           if (state is PanDetailsSaved || state is AuthenticatedFull) {
-            context.go(AppConstants.processing);
+            context.push(AppConstants.processing);
           } else if (state is AuthError) {
             ScaffoldMessenger.of(
               context,

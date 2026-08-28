@@ -64,7 +64,7 @@ class _PersonalDetailsPageState extends State<PersonalDetailsPage> {
         listener: (context, state) {
           if (!mounted) return;
           if (state is PersonalDetailsSaved || state is AuthenticatedFull) {
-            context.go(AppConstants.panDetails);
+            context.push(AppConstants.panDetails);
           } else if (state is AuthError) {
             ScaffoldMessenger.of(
               context,

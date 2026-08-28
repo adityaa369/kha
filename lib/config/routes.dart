@@ -96,19 +96,8 @@ final router = GoRouter(
       return null;
     }
 
-    if (authState is PersonalDetailsSaved) {
-      if (state.uri.path != AppConstants.panDetails) {
-        return AppConstants.panDetails;
-      }
-      return null;
-    }
-
-    if (authState is PanDetailsSaved) {
-      if (state.uri.path != AppConstants.processing) {
-        return AppConstants.processing;
-      }
-      return null;
-    }
+    // Navigation is handled by BlocListeners in the UI
+    // to allow back navigation without being trapped by GoRouter
 
     if (authState is AuthenticatedFull) {
       if (isAuthRoute || isOnboardingRoute) return AppConstants.home;
