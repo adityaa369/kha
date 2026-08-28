@@ -82,9 +82,8 @@ final router = GoRouter(
     }
 
     if (authState is OtpVerified ||
-        authState is RegistrationOtpVerified ||
-        authState is AuthenticatedUnverified) {
-      final user = authState is AuthenticatedUnverified ? authState.user : null;
+        authState is RegistrationOtpVerified) {
+      final user = null; // No user available yet in these states
       if (user != null && user.firstName.isNotEmpty) {
         if (state.uri.path != AppConstants.panDetails) {
           return AppConstants.panDetails;
@@ -282,7 +281,7 @@ final router = GoRouter(
     GoRoute(
       path: '/profile/security',
       builder: (context, state) => BlocProvider(
-        create: (ctx) => SecurityCubit(SecurityRepository(ctx.read<ApiClient>())),
+        create: (ctx) => SecurityCubit(SecurityRepository(ApiClient())),
         child: const SecurityHubPage(),
       ),
     ),

@@ -200,8 +200,8 @@ class AuthCubit extends Cubit<AuthState> {
   }) async {
     emit(AuthLoading());
     try {
-      final response = await _api.post(
-        '/auth/register',
+      final response = await _api.put(
+        '/users/profile',
         data: {
           'firstName': firstName,
           'lastName': lastName,
@@ -240,8 +240,8 @@ class AuthCubit extends Cubit<AuthState> {
   }) async {
     emit(AuthLoading());
     try {
-      final response = await _api.post(
-        '/auth/register',
+      final response = await _api.put(
+        '/users/profile',
         data: {'pan': pan, 'aadhar': aadhar, 'dob': dob, 'gender': gender},
       );
 
