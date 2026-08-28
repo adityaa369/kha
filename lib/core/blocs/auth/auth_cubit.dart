@@ -362,6 +362,24 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
+  Future<void> sendVerificationEmail() async {
+    try {
+      final response = await _api.post('/auth/send-verification-email');
+      if (response.data != null && response.data['success'] == true) {
+        // Success
+      } else {
+        throw Exception(response.data?['message'] ?? 'Failed to send email');
+      }
+    } on DioException catch (e) {
+      if (e.error is Failure) {
+        throw Exception((e.error as Failure).message);
+      }
+      throw Exception('Failed to send verification email');
+    } catch (e) {
+      throw Exception('An error occurred');
+    }
+  }
+
   Future<void> logout() async {
     emit(AuthLoading());
     try {

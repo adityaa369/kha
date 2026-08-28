@@ -161,18 +161,29 @@ class ProfilePage extends StatelessWidget {
                                         ),
                                       )
                                     : InkWell(
-                                        onTap: () {
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                            const SnackBar(
-                                              content: Text(
-                                                'Check your email inbox to verify your email address',
-                                              ),
-                                              behavior:
-                                                  SnackBarBehavior.floating,
-                                            ),
-                                          );
+                                        onTap: () async {
+                                          try {
+                                            await context.read<AuthCubit>().sendVerificationEmail();
+                                            if (context.mounted) {
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                const SnackBar(
+                                                  content: Text('Verification email sent! Please check your inbox.'),
+                                                  backgroundColor: Colors.green,
+                                                  behavior: SnackBarBehavior.floating,
+                                                ),
+                                              );
+                                            }
+                                          } catch (e) {
+                                            if (context.mounted) {
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                SnackBar(
+                                                  content: Text(e.toString().replaceAll('Exception: ', '')),
+                                                  backgroundColor: Colors.red,
+                                                  behavior: SnackBarBehavior.floating,
+                                                ),
+                                              );
+                                            }
+                                          }
                                         },
                                         borderRadius: BorderRadius.circular(
                                           12.r,
@@ -247,7 +258,7 @@ class ProfilePage extends StatelessWidget {
                             icon: Icons.person_outline,
                             title: 'Personal Details',
                             subtitle: 'Email, Gender, Pan, DOB, Address',
-                            onTap: () => context.push('/profile/edit'),
+                            onTap: () => context.push(AppConstants.personalDetails),
                           ),
                           _MenuTile(
                             icon: Icons.security,
