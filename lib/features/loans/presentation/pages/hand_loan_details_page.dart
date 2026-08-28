@@ -1,4 +1,5 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -293,7 +294,7 @@ class HandLoanDetailsPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
-                      child: _stat('Principal Amount', 'â‚¹${_fmt(loan.amount)}'),
+                      child: _stat('Principal Amount', '₹${_fmt(loan.amount)}'),
                     ),
                     SizedBox(width: 12.w),
                     Expanded(child: _stat('Duration', '$duration Months')),
@@ -436,12 +437,12 @@ class HandLoanDetailsPage extends StatelessWidget {
               Expanded(
                 child: _gradientStat(
                   'Total Payable',
-                  totalPayable > 0 ? 'â‚¹${_fmt(totalPayable)}' : '-',
+                  totalPayable > 0 ? '₹${_fmt(totalPayable)}' : '-',
                 ),
               ),
               SizedBox(width: 12.w),
               Expanded(
-                child: _gradientStat('Amount Paid', 'â‚¹${_fmt(amountPaid)}'),
+                child: _gradientStat('Amount Paid', '₹${_fmt(amountPaid)}'),
               ),
             ],
           ),
@@ -452,7 +453,7 @@ class HandLoanDetailsPage extends StatelessWidget {
               Expanded(
                 child: _gradientStat(
                   'Amount Pending',
-                  'â‚¹${_fmt(amountPending)}',
+                  '₹${_fmt(amountPending)}',
                 ),
               ),
               SizedBox(width: 12.w),
@@ -814,12 +815,7 @@ class HandLoanDetailsPage extends StatelessWidget {
 
   String _fmt(double v) {
     if (v.isNaN || v.isInfinite) return '0';
-    return v
-        .toStringAsFixed(0)
-        .replaceAllMapped(
-          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-          (m) => '${m[1]},',
-        );
+    return NumberFormat('#,##,##0', 'en_IN').format(v);
   }
 
   String _dateStr(DateTime d) => '${d.day} ${_month(d.month)} ${d.year}';

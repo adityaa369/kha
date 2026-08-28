@@ -1,3 +1,4 @@
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:equatable/equatable.dart';
 import 'dart:math' as math;
@@ -313,10 +314,7 @@ class LoanModel extends Equatable {
   }
 
   static String _formatNumber(double number) {
-    return number.toStringAsFixed(0).replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (Match m) => '${m[1]},',
-    );
+    return NumberFormat('#,##,##0', 'en_IN').format(number);
   }
 
   String get statusDisplay {

@@ -151,18 +151,18 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
           children: [
             Text('Borrower: ${_borrowerNameController.text}'),
             SizedBox(height: 8.h),
-            Text('Principal: â‚¹${amount.toStringAsFixed(2)}'),
+            Text('Principal: ₹${amount.toStringAsFixed(2)}'),
             if (widget.loanType == 'interest_credit') ...[
               SizedBox(height: 8.h),
               Text('Interest Rate: $rate% (Annual)'),
               SizedBox(height: 8.h),
-              Text('Total Interest: â‚¹${totalInterest.toStringAsFixed(2)}'),
+              Text('Total Interest: ₹${totalInterest.toStringAsFixed(2)}'),
             ],
             SizedBox(height: 8.h),
             Text('Duration: $months Months'),
             Divider(height: 24.h),
             Text(
-              'Total Repayment: â‚¹${totalAmount.toStringAsFixed(2)}',
+              'Total Repayment: ₹${totalAmount.toStringAsFixed(2)}',
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ],
@@ -302,7 +302,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
       'borrower_name': _borrowerNameController.text,
       'borrower_aadhar': _aadharController.text,
       'borrower_address': _addressController.text,
-      'amount': ((double.tryParse(_amountController.text) ?? 0.0) * 100).toInt(),
+      'amount': double.tryParse(_amountController.text) ?? 0.0,
       'interest_rate': widget.loanType == 'interest_credit'
           ? (double.tryParse(_interestController.text) ?? 0.0)
           : 0.0,
@@ -327,7 +327,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
           'loan_id': result['id'],
           'borrower_name': _borrowerNameController.text,
           'borrower_phone': phone,
-          'amount': ((double.tryParse(_amountController.text) ?? 0.0) * 100).toInt(),
+          'amount': double.tryParse(_amountController.text) ?? 0.0,
         },
       );
     } else if (mounted) {

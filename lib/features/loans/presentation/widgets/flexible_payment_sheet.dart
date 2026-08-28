@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
@@ -35,11 +35,13 @@ class FlexiblePaymentSheet extends StatefulWidget {
 }
 
 class _FlexiblePaymentSheetState extends State<FlexiblePaymentSheet> {
-  int _step = 0; // 0: Amount, 1: Success
+  int _step = 0; // 0: Amount, 1: OTP, 2: Success
   bool _isLoading = false;
   
   final _amountCtrl = TextEditingController();
+  final _otpCtrl = TextEditingController();
   final _currencyFmt = NumberFormat('#,##0', 'en_IN');
+  String _verificationId = '';
 
   @override
   void initState() {

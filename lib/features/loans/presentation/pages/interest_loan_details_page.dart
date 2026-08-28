@@ -1,4 +1,5 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
@@ -337,7 +338,7 @@ class InterestLoanDetailsPage extends StatelessWidget {
                     Expanded(
                       child: _statItem(
                         'Principal Amount',
-                        'â‚¹${_fmt(loan.amount)}',
+                        '₹${_fmt(loan.amount)}',
                       ),
                     ),
                     SizedBox(width: 12.w),
@@ -462,7 +463,7 @@ class InterestLoanDetailsPage extends StatelessWidget {
               ),
               SizedBox(width: 12.w),
               Expanded(
-                child: _interestStat('Monthly Interest', 'â‚¹${_fmt(monthly)}'),
+                child: _interestStat('Monthly Interest', '₹${_fmt(monthly)}'),
               ),
             ],
           ),
@@ -473,12 +474,12 @@ class InterestLoanDetailsPage extends StatelessWidget {
               Expanded(
                 child: _interestStat(
                   'Total Interest',
-                  'â‚¹${_fmt(totalInterest)}',
+                  '₹${_fmt(totalInterest)}',
                 ),
               ),
               SizedBox(width: 12.w),
               Expanded(
-                child: _interestStat('Total Payable', 'â‚¹${_fmt(totalPayable)}'),
+                child: _interestStat('Total Payable', '₹${_fmt(totalPayable)}'),
               ),
             ],
           ),
@@ -487,13 +488,13 @@ class InterestLoanDetailsPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: _interestStat('Interest Paid', 'â‚¹${_fmt(received)}'),
+                child: _interestStat('Interest Paid', '₹${_fmt(received)}'),
               ),
               SizedBox(width: 12.w),
               Expanded(
                 child: _interestStat(
                   'Interest Pending',
-                  'â‚¹${_fmt(totalInterest - received)}',
+                  '₹${_fmt(totalInterest - received)}',
                 ),
               ),
             ],
@@ -914,12 +915,7 @@ class InterestLoanDetailsPage extends StatelessWidget {
 
   String _fmt(double v) {
     if (v.isNaN || v.isInfinite) return '0';
-    return v
-        .toStringAsFixed(0)
-        .replaceAllMapped(
-          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-          (m) => '${m[1]},',
-        );
+    return NumberFormat('#,##,##0', 'en_IN').format(v);
   }
 
   String _month(int m) {

@@ -105,6 +105,28 @@ class LoanCubit extends Cubit<LoanState> {
   }
 
   // Verify Lender OTP
+  
+  Future<bool> deleteLoan(String loanId) async {
+    try {
+      await _repository.deleteLoan(loanId);
+      
+      if (state is LoansLoaded) {
+        final current = state as LoansLoaded;
+        final myLoans = current.myLoans.where((l) => l.id != loanId).toList();
+        final givenLoans = current.givenLoans.where((l) => l.id != loanId).toList();
+        emit(LoansLoaded(
+          myLoans: myLoans,
+          givenLoans: givenLoans,
+        ));
+      } else {
+        fetchLoans(); // Refresh if we were in some other state
+      }
+      return true;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<bool> verifyLenderOtp(
     String loanId,
     String otp,

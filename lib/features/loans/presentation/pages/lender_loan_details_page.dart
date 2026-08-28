@@ -1,4 +1,5 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -84,7 +85,7 @@ class LenderLoanDetailsPage extends StatelessWidget {
               onPressed: () => context.pop(),
             ),
             title: Text(
-              '${theme.label} â€” Lender View',
+              '${theme.label} — Lender View',
               style: TextStyle(
                 color: theme.primary,
                 fontSize: 15.sp,
@@ -136,7 +137,7 @@ class LenderLoanDetailsPage extends StatelessWidget {
                         SizedBox(height: 16.h),
                       ],
                     ],
-                    if (isPending) _pendingCard(activeLoan),
+                    if (isPending) _pendingCard(context, activeLoan),
                     SizedBox(height: 80.h), // space for bottom bar
                   ],
                 ),
@@ -319,7 +320,7 @@ class LenderLoanDetailsPage extends StatelessWidget {
                       if (isInterest) ...[
                          Text('% Interest Credit', style: TextStyle(color: theme.primary, fontSize: 12.sp, fontWeight: FontWeight.bold)),
                       ] else ...[
-                         Text('ðŸ’° Hand Credit', style: TextStyle(color: theme.primary, fontSize: 12.sp, fontWeight: FontWeight.bold)),
+                         Text('💰 Hand Credit', style: TextStyle(color: theme.primary, fontSize: 12.sp, fontWeight: FontWeight.bold)),
                       ],
                     ],
                   ),
@@ -352,14 +353,14 @@ class LenderLoanDetailsPage extends StatelessWidget {
                 Expanded(
                   child: _stat(
                     isInterest ? 'Principal' : 'Given Amount',
-                    'â‚¹${_fmt(loan.amount)}',
+                    '₹${_fmt(loan.amount)}',
                   ),
                 ),
                 SizedBox(width: 12.w),
                 Expanded(
                   child: _stat(
                     isInterest ? 'Monthly Interest' : 'Received Amount',
-                    isInterest ? 'â‚¹${_fmt(monthly)}' : 'â‚¹${_fmt(collected)}',
+                    isInterest ? '₹${_fmt(monthly)}' : '₹${_fmt(collected)}',
                     valueColor: isInterest ? theme.primary : Colors.green.shade700,
                   ),
                 ),
@@ -367,7 +368,7 @@ class LenderLoanDetailsPage extends StatelessWidget {
                 Expanded(
                   child: _stat(
                     isInterest ? 'Total Interest' : 'Remaining Amount',
-                    isInterest ? 'â‚¹${_fmt(monthly * duration)}' : 'â‚¹${_fmt(remaining)}',
+                    isInterest ? '₹${_fmt(monthly * duration)}' : '₹${_fmt(remaining)}',
                     valueColor: isInterest ? Colors.black87 : Colors.red.shade600,
                   ),
                 ),
@@ -577,7 +578,7 @@ class LenderLoanDetailsPage extends StatelessWidget {
 
   String _txAmountStr(String type, double amount) {
     final sign = type == 'loan_given' ? '-' : '+';
-    return '$signâ‚¹${_fmt(amount)}';
+    return '$sign₹${_fmt(amount)}';
   }
 
   bool _txIsPositive(String type) => type != 'loan_given';
@@ -1129,7 +1130,41 @@ class LenderLoanDetailsPage extends StatelessWidget {
 
   // â”€â”€â”€ Pending Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-  Widget _pendingCard(LoanModel loan) {
+    void _confirmCancel(BuildContext context, LoanModel loan) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Cancel Request'),
+        content: const Text('Are you sure you want to cancel this pending loan request? This cannot be undone.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('No')),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              try {
+                await context.read<LoanCubit>().deleteLoan(loan.id);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Request cancelled successfully')),
+                  );
+                  context.pop();
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Failed to cancel: $e')),
+                  );
+                }
+              }
+            },
+            child: const Text('Yes, Cancel', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+    Widget _pendingCard(BuildContext context, LoanModel loan) {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(16.w),
@@ -1164,10 +1199,41 @@ class LenderLoanDetailsPage extends StatelessWidget {
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 12.sp, color: const Color(0xFFB45309)),
           ),
+          SizedBox(height: 16.h),
+          Row(
+            children: [
+              if (loan.status == 'pending_otp') ...[
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => context.push(AppConstants.loanConfirmation, extra: loan),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFD97706),
+                      foregroundColor: Colors.white,
+                      minimumSize: Size(0, 40.h),
+                    ),
+                    child: const Text('Verify OTP Now'),
+                  ),
+                ),
+                SizedBox(width: 8.w),
+              ],
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => _confirmCancel(context, loan),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.red.shade700,
+                    side: BorderSide(color: Colors.red.shade300),
+                    minimumSize: Size(0, 40.h),
+                  ),
+                  child: const Text('Cancel Request'),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
   }
+
 
   // â”€â”€â”€ Bottom Bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -1384,12 +1450,7 @@ class LenderLoanDetailsPage extends StatelessWidget {
 
   String _fmt(double v) {
     if (v.isNaN || v.isInfinite) return '0';
-    return v
-        .toStringAsFixed(0)
-        .replaceAllMapped(
-          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-          (m) => '${m[1]},',
-        );
+    return NumberFormat('#,##,##0', 'en_IN').format(v);
   }
 
   String _dateStr(DateTime d) => '${d.day} ${_monthName(d.month)} ${d.year}';
