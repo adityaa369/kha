@@ -8,6 +8,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/blocs/auth/auth_cubit.dart';
 import '../../../../core/blocs/loans/loan_cubit.dart';
 import '../../../../core/widgets/looping_avatar.dart';
+import '../widgets/verify_email_bottom_sheet.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -156,34 +157,13 @@ class ProfilePage extends StatelessWidget {
                                           style: TextStyle(
                                             fontSize: 11.sp,
                                             fontWeight: FontWeight.w600,
-                                            color: Colors.green[700],
+                                            color: KhaataTheme.accentGreen,
                                           ),
                                         ),
                                       )
                                     : InkWell(
-                                        onTap: () async {
-                                          try {
-                                            await context.read<AuthCubit>().sendVerificationEmail();
-                                            if (context.mounted) {
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                const SnackBar(
-                                                  content: Text('Verification email sent! Please check your inbox.'),
-                                                  backgroundColor: Colors.green,
-                                                  behavior: SnackBarBehavior.floating,
-                                                ),
-                                              );
-                                            }
-                                          } catch (e) {
-                                            if (context.mounted) {
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                SnackBar(
-                                                  content: Text(e.toString().replaceAll('Exception: ', '')),
-                                                  backgroundColor: Colors.red,
-                                                  behavior: SnackBarBehavior.floating,
-                                                ),
-                                              );
-                                            }
-                                          }
+                                        onTap: () {
+                                          VerifyEmailBottomSheet.show(context, email!);
                                         },
                                         borderRadius: BorderRadius.circular(
                                           12.r,
