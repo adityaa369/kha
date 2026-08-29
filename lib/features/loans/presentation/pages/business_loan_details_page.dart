@@ -61,7 +61,7 @@ class BusinessLoanDetailsPage extends StatelessWidget {
                 SizedBox(height: 16.h),
                 _statsCard(activeLoan),
                 SizedBox(height: 16.h),
-                _recentTransactions(activeLoan, theme),
+                _recentTransactions(activeLoan),
                   SizedBox(height: 16.h),
                   _creditOverviewCard(activeLoan),
                 SizedBox(height: 16.h),
@@ -237,7 +237,7 @@ class BusinessLoanDetailsPage extends StatelessWidget {
   Widget _statsCard(LoanModel loan) {
     final actualStart = loan.startDate ?? loan.activatedAt ?? loan.createdAt ?? DateTime.now();
     final startStr = _dateStr(actualStart);
-    final endStr = loan.endDate != null ? _dateStr(loan.endDate!) : _dateStr(actualStart.add(Duration(days: (loan.durationMonths ?? duration) * 30)));
+    final endStr = loan.endDate != null ? _dateStr(loan.endDate!) : _dateStr(actualStart.add(Duration(days: (loan.durationMonths ?? 0) * 30)));
     final duration = loan.durationMonths ?? 0;
     final progress = loan.progress.clamp(0.0, 1.0);
     return Container(
@@ -872,7 +872,7 @@ class BusinessLoanDetailsPage extends StatelessWidget {
     }
   }
 
-  Widget _recentTransactions(LoanModel loan, _TypeTheme theme) {
+  Widget _recentTransactions(LoanModel loan) {
     final txns = loan.transactions.reversed.toList(); // newest first
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -887,12 +887,12 @@ class BusinessLoanDetailsPage extends StatelessWidget {
             Container(
               padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
               decoration: BoxDecoration(
-                color: theme.bg,
+                color: _bg,
                 borderRadius: BorderRadius.circular(12.r),
               ),
               child: Text(
                 '${txns.length} records',
-                style: TextStyle(fontSize: 11.sp, color: theme.primary, fontWeight: FontWeight.w600),
+                style: TextStyle(fontSize: 11.sp, color: _primary, fontWeight: FontWeight.w600),
               ),
             ),
           ],

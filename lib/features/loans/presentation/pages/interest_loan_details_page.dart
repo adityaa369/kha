@@ -966,7 +966,7 @@ class InterestLoanDetailsPage extends StatelessWidget {
     }
   }
 
-  Widget _recentTransactions(LoanModel loan, _TypeTheme theme) {
+  Widget _recentTransactions(LoanModel loan) {
     final txns = loan.transactions.reversed.toList(); // newest first
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -981,12 +981,12 @@ class InterestLoanDetailsPage extends StatelessWidget {
             Container(
               padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
               decoration: BoxDecoration(
-                color: theme.bg,
+                color: _bg,
                 borderRadius: BorderRadius.circular(12.r),
               ),
               child: Text(
                 '${txns.length} records',
-                style: TextStyle(fontSize: 11.sp, color: theme.primary, fontWeight: FontWeight.w600),
+                style: TextStyle(fontSize: 11.sp, color: _primary, fontWeight: FontWeight.w600),
               ),
             ),
           ],
