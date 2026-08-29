@@ -276,8 +276,9 @@ class LenderLoanDetailsPage extends StatelessWidget {
     int paidMonths,
     double progress,
   ) {
-    final start = loan.startDate != null ? _dateStr(loan.startDate!) : '-';
-    final end = loan.endDate != null ? _dateStr(loan.endDate!) : '-';
+    final actualStart = loan.startDate ?? loan.activatedAt ?? loan.createdAt ?? DateTime.now();
+    final start = _dateStr(actualStart);
+    final end = loan.endDate != null ? _dateStr(loan.endDate!) : _dateStr(actualStart.add(Duration(days: (loan.durationMonths ?? duration) * 30)));
     final rate = loan.interestRate ?? 0.0;
     final monthly = rate > 0
         ? loan.amount * rate / 100

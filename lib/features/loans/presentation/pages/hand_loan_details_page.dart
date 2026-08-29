@@ -61,7 +61,7 @@ class HandLoanDetailsPage extends StatelessWidget {
                 SizedBox(height: 16.h),
                 _statsCard(activeLoan),
                 SizedBox(height: 16.h),
-                RepaymentTimelineWidget(loan: activeLoan),
+                _recentTransactions(activeLoan, theme),
                   SizedBox(height: 16.h),
                   _creditOverviewCard(activeLoan),
                 SizedBox(height: 16.h),
@@ -235,8 +235,9 @@ class HandLoanDetailsPage extends StatelessWidget {
   // â”€â”€â”€ Stats Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Widget _statsCard(LoanModel loan) {
-    final startStr = loan.startDate != null ? _dateStr(loan.startDate!) : '-';
-    final endStr = loan.endDate != null ? _dateStr(loan.endDate!) : '-';
+    final actualStart = loan.startDate ?? loan.activatedAt ?? loan.createdAt ?? DateTime.now();
+    final startStr = _dateStr(actualStart);
+    final endStr = loan.endDate != null ? _dateStr(loan.endDate!) : _dateStr(actualStart.add(Duration(days: (loan.durationMonths ?? duration) * 30)));
     final duration = loan.durationMonths ?? 0;
     final progress = loan.progress.clamp(0.0, 1.0);
     return Container(
@@ -870,8 +871,146 @@ class HandLoanDetailsPage extends StatelessWidget {
         return s;
     }
   }
+
+  Widget _recentTransactions(LoanModel loan, _TypeTheme theme) {
+    final txns = loan.transactions.reversed.toList(); // newest first
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Recent Transactions',
+              style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w700, color: Colors.black87),
+            ),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+              decoration: BoxDecoration(
+                color: theme.bg,
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+              child: Text(
+                '${txns.length} records',
+                style: TextStyle(fontSize: 11.sp, color: theme.primary, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 12.h),
+        if (txns.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.all(20.w),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(color: Colors.grey.shade200),
+            ),
+            child: Column(
+              children: [
+                Icon(Icons.receipt_long_outlined, color: Colors.grey.shade400, size: 32.sp),
+                SizedBox(height: 8.h),
+                Text('No transactions recorded yet', style: TextStyle(color: Colors.grey, fontSize: 12.sp)),
+                SizedBox(height: 4.h),
+                Text('Use Record Payment below to log payments', style: TextStyle(color: Colors.grey.shade400, fontSize: 11.sp)),
+              ],
+            ),
+          )
+        else
+          ...txns.map((tx) => _txItem(
+            _txIcon(tx.type as String? ?? ''),
+            _txColor(tx.type as String? ?? ''),
+            _txTitle(tx.type as String? ?? ''),
+            tx.note as String? ?? '',
+            _txAmountStr(tx.type as String? ?? '', (tx.amount as num?)?.toDouble() ?? 0),
+            _txDateStr(tx.recordedAt),
+            _txIsPositive(tx.type as String? ?? ''),
+          )),
+      ],
+    );
+  }
+
+  IconData _txIcon(String type) {
+    switch (type) {
+      case 'payment': return Icons.arrow_downward;
+      case 'interest_payment': return Icons.percent;
+      case 'credit_added': return Icons.add_circle_outline;
+      case 'loan_given': return Icons.arrow_upward;
+      default: return Icons.swap_horiz;
+    }
+  }
+
+  Color _txColor(String type) {
+    switch (type) {
+      case 'payment': return Colors.green.shade600;
+      case 'interest_payment': return Colors.teal.shade600;
+      case 'credit_added': return Colors.orange.shade600;
+      case 'loan_given': return Colors.red.shade400;
+      default: return Colors.grey;
+    }
+  }
+
+  String _txTitle(String type) {
+    switch (type) {
+      case 'payment': return 'Payment Received';
+      case 'interest_payment': return 'Interest Received';
+      case 'credit_added': return 'Credit Added';
+      case 'loan_given': return 'Loan Disbursed';
+      default: return 'Transaction';
+    }
+  }
+
+  String _txAmountStr(String type, double amount) {
+    final sign = type == 'loan_given' ? '-' : '+';
+    return '$sign₹${_fmt(amount)}';
+  }
+
+  bool _txIsPositive(String type) => type != 'loan_given';
+
+  String _txDateStr(dynamic rawDate) {
+    if (rawDate == null) return '';
+    try {
+      final dt = DateTime.parse(rawDate.toString()).toLocal();
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      return '${dt.day.toString().padLeft(2, '0')} ${months[dt.month - 1]} ${dt.year}';
+    } catch (_) {
+      return '';
+    }
+  }
+
+  Widget _txItem(IconData icon, Color color, String title, String subtitle, String amount, String date, bool isPositive) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 12.h),
+      child: Row(
+        children: [
+          Container(
+            padding: EdgeInsets.all(10.w),
+            decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
+            child: Icon(icon, color: color, size: 16.sp),
+          ),
+          SizedBox(width: 12.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.sp, color: Colors.black87)),
+                SizedBox(height: 2.h),
+                Text(subtitle, style: TextStyle(color: Colors.grey, fontSize: 11.sp)),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(amount, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.sp, color: isPositive ? Colors.green.shade700 : Colors.red.shade600)),
+              SizedBox(height: 2.h),
+              Text(date, style: TextStyle(color: Colors.grey, fontSize: 11.sp)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
 }
-
-
-
-

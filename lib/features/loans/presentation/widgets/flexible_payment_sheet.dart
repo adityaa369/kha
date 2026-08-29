@@ -83,7 +83,7 @@ class _FlexiblePaymentSheetState extends State<FlexiblePaymentSheet> {
     }
 
     try {
-      final phone = '+91';
+      final phone = '+91${widget.loan.mobile ?? ''}';
       if (phone.length < 13) throw Exception('Invalid borrower phone number');
       
       await FirebaseAuth.instance.verifyPhoneNumber(
