@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -55,22 +55,24 @@ class HandLoanDetailsPage extends StatelessWidget {
           body: RefreshIndicator(
             onRefresh: () async => context.read<LoanCubit>().fetchLoans(),
             child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-            padding: EdgeInsets.all(16.w),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _profileCard(context, activeLoan),
-                SizedBox(height: 16.h),
-                _statsCard(activeLoan),
-                SizedBox(height: 16.h),
-                _recentTransactions(activeLoan),
+              padding: EdgeInsets.all(16.w),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _profileCard(context, activeLoan),
+                  SizedBox(height: 16.h),
+                  _statsCard(activeLoan),
+                  SizedBox(height: 16.h),
+                  _repaymentChecklist(activeLoan),
+                  SizedBox(height: 16.h),
+                  _recentTransactions(activeLoan),
                   SizedBox(height: 16.h),
                   _creditOverviewCard(activeLoan),
-                SizedBox(height: 16.h),
-                _proofDocumentSection(context, activeLoan),
-                SizedBox(height: 16.h),
-              ],
+                  SizedBox(height: 16.h),
+                  _proofDocumentSection(context, activeLoan),
+                  SizedBox(height: 16.h),
+                ],
+              ),
             ),
           ),
         );
@@ -78,7 +80,7 @@ class HandLoanDetailsPage extends StatelessWidget {
     );
   }
 
-  // â”€â”€â”€ Profile Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // —————————————————————————————————————————————————————————————— Profile Card ——————————————————————————————————————————————————————————————
 
   Widget _profileCard(BuildContext context, LoanModel loan) {
     String? currentUserId;

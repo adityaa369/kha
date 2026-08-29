@@ -55,8 +55,7 @@ class BusinessLoanDetailsPage extends StatelessWidget {
           body: RefreshIndicator(
             onRefresh: () async => context.read<LoanCubit>().fetchLoans(),
             child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-            padding: EdgeInsets.all(16.w),
+              padding: EdgeInsets.all(16.w),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

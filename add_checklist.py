@@ -1,18 +1,10 @@
-import re
-import os
-
-def insert_checklist(filepath, is_lender):
-    with open(filepath, 'r', encoding='utf-8') as f:
-        content = f.read()
-    
-    click_action = "context.read<LoanCubit>().toggleMonthStatus(loan.id, month.monthIndex, isPaid ? 'unpaid' : 'paid');" if is_lender else ""
-
-    checklist_widget = f'''
-  Widget _buildMonthTrackingChecklist(BuildContext context, LoanModel loan) {{
-    if (loan.monthsTracking.isEmpty) return const SizedBox.shrink();
+checklist_code = """
+  Widget _repaymentChecklist(LoanModel loan) {
+    final duration = loan.durationMonths ?? 0;
+    final progress = loan.progress.clamp(0.0, 1.0);
+    final paidMonths = (duration * progress).round();
 
     return Container(
-      margin: EdgeInsets.only(top: 24.h),
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -22,85 +14,68 @@ def insert_checklist(filepath, is_lender):
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Repayment Checklist', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold, color: Colors.black87)),
+          Text(
+            loan.type.toLowerCase().contains('interest') || loan.type.toLowerCase().contains('home')
+                ? 'Monthly Interest Overview'
+                : 'Monthly Payment Overview',
+            style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w700, color: Colors.black87),
+          ),
           SizedBox(height: 12.h),
-          ...loan.monthsTracking.map((month) {{
-            final isPaid = month.status == 'paid';
-            return Padding(
-              padding: EdgeInsets.symmetric(vertical: 8.h),
+          if (duration > 0)
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
               child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () {{
-                      {click_action}
-                    }},
-                    child: Container(
-                      width: 24.w,
-                      height: 24.w,
-                      decoration: BoxDecoration(
-                        color: isPaid ? Colors.green.shade500 : Colors.white,
-                        border: Border.all(color: isPaid ? Colors.green.shade500 : Colors.grey.shade400, width: 2),
-                        borderRadius: BorderRadius.circular(6.r),
-                      ),
-                      child: isPaid ? Icon(Icons.check, size: 16.sp, color: Colors.white) : null,
-                    ),
-                  ),
-                  SizedBox(width: 12.w),
-                  Expanded(
+                children: List.generate(duration, (index) {
+                  final isPaid = index < paidMonths;
+                  final dueDate = (loan.startDate ?? loan.activatedAt ?? loan.createdAt ?? DateTime.now()).add(Duration(days: (index + 1) * 30));
+
+                  return Container(
+                    margin: EdgeInsets.only(right: 12.w),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Month ${{month.monthIndex}}', style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w600, color: Colors.black87)),
-                        if (isPaid && month.markedPaidAt != null)
-                          Text('Marked paid on ${{DateFormat('MMM d, yyyy').format(month.markedPaidAt!)}}', style: TextStyle(fontSize: 11.sp, color: Colors.grey.shade600)),
+                        Text(
+                          '${_monthName(dueDate.month)} ${dueDate.year}',
+                          style: TextStyle(fontSize: 10.sp, color: Colors.grey.shade600),
+                        ),
+                        SizedBox(height: 6.h),
+                        Container(
+                          width: 50.w,
+                          height: 55.h,
+                          decoration: BoxDecoration(
+                            color: isPaid ? Colors.green.shade50 : Colors.white,
+                            border: Border.all(color: isPaid ? Colors.green : Colors.red.shade200, width: 1.5),
+                            borderRadius: BorderRadius.circular(8.r),
+                          ),
+                          alignment: Alignment.center,
+                          child: Icon(
+                            isPaid ? Icons.check : Icons.close,
+                            color: isPaid ? Colors.green : Colors.red.shade300,
+                            size: 20.sp,
+                          ),
+                        ),
                       ],
                     ),
-                  ),
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                    decoration: BoxDecoration(
-                      color: isPaid ? Colors.green.shade50 : Colors.orange.shade50,
-                      borderRadius: BorderRadius.circular(12.r),
-                    ),
-                    child: Text(
-                      isPaid ? 'Paid' : 'Unpaid',
-                      style: TextStyle(
-                        color: isPaid ? Colors.green.shade700 : Colors.orange.shade700,
-                        fontSize: 11.sp,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
+                  );
+                }),
               ),
-            );
-          }}).toList(),
+            ),
         ],
       ),
     );
-  }}
-'''
+  }
 
-    if '_buildMonthTrackingChecklist' not in content:
-        content = re.sub(r'\n}\n?$', '\n' + checklist_widget + '\n}\n', content)
+  String _monthName(int m) {
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return months[m - 1];
+  }
+"""
 
-    if '_buildMonthTrackingChecklist(context, loan),' not in content:
-        if '_txList(' in content:
-            content = content.replace('_txList(loan.transactions, theme),', '_buildMonthTrackingChecklist(context, loan),\n                      SizedBox(height: 16.h),\n                      _txList(loan.transactions, theme),')
-        else:
-            content = content.replace('_statsCard(loan),', '_statsCard(loan),\n                      SizedBox(height: 16.h),\n                      _buildMonthTrackingChecklist(context, loan),')
+with open('lib/features/loans/presentation/pages/hand_loan_details_page.dart', 'r', encoding='utf-8') as f:
+    c = f.read()
 
-    with open(filepath, 'w', encoding='utf-8') as f:
-        f.write(content)
-
-pages = [
-    ('lib/features/loans/presentation/pages/lender_loan_details_page.dart', True),
-    ('lib/features/loans/presentation/pages/hand_loan_details_page.dart', False),
-    ('lib/features/loans/presentation/pages/interest_loan_details_page.dart', False),
-    ('lib/features/loans/presentation/pages/business_loan_details_page.dart', False),
-]
-
-for page, is_lender in pages:
-    if os.path.exists(page):
-        insert_checklist(page, is_lender)
-        print("Updated " + page)
+if "_repaymentChecklist" not in c[c.find("Widget _txItem"):]:
+    c = c.rstrip()[:-1] + "\n" + checklist_code + "\n}\n"
+    with open('lib/features/loans/presentation/pages/hand_loan_details_page.dart', 'w', encoding='utf-8') as f:
+        f.write(c)
+        print("Added checklist")
