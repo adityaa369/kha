@@ -1,5 +1,3 @@
-﻿import 'dart:typed_data';
-import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -37,7 +35,7 @@ class PdfGenerator {
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
                   pw.Text('Khataa Loan Statement', style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold, color: PdfColors.blue800)),
-                  pw.Text('CONFIDENTIAL', style: pw.TextStyle(fontSize: 10, color: PdfColors.grey500)),
+                  pw.Text('CONFIDENTIAL', style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey500)),
                 ],
               ),
               pw.SizedBox(height: 4),
@@ -75,9 +73,9 @@ class PdfGenerator {
           pw.SizedBox(height: 8),
           pw.Container(
             padding: const pw.EdgeInsets.all(12),
-            decoration: pw.BoxDecoration(
+            decoration: const pw.BoxDecoration(
               color: PdfColors.grey100,
-              borderRadius: const pw.BorderRadius.all(pw.Radius.circular(8)),
+              borderRadius: pw.BorderRadius.all(pw.Radius.circular(8)),
             ),
             child: pw.Row(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -117,7 +115,7 @@ class PdfGenerator {
             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
             children: [
               _buildMetricBox('Original Principal', 'Rs. ${currencyFmt.format(loan.amount)}'),
-              _buildMetricBox('Total Payable', 'Rs. ${currencyFmt.format(loan.totalPayableAmount ?? loan.amount)}'),
+              _buildMetricBox('Total Payable', 'Rs. ${currencyFmt.format(loan.totalPayableAmount)}'),
               _buildMetricBox('Total Paid', 'Rs. ${currencyFmt.format(loan.paidAmount)}'),
               _buildMetricBox('Remaining Balance', 'Rs. ${currencyFmt.format(loan.remainingAmount)}'),
             ],

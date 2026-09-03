@@ -217,7 +217,7 @@ class _RegistrationOtpPageState extends State<RegistrationOtpPage> {
               BlocConsumer<AuthCubit, AuthState>(
                 listener: (context, state) {
                   if (!mounted) return;
-                  if (state is RegistrationOtpVerified) {
+                  if (state is AuthenticatedKycComplete) {
                     context.go(AppConstants.processing);
                   } else if (state is AuthError) {
                     setState(() {

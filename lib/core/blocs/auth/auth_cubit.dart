@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter/painting.dart';
 import 'package:equatable/equatable.dart';
 import 'package:dio/dio.dart';
 import '../../../data/models/user_model.dart';
@@ -22,74 +23,101 @@ class AuthCubit extends Cubit<AuthState> {
   UserModel? get currentUser => _currentUser;
 
   Future<void> checkAuthStatus() async {
-    emit(AuthLoading());
+    emit(AuthInitial()); // Explicit Bootstrapping
     try {
       final token = await SecureStorage.getToken();
-      final userDataJson = await SecureStorage.getUserData();
-
-      if (token != null && userDataJson != null) {
-        _currentUser = UserModel.fromJson(jsonDecode(userDataJson));
-
-        // INSTANTLY emit authenticated state using local cache!
-        _emitAuthenticatedState();
-
-        // Silently sync with backend to ensure token validity
-        _api
-            .get('/auth/me')
-            .then((response) async {
-              final data = response.data;
-              if (data is Map && data['success'] == true) {
-                _currentUser = UserModel.fromJson(data['user']);
-                await SecureStorage.saveUserData(
-                  jsonEncode(_currentUser!.toFullJson()),
-                );
-                _emitAuthenticatedState(); // Refresh UI with latest data
-              } else {
-                await logout();
-              }
-            })
-            .catchError((_) {
-              // Ignore network timeouts silently during optimistic boot
-            });
-      } else {
+      if (token == null) {
         emit(Unauthenticated());
+        return;
+      }
+
+      // DO NOT emit authenticated state optimistically here anymore!
+      // Wait for authoritative backend validation.
+      try {
+        final response = await _api.get('/auth/me');
+        final data = response.data;
+        if (data is Map && data['success'] == true) {
+          _currentUser = UserModel.fromJson(data['user']);
+          await SecureStorage.saveUserData(jsonEncode(_currentUser!.toFullJson()));
+          _emitAuthoritativeState();
+        } else {
+          await _forceLogout();
+        }
+      } on DioException catch (e) {
+        if (e.response?.statusCode == 401 || e.response?.statusCode == 403) {
+          // Token revoked or user banned
+          await _forceLogout();
+        } else {
+          // Network timeout or 5xx: App is offline but has a cached token.
+          // Fall back to local data so app isn't bricked offline, but mark explicitly as AuthOffline.
+          final userDataJson = await SecureStorage.getUserData();
+          if (userDataJson != null) {
+            _currentUser = UserModel.fromJson(jsonDecode(userDataJson));
+            emit(AuthOffline(user: _currentUser!));
+          } else {
+            await _forceLogout();
+          }
+        }
+      } catch (e) {
+        await _forceLogout();
       }
     } catch (e) {
       emit(Unauthenticated());
     }
   }
 
-  void _emitAuthenticatedState() async {
+Future<void> _forceLogout() async {
+    await SecureStorage.clearAuthData();
+    // 4F-4F: Wipe document-related temporary state / memory cache
+    PaintingBinding.instance.imageCache.clear();
+    PaintingBinding.instance.imageCache.clearLiveImages();
+    _currentUser = null;
+    emit(Unauthenticated());
+  }
+
+  void _emitAuthoritativeState() async {
     if (_currentUser == null) {
       emit(Unauthenticated());
       return;
     }
 
-    // Sync FCM Token quietly in the background
+    if (isPasswordResetFlow) {
+      emit(PasswordResetRequired(user: _currentUser));
+      return;
+    }
+
+    // Sync FCM Token quietly in the background without blocking route
     try {
       final fcmToken = await NotificationService.getToken();
+      // Phase 4E: Backend expects token in body, maps to req.user.id implicitly
       if (fcmToken != null) {
         await _api.post('/users/fcm-token', data: {'fcmToken': fcmToken});
       }
     } catch (_) {}
 
-    if (_currentUser!.isKycComplete && _currentUser!.firstName.isNotEmpty) {
-      emit(AuthenticatedFull(user: _currentUser!));
+    final user = _currentUser!;
+    
+    // Evaluate backend source of truth for routing
+    if (!user.isEmailVerified) {
+      emit(AuthenticatedEmailUnverified(user: user));
+    } else if (!user.isKycComplete || user.firstName.isEmpty) {
+      emit(AuthenticatedEmailVerifiedKycIncomplete(user: user));
     } else {
-      emit(AuthenticatedUnverified(user: _currentUser!));
+      emit(AuthenticatedKycComplete(user: user));
     }
   }
+
+  // -------------------------------------------------------------
+  // Workflow Methods (Note: They now trigger transient UI states 
+  // but eventually re-converge to _emitAuthoritativeState)
+  // -------------------------------------------------------------
 
   Future<void> sendOtp(String phone) async {
     emit(AuthLoading());
     try {
       String formattedPhone = phone.trim();
       if (!formattedPhone.startsWith('+')) {
-        if (formattedPhone.startsWith('91')) {
-          formattedPhone = '+$formattedPhone';
-        } else {
-          formattedPhone = '+91$formattedPhone';
-        }
+        formattedPhone = formattedPhone.startsWith('91') ? '+$formattedPhone' : '+91$formattedPhone';
       }
 
       await FirebaseAuth.instance.verifyPhoneNumber(
@@ -97,6 +125,7 @@ class AuthCubit extends Cubit<AuthState> {
         verificationCompleted: (PhoneAuthCredential credential) async {},
         verificationFailed: (FirebaseAuthException e) {
           emit(AuthError(e.message ?? 'Firebase Verification failed'));
+          checkAuthStatus(); // Revert back to proper baseline on error
         },
         codeSent: (String verificationId, int? resendToken) {
           _verificationId = verificationId;
@@ -107,88 +136,56 @@ class AuthCubit extends Cubit<AuthState> {
         },
       );
     } catch (e) {
-      emit(AuthError('Failed to initiate Firebase OTP: $e'));
+      emit(AuthError('Failed to send OTP: $e'));
+      checkAuthStatus();
     }
   }
 
-  Future<void> startPasswordReset(String phone) async {
-    isPasswordResetFlow = true;
-    await sendOtp(phone);
-  }
-
-  Future<void> verifyOtp(
-    String phone,
-    String otp, {
-    Map<String, dynamic>? registrationDetails,
-  }) async {
-    emit(AuthLoading());
+  Future<void> verifyOtp(String phone, String otp) async {
+    emit(OtpVerifying());
     try {
-      if (_verificationId == null) {
-        emit(
-          const AuthError(
-            'Verification session expired. Please request OTP again.',
-          ),
-        );
-        return;
-      }
-
+      if (_verificationId == null) throw Exception('Verification ID missing');
+      
       final credential = PhoneAuthProvider.credential(
         verificationId: _verificationId!,
         smsCode: otp,
       );
 
-      final UserCredential userCredential = await FirebaseAuth.instance
-          .signInWithCredential(credential);
-      final idToken = await userCredential.user?.getIdToken();
+      final userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+      final idToken = await userCredential.user?.getIdToken(true);
 
-      if (idToken == null) {
-        emit(const AuthError('Failed to get Firebase ID Token'));
-        return;
-      }
+      if (idToken == null) throw Exception('Failed to retrieve Firebase ID Token');
 
-      final response = await _api.post(
-        '/auth/verify-otp',
-        data: {
-          'idToken': idToken,
-          'phone': phone,
-          if (registrationDetails != null)
-            'registrationDetails': registrationDetails,
-        },
-      );
+      // Send ID Token to backend (Phase 4E Contract)
+      final response = await _api.post('/auth/verify-otp', data: {
+        'idToken': idToken,
+        'phone': phone,
+      });
 
       final data = response.data;
       if (data is Map && data['success'] == true) {
-        if (registrationDetails != null) {
-          emit(const RegistrationSuccess());
+        final token = data['token'];
+        await SecureStorage.saveToken(token);
+        
+        _currentUser = UserModel.fromJson(data['user']);
+        await SecureStorage.saveUserData(jsonEncode(_currentUser!.toFullJson()));
+
+        if (isPasswordResetFlow) {
+          isPasswordResetFlow = false;
+          emit(PasswordResetRequired(user: _currentUser));
         } else {
-          final token = data['token'];
-          final userJson = data['user'];
-
-          await SecureStorage.saveToken(token);
-          _currentUser = UserModel.fromJson(userJson);
-          await SecureStorage.saveUserData(
-            jsonEncode(_currentUser!.toFullJson()),
-          );
-
-          if (isPasswordResetFlow) {
-            isPasswordResetFlow = false;
-            emit(const PasswordResetRequired());
-          } else {
-            _emitAuthenticatedState();
-          }
+          _emitAuthoritativeState();
         }
       } else {
-        final errMsg = (data is Map) ? data['message'] : null;
-        emit(AuthError(errMsg ?? 'Invalid backend response'));
+        emit(AuthError((data is Map) ? (data['message'] ?? 'Invalid response') : 'Invalid response'));
+        emit(Unauthenticated());
       }
     } on DioException catch (e) {
-      if (e.error is Failure) {
-        emit(AuthError((e.error as Failure).message));
-      } else {
-        emit(AuthError('Verification failed: ${e.message ?? e.toString()}'));
-      }
+      emit(AuthError(e.error is Failure ? (e.error as Failure).message : 'Verification failed'));
+      emit(Unauthenticated());
     } catch (e) {
       emit(AuthError('Verification failed: $e'));
+      emit(Unauthenticated());
     }
   }
 
@@ -200,35 +197,12 @@ class AuthCubit extends Cubit<AuthState> {
   }) async {
     emit(AuthLoading());
     try {
-      final response = await _api.put(
-        '/users/profile',
-        data: {
-          'firstName': firstName,
-          'lastName': lastName,
-          'email': email,
-          'phone': phone,
-        },
-      );
-
-      final data = response.data;
-      if (data is Map && data['success'] == true) {
-        _currentUser = UserModel.fromJson(data['user']);
-        await SecureStorage.saveUserData(
-          jsonEncode(_currentUser!.toFullJson()),
-        );
-        emit(PersonalDetailsSaved(user: _currentUser!));
-      } else {
-        final errMsg = (data is Map) ? data['message'] : null;
-        emit(AuthError(errMsg ?? 'Failed to save details'));
-      }
-    } on DioException catch (e) {
-      if (e.error is Failure) {
-        emit(AuthError((e.error as Failure).message));
-      } else {
-        emit(AuthError('Failed to save details: ${e.message ?? e.toString()}'));
-      }
+      final response = await _api.put('/users/profile', data: {
+        'firstName': firstName, 'lastName': lastName, 'email': email, 'phone': phone
+      });
+      _handleProfileUpdateResponse(response);
     } catch (e) {
-      emit(AuthError('Failed to save details: $e'));
+      _handleProfileUpdateError(e);
     }
   }
 
@@ -240,178 +214,117 @@ class AuthCubit extends Cubit<AuthState> {
   }) async {
     emit(AuthLoading());
     try {
-      final response = await _api.put(
-        '/users/profile',
-        data: {'pan': pan, 'aadhar': aadhar, 'dob': dob, 'gender': gender},
-      );
-
-      final data = response.data;
-      if (data is Map && data['success'] == true) {
-        _currentUser = UserModel.fromJson(data['user']);
-        await SecureStorage.saveUserData(
-          jsonEncode(_currentUser!.toFullJson()),
-        );
-        emit(PanDetailsSaved(user: _currentUser!));
-      } else {
-        final errMsg = (data is Map) ? data['message'] : null;
-        emit(AuthError(errMsg ?? 'Failed to save PAN details'));
-      }
-    } on DioException catch (e) {
-      if (e.error is Failure) {
-        emit(AuthError((e.error as Failure).message));
-      } else {
-        emit(
-          AuthError('Failed to save PAN details: ${e.message ?? e.toString()}'),
-        );
-      }
+      final response = await _api.put('/users/profile', data: {
+        'pan': pan, 'aadhar': aadhar, 'dob': dob, 'gender': gender
+      });
+      _handleProfileUpdateResponse(response);
     } catch (e) {
-      emit(AuthError('Failed to save PAN details: $e'));
+      _handleProfileUpdateError(e);
     }
   }
 
   Future<void> completeRegistration() async {
     emit(AuthLoading());
     try {
-      if (_currentUser == null) {
-        emit(const AuthError('User data not found'));
-        return;
-      }
-
       final response = await _api.get('/auth/me');
-
-      final data = response.data;
-      if (data is Map && data['success'] == true) {
-        _currentUser = UserModel.fromJson(data['user']);
-        await SecureStorage.saveUserData(
-          jsonEncode(_currentUser!.toFullJson()),
-        );
-        _emitAuthenticatedState();
-      } else {
-        final errMsg = (data is Map) ? data['message'] : null;
-        emit(AuthError(errMsg ?? 'Registration failed'));
-      }
-    } on DioException catch (e) {
-      if (e.error is Failure) {
-        emit(AuthError((e.error as Failure).message));
-      } else {
-        emit(AuthError('Registration failed: ${e.message ?? e.toString()}'));
-      }
+      _handleProfileUpdateResponse(response);
     } catch (e) {
-      emit(AuthError('Registration failed: $e'));
+      _handleProfileUpdateError(e);
+    }
+  }
+
+  void _handleProfileUpdateResponse(Response response) async {
+    final data = response.data;
+    if (data is Map && data['success'] == true) {
+      _currentUser = UserModel.fromJson(data['user']);
+      await SecureStorage.saveUserData(jsonEncode(_currentUser!.toFullJson()));
+      _emitAuthoritativeState(); // Progress user cleanly through standard funnel
+    } else {
+      emit(AuthError((data is Map) ? (data['message'] ?? 'Update failed') : 'Update failed'));
+      _emitAuthoritativeState(); // Fallback to whatever true state they have
+    }
+  }
+
+  void _handleProfileUpdateError(dynamic e) {
+    emit(AuthError(e is DioException && e.error is Failure ? (e.error as Failure).message : e.toString()));
+    if (_currentUser != null) {
+      _emitAuthoritativeState();
+    } else {
+      emit(Unauthenticated());
     }
   }
 
   Future<void> loginWithPassword(String phone, String password) async {
     emit(AuthLoading());
     try {
-      final response = await _api.post(
-        '/auth/login-password',
-        data: {'phone': phone, 'password': password},
-      );
+      final response = await _api.post('/auth/login-password', data: {
+        'phone': phone, 'password': password
+      });
 
       final data = response.data;
       if (data is Map && data['success'] == true) {
-        final token = data['token'];
-        final userJson = data['user'];
-
-        await SecureStorage.saveToken(token);
-        _currentUser = UserModel.fromJson(userJson);
-        await SecureStorage.saveUserData(
-          jsonEncode(_currentUser!.toFullJson()),
-        );
-
-        _emitAuthenticatedState();
+        await SecureStorage.saveToken(data['token']);
+        _currentUser = UserModel.fromJson(data['user']);
+        await SecureStorage.saveUserData(jsonEncode(_currentUser!.toFullJson()));
+        _emitAuthoritativeState();
       } else {
-        final errMsg = (data is Map) ? data['message'] : null;
-        emit(AuthError(errMsg ?? 'Invalid backend response'));
-      }
-    } on DioException catch (e) {
-      if (e.error is Failure) {
-        emit(AuthError((e.error as Failure).message));
-      } else {
-        emit(AuthError('Login failed: ${e.message ?? e.toString()}'));
+        emit(AuthError((data is Map) ? (data['message'] ?? 'Invalid response') : 'Invalid response'));
+        emit(Unauthenticated());
       }
     } catch (e) {
-      emit(AuthError('Login failed: $e'));
+      emit(AuthError(e is DioException && e.error is Failure ? (e.error as Failure).message : e.toString()));
+      emit(Unauthenticated());
     }
   }
 
   Future<void> resetPassword(String newPassword) async {
     emit(AuthLoading());
     try {
-      final response = await _api.post(
-        '/auth/reset-password',
-        data: {'password': newPassword},
-      );
-
-      final data = response.data;
-      if (data is Map && data['success'] == true) {
-        _emitAuthenticatedState();
+      final response = await _api.post('/auth/reset-password', data: {'password': newPassword});
+      if (response.data is Map && response.data['success'] == true) {
+        _emitAuthoritativeState();
       } else {
-        final errMsg = (data is Map) ? data['message'] : null;
-        emit(AuthError(errMsg ?? 'Failed to reset password'));
-      }
-    } on DioException catch (e) {
-      if (e.error is Failure) {
-        emit(AuthError((e.error as Failure).message));
-      } else {
-        emit(AuthError('Reset failed: ${e.message ?? e.toString()}'));
+        emit(AuthError(response.data?['message'] ?? 'Failed to reset password'));
+        _emitAuthoritativeState();
       }
     } catch (e) {
-      emit(AuthError('Reset failed: $e'));
+      emit(AuthError(e is DioException && e.error is Failure ? (e.error as Failure).message : e.toString()));
+      _emitAuthoritativeState();
     }
   }
 
   Future<void> sendVerificationEmail() async {
     try {
       final response = await _api.post('/auth/send-verification-email');
-      if (response.data != null && response.data['success'] == true) {
-        // Success
-      } else {
+      if (response.data == null || response.data['success'] != true) {
         throw Exception(response.data?['message'] ?? 'Failed to send email');
       }
-    } on DioException catch (e) {
-      if (e.error is Failure) {
-        throw Exception((e.error as Failure).message);
-      }
-      throw Exception('Failed to send verification email');
     } catch (e) {
-      throw Exception('An error occurred');
+      throw Exception(e is DioException && e.error is Failure ? (e.error as Failure).message : 'Failed to send email');
     }
   }
 
   Future<void> logout() async {
     emit(AuthLoading());
     try {
-      // Preserve loan/chit cache — only wipe auth credentials
-      await SecureStorage.clearAuthData();
-      _currentUser = null;
-      emit(Unauthenticated());
+      await _forceLogout();
     } catch (e) {
       emit(AuthError('Logout failed: $e'));
+      await _forceLogout(); // Ensure local state is wiped even on error
     }
   }
 
-  /// Initiates credit score processing via backend.
-  /// Falls back gracefully if the endpoint isn't available yet.
   Future<void> processCreditScore() async {
     try {
       final response = await _api.post('/auth/credit-score');
       final data = response.data;
       if (data is Map && data['success'] == true && data['user'] != null) {
         _currentUser = UserModel.fromJson(data['user']);
-        await SecureStorage.saveUserData(
-          jsonEncode(_currentUser!.toFullJson()),
-        );
+        await SecureStorage.saveUserData(jsonEncode(_currentUser!.toFullJson()));
       }
-    } catch (_) {
-      // Non-critical — credit score processing may be async on the backend.
-      // We still proceed to home so registration doesn't get stuck.
-    }
-    emit(const CreditScoreProcessed());
+    } catch (_) {}
+    _emitAuthoritativeState();
   }
 
-  /// Resets cubit to initial state — call when user cancels registration mid-flow
-  void resetToInitial() => emit(AuthInitial());
+  void resetToInitial() => checkAuthStatus();
 }
-

@@ -1,113 +1,84 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:intl/intl.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../../../config/theme.dart';
 import '../../../../data/models/loan_model.dart';
-import '../../../../core/blocs/loans/loan_cubit.dart';
-import '../widgets/repayment_timeline_widget.dart';
-import '../../../../core/blocs/loans/loan_state.dart';
-import '../../../../core/blocs/auth/auth_cubit.dart';
+import '../../../../data/models/interest_schedule_model.dart';
+import '../../../../data/repositories/loan_repository.dart';
+import '../../../../core/blocs/loans/interest_schedule_cubit.dart';
+import '../widgets/flexible_payment_sheet.dart';
+import '../widgets/close_loan_sheet.dart';
 
 class InterestLoanDetailsPage extends StatelessWidget {
   final LoanModel loan;
 
   const InterestLoanDetailsPage({super.key, required this.loan});
 
-  // â”€â”€â”€ Theme â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => InterestScheduleCubit(repository: context.read<LoanRepository>())
+        ..fetchSchedule(loan.id),
+      child: _InterestLoanDetailsView(loan: loan),
+    );
+  }
+}
 
-  static const _primary = Color(0xFFE65100);
-  static const _bg = Color(0xFFFFF3E0);
-  static const _accent = Color(0xFFEF6C00);
+class _InterestLoanDetailsView extends StatelessWidget {
+  final LoanModel loan;
 
-  // â”€â”€â”€ Build â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const _InterestLoanDetailsView({required this.loan});
+
+  String _fmt(num amount) {
+    return NumberFormat('#,##0', 'en_IN').format(amount);
+  }
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<LoanCubit, LoanState>(
-      builder: (context, state) {
-        final activeLoan = state is LoansLoaded
-            ? (state.myLoans + state.givenLoans).firstWhere(
-                (l) => l.id == loan.id,
-                orElse: () => loan,
-              )
-            : loan;
+    final themePrimary = Colors.teal.shade700;
+    final themeBg = Colors.teal.shade50;
+    final isClosed = loan.status == 'closed' || loan.status == 'completed';
+    final isTerminal = isClosed || loan.status == 'rejected' || loan.status == 'cancelled' || loan.status == 'expired';
 
-        return Scaffold(
-          backgroundColor: KhaataTheme.backgroundGrey,
-          appBar: AppBar(
-            backgroundColor: Colors.white,
-            elevation: 0,
-            scrolledUnderElevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.black87),
-              onPressed: () => context.pop(),
-            ),
-            title: Text(
-              'Interest Credit Details',
-              style: TextStyle(
-                color: _primary,
-                fontSize: 16.sp,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            centerTitle: true,
+    return Scaffold(
+      backgroundColor: Colors.grey.shade50,
+      appBar: AppBar(
+        title: const Text('Interest Credit Details'),
+        backgroundColor: themePrimary,
+        foregroundColor: Colors.white,
+      ),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await context.read<InterestScheduleCubit>().fetchSchedule(loan.id);
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: EdgeInsets.all(16.w),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildHeader(themePrimary),
+              SizedBox(height: 16.h),
+              _buildAgreementTerms(themePrimary),
+              SizedBox(height: 16.h),
+              _buildAuthoritativeBalances(themePrimary, themeBg),
+              SizedBox(height: 16.h),
+              _buildInterestTimeline(themePrimary),
+              SizedBox(height: 24.h),
+              if (!isTerminal && loan.financialStatus != 'FROZEN')
+                _buildActionButtons(context, themePrimary),
+              if (loan.financialStatus == 'FROZEN')
+                _buildFrozenWarning(),
+            ],
           ),
-          body: RefreshIndicator(
-            onRefresh: () async => context.read<LoanCubit>().fetchLoans(),
-            child: SingleChildScrollView(
-              padding: EdgeInsets.all(16.w),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _profileCard(context, activeLoan),
-                  SizedBox(height: 16.h),
-                  _statsCard(activeLoan),
-                  SizedBox(height: 16.h),
-                  _interestInfoCard(activeLoan),
-                  SizedBox(height: 16.h),
-                  _paymentProgressCard(activeLoan),
-                  SizedBox(height: 16.h),
-                  _repaymentChecklist(activeLoan),
-                  SizedBox(height: 16.h),
-                  _recentTransactions(activeLoan),
-                  SizedBox(height: 16.h),
-                  _proofDocumentSection(context, activeLoan),
-                  SizedBox(height: 16.h),
-                  SizedBox(height: 8.h),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
+        ),
+      ),
     );
   }
 
-  // ——————————————————————————————————————————————————————————————————————————————
-
-  Widget _profileCard(BuildContext context, LoanModel loan) {
-    String? currentUserId;
-    try {
-      final authState = context.read<AuthCubit>().state;
-      if (authState is AuthenticatedFull) currentUserId = authState.user.id;
-      if (authState is AuthenticatedUnverified) {
-        currentUserId = authState.user.id;
-      }
-    } catch (_) {}
-
-    final isLender = loan.lenderId == currentUserId;
-    final phone = isLender ? (loan.mobile ?? '') : (loan.lenderPhone ?? '');
-    final name = isLender
-        ? (loan.borrowerName.isNotEmpty ? loan.borrowerName : 'Borrower')
-        : (loan.lenderName?.isNotEmpty == true ? loan.lenderName! : 'Lender');
-    final initials = name.isNotEmpty ? name[0].toUpperCase() : 'U';
-    final roleLabel = isLender ? 'Borrower' : 'Lender';
-
+  Widget _buildHeader(Color primary) {
+    final isClosed = loan.status == 'closed' || loan.status == 'completed';
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
@@ -116,432 +87,52 @@ class InterestLoanDetailsPage extends StatelessWidget {
         border: Border.all(color: Colors.grey.shade200),
       ),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Avatar
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                loan.borrowerName.isEmpty ? loan.userId ?? 'Unknown' : loan.borrowerName,
+                style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 4.h),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                decoration: BoxDecoration(
+                  color: isClosed ? Colors.grey.shade100 : Colors.green.shade50,
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: Text(
+                  loan.status.toUpperCase(),
+                  style: TextStyle(
+                    fontSize: 10.sp,
+                    fontWeight: FontWeight.bold,
+                    color: isClosed ? Colors.grey.shade700 : Colors.green.shade700,
+                  ),
+                ),
+              )
+            ],
+          ),
           Container(
-            width: 52.w,
-            height: 52.w,
+            width: 48.w,
+            height: 48.w,
             decoration: BoxDecoration(
-              color: _bg,
-              borderRadius: BorderRadius.circular(26.r),
+              color: primary.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
             ),
             alignment: Alignment.center,
             child: Text(
-              initials,
-              style: TextStyle(
-                color: _primary,
-                fontWeight: FontWeight.w800,
-                fontSize: 18.sp,
-              ),
+              loan.borrowerName.isNotEmpty ? loan.borrowerName[0].toUpperCase() : 'B',
+              style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold, color: primary),
             ),
-          ),
-          SizedBox(width: 12.w),
-
-          // Name + role + phone
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.black87,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                SizedBox(height: 2.h),
-                Text(
-                  roleLabel,
-                  style: TextStyle(
-                    fontSize: 11.sp,
-                    color: _accent,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                if (phone.isNotEmpty) ...[
-                  SizedBox(height: 2.h),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.phone_outlined,
-                        size: 12.sp,
-                        color: Colors.grey,
-                      ),
-                      SizedBox(width: 4.w),
-                      Flexible(
-                        child: Text(
-                          phone,
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            color: Colors.grey.shade600,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ],
-            ),
-          ),
-
-          // Call & WhatsApp icons
-          if (phone.isNotEmpty)
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _iconAction(
-                  icon: Icons.phone,
-                  color: Colors.blue.shade600,
-                  tooltip: 'Call',
-                  onTap: () {
-                    Clipboard.setData(ClipboardData(text: phone));
-                  },
-                ),
-                SizedBox(width: 12.w),
-                _iconAction(
-                  icon: Icons.chat_bubble_outline,
-                  color: Colors.green.shade600,
-                  tooltip: 'WhatsApp',
-                  onTap: () async {
-                    final uri = Uri.parse('https://wa.me/91$phone');
-                    if (await canLaunchUrl(uri)) {
-                      await launchUrl(
-                        uri,
-                        mode: LaunchMode.externalApplication,
-                      );
-                    }
-                  },
-                ),
-              ],
-            ),
+          )
         ],
       ),
     );
   }
 
-  Widget _iconAction({
-    required IconData icon,
-    required Color color,
-    required String tooltip,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            padding: EdgeInsets.all(8.w),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8.r),
-            ),
-            child: Icon(icon, size: 20.sp, color: color),
-          ),
-          SizedBox(height: 4.h),
-          Text(
-            tooltip,
-            style: TextStyle(
-              fontSize: 10.sp,
-              fontWeight: FontWeight.w600,
-              color: color,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // â”€â”€â”€ Stats Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
-  Widget _statsCard(LoanModel loan) {
-    final startStr =
-        '${(loan.startDate ?? DateTime.now()).day} ${_month((loan.startDate ?? DateTime.now()).month)} ${(loan.startDate ?? DateTime.now()).year}';
-    final endStr = loan.endDate != null
-        ? '${loan.endDate!.day} ${_month(loan.endDate!.month)} ${loan.endDate!.year}'
-        : '-';
-    final duration = loan.durationMonths ?? 0;
-    final progress = loan.progress.clamp(0.0, 1.0);
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header badge
-          Padding(
-            padding: EdgeInsets.all(16.w),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 12.w,
-                    vertical: 6.h,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _bg,
-                    borderRadius: BorderRadius.circular(20.r),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.percent, size: 14.sp, color: _primary),
-                      SizedBox(width: 6.w),
-                      Text(
-                        'Interest Credit',
-                        style: TextStyle(
-                          color: _primary,
-                          fontSize: 12.sp,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Flexible(
-                  child: Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 10.w,
-                      vertical: 4.h,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _statusColor(loan.status).withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(12.r),
-                    ),
-                    child: Text(
-                      _statusLabel(loan.status),
-                      style: TextStyle(
-                        color: _statusColor(loan.status),
-                        fontSize: 11.sp,
-                        fontWeight: FontWeight.w700,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          Divider(height: 1, color: Colors.grey.shade100),
-
-          // Key stats grid
-          Padding(
-            padding: EdgeInsets.all(16.w),
-            child: Column(
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: _statItem(
-                        'Principal Amount',
-                        '₹${_fmt(loan.amount)}',
-                      ),
-                    ),
-                    SizedBox(width: 12.w),
-                    Expanded(child: _statItem('Duration', '$duration Months')),
-                  ],
-                ),
-                SizedBox(height: 12.h),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(child: _statItem('Start Date', startStr)),
-                    SizedBox(width: 12.w),
-                    Expanded(child: _statItem('End Date', endStr)),
-                  ],
-                ),
-                SizedBox(height: 12.h),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: _statItem(
-                        'Paid Months',
-                        '0 / $duration',
-                      ),
-                    ),
-                    SizedBox(width: 12.w),
-                    Expanded(
-                      child: _statItem(
-                        'Progress',
-                        '${(progress * 100).toStringAsFixed(0)}%',
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _statItem(String label, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 11.sp,
-            color: Colors.grey.shade500,
-            fontWeight: FontWeight.w400,
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        SizedBox(height: 3.h),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 14.sp,
-            fontWeight: FontWeight.w600,
-            color: Colors.black87,
-          ),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ],
-    );
-  }
-
-  // â”€â”€â”€ Interest Info Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
-  Widget _interestInfoCard(LoanModel loan) {
-    final rate = loan.interestRate ?? 0.0;
-    final duration = loan.durationMonths ?? 0;
-    final monthly = rate > 0
-        ? loan.amount * rate / 100
-        : (loan.emiAmount ?? 0.0);
-    final totalInterest = monthly * duration;
-    final totalPayable = loan.amount + totalInterest;
-    final progress = loan.progress.clamp(0.0, 1.0);
-    final received = monthly * (duration * progress).floor();
-
-    return Container(
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [_primary, _accent],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16.r),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.trending_up, color: Colors.white70, size: 16.sp),
-              SizedBox(width: 6.w),
-              Text(
-                'Interest Overview',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 12.sp,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 16.h),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: _interestStat(
-                  'Interest Rate',
-                  '${rate.toStringAsFixed(1)}% / month',
-                ),
-              ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: _interestStat('Monthly Interest', '₹${_fmt(monthly)}'),
-              ),
-            ],
-          ),
-          SizedBox(height: 12.h),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: _interestStat(
-                  'Total Interest',
-                  '₹${_fmt(totalInterest)}',
-                ),
-              ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: _interestStat('Total Payable', '₹${_fmt(totalPayable)}'),
-              ),
-            ],
-          ),
-          SizedBox(height: 12.h),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: _interestStat('Interest Paid', '₹${_fmt(received)}'),
-              ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: _interestStat(
-                  'Interest Pending',
-                  '₹${_fmt(totalInterest - received)}',
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _interestStat(String label, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          label,
-          style: TextStyle(color: Colors.white60, fontSize: 11.sp, fontWeight: FontWeight.w400),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        SizedBox(height: 3.h),
-        Text(
-          value,
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 14.sp,
-            fontWeight: FontWeight.w600,
-          ),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ],
-    );
-  }
-
-  // â”€â”€â”€ Payment Progress Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
-  Widget _paymentProgressCard(LoanModel loan) {
-    final duration = loan.durationMonths ?? 0;
-    final progress = loan.progress.clamp(0.0, 1.0);
+  Widget _buildAgreementTerms(Color primary) {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
@@ -552,277 +143,103 @@ class InterestLoanDetailsPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Monthly Payments',
-            style: TextStyle(
-              fontSize: 14.sp,
-              fontWeight: FontWeight.w700,
-              color: Colors.black87,
-            ),
+          Row(
+            children: [
+              Icon(Icons.assignment_outlined, color: primary, size: 20.sp),
+              SizedBox(width: 8.w),
+              Text('Agreement Terms', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold)),
+            ],
           ),
-          SizedBox(height: 4.h),
-          Text(
-            '0 of $duration months paid',
-            style: TextStyle(fontSize: 12.sp, color: Colors.grey.shade500),
+          Divider(height: 24.h),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Interest Method', style: TextStyle(color: Colors.grey.shade600, fontSize: 12.sp)),
+              Text('SIMPLE_ORIGINAL_PRINCIPAL', style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w600)),
+            ],
           ),
-          SizedBox(height: 12.h),
-
-          // Progress bar
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8.r),
-            child: LinearProgressIndicator(
-              value: progress,
-              backgroundColor: Colors.grey.shade100,
-              valueColor: const AlwaysStoppedAnimation<Color>(_primary),
-              minHeight: 10.h,
-            ),
+          SizedBox(height: 8.h),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Interest Rate', style: TextStyle(color: Colors.grey.shade600, fontSize: 12.sp)),
+              Text(loan.displayInterestRate, style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w600)),
+            ],
           ),
-          SizedBox(height: 16.h),
-
-          // Month checklist
-          
+          SizedBox(height: 8.h),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Original Principal', style: TextStyle(color: Colors.grey.shade600, fontSize: 12.sp)),
+              Text('₹${_fmt(loan.amount)}', style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w600)),
+            ],
+          ),
+          SizedBox(height: 8.h),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Accrual Convention', style: TextStyle(color: Colors.grey.shade600, fontSize: 12.sp)),
+              Text('ACT/365 Fixed', style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w600)),
+            ],
+          ),
         ],
       ),
     );
   }
 
-  // â”€â”€â”€ Proof Document Section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  Widget _buildAuthoritativeBalances(Color primary, Color bg) {
+    return BlocBuilder<InterestScheduleCubit, InterestScheduleState>(
+      builder: (context, state) {
+        InterestScheduleModel? schedule;
+        if (state is InterestScheduleLoaded) {
+          schedule = state.schedule;
+        } else if (state is InterestScheduleLoading) schedule = state.lastKnownData;
+        else if (state is InterestScheduleError) schedule = state.lastKnownData;
 
-  Widget _proofDocumentSection(BuildContext context, LoanModel loan) {
-    if (loan.documentUrl == null || loan.documentUrl!.trim().isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    final url = loan.documentUrl!;
-    final lowercaseUrl = url.toLowerCase();
-    final isPdf =
-        lowercaseUrl.contains('.pdf') ||
-        lowercaseUrl.split('?').first.endsWith('.pdf');
-
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Agreement & Proof Document',
-            style: TextStyle(
-              fontSize: 14.sp,
-              fontWeight: FontWeight.w700,
-              color: Colors.black87,
-            ),
+        return Container(
+          padding: EdgeInsets.all(16.w),
+          decoration: BoxDecoration(
+            color: primary,
+            borderRadius: BorderRadius.circular(16.r),
           ),
-          SizedBox(height: 12.h),
-          InkWell(
-            onTap: () => _showDocumentDialog(context, url, isPdf),
-            borderRadius: BorderRadius.circular(12.r),
-            child: Container(
-              padding: EdgeInsets.all(12.w),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFF3E0),
-                border: Border.all(color: _primary.withValues(alpha: 0.2)),
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-              child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 children: [
-                  // Thumbnail
-                  Container(
-                    width: 40.w,
-                    height: 40.w,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFF3E0),
-                      borderRadius: BorderRadius.circular(8.r),
-                    ),
-                    clipBehavior: Clip.antiAlias,
-                    child: isPdf
-                        ? const Icon(
-                            Icons.picture_as_pdf,
-                            color: Color(0xFFDC2626),
-                            size: 22,
-                          )
-                        : Image.network(
-                            url,
-                            fit: BoxFit.cover,
-                            loadingBuilder: (context, child, progress) {
-                              if (progress == null) return child;
-                              return Center(
-                                child: SizedBox(
-                                  width: 16.w,
-                                  height: 16.w,
-                                  child: const CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: _primary,
-                                  ),
-                                ),
-                              );
-                            },
-                            errorBuilder: (_, __, ___) => const Icon(
-                              Icons.image,
-                              color: _primary,
-                              size: 22,
-                            ),
-                          ),
+                  Icon(Icons.account_balance_wallet, color: Colors.white70, size: 20.sp),
+                  SizedBox(width: 8.w),
+                  Text('Authoritative Ledger Balances', style: TextStyle(color: Colors.white, fontSize: 14.sp, fontWeight: FontWeight.bold)),
+                  const Spacer(),
+                  if (state is InterestScheduleLoading)
+                    SizedBox(width: 16.w, height: 16.w, child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)),
+                  if (state is InterestScheduleError)
+                    Icon(Icons.error_outline, color: Colors.red.shade200, size: 20.sp),
+                ],
+              ),
+              Divider(height: 24.h, color: Colors.white24),
+              Row(
+                children: [
+                  Expanded(
+                    child: _statBox('Accrued Interest', schedule != null ? '₹${_fmt(schedule.totalAccruedPaise / 100.0)}' : '-', Colors.white),
                   ),
                   SizedBox(width: 12.w),
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          isPdf
-                              ? 'Signed_Agreement_Interest_Credit.pdf'
-                              : 'Proof_Document_Interest_Credit.jpg',
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        SizedBox(height: 2.h),
-                        Text(
-                          'Tap to view proof document',
-                          style: TextStyle(
-                            fontSize: 10.sp,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                      ],
-                    ),
+                    child: _statBox('Interest Paid', schedule != null ? '₹${_fmt(schedule.totalPaidPaise / 100.0)}' : '-', Colors.white),
                   ),
-                  Icon(Icons.visibility_outlined, color: _primary, size: 18.sp),
                 ],
               ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showDocumentDialog(BuildContext context, String url, bool isPdf) {
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (context) {
-        return Dialog(
-          insetPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 24.h),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24.r),
-          ),
-          backgroundColor: Colors.white,
-          clipBehavior: Clip.antiAlias,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Header
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border(
-                    bottom: BorderSide(color: Colors.grey.shade100),
+              SizedBox(height: 16.h),
+              Row(
+                children: [
+                  Expanded(
+                    child: _statBox('Principal Outstanding', '₹${_fmt(loan.principalOutstandingPaise / 100.0)}', Colors.white),
                   ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        isPdf ? 'Agreement & Signature' : 'Proof Document',
-                        style: TextStyle(
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close, color: Colors.black54),
-                      onPressed: () => Navigator.of(context).pop(),
-                      constraints: const BoxConstraints(),
-                      padding: EdgeInsets.zero,
-                    ),
-                  ],
-                ),
-              ),
-              // Body
-              Flexible(
-                child: Container(
-                  color: Colors.grey.shade50,
-                  width: double.infinity,
-                  padding: EdgeInsets.all(16.w),
-                  child: isPdf
-                      ? _pdfPreview(context, url)
-                      : _imagePreview(context, url),
-                ),
-              ),
-              // Footer
-              Container(
-                padding: EdgeInsets.all(16.w),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border(top: BorderSide(color: Colors.grey.shade100)),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () async {
-                          final uri = Uri.parse(url);
-                          if (await canLaunchUrl(uri)) {
-                            await launchUrl(
-                              uri,
-                              mode: LaunchMode.externalApplication,
-                            );
-                          }
-                        },
-                        icon: Icon(Icons.open_in_new, size: 16.sp),
-                        label: Text(
-                          'Open External',
-                          style: TextStyle(fontSize: 13.sp),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: _primary,
-                          side: const BorderSide(color: _primary),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12.r),
-                          ),
-                          padding: EdgeInsets.symmetric(vertical: 12.h),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 12.w),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _primary,
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12.r),
-                          ),
-                          padding: EdgeInsets.symmetric(vertical: 12.h),
-                        ),
-                        child: Text(
-                          'Close',
-                          style: TextStyle(
-                            fontSize: 13.sp,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: _statBox('Interest Outstanding', schedule != null ? '₹${_fmt(schedule.outstandingInterestPaise / 100.0)}' : '-', Colors.orange.shade200),
+                  ),
+                ],
               ),
             ],
           ),
@@ -831,360 +248,164 @@ class InterestLoanDetailsPage extends StatelessWidget {
     );
   }
 
-  Widget _imagePreview(BuildContext context, String url) {
-    return SizedBox(
-      width: double.infinity,
-      height: 300.h,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12.r),
-        child: InteractiveViewer(
-          minScale: 0.5,
-          maxScale: 4.0,
-          child: Image.network(
-            url,
-            fit: BoxFit.contain,
-            cacheWidth: 1080,
-            loadingBuilder: (context, child, progress) {
-              if (progress == null) return child;
-              return const Center(
-                child: CircularProgressIndicator(color: _primary),
-              );
-            },
-            errorBuilder: (_, __, ___) => const Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.broken_image, color: Colors.grey, size: 48),
-                  SizedBox(height: 8),
-                  Text(
-                    'Failed to load image',
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
+  Widget _statBox(String label, String value, Color valueColor) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: TextStyle(color: Colors.white70, fontSize: 11.sp)),
+        SizedBox(height: 4.h),
+        Text(value, style: TextStyle(color: valueColor, fontSize: 16.sp, fontWeight: FontWeight.bold)),
+      ],
     );
   }
 
-  Widget _pdfPreview(BuildContext context, String url) {
+  Widget _buildInterestTimeline(Color primary) {
+    return BlocBuilder<InterestScheduleCubit, InterestScheduleState>(
+      builder: (context, state) {
+        InterestScheduleModel? schedule;
+        if (state is InterestScheduleLoaded) {
+          schedule = state.schedule;
+        } else if (state is InterestScheduleLoading) schedule = state.lastKnownData;
+        else if (state is InterestScheduleError) schedule = state.lastKnownData;
+
+        return Container(
+          padding: EdgeInsets.all(16.w),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16.r),
+            border: Border.all(color: Colors.grey.shade200),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.calendar_month, color: primary, size: 20.sp),
+                  SizedBox(width: 8.w),
+                  Text('Interest Timeline', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold)),
+                ],
+              ),
+              Divider(height: 24.h),
+              if (schedule == null && state is InterestScheduleLoading)
+                const Center(child: CircularProgressIndicator())
+              else if (schedule == null && state is InterestScheduleError)
+                Center(child: Text('Failed to load schedule', style: TextStyle(color: Colors.red.shade400)))
+              else if (schedule != null && schedule.schedule.isEmpty)
+                Center(child: Text('No interest accrued or paid yet', style: TextStyle(color: Colors.grey.shade500)))
+              else if (schedule != null)
+                ...schedule.schedule.map((p) => Padding(
+                  padding: EdgeInsets.only(bottom: 16.h),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(p.month, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.sp)),
+                      SizedBox(height: 8.h),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('Accrued', style: TextStyle(color: Colors.grey.shade600, fontSize: 12.sp)),
+                          Text('₹${_fmt(p.accruedPaise / 100.0)}', style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w600, color: Colors.blue.shade700)),
+                        ],
+                      ),
+                      SizedBox(height: 4.h),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('Paid', style: TextStyle(color: Colors.grey.shade600, fontSize: 12.sp)),
+                          Text('₹${_fmt(p.paidPaise / 100.0)}', style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w600, color: Colors.green.shade700)),
+                        ],
+                      ),
+                      SizedBox(height: 4.h),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('Outstanding', style: TextStyle(color: Colors.grey.shade600, fontSize: 12.sp)),
+                          Text('₹${_fmt((p.accruedPaise - p.paidPaise) / 100.0)}', style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w600, color: Colors.orange.shade700)),
+                        ],
+                      ),
+                      Divider(height: 16.h),
+                    ],
+                  ),
+                )),
+            ],
+          ),
+        );
+      }
+    );
+  }
+
+  Widget _buildFrozenWarning() {
     return Container(
-      width: double.infinity,
-      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 32.h),
+      padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: Colors.grey.shade200),
+        color: Colors.orange.shade50,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: Colors.orange.shade200),
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
+      child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: const BoxDecoration(
-              color: Color(0xFFFEE2E2),
-              shape: BoxShape.circle,
+          Icon(Icons.lock, color: Colors.orange.shade800),
+          SizedBox(width: 12.w),
+          Expanded(
+            child: Text(
+              'This loan is temporarily locked while its financial records are being verified.',
+              style: TextStyle(color: Colors.orange.shade900, fontSize: 12.sp),
             ),
-            child: const Icon(
-              Icons.picture_as_pdf,
-              color: Color(0xFFDC2626),
-              size: 48,
-            ),
-          ),
-          SizedBox(height: 20.h),
-          Text(
-            'PDF Document',
-            style: TextStyle(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            'This document is in PDF format. Tap "Open External" to view it in your browser or PDF reader.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 12.sp,
-              color: Colors.grey.shade600,
-              height: 1.4,
-            ),
-          ),
+          )
         ],
       ),
     );
   }
 
-  // â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-  String _fmt(double v) {
-    if (v.isNaN || v.isInfinite) return '0';
-    return NumberFormat('#,##,##0', 'en_IN').format(v);
-  }
-
-  String _month(int m) {
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    if (m < 1 || m > 12) return 'Jan';
-    return months[m - 1];
-  }
-
-  Color _statusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'active':
-        return Colors.green.shade700;
-      case 'closed':
-        return Colors.grey.shade600;
-      case 'pending_otp':
-      case 'pending_approval':
-        return const Color(0xFFD97706);
-      default:
-        return Colors.blueGrey;
-    }
-  }
-
-  String _statusLabel(String status) {
-    switch (status.toLowerCase()) {
-      case 'active':
-        return 'Active';
-      case 'closed':
-        return 'Closed';
-      case 'pending_otp':
-        return 'Pending OTP';
-      case 'pending_approval':
-        return 'Pending Approval';
-      default:
-        return status;
-    }
-  }
-
-  Widget _recentTransactions(LoanModel loan) {
-    final txns = loan.transactions.reversed.toList(); // newest first
+  Widget _buildActionButtons(BuildContext context, Color primary) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'Recent Transactions',
-              style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w700, color: Colors.black87),
-            ),
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-              decoration: BoxDecoration(
-                color: _bg,
-                borderRadius: BorderRadius.circular(12.r),
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: () => FlexiblePaymentSheet.show(context, loan, 'Record Payment', 'payment'),
+                icon: const Icon(Icons.payment, size: 18),
+                label: const Text('Record Payment'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primary,
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(vertical: 12.h),
+                ),
               ),
-              child: Text(
-                '${txns.length} records',
-                style: TextStyle(fontSize: 11.sp, color: _primary, fontWeight: FontWeight.w600),
+            ),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: () => FlexiblePaymentSheet.show(context, loan, 'Add Credit', 'add_credit'),
+                icon: const Icon(Icons.add_circle_outline, size: 18),
+                label: const Text('Add Credit'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: primary,
+                  side: BorderSide(color: primary),
+                  padding: EdgeInsets.symmetric(vertical: 12.h),
+                ),
               ),
             ),
           ],
         ),
         SizedBox(height: 12.h),
-        if (txns.isEmpty)
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.all(20.w),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(12.r),
-              border: Border.all(color: Colors.grey.shade200),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: () => CloseLoanSheet.show(context, loan),
+            icon: const Icon(Icons.close, size: 18),
+            label: const Text('Close Loan'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.red.shade700,
+              side: BorderSide(color: Colors.red.shade200),
+              padding: EdgeInsets.symmetric(vertical: 12.h),
             ),
-            child: Column(
-              children: [
-                Icon(Icons.receipt_long_outlined, color: Colors.grey.shade400, size: 32.sp),
-                SizedBox(height: 8.h),
-                Text('No transactions recorded yet', style: TextStyle(color: Colors.grey, fontSize: 12.sp)),
-                SizedBox(height: 4.h),
-                Text('Use Record Payment below to log payments', style: TextStyle(color: Colors.grey.shade400, fontSize: 11.sp)),
-              ],
-            ),
-          )
-        else
-          ...txns.map((tx) => _txItem(
-            _txIcon(tx.type as String? ?? ''),
-            _txColor(tx.type as String? ?? ''),
-            _txTitle(tx.type as String? ?? ''),
-            tx.note as String? ?? '',
-            _txAmountStr(tx.type as String? ?? '', (tx.amount as num?)?.toDouble() ?? 0),
-            _txDateStr(tx.recordedAt),
-            _txIsPositive(tx.type as String? ?? ''),
-          )),
+          ),
+        ),
       ],
     );
-  }
-
-  IconData _txIcon(String type) {
-    switch (type) {
-      case 'payment': return Icons.arrow_downward;
-      case 'interest_payment': return Icons.percent;
-      case 'credit_added': return Icons.add_circle_outline;
-      case 'loan_given': return Icons.arrow_upward;
-      default: return Icons.swap_horiz;
-    }
-  }
-
-  Color _txColor(String type) {
-    switch (type) {
-      case 'payment': return Colors.green.shade600;
-      case 'interest_payment': return Colors.teal.shade600;
-      case 'credit_added': return Colors.orange.shade600;
-      case 'loan_given': return Colors.red.shade400;
-      default: return Colors.grey;
-    }
-  }
-
-  String _txTitle(String type) {
-    switch (type) {
-      case 'payment': return 'Payment Received';
-      case 'interest_payment': return 'Interest Received';
-      case 'credit_added': return 'Credit Added';
-      case 'loan_given': return 'Loan Disbursed';
-      default: return 'Transaction';
-    }
-  }
-
-  String _txAmountStr(String type, double amount) {
-    final sign = type == 'loan_given' ? '-' : '+';
-    return '$sign₹${_fmt(amount)}';
-  }
-
-  bool _txIsPositive(String type) => type != 'loan_given';
-
-  String _txDateStr(dynamic rawDate) {
-    if (rawDate == null) return '';
-    try {
-      final dt = DateTime.parse(rawDate.toString()).toLocal();
-      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      return '${dt.day.toString().padLeft(2, '0')} ${months[dt.month - 1]} ${dt.year}';
-    } catch (_) {
-      return '';
-    }
-  }
-
-  Widget _txItem(IconData icon, Color color, String title, String subtitle, String amount, String date, bool isPositive) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 12.h),
-      child: Row(
-        children: [
-          Container(
-            padding: EdgeInsets.all(10.w),
-            decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
-            child: Icon(icon, color: color, size: 16.sp),
-          ),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.sp, color: Colors.black87)),
-                SizedBox(height: 2.h),
-                Text(subtitle, style: TextStyle(color: Colors.grey, fontSize: 11.sp)),
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(amount, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.sp, color: isPositive ? Colors.green.shade700 : Colors.red.shade600)),
-              SizedBox(height: 2.h),
-              Text(date, style: TextStyle(color: Colors.grey, fontSize: 11.sp)),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-
-
-  Widget _repaymentChecklist(LoanModel loan) {
-    final duration = loan.durationMonths ?? 0;
-    final progress = loan.progress.clamp(0.0, 1.0);
-    final paidMonths = (duration * progress).round();
-
-    return Container(
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            loan.type.toLowerCase().contains('interest') || loan.type.toLowerCase().contains('home')
-                ? 'Monthly Interest Overview'
-                : 'Monthly Payment Overview',
-            style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w700, color: Colors.black87),
-          ),
-          SizedBox(height: 12.h),
-          if (duration > 0)
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              child: Row(
-                children: List.generate(duration, (index) {
-                  final isPaid = index < paidMonths;
-                  final dueDate = (loan.startDate ?? loan.activatedAt ?? loan.createdAt ?? DateTime.now()).add(Duration(days: (index + 1) * 30));
-
-                  return Container(
-                    margin: EdgeInsets.only(right: 12.w),
-                    child: Column(
-                      children: [
-                        Text(
-                          '${_monthName(dueDate.month)} ${dueDate.year}',
-                          style: TextStyle(fontSize: 10.sp, color: Colors.grey.shade600),
-                        ),
-                        SizedBox(height: 6.h),
-                        Container(
-                          width: 50.w,
-                          height: 55.h,
-                          decoration: BoxDecoration(
-                            color: isPaid ? Colors.green.shade50 : Colors.white,
-                            border: Border.all(color: isPaid ? Colors.green : Colors.red.shade200, width: 1.5),
-                            borderRadius: BorderRadius.circular(8.r),
-                          ),
-                          alignment: Alignment.center,
-                          child: Icon(
-                            isPaid ? Icons.check : Icons.close,
-                            color: isPaid ? Colors.green : Colors.red.shade300,
-                            size: 20.sp,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  String _monthName(int m) {
-    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    return months[m - 1];
   }
 
 }

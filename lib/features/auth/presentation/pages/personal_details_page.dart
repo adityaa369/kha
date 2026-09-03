@@ -63,7 +63,7 @@ class _PersonalDetailsPageState extends State<PersonalDetailsPage> {
       body: BlocListener<AuthCubit, AuthState>(
         listener: (context, state) {
           if (!mounted) return;
-          if (state is PersonalDetailsSaved || state is AuthenticatedFull) {
+          if (state is AuthenticatedKycComplete || state is AuthenticatedKycComplete) {
             context.push(AppConstants.panDetails);
           } else if (state is AuthError) {
             ScaffoldMessenger.of(

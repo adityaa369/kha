@@ -97,8 +97,8 @@ class _VerifyEmailBottomSheetState extends State<VerifyEmailBottomSheet> {
       
       final state = context.read<AuthCubit>().state;
       bool isVerified = false;
-      if (state is AuthenticatedFull && state.user.isEmailVerified) isVerified = true;
-      if (state is AuthenticatedUnverified && state.user.isEmailVerified) isVerified = true;
+      if (state is AuthenticatedKycComplete && state.user.isEmailVerified) isVerified = true;
+      if (state is AuthenticatedEmailUnverified && state.user.isEmailVerified) isVerified = true;
 
       if (isVerified) {
         context.pop();
@@ -224,7 +224,7 @@ class _VerifyEmailBottomSheetState extends State<VerifyEmailBottomSheet> {
                   ? SizedBox(
                       height: 20.sp,
                       width: 20.sp,
-                      child: CircularProgressIndicator(
+                      child: const CircularProgressIndicator(
                         strokeWidth: 2,
                         valueColor: AlwaysStoppedAnimation(KhaataTheme.primaryBlue),
                       ),

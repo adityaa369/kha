@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:dio_smart_retry/dio_smart_retry.dart';
 import 'package:flutter/foundation.dart';
@@ -90,26 +90,39 @@ class ApiClient {
               case DioExceptionType.badResponse:
                 final responseData = e.response?.data;
                 String? msg;
+                String? code;
                 if (responseData is Map) {
                   msg = responseData['message']?.toString();
+                  code = responseData['code']?.toString();
                 } else if (responseData is String) {
                   msg = responseData;
                 }
-                                final statusCode = e.response?.statusCode ?? 500;
+                final statusCode = e.response?.statusCode ?? 500;
                 
                 // F.2 Emergency UX: Trap 503 Kill Switch response
                 if (statusCode == 503) {
                   onMaintenanceMode?.call();
-                  myException = e.copyWith(error: ServerFailure(msg ?? 'Financial operations are temporarily suspended.'));
+                  myException = e.copyWith(error: ServerFailure(msg ?? 'Financial operations are temporarily suspended.', code));
                   break;
                 }
                 
-                if (statusCode >= 500) {
-                  myException = e.copyWith(error: ServerFailure(msg ?? 'Internal Server Error'));
-                } else if (statusCode == 403) {
-                  myException = e.copyWith(error: AuthFailure(msg ?? 'Access denied'));
+                // 4F-6: Structured Error Code Mapping
+                if (code == 'RATE_LIMITED' || statusCode == 429) {
+                  myException = e.copyWith(error: RateLimitedFailure(msg ?? 'Too many requests', code));
+                } else if (code == 'INTENT_CONSUMED') {
+                  myException = e.copyWith(error: IntentConsumedFailure(msg ?? 'Action already completed', code));
+                } else if (code == 'OVERPAYMENT_REJECTED' || code == 'LOAN_FROZEN' || code == 'TERMINAL_STATE' || code == 'BUSINESS_ERROR') {
+                  myException = e.copyWith(error: BusinessLogicFailure(msg ?? 'Operation rejected', code));
+                } else if (code == 'INVALID_ID' || code == 'VALIDATION_ERROR') {
+                  myException = e.copyWith(error: ValidationFailure(msg ?? 'Invalid request data', code));
+                } else if (code == 'UNAUTHORIZED' || statusCode == 401) {
+                  myException = e.copyWith(error: AuthFailure(msg ?? 'Session expired', code));
+                } else if (code == 'FORBIDDEN' || statusCode == 403) {
+                  myException = e.copyWith(error: AuthFailure(msg ?? 'Access denied', code));
+                } else if (statusCode >= 500) {
+                  myException = e.copyWith(error: ServerFailure(msg ?? 'Internal Server Error', code));
                 } else {
-                  myException = e.copyWith(error: ValidationFailure(msg ?? 'Request failed'));
+                  myException = e.copyWith(error: ValidationFailure(msg ?? 'Request failed', code));
                 }
                 break;
               default:
@@ -204,7 +217,7 @@ class ApiClient {
 
   Dio get dio => _dio;
   Future<Response> get(String path, {Map<String, dynamic>? queryParameters, Options? options}) async => await _dio.get(path, queryParameters: queryParameters, options: options);
-  Future<Response> post(String path, {dynamic data}) async => await _dio.post(path, data: data);
+  Future<Response> post(String path, {dynamic data, Options? options}) async => await _dio.post(path, data: data, options: options);
   Future<Response> put(String path, {dynamic data}) async => await _dio.put(path, data: data);
   Future<Response> patch(String path, {dynamic data}) async => await _dio.patch(path, data: data);
   Future<Response> delete(String path, {dynamic data}) async => await _dio.delete(path, data: data);

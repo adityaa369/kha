@@ -154,11 +154,7 @@ class _LoanConfirmationPageState extends State<LoanConfirmationPage> {
         final loanId = widget.loanData['loan_id'];
         if (loanId == null) throw 'Missing loan ID';
 
-        final success = await context.read<LoanCubit>().verifyLenderOtp(
-          loanId,
-          _currentOtp,
-          _verificationId!,
-        );
+        final success = await context.read<LoanCubit>().verifyLenderOtp(loanId);
 
         if (!mounted) return;
         setState(() => _isLoading = false);

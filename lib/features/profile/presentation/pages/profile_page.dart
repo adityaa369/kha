@@ -17,9 +17,9 @@ class ProfilePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final authState = context.watch<AuthCubit>().state;
     bool isAdmin = false;
-    if (authState is AuthenticatedFull) {
+    if (authState is AuthenticatedKycComplete) {
       isAdmin = authState.user.isAdmin;
-    } else if (authState is AuthenticatedUnverified) {
+    } else if (authState is AuthenticatedEmailUnverified) {
       isAdmin = authState.user.isAdmin;
     }
 
@@ -89,12 +89,12 @@ class ProfilePage extends StatelessWidget {
                           String? email;
                           bool isEmailVerified = false;
 
-                          if (state is AuthenticatedFull) {
+                          if (state is AuthenticatedKycComplete) {
                             fullName = state.user.displayName;
                             gender = state.user.gender;
                             email = state.user.email;
                             isEmailVerified = state.user.isEmailVerified;
-                          } else if (state is AuthenticatedUnverified) {
+                          } else if (state is AuthenticatedEmailUnverified) {
                             fullName = 'Verified User';
                             gender = state.user.gender;
                             email = state.user.email;

@@ -1,4 +1,3 @@
-import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
@@ -6,12 +5,11 @@ import 'package:go_router/go_router.dart';
 import '../../../../config/theme.dart';
 import '../../../../config/constants.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../core/blocs/auth/auth_cubit.dart';
 import '../../../../core/blocs/loans/loan_cubit.dart';
 import '../../../../core/blocs/loans/loan_state.dart';
 import '../../../../core/blocs/navigation/navigation_cubit.dart';
 import '../../../../data/models/loan_model.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import '../widgets/close_loan_sheet.dart';
 
 class LoansGivenPage extends StatelessWidget {
   const LoansGivenPage({super.key});
@@ -234,156 +232,8 @@ class LoansGivenPage extends StatelessWidget {
                 totalPayable: loan.totalPayable != null
                     ? '₹ ${_formatCurrency(loan.totalPayable!)}'
                     : null,
-                onCloseLoan: () async {
-                  final router = GoRouter.of(context);
-                  final navigator = Navigator.of(context, rootNavigator: true);
-                  final sm = ScaffoldMessenger.of(context);
-                  final loanCubit = context.read<LoanCubit>();
+                onCloseLoan: () => CloseLoanSheet.show(context, loan),
 
-                  showDialog(
-                    context: context,
-                    barrierDismissible: false,
-                    builder: (context) =>
-                        const Center(child: CircularProgressIndicator()),
-                  );
-
-                  try {
-                    final phone = loan.mobile;
-                    if (phone == null || phone.isEmpty) {
-                      throw 'Borrower phone number is missing';
-                    }
-                    final formattedPhone = phone.startsWith('+')
-                        ? phone
-                        : '+91$phone';
-
-                    String? verificationId;
-
-                    await FirebaseAuth.instance.verifyPhoneNumber(
-                      phoneNumber: formattedPhone,
-                      verificationCompleted:
-                          (PhoneAuthCredential credential) {},
-                      verificationFailed: (FirebaseAuthException e) {
-                        navigator.pop(); // close loader
-                        sm.showSnackBar(
-                          SnackBar(
-                            backgroundColor: KhaataTheme.dangerRed,
-                            content: Text(
-                              'Firebase SMS OTP failed: ${e.message}',
-                            ),
-                          ),
-                        );
-                      },
-                      codeSent: (String vId, int? resendToken) {
-                        navigator.pop(); // close loader
-                        verificationId = vId;
-
-                        final otpController = TextEditingController();
-                        showDialog(
-                          context: context,
-                          barrierDismissible: false,
-                          builder: (dialogContext) => AlertDialog(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            title: const Text(
-                              'Finalize Closure',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            content: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  'An OTP has been sent securely via Firebase SMS to the borrower ($formattedPhone). Enter it below to mutually confirm the agreement closure.',
-                                ),
-                                const SizedBox(height: 16),
-                                TextField(
-                                  controller: otpController,
-                                  keyboardType: TextInputType.number,
-                                  maxLength: 6,
-                                  decoration: InputDecoration(
-                                    hintText: '6-digit OTP',
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    filled: true,
-                                    fillColor: Colors.grey[100],
-                                    counterText: '',
-                                  ),
-                                ),
-                              ],
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(dialogContext),
-                                child: const Text(
-                                  'Cancel',
-                                  style: TextStyle(color: Colors.grey),
-                                ),
-                              ),
-                              ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.green.shade700,
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                                onPressed: () async {
-                                  if (otpController.text.length != 6) return;
-
-                                  Navigator.pop(dialogContext); // hide dialog
-
-                                  showDialog(
-                                    context: context,
-                                    barrierDismissible: false,
-                                    builder: (_) => const Center(
-                                      child: CircularProgressIndicator(),
-                                    ),
-                                  );
-
-                                  final success = await loanCubit.closeLoan(
-                                    loan.id,
-                                    otpController.text,
-                                    verificationId!,
-                                  );
-
-                                  navigator.pop(); // hide loader
-
-                                  if (success) {
-                                    router.push(AppConstants.loanCloseSuccess);
-                                  } else {
-                                    final state = loanCubit.state;
-                                    final String errorMsg = state is LoanError
-                                        ? state.message
-                                        : 'Invalid Authentication OTP.';
-                                    sm.showSnackBar(
-                                      SnackBar(
-                                        backgroundColor: KhaataTheme.dangerRed,
-                                        content: Text(errorMsg),
-                                      ),
-                                    );
-                                  }
-                                },
-                                child: const Text('Confirm'),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                      codeAutoRetrievalTimeout: (String vId) {
-                        verificationId = vId;
-                      },
-                    );
-                  } catch (e) {
-                    navigator.pop(); // close loader
-                    sm.showSnackBar(
-                      SnackBar(
-                        backgroundColor: KhaataTheme.dangerRed,
-                        content: Text('Failed to initiate closure OTP: $e'),
-                      ),
-                    );
-                  }
-                },
               ),
             );
           },

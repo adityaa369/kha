@@ -46,7 +46,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                 backgroundColor: KhaataTheme.dangerRed,
               ),
             );
-          } else if (state is AuthenticatedFull) {
+          } else if (state is AuthenticatedKycComplete) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('Password reset successfully!'),

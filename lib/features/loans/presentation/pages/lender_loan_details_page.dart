@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
+import '../widgets/close_loan_sheet.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../config/constants.dart';
@@ -131,8 +132,8 @@ class LenderLoanDetailsPage extends StatelessWidget {
                       SizedBox(height: 14.h),
                       _recentTransactions(activeLoan, theme),
                       SizedBox(height: 14.h),
-                      if (activeLoan.documentUrl != null &&
-                          activeLoan.documentUrl!.isNotEmpty) ...[
+                      if (activeLoan.documentId != null &&
+                          activeLoan.documentId!.isNotEmpty) ...[
                         _documentSection(context, activeLoan, theme),
                         SizedBox(height: 16.h),
                       ],
@@ -284,13 +285,13 @@ class LenderLoanDetailsPage extends StatelessWidget {
         ? loan.amount * rate / 100
         : (loan.emiAmount ?? 0.0);
     // originalTotal = what was owed at activation
-    final originalTotal = (loan.totalPayableAmount != null && loan.paidAmount != null && loan.paidAmount! > 0)
-        ? loan.totalPayableAmount! + loan.paidAmount!
-        : ((loan.totalPayableAmount ?? 0.0) > 0
-            ? loan.totalPayableAmount!
+    final originalTotal = loan.paidAmount > 0
+        ? loan.totalPayableAmount + loan.paidAmount
+        : (loan.totalPayableAmount > 0
+            ? loan.totalPayableAmount
             : loan.amount + (monthly * duration));
     // remaining = what the backend says is still owed (totalPayableAmount is updated on each payment)
-    final remaining = loan.totalPayableAmount ?? (originalTotal * (1 - progress));
+    final remaining = loan.totalPayableAmount;
     final collected = originalTotal - remaining;
     final isInterest = loan.type.toLowerCase().contains('interest') || loan.type.toLowerCase().contains('home');
 
@@ -801,7 +802,7 @@ class LenderLoanDetailsPage extends StatelessWidget {
     LoanModel loan,
     _TypeTheme theme,
   ) {
-    if (loan.documentUrl == null || loan.documentUrl!.trim().isEmpty) {
+    if (loan.documentId == null || loan.documentId!.trim().isEmpty) {
       return Container(
         padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(
@@ -826,7 +827,7 @@ class LenderLoanDetailsPage extends StatelessWidget {
       );
     }
 
-    final url = loan.documentUrl!;
+    final url = loan.documentId!;
     final isPdf = url.toLowerCase().contains('.pdf');
 
     return Container(
@@ -1279,7 +1280,7 @@ class LenderLoanDetailsPage extends StatelessWidget {
             SizedBox(width: 8.w),
             Expanded(
               child: ElevatedButton.icon(
-                onPressed: () => _initiateLoanClose(context, loan),
+                onPressed: () => CloseLoanSheet.show(context, loan),
                 icon: Icon(Icons.delete, size: 14.sp),
                 label: Text('Close Loan', style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.bold)),
                 style: ElevatedButton.styleFrom(
@@ -1317,140 +1318,9 @@ class LenderLoanDetailsPage extends StatelessWidget {
 
   // â”€â”€â”€ Close Loan (OTP) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-  void _initiateLoanClose(BuildContext context, LoanModel loan) {
-    final loanCubit = context.read<LoanCubit>();
-    final sm = ScaffoldMessenger.of(context);
-    final phone = loan.mobile ?? '';
-    if (phone.isEmpty) {
-      sm.showSnackBar(
-        const SnackBar(
-          backgroundColor: Colors.red,
-          content: Text('Borrower phone number missing'),
-        ),
-      );
-      return;
-    }
 
-    final formatted = phone.startsWith('+') ? phone : '+91$phone';
 
-    // Show loading
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator()),
-    );
 
-    FirebaseAuth.instance.verifyPhoneNumber(
-      phoneNumber: formatted,
-      verificationCompleted: (_) {},
-      verificationFailed: (e) {
-        if (context.mounted) Navigator.of(context, rootNavigator: true).pop();
-        sm.showSnackBar(
-          SnackBar(
-            backgroundColor: Colors.red,
-            content: Text('OTP failed: ${e.message}'),
-          ),
-        );
-      },
-      codeSent: (String vId, int? _) {
-        if (context.mounted) Navigator.of(context, rootNavigator: true).pop();
-        _showOtpDialog(context, loan, loanCubit, vId, formatted, sm);
-      },
-      codeAutoRetrievalTimeout: (_) {},
-    );
-  }
-
-  void _showOtpDialog(
-    BuildContext context,
-    LoanModel loan,
-    LoanCubit loanCubit,
-    String vId,
-    String phone,
-    ScaffoldMessengerState sm,
-  ) {
-    final otpCtrl = TextEditingController();
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
-          'Confirm Closure',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'An OTP has been sent to the borrower ($phone). Enter it to confirm closure.',
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: otpCtrl,
-              keyboardType: TextInputType.number,
-              maxLength: 6,
-              decoration: InputDecoration(
-                hintText: '6-digit OTP',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                filled: true,
-                fillColor: Colors.grey[100],
-                counterText: '',
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red.shade700,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            onPressed: () async {
-              if (otpCtrl.text.length != 6) return;
-              Navigator.pop(dialogContext);
-              showDialog(
-                context: context,
-                barrierDismissible: false,
-                builder: (_) =>
-                    const Center(child: CircularProgressIndicator()),
-              );
-
-              final success = await loanCubit.closeLoan(
-                loan.id,
-                otpCtrl.text,
-                vId,
-              );
-              if (context.mounted) {
-                Navigator.of(context, rootNavigator: true).pop();
-              }
-
-              if (success && context.mounted) {
-                context.go(AppConstants.loanCloseSuccess);
-              } else {
-                sm.showSnackBar(
-                  const SnackBar(
-                    backgroundColor: Colors.red,
-                    content: Text('Invalid OTP. Closure failed.'),
-                  ),
-                );
-              }
-            },
-            child: const Text('Confirm Close'),
-          ),
-        ],
-      ),
-    );
-  }
 
   // â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 

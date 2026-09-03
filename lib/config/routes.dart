@@ -1,28 +1,29 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+
 import '../core/blocs/auth/auth_cubit.dart';
+import '../features/splash/presentation/pages/splash_page.dart';
+import '../features/auth/presentation/pages/auth_choice_page.dart';
 import '../features/auth/presentation/pages/login_page.dart';
-import '../features/auth/presentation/pages/otp_page.dart';
-import '../features/auth/presentation/pages/pan_details_page.dart';
-import '../features/auth/presentation/pages/personal_details_page.dart';
-import '../features/auth/presentation/pages/registration_otp_page.dart';
-import '../features/auth/presentation/pages/welcome_page.dart';
 import '../features/auth/presentation/pages/signup_page.dart';
+import '../features/auth/presentation/pages/otp_page.dart';
+import '../features/auth/presentation/pages/personal_details_page.dart';
+import '../features/auth/presentation/pages/pan_details_page.dart';
 import '../features/auth/presentation/pages/processing_page.dart';
 import '../features/auth/presentation/pages/reset_password_page.dart';
+import '../features/auth/presentation/pages/registration_otp_page.dart';
+import '../features/auth/presentation/pages/welcome_page.dart';
 import '../features/home/presentation/pages/home_page.dart';
-import '../features/insights/presentation/pages/insights_page.dart';
-import '../features/loans/presentation/pages/loans_given_page.dart';
-import '../features/loans/presentation/pages/my_loans_page.dart';
 import '../features/profile/presentation/pages/profile_page.dart';
+import '../features/insights/presentation/pages/insights_page.dart';
+import '../features/loans/presentation/pages/my_loans_page.dart';
+import '../features/loans/presentation/pages/loans_given_page.dart';
 import '../features/loans/presentation/pages/create_loan_page.dart';
 import '../features/loans/presentation/pages/loan_confirmation_page.dart';
 import '../features/loans/presentation/pages/loan_success_page.dart';
 import '../features/loans/presentation/pages/loan_close_success_page.dart';
 import '../features/loans/presentation/pages/loan_details_page.dart';
-import '../features/loans/presentation/pages/lender_loan_details_page.dart';
-import '../features/splash/presentation/pages/splash_page.dart';
-import '../features/auth/presentation/pages/auth_choice_page.dart';
+
 import '../features/chit_funds/presentation/pages/chit_invites_page.dart';
 import '../features/chit_funds/presentation/pages/my_chits_page.dart';
 import '../features/chit_funds/presentation/pages/create_chit_page.dart';
@@ -31,6 +32,8 @@ import '../features/chit_funds/presentation/pages/chit_success_page.dart';
 import '../features/chit_funds/presentation/pages/chit_group_admin_page.dart';
 import '../features/home/presentation/pages/notifications_page.dart';
 import '../features/loans/presentation/pages/loan_approval_page.dart';
+import '../features/loans/presentation/pages/add_credit_approval_page.dart';
+import '../features/loans/presentation/pages/close_loan_approval_page.dart';
 import '../features/chit_funds/presentation/pages/chit_live_auction_page.dart';
 import '../features/chit_funds/presentation/pages/chit_home_page.dart';
 import '../features/chit_funds/presentation/pages/chit_member_detail_page.dart';
@@ -41,7 +44,6 @@ import '../data/repositories/security_repository.dart';
 import '../core/network/api_client.dart';
 
 
-import '../data/models/loan_model.dart';
 import 'constants.dart';
 
 final router = GoRouter(
@@ -58,19 +60,19 @@ final router = GoRouter(
       '/auth-choice',
     ].contains(state.uri.path);
 
-    final isOnboardingRoute = [
-      AppConstants.personalDetails,
-      AppConstants.panDetails,
-      AppConstants.registrationOtp,
-      AppConstants.processing,
-    ].contains(state.uri.path);
+    // Bootstrapping Phase: Trap in Splash and preserve intent via query param
+    if (authState is AuthInitial) {
+      if (state.uri.path != AppConstants.splash) {
+        return '${AppConstants.splash}?redirect_to=${Uri.encodeComponent(state.uri.toString())}';
+      }
+      return null;
+    }
 
-    if (state.uri.path == AppConstants.splash) return null;
-
-    if (authState is Unauthenticated ||
-        authState is AuthInitial ||
-        authState is RegistrationSuccess) {
-      if (!isAuthRoute && state.uri.path != '/reset-password') return AppConstants.login;
+    if (authState is Unauthenticated) {
+      if (!isAuthRoute && state.uri.path != '/reset-password') {
+        // Here we could technically save redirect_to for post-login, but for now just protect routes.
+        return AppConstants.login;
+      }
       return null;
     }
 
@@ -81,26 +83,26 @@ final router = GoRouter(
       return null;
     }
 
-    if (authState is OtpVerified ||
-        authState is RegistrationOtpVerified) {
-      final user = null; // No user available yet in these states
-      if (user != null && user.firstName.isNotEmpty) {
-        if (state.uri.path != AppConstants.panDetails) {
-          return AppConstants.panDetails;
-        }
+    // KYC Progress
+    if (authState is AuthenticatedEmailVerifiedKycIncomplete) {
+      final user = authState.user;
+      if (user.firstName.isEmpty) {
+        if (state.uri.path != AppConstants.personalDetails) return AppConstants.personalDetails;
       } else {
-        if (state.uri.path != AppConstants.personalDetails) {
-          return AppConstants.personalDetails;
-        }
+        if (state.uri.path != AppConstants.panDetails) return AppConstants.panDetails;
       }
       return null;
     }
 
-    // Navigation is handled by BlocListeners in the UI
-    // to allow back navigation without being trapped by GoRouter
-
-    if (authState is AuthenticatedFull) {
-      if (isAuthRoute || isOnboardingRoute) return AppConstants.home;
+    // Full Authorized State
+    if (authState is AuthenticatedKycComplete) {
+      // If they were originally trying to go somewhere and hit splash, let them through
+      if (state.uri.path == AppConstants.splash) {
+        final redirect = state.uri.queryParameters['redirect_to'];
+        if (redirect != null && redirect.isNotEmpty) return redirect;
+      }
+      // If they go to login/auth pages while fully authenticated, bounce to home
+      if (isAuthRoute) return AppConstants.home;
       return null;
     }
 
@@ -189,10 +191,36 @@ final router = GoRouter(
       builder: (context, state) => const NotificationsPage(),
     ),
     GoRoute(
-      path: AppConstants.loanApproval,
+      path: '/close-loan-approval/:intentId',
       builder: (context, state) {
-        final loan = state.extra as LoanModel;
-        return LoanApprovalPage(loan: loan);
+        final intentId = state.pathParameters['intentId'] ?? '';
+        final loanId = state.uri.queryParameters['loanId'] ?? '';
+        return CloseLoanApprovalPage(
+          loanId: loanId,
+          intentId: intentId,
+        );
+      },
+    ),
+    GoRoute(
+      path: '/add-credit-approval/:intentId',
+      builder: (context, state) {
+        final intentId = state.pathParameters['intentId'] ?? '';
+        final loanId = state.uri.queryParameters['loanId'] ?? '';
+        final amountStr = state.uri.queryParameters['amount'] ?? '0';
+        final amountRupees = double.tryParse(amountStr) ?? 0;
+        return AddCreditApprovalPage(
+          loanId: loanId,
+          intentId: intentId,
+          amountRupees: amountRupees,
+        );
+      },
+    ),
+    GoRoute(
+      path: '${AppConstants.loanApproval}/:id',
+      builder: (context, state) {
+        final id = state.pathParameters['id'] ?? '';
+        // UI layer will fetch the actual loan using ID
+        return LoanApprovalPage(loanId: id);
       },
     ),
     GoRoute(
@@ -204,19 +232,13 @@ final router = GoRouter(
       builder: (context, state) => const LoanCloseSuccessPage(),
     ),
     GoRoute(
-      path: AppConstants.loanDetails,
+      path: '${AppConstants.loanDetails}/:id',
       builder: (context, state) {
-        final loan = state.extra as LoanModel;
-        return LoanDetailsPage(loan: loan);
+        final id = state.pathParameters['id'] ?? '';
+        return LoanDetailsPage(loanId: id);
       },
     ),
-    GoRoute(
-      path: AppConstants.lenderLoanDetails,
-      builder: (context, state) {
-        final loan = state.extra as LoanModel;
-        return LenderLoanDetailsPage(loan: loan);
-      },
-    ),
+
     GoRoute(
       path: '/auth-choice',
       builder: (context, state) => const AuthChoicePage(),
@@ -224,7 +246,6 @@ final router = GoRouter(
     GoRoute(
       path: '/chit-live-auction',
       builder: (context, state) {
-        // Fallback ledger ID if not provided (for deep link demo)
         final ledgerId = state.uri.queryParameters['ledgerId'] ?? 'demo_ledger_123';
         return ChitLiveAuctionPage(ledgerId: ledgerId);
       },

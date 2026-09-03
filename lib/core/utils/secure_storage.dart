@@ -130,14 +130,18 @@ class SecureStorage {
     return value != null ? DateTime.parse(value) : null;
   }
 
-  // Clear only auth credentials — preserves loan/chit cache for next login
+  // Clear auth credentials and sensitive caches to prevent cross-user leakage
   static Future<void> clearAuthData() async {
     await _storage.delete(key: _tokenKey);
-    await _storage.delete(key: _refreshTokenKey);
     await _storage.delete(key: _refreshTokenKey);
     await _storage.delete(key: _userKey);
     await _storage.delete(key: _biometricEnabledKey);
     await _storage.delete(key: _lastLoginKey);
+    // MUST clear financial caches
+    await _storage.delete(key: _loansKey);
+    await _storage.delete(key: _vacantChitsKey);
+    await _storage.delete(key: _myInvitesKey);
+    await _storage.delete(key: _myChitsKey);
   }
 
   // Clear all (full wipe — use only when user explicitly wants to erase all data)

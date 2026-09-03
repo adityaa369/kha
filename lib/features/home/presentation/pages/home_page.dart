@@ -1,4 +1,3 @@
-import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -55,7 +54,7 @@ class _HomeViewState extends State<_HomeView> {
     });
 
     _authSub = context.read<AuthCubit>().stream.listen((authState) {
-      if (authState is AuthenticatedFull) {
+      if (authState is AuthenticatedKycComplete) {
         if (mounted) {
           if (context.read<LoanCubit>().state is LoanInitial) {
             context.read<LoanCubit>().fetchLoans();
@@ -498,7 +497,7 @@ class _TopBarState extends State<_TopBar> {
                 child: BlocBuilder<AuthCubit, AuthState>(
                   builder: (context, state) {
                     String? gender;
-                    if (state is AuthenticatedFull) {
+                    if (state is AuthenticatedKycComplete) {
                       gender = state.user.gender;
                     }
                     return Container(
@@ -543,7 +542,7 @@ class _GreetingSection extends StatelessWidget {
           BlocBuilder<AuthCubit, AuthState>(
             builder: (context, state) {
               String name = 'User';
-              if (state is AuthenticatedFull) {
+              if (state is AuthenticatedKycComplete) {
                 name = state.user.firstName;
               }
               return Row(

@@ -61,7 +61,7 @@ class _LoginPageState extends State<LoginPage> {
             style: ElevatedButton.styleFrom(backgroundColor: KhaataTheme.primaryBlue),
             onPressed: () {
               Navigator.pop(ctx);
-              context.read<AuthCubit>().startPasswordReset(phone);
+              // context.read<AuthCubit>().startPasswordReset(phone);
               context.push('/otp', extra: phone);
             },
             child: const Text('Send OTP', style: TextStyle(color: Colors.white)),
@@ -78,11 +78,12 @@ class _LoginPageState extends State<LoginPage> {
       body: BlocConsumer<AuthCubit, AuthState>(
         listener: (context, state) {
           if (!mounted) return;
-          if (state is AuthError) {
+
+          if (state is AuthError) {
             DialogUtils.showErrorDialog(context, state.message);
-          } else if (state is AuthenticatedFull) {
+          } else if (state is AuthenticatedKycComplete) {
             context.go('/home');
-          } else if (state is AuthenticatedUnverified) {
+          } else if (state is AuthenticatedEmailUnverified) {
             context.go('/home');
           }
         },

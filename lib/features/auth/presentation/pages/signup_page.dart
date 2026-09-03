@@ -157,7 +157,7 @@ class _SignupPageState extends State<SignupPage> {
       context.read<AuthCubit>().verifyOtp(
         phone,
         otp,
-        registrationDetails: registrationDetails,
+        // registrationDetails: registrationDetails,
       );
     }
   }
@@ -188,14 +188,14 @@ class _SignupPageState extends State<SignupPage> {
           if (!mounted) return;
           if (state is AuthError) {
             DialogUtils.showErrorDialog(context, state.message);
-          } else if (state is RegistrationSuccess) {
+          } else if (state is AuthenticatedEmailUnverified) {
             DialogUtils.showSuccessDialog(context, 
                   'Registration successful! Please login with your credentials.',
                 );
             context.go('/login');
-          } else if (state is AuthenticatedUnverified) {
+          } else if (state is AuthenticatedEmailUnverified) {
             context.go('/home'); // Fallback direct home routing
-          } else if (state is AuthenticatedFull) {
+          } else if (state is AuthenticatedKycComplete) {
             context.go('/home');
           }
         },

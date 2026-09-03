@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+
 import 'package:intl/intl.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../../../data/models/loan_model.dart';
 import '../../../../core/blocs/loans/loan_cubit.dart';
+import '../../../../core/blocs/loans/payment_flow_cubit.dart';
+import '../../../../core/blocs/loans/add_credit_flow_cubit.dart';
+import '../../../../data/repositories/loan_repository.dart' as khatha;
 import '../../../../core/utils/error_handler.dart';
-import '../../../../core/error/failures.dart';
 
-class FlexiblePaymentSheet extends StatefulWidget {
+class FlexiblePaymentSheet extends StatelessWidget {
   final LoanModel loan;
   final String title;
   final String actionType;
@@ -26,22 +27,52 @@ class FlexiblePaymentSheet extends StatefulWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => FlexiblePaymentSheet(loan: loan, title: title, actionType: actionType),
+      builder: (_) {
+        if (actionType == 'add_credit') {
+          return BlocProvider(
+            create: (ctx) => AddCreditFlowCubit(
+              repository: ctx.read<khatha.LoanRepository>(),
+              loanId: loan.id,
+            ),
+            child: FlexiblePaymentSheet(loan: loan, title: title, actionType: actionType),
+          );
+        } else {
+          return BlocProvider(
+            create: (ctx) => PaymentFlowCubit(
+              repository: ctx.read<khatha.LoanRepository>(),
+              loanId: loan.id,
+            ),
+            child: FlexiblePaymentSheet(loan: loan, title: title, actionType: actionType),
+          );
+        }
+      },
     );
   }
 
   @override
-  State<FlexiblePaymentSheet> createState() => _FlexiblePaymentSheetState();
+  Widget build(BuildContext context) {
+    return _FlexiblePaymentSheetView(loan: loan, title: title, actionType: actionType);
+  }
 }
 
-class _FlexiblePaymentSheetState extends State<FlexiblePaymentSheet> {
-  int _step = 0; // 0: Amount, 1: OTP, 2: Success
-  bool _isLoading = false;
-  
+class _FlexiblePaymentSheetView extends StatefulWidget {
+  final LoanModel loan;
+  final String title;
+  final String actionType;
+
+  const _FlexiblePaymentSheetView({
+    required this.loan,
+    required this.title,
+    required this.actionType,
+  });
+
+  @override
+  State<_FlexiblePaymentSheetView> createState() => _FlexiblePaymentSheetViewState();
+}
+
+class _FlexiblePaymentSheetViewState extends State<_FlexiblePaymentSheetView> {
   final _amountCtrl = TextEditingController();
-  final _otpCtrl = TextEditingController();
   final _currencyFmt = NumberFormat('#,##0', 'en_IN');
-  String _verificationId = '';
 
   @override
   void initState() {
@@ -49,378 +80,156 @@ class _FlexiblePaymentSheetState extends State<FlexiblePaymentSheet> {
     _amountCtrl.addListener(() => setState(() {}));
   }
 
-  @override
-  void dispose() {
-    _amountCtrl.dispose();
-    _otpCtrl.dispose();
-    super.dispose();
-  }
-
-  double get _enteredAmount => double.tryParse(_amountCtrl.text.replaceAll(',', '')) ?? 0;
-
-  double get _currentBalance => widget.loan.remainingAmount;
-
+  double get _enteredAmount => double.tryParse(_amountCtrl.text) ?? 0;
+  
   double get _newBalance {
+    final currentBalance = (widget.loan.principalOutstandingPaise + 
+                           widget.loan.interestOutstandingPaise + 
+                           widget.loan.feesOutstandingPaise) / 100.0;
     if (widget.actionType == 'add_credit') {
-      return _currentBalance + _enteredAmount;
+      return currentBalance + _enteredAmount;
     }
-    return (_currentBalance - _enteredAmount).clamp(0, double.infinity);
+    return (currentBalance - _enteredAmount).clamp(0.0, double.infinity);
   }
 
-  double get _totalReceived {
-    if (widget.actionType == 'add_credit') return 0;
-    return widget.loan.paidAmount + _enteredAmount;
-  }
-
-  Future<void> _processPayment() async {
+  void _processPayment() {
     if (_enteredAmount <= 0) return;
     
-    setState(() => _isLoading = true);
-
     if (widget.actionType == 'add_credit') {
-      await _verifyAndApply('');
-      return;
+      context.read<AddCreditFlowCubit>().createIntent(_enteredAmount);
+    } else {
+      context.read<PaymentFlowCubit>().submitPayment(_enteredAmount);
     }
-
-    try {
-      final phone = '+91${widget.loan.mobile ?? ''}';
-      if (phone.length < 13) throw Exception('Invalid borrower phone number');
-      
-      await FirebaseAuth.instance.verifyPhoneNumber(
-        phoneNumber: phone,
-        verificationCompleted: (_) {},
-        verificationFailed: (e) {
-          if (!mounted) return;
-          setState(() => _isLoading = false);
-          ErrorHandler.showError(context, e.message ?? 'Verification failed');
-        },
-        codeSent: (verificationId, forceResendingToken) {
-          if (!mounted) return;
-          setState(() {
-            _isLoading = false;
-            _verificationId = verificationId;
-            _step = 1;
-          });
-        },
-        codeAutoRetrievalTimeout: (_) {},
-      );
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _isLoading = false);
-      ErrorHandler.showError(context, 'Failed to send OTP: ');
-    }
-  }
-
-  Future<void> _verifyAndApply(String otp) async {
-    setState(() => _isLoading = true);
-    final cubit = context.read<LoanCubit>();
-    bool success = false;
-
-    try {
-      if (widget.actionType == 'record_payment') {
-        success = await cubit.recordPayment(widget.loan.id, (_enteredAmount * 100).toInt(), otp, _verificationId);
-      } else if (widget.actionType == 'add_credit') {
-        success = await cubit.addCredit(widget.loan.id, (_enteredAmount * 100).toInt());
-      } else if (widget.actionType == 'record_interest') {
-        success = await cubit.recordInterest(widget.loan.id, (_enteredAmount * 100).toInt(), otp, _verificationId);
-      }
-
-      if (!mounted) return;
-      setState(() => _isLoading = false);
-
-      if (success) {
-        setState(() => _step = 2);
-      }
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _isLoading = false);
-      
-      String errorMsg = 'An unexpected error occurred.';
-      if (e is ServerFailure) {
-        errorMsg = 'Server Error: ';
-      } else {
-        errorMsg = e.toString();
-      }
-      ErrorHandler.showError(context, errorMsg);
-    }
-  }
-
-  Widget _buildAmountStep() {
-    final isAddCredit = widget.actionType == 'add_credit';
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(widget.title, style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)),
-            IconButton(
-              icon: const Icon(Icons.close),
-              onPressed: () => Navigator.pop(context),
-            ),
-          ],
-        ),
-        SizedBox(height: 8.h),
-        Text('Enter Amount', style: TextStyle(fontSize: 12.sp, color: Colors.grey.shade600, fontWeight: FontWeight.w600)),
-        SizedBox(height: 8.h),
-        TextField(
-          controller: _amountCtrl,
-          keyboardType: TextInputType.number,
-          style: TextStyle(fontSize: 24.sp, fontWeight: FontWeight.bold),
-          decoration: InputDecoration(
-            prefixText: '₹ ',
-            prefixStyle: TextStyle(fontSize: 24.sp, fontWeight: FontWeight.bold, color: Colors.black87),
-            hintText: '0',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide(color: Colors.grey.shade300)),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide(color: Colors.grey.shade300)),
-            filled: true,
-            fillColor: Colors.white,
-          ),
-        ),
-        SizedBox(height: 16.h),
-        Container(
-          padding: EdgeInsets.all(16.w),
-          decoration: BoxDecoration(
-            color: Colors.green.shade50,
-            borderRadius: BorderRadius.circular(12.r),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('After this transaction', style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.bold, color: Colors.black87)),
-              SizedBox(height: 12.h),
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(isAddCredit ? 'Current Balance' : 'Total Received', style: TextStyle(fontSize: 11.sp, color: Colors.grey.shade600)),
-                        SizedBox(height: 4.h),
-                        Text(
-                          '₹${_currencyFmt.format(isAddCredit ? _currentBalance : widget.loan.paidAmount)}',
-                          style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold, color: Colors.green.shade700),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(width: 1, height: 40.h, color: Colors.green.shade200),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(isAddCredit ? 'New Balance' : 'Remaining Amount', style: TextStyle(fontSize: 11.sp, color: Colors.grey.shade600)),
-                        SizedBox(height: 4.h),
-                        Text(
-                          '₹${_currencyFmt.format(_newBalance)}',
-                          style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold, color: Colors.orange.shade700),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        SizedBox(height: 24.h),
-        ElevatedButton(
-          onPressed: (_enteredAmount > 0 && !_isLoading) ? _processPayment : null,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.green.shade700,
-            foregroundColor: Colors.white,
-            padding: EdgeInsets.symmetric(vertical: 14.h),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-            elevation: 0,
-          ),
-          child: _isLoading 
-              ? SizedBox(width: 20.w, height: 20.w, child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-              : Text('Record Transaction', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold)),
-        ),
-        SizedBox(height: 8.h),
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text('Cancel', style: TextStyle(color: Colors.grey.shade600)),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildOtpStep() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text('Enter OTP', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
-            IconButton(
-              icon: Icon(Icons.close, color: Colors.grey.shade600),
-              onPressed: () => Navigator.pop(context),
-            ),
-          ],
-        ),
-        SizedBox(height: 8),
-        Text('Please ask the borrower for the 6-digit OTP sent to their phone to confirm this payment.', style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
-        SizedBox(height: 16),
-        TextField(
-          controller: _otpCtrl,
-          keyboardType: TextInputType.number,
-          maxLength: 6,
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 8),
-          textAlign: TextAlign.center,
-          onChanged: (val) {
-            if (val.length == 6) setState((){});
-          },
-          decoration: InputDecoration(
-            counterText: '',
-            hintText: '000000',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-            filled: true,
-            fillColor: Colors.grey.shade100,
-          ),
-        ),
-        SizedBox(height: 24),
-        ElevatedButton(
-          onPressed: (_otpCtrl.text.length == 6 && !_isLoading) ? () => _verifyAndApply(_otpCtrl.text) : null,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.green.shade700,
-            foregroundColor: Colors.white,
-            padding: EdgeInsets.symmetric(vertical: 14),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            elevation: 0,
-          ),
-          child: _isLoading 
-              ? SizedBox(width: 20, height: 20, child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-              : Text('Verify & Apply', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-        ),
-        SizedBox(height: 8),
-        TextButton(
-          onPressed: () => setState(() => _step = 0),
-          child: Text('Back', style: TextStyle(color: Colors.grey.shade600)),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSuccessStep() {
-    final isAddCredit = widget.actionType == 'add_credit';
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SizedBox(height: 24.h),
-        Center(
-          child: Container(
-            padding: EdgeInsets.all(16.w),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.green.shade700, width: 2),
-            ),
-            child: Icon(Icons.check, color: Colors.green.shade700, size: 40.sp),
-          ),
-        ),
-        SizedBox(height: 16.h),
-        Center(
-          child: Text('Transaction Recorded Successfully!', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold, color: Colors.black87)),
-        ),
-        SizedBox(height: 4.h),
-        Center(
-          child: Text('₹${_currencyFmt.format(_enteredAmount)} has been recorded.', style: TextStyle(fontSize: 13.sp, color: Colors.grey.shade600)),
-        ),
-        SizedBox(height: 24.h),
-        Container(
-          padding: EdgeInsets.all(16.w),
-          decoration: BoxDecoration(
-            color: Colors.green.shade50,
-            borderRadius: BorderRadius.circular(12.r),
-          ),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(isAddCredit ? 'Current Balance' : 'Total Received', style: TextStyle(fontSize: 11.sp, color: Colors.grey.shade600)),
-                        SizedBox(height: 4.h),
-                        Text(
-                          '₹${_currencyFmt.format(isAddCredit ? _currentBalance : _totalReceived)}',
-                          style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold, color: Colors.green.shade700),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(isAddCredit ? 'New Balance' : 'Remaining Amount', style: TextStyle(fontSize: 11.sp, color: Colors.grey.shade600)),
-                        SizedBox(height: 4.h),
-                        Text(
-                          '₹${_currencyFmt.format(_newBalance)}',
-                          style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold, color: Colors.orange.shade700),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 16.h),
-              Text('Status', style: TextStyle(fontSize: 11.sp, color: Colors.grey.shade600)),
-              SizedBox(height: 4.h),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
-                decoration: BoxDecoration(
-                  color: Colors.green.shade100,
-                  borderRadius: BorderRadius.circular(20.r),
-                ),
-                child: Text('On Track', style: TextStyle(color: Colors.green.shade800, fontSize: 12.sp, fontWeight: FontWeight.bold)),
-              ),
-            ],
-          ),
-        ),
-        SizedBox(height: 24.h),
-        ElevatedButton(
-          onPressed: () => Navigator.pop(context),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.green.shade700,
-            foregroundColor: Colors.white,
-            padding: EdgeInsets.symmetric(vertical: 14.h),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-            elevation: 0,
-          ),
-          child: Text('Done', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold)),
-        ),
-        SizedBox(height: 16.h),
-      ],
-    );
   }
 
   @override
   Widget build(BuildContext context) {
+    if (widget.actionType == 'add_credit') {
+      return _buildAddCreditConsumer();
+    }
+    return _buildPaymentConsumer();
+  }
+
+  Widget _buildAddCreditConsumer() {
+    return BlocConsumer<AddCreditFlowCubit, AddCreditFlowState>(
+      listener: (context, state) {
+        if (state is AddCreditSuccess) {
+           context.read<LoanCubit>().fetchLoans();
+        } else if (state is AddCreditRejectedState) {
+           ErrorHandler.showError(context, state.failure.message);
+        }
+      },
+      builder: (context, state) {
+        return _buildSheetLayout(
+          isProcessing: state is AddCreditCreatingIntent || state is AddCreditCommitting,
+          isSuccess: state is AddCreditAwaitingConsent, // For lender, intent creation success
+          isUnknown: false,
+          successMessage: 'Add Credit intent sent to borrower for approval.',
+          onAction: _processPayment,
+          isActionDisabled: state is AddCreditCreatingIntent || _enteredAmount <= 0,
+        );
+      },
+    );
+  }
+
+  Widget _buildPaymentConsumer() {
+    return BlocConsumer<PaymentFlowCubit, PaymentFlowState>(
+      listener: (context, state) {
+        if (state is PaymentSuccess) {
+           context.read<LoanCubit>().fetchLoans();
+        } else if (state is PaymentRejected) {
+           ErrorHandler.showError(context, state.failure.message);
+        }
+      },
+      builder: (context, state) {
+        return _buildSheetLayout(
+          isProcessing: state is PaymentSubmitting || state is PaymentReconciling,
+          isSuccess: state is PaymentSuccess,
+          isUnknown: state is PaymentUnknown,
+          successMessage: 'Payment Recorded Successfully',
+          onAction: _processPayment,
+          isActionDisabled: state is PaymentSubmitting || state is PaymentReconciling || _enteredAmount <= 0,
+          onReconcile: state is PaymentUnknown ? () => context.read<PaymentFlowCubit>().reconcile(state.attempt) : null,
+        );
+      },
+    );
+  }
+
+  Widget _buildSheetLayout({
+    required bool isProcessing,
+    required bool isSuccess,
+    required bool isUnknown,
+    required String successMessage,
+    required VoidCallback onAction,
+    required bool isActionDisabled,
+    VoidCallback? onReconcile,
+  }) {
     return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
-        padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 16.h),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+          color: Theme.of(context).scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
-          child: _step == 0 ? _buildAmountStep() : _step == 1 ? _buildOtpStep() : _buildSuccessStep(),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(widget.title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
+              ],
+            ),
+            const SizedBox(height: 24),
+            if (isSuccess) ...[
+              const Icon(Icons.check_circle, color: Colors.green, size: 64),
+              const SizedBox(height: 16),
+              Text(successMessage, textAlign: TextAlign.center, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Done'),
+              )
+            ] else if (isUnknown) ...[
+              const Icon(Icons.hourglass_empty, color: Colors.orange, size: 64),
+              const SizedBox(height: 16),
+              const Text('Payment Processing...', textAlign: TextAlign.center, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              const Text('We are checking the status of your transaction with the server.', textAlign: TextAlign.center),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: onReconcile,
+                child: const Text('Refresh Status'),
+              )
+            ] else ...[
+              TextField(
+                controller: _amountCtrl,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(
+                  labelText: 'Amount (₹)',
+                  prefixText: '₹ ',
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Remaining Balance:'),
+                  Text('₹ ${_currencyFmt.format(_newBalance)}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                ],
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: isActionDisabled ? null : onAction,
+                child: Text(isProcessing ? 'Processing...' : 'Submit ₹${_currencyFmt.format(_enteredAmount)}'),
+              )
+            ],
+          ],
         ),
       ),
     );
   }
 }
-

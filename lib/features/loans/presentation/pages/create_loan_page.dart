@@ -1,4 +1,4 @@
-﻿import 'dart:io';
+import 'dart:io';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -9,7 +9,6 @@ import '../../../../config/theme.dart';
 import '../../../../core/widgets/inputs.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/blocs/loans/loan_cubit.dart';
-import '../../../../core/blocs/system/system_state_cubit.dart';
 import '../../../../core/blocs/loans/loan_state.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/services/biometric_auth_service.dart';
@@ -232,8 +231,8 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
             );
         final uploadTask = ref.putFile(_selectedDocumentFile!);
         final snapshot = await uploadTask;
-        final documentUrl = await snapshot.ref.getDownloadURL();
-        _finalizeLoanCreation(phone, documentUrl);
+        final documentId = snapshot.ref.fullPath;
+        _finalizeLoanCreation(phone, documentId);
       } catch (e) {
         setState(() => _isLoading = false);
         if (mounted) {
@@ -291,7 +290,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
     );
   }
 
-  void _finalizeLoanCreation(String phone, String? documentUrl) async {
+  void _finalizeLoanCreation(String phone, String? documentId) async {
     setState(() => _isLoading = true);
     final cubit = context.read<LoanCubit>();
     final idempotencyKey = const Uuid().v4();
@@ -313,7 +312,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
       'notes': _notesController.text,
       'shop_name': _shopNameController.text,
       'type': widget.loanType,
-      'documentUrl': documentUrl,
+      'documentId': documentId,
     };
 
     final result = await cubit.createLoan(loanData);

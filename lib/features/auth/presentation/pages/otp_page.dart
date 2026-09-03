@@ -239,10 +239,10 @@ class _OtpPageState extends State<OtpPage> {
                   if (!mounted) return;
                   if (state is PasswordResetRequired) {
                     context.go('/reset-password');
-                  } else if (state is AuthenticatedFull ||
-                      state is AuthenticatedUnverified) {
+                  } else if (state is AuthenticatedKycComplete ||
+                      state is AuthenticatedEmailUnverified) {
                     context.go(AppConstants.home);
-                  } else if (state is OtpVerified) {
+                  } else if (state is AuthenticatedKycComplete) {
                     context.push(AppConstants.personalDetails);
                   } else if (state is AuthError) {
                     setState(() {

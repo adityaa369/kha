@@ -9,7 +9,6 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../config/theme.dart';
 import '../../../../data/models/loan_model.dart';
 import '../../../../core/blocs/loans/loan_cubit.dart';
-import '../widgets/repayment_timeline_widget.dart';
 import '../../../../core/blocs/loans/loan_state.dart';
 import '../../../../core/blocs/auth/auth_cubit.dart';
 
@@ -86,8 +85,8 @@ class HandLoanDetailsPage extends StatelessWidget {
     String? currentUserId;
     try {
       final authState = context.read<AuthCubit>().state;
-      if (authState is AuthenticatedFull) currentUserId = authState.user.id;
-      if (authState is AuthenticatedUnverified) {
+      if (authState is AuthenticatedKycComplete) currentUserId = authState.user.id;
+      if (authState is AuthenticatedEmailVerifiedKycIncomplete) {
         currentUserId = authState.user.id;
       }
     } catch (_) {}
@@ -467,11 +466,11 @@ class HandLoanDetailsPage extends StatelessWidget {
             ],
           ),
           SizedBox(height: 12.h),
-          Row(
+          const Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               
-              const Expanded(child: SizedBox()),
+              Expanded(child: SizedBox()),
             ],
           ),
         ],
@@ -508,11 +507,11 @@ class HandLoanDetailsPage extends StatelessWidget {
   // â”€â”€â”€ Payment Checklist â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Widget _proofDocumentSection(BuildContext context, LoanModel loan) {
-    if (loan.documentUrl == null || loan.documentUrl!.trim().isEmpty) {
+    if (loan.documentId == null || loan.documentId!.trim().isEmpty) {
       return const SizedBox.shrink();
     }
 
-    final url = loan.documentUrl!;
+    final url = loan.documentId!;
     final isPdf = url.toLowerCase().contains('.pdf');
 
     return Container(
@@ -927,7 +926,7 @@ class HandLoanDetailsPage extends StatelessWidget {
             _txIcon(tx.type as String? ?? ''),
             _txColor(tx.type as String? ?? ''),
             _txTitle(tx.type as String? ?? ''),
-            tx.note as String? ?? '',
+            tx.note ?? '',
             _txAmountStr(tx.type as String? ?? '', (tx.amount as num?)?.toDouble() ?? 0),
             _txDateStr(tx.recordedAt),
             _txIsPositive(tx.type as String? ?? ''),

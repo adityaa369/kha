@@ -53,7 +53,7 @@ class _ChitLiveAuctionPageState extends State<ChitLiveAuctionPage> {
       setState(() => _isConnected = true);
       final authState = context.read<AuthCubit>().state;
       String userId = 'unknown';
-      if (authState is AuthenticatedFull) userId = authState.user.id;
+      if (authState is AuthenticatedKycComplete) userId = authState.user.id;
       _socket.emit('join_auction', {'ledgerId': widget.ledgerId, 'userId': userId});
     });
     
@@ -178,7 +178,7 @@ class _ChitLiveAuctionPageState extends State<ChitLiveAuctionPage> {
     setState(() => _isPlacingBid = true);
     final authState = authCubit.state;
     String userId = 'unknown';
-    if (authState is AuthenticatedFull) userId = authState.user.id;
+    if (authState is AuthenticatedKycComplete) userId = authState.user.id;
     
     _socket.emit('place_bid', {
       'ledgerId': widget.ledgerId,

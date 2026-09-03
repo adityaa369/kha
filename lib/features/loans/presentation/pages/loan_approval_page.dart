@@ -12,9 +12,9 @@ import '../../../../core/services/biometric_auth_service.dart';
 import '../../../../config/constants.dart';
 
 class LoanApprovalPage extends StatefulWidget {
-  final LoanModel loan;
+  final String loanId;
 
-  const LoanApprovalPage({super.key, required this.loan});
+  const LoanApprovalPage({super.key, required this.loanId});
 
   @override
   State<LoanApprovalPage> createState() => _LoanApprovalPageState();
@@ -22,8 +22,28 @@ class LoanApprovalPage extends StatefulWidget {
 
 class _LoanApprovalPageState extends State<LoanApprovalPage> {
   bool _isApproving = false;
+  LoanModel? _loan;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchLoan();
+  }
+
+  Future<void> _fetchLoan() async {
+    final loan = await context.read<LoanCubit>().getLoanById(widget.loanId);
+    if (mounted) {
+      setState(() {
+        _loan = loan;
+        _isLoading = false;
+      });
+    }
+  }
 
   void _approveLoan() async {
+    if (_loan == null) return;
+    
     final authenticated = await BiometricAuthService.authenticate();
     if (!authenticated) {
       if (mounted) {
@@ -43,9 +63,11 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
     if (!mounted) return;
     setState(() => _isApproving = true);
 
-    final success = await context.read<LoanCubit>().verifyLoan(widget.loan.id);
+    final success = await context.read<LoanCubit>().verifyLoan(_loan!.id);
 
-    setState(() => _isApproving = false);
+    if (mounted) {
+      setState(() => _isApproving = false);
+    }
 
     if (!success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -62,6 +84,31 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_loan == null) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          title: const Text('Review Agreement'),
+          centerTitle: true,
+          elevation: 0,
+          backgroundColor: Colors.white,
+          foregroundColor: KhaataTheme.textDark,
+        ),
+        body: const Center(
+          child: Text('Loan not found.'),
+        ),
+      );
+    }
+
+    final loan = _loan!;
+
     return BlocListener<LoanCubit, LoanState>(
       listener: (context, state) {
         if (state is LoanVerificationSuccess) {
@@ -88,25 +135,26 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
                 padding: EdgeInsets.all(12.w),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF59E0B).withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12.r),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: const Color(0xFFF59E0B).withValues(alpha: 0.2),
+                  ),
                 ),
                 child: Row(
                   children: [
-                    Icon(
-                      Icons.access_time_filled,
-                      color: const Color(0xFFF59E0B),
-                      size: 20.sp,
+                    const Icon(
+                      Icons.pending_actions,
+                      color: Color(0xFFF59E0B),
                     ),
-                    SizedBox(width: 8.w),
+                    SizedBox(width: 12.w),
                     Expanded(
                       child: Text(
-                        widget.loan.status == 'pending_otp'
-                            ? 'Pending Lender OTP Verification'
-                            : 'Pending Your Approval',
-                        style: TextStyle(
-                          color: const Color(0xFFF59E0B),
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14.sp,
+                        loan.status == 'pending_otp'
+                            ? 'Awaiting your signature'
+                            : 'Awaiting completion',
+                        style: const TextStyle(
+                          color: Color(0xFFB45309),
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ),
@@ -115,196 +163,168 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
               ),
               SizedBox(height: 24.h),
 
-              // Header Section
-              Center(
+              // Lender Info
+              Text(
+                'Lender',
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  color: Colors.grey[600],
+                ),
+              ),
+              SizedBox(height: 4.h),
+              Text(
+                loan.lenderName ?? 'Unknown Lender',
+                style: TextStyle(
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.bold,
+                  color: KhaataTheme.textDark,
+                ),
+              ),
+              SizedBox(height: 32.h),
+
+              // Loan Details Card
+              Container(
+                padding: EdgeInsets.all(20.w),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
                 child: Column(
                   children: [
-                    CircleAvatar(
-                      radius: 30.r,
-                      backgroundColor: KhaataTheme.primaryBlue.withValues(
-                        alpha: 0.1,
-                      ),
-                      child: Icon(
-                        Icons.person,
-                        color: KhaataTheme.primaryBlue,
-                        size: 30.sp,
-                      ),
-                    ),
-                    SizedBox(height: 12.h),
                     Text(
-                      widget.loan.lenderName ?? 'Unknown Lender',
-                      style: TextStyle(
-                        fontSize: 18.sp,
-                        fontWeight: FontWeight.bold,
-                        color: KhaataTheme.textDark,
-                      ),
-                    ),
-                    Text(
-                      'Lender',
+                      'Amount Requested',
                       style: TextStyle(
                         fontSize: 14.sp,
-                        color: KhaataTheme.textGrey,
+                        color: Colors.grey[600],
                       ),
+                    ),
+                    SizedBox(height: 8.h),
+                    Text(
+                      '₹${NumberFormat('#,##0').format(loan.amount / 100)}',
+                      style: TextStyle(
+                        fontSize: 32.sp,
+                        fontWeight: FontWeight.bold,
+                        color: KhaataTheme.primaryBlue,
+                      ),
+                    ),
+                    SizedBox(height: 24.h),
+
+                    // Temporary OTP Display Box for Testing
+                    if (loan.status == 'pending_otp') ...[
+                      Container(
+                        padding: EdgeInsets.all(16.w),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[50],
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey.shade300),
+                        ),
+                        child: Column(
+                          children: [
+                            Text(
+                              'Share this OTP with Lender',
+                              style: TextStyle(
+                                fontSize: 13.sp,
+                                color: Colors.grey[600],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            SizedBox(height: 12.h),
+                            Text(
+                              loan.otp == 'FIREBASE_OTP'
+                                  ? 'Verified by App'
+                                  : (loan.otp ?? '-'),
+                              style: TextStyle(
+                                fontSize: loan.otp == 'FIREBASE_OTP'
+                                    ? 24.sp
+                                    : 32.sp,
+                                fontWeight: FontWeight.bold,
+                                color: KhaataTheme.textDark,
+                                letterSpacing: loan.otp == 'FIREBASE_OTP'
+                                    ? 1
+                                    : 4,
+                              ),
+                            ),
+                            SizedBox(height: 8.h),
+                            Text(
+                              loan.otp == 'FIREBASE_OTP'
+                                  ? 'Digital handshake complete'
+                                  : 'This confirms your agreement to the loan terms',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 12.sp,
+                                color: Colors.grey[500],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 24.h),
+                    ],
+
+                    const Divider(),
+                    SizedBox(height: 16.h),
+                    _DetailRow(
+                      label: 'Interest',
+                      value: (loan.interestRate ?? 0) > 0
+                          ? '${loan.interestRate}% PM'
+                          : '0% (Hand Loan)',
+                    ),
+                    SizedBox(height: 12.h),
+                    _DetailRow(
+                      label: 'Duration',
+                      value: '${loan.durationMonths} Months',
+                    ),
+                    SizedBox(height: 12.h),
+                    _DetailRow(
+                      label: 'Type',
+                      value: loan.type.toUpperCase(),
+                    ),
+                    SizedBox(height: 12.h),
+                    _DetailRow(
+                      label: 'Date',
+                      value: DateFormat('MMM dd, yyyy')
+                          .format(loan.createdAt ?? DateTime.now()),
                     ),
                   ],
                 ),
               ),
               SizedBox(height: 32.h),
 
-              // Amount Section
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(24.w),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.circular(16.r),
-                  border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      'Loan Amount',
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        color: KhaataTheme.textGrey,
-                      ),
-                    ),
-                    SizedBox(height: 8.h),
-                    Text(
-                      '₹${NumberFormat('#,##0').format(widget.loan.amount)}',
-                      style: TextStyle(
-                        fontSize: 32.sp,
-                        fontWeight: FontWeight.w800,
-                        color: KhaataTheme.primaryBlue,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 24.h),
-
-              if (widget.loan.status == 'pending_otp') ...[
-                Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.all(16.w),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFEF3C7), // Light amber
-                    borderRadius: BorderRadius.circular(16.r),
-                    border: Border.all(color: const Color(0xFFFDE68A)),
-                  ),
-                  child: Column(
-                    children: [
-                      Text(
-                        'VERIFICATION OTP',
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          fontWeight: FontWeight.w800,
-                          color: const Color(0xFF92400E),
-                          letterSpacing: 1,
-                        ),
-                      ),
-                      SizedBox(height: 8.h),
-                      Text(
-                        widget.loan.otp == 'FIREBASE_OTP'
-                            ? 'SMS SENT'
-                            : (widget.loan.otp ?? '-'),
-                        style: TextStyle(
-                          fontSize: widget.loan.otp == 'FIREBASE_OTP'
-                              ? 24.sp
-                              : 32.sp,
-                          fontWeight: FontWeight.w900,
-                          color: const Color(0xFF92400E),
-                          letterSpacing: widget.loan.otp == 'FIREBASE_OTP'
-                              ? 1.w
-                              : 4.w,
-                        ),
-                      ),
-                      SizedBox(height: 8.h),
-                      Text(
-                        widget.loan.otp == 'FIREBASE_OTP'
-                            ? 'A verification OTP has been sent to your mobile phone via SMS. Please share it with the Lender to complete the setup.'
-                            : 'Share this OTP with the Lender to verify and proceed with the loan setup.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          fontWeight: FontWeight.w500,
-                          color: const Color(0xFFB45309),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 24.h),
-              ],
-
-              // Details Section
-              Text(
-                'Agreement Details',
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w700,
-                  color: KhaataTheme.textDark,
-                ),
-              ),
-              SizedBox(height: 16.h),
-              _DetailRow(
-                label: 'Interest Rate',
-                value: (widget.loan.interestRate ?? 0) > 0
-                    ? '${widget.loan.interestRate}% PM'
-                    : '0% (Interest Free)',
-              ),
-              _DetailRow(
-                label: 'Duration',
-                value: '${widget.loan.durationMonths} Months',
-              ),
-              _DetailRow(
-                label: 'Loan Type',
-                value: widget.loan.type.toUpperCase(),
-              ),
-              _DetailRow(
-                label: 'Date Issued',
-                value: DateFormat(
-                  'dd MMM, yyyy',
-                ).format(widget.loan.createdAt ?? DateTime.now()),
-              ),
-
-              SizedBox(height: 40.h),
-
               // Action Buttons
-              if (widget.loan.status == 'pending_otp')
-                const PrimaryButton(
-                  text: 'Waiting for Lender Verification...',
-                  onPressed: null, // Disabled
-                )
-              else
+              if (loan.status == 'pending_otp')
                 PrimaryButton(
-                  text: 'Accept Agreement',
+                  text: 'Sign & Accept Terms',
                   isLoading: _isApproving,
                   onPressed: _approveLoan,
                 ),
               SizedBox(height: 16.h),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: _isApproving ? null : () => context.pop(),
-                  style: OutlinedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(vertical: 16.h),
-                    side: BorderSide(color: Colors.red.withValues(alpha: 0.5)),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12.r),
-                    ),
-                  ),
-                  child: Text(
-                    'Decline / Go Back',
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.red,
+              if (loan.status == 'pending_otp')
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton(
+                    onPressed: () {
+                      if (!_isApproving) {
+                        context.pop();
+                      }
+                    },
+                    child: Text(
+                      'Decline & Return',
+                      style: TextStyle(
+                        color: Colors.red[400],
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16.sp,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              SizedBox(height: 20.h),
             ],
           ),
         ),
@@ -317,29 +337,32 @@ class _DetailRow extends StatelessWidget {
   final String label;
   final String value;
 
-  const _DetailRow({required this.label, required this.value});
+  const _DetailRow({
+    required this.label,
+    required this.value,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 16.h),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: TextStyle(fontSize: 14.sp, color: KhaataTheme.textGrey),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.grey[600],
+            fontSize: 14.sp,
           ),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 14.sp,
-              fontWeight: FontWeight.w600,
-              color: KhaataTheme.textDark,
-            ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            color: KhaataTheme.textDark,
+            fontWeight: FontWeight.w600,
+            fontSize: 14.sp,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

@@ -3,86 +3,57 @@ part of 'auth_cubit.dart';
 abstract class AuthState extends Equatable {
   const AuthState();
 
+  UserModel? get user => null;
+
   @override
   List<Object?> get props => [];
 }
 
+// Bootstrapping Phase
 class AuthInitial extends AuthState {}
 
-class AuthLoading extends AuthState {}
-
+// Authoritative Backend States
 class Unauthenticated extends AuthState {}
 
-class OtpSent extends AuthState {
-  final String phone;
-  const OtpSent({required this.phone});
-
+class AuthenticatedEmailUnverified extends AuthState {
   @override
-  List<Object?> get props => [phone];
-}
-
-class OtpVerified extends AuthState {
-  final String phone;
-  const OtpVerified({required this.phone});
-
-  @override
-  List<Object?> get props => [phone];
-}
-
-class PersonalDetailsSaved extends AuthState {
   final UserModel user;
-  const PersonalDetailsSaved({required this.user});
-
+  const AuthenticatedEmailUnverified({required this.user});
   @override
   List<Object?> get props => [user];
 }
 
-class PanDetailsSaved extends AuthState {
+class AuthenticatedEmailVerifiedKycIncomplete extends AuthState {
+  @override
   final UserModel user;
-  const PanDetailsSaved({required this.user});
-
+  const AuthenticatedEmailVerifiedKycIncomplete({required this.user});
   @override
   List<Object?> get props => [user];
 }
 
-class CreditScoreProcessed extends AuthState {
-  const CreditScoreProcessed();
-}
-
-class AuthenticatedUnverified extends AuthState {
+class AuthenticatedKycComplete extends AuthState {
+  @override
   final UserModel user;
-  const AuthenticatedUnverified({required this.user});
-
+  const AuthenticatedKycComplete({required this.user});
   @override
   List<Object?> get props => [user];
 }
 
-class AuthenticatedFull extends AuthState {
-  final UserModel user;
-  const AuthenticatedFull({required this.user});
-
-  @override
-  List<Object?> get props => [user];
-}
-
+// Special Authorization States
 class PasswordResetRequired extends AuthState {
-  const PasswordResetRequired();
+  @override
+  final UserModel? user;
+  const PasswordResetRequired({this.user});
+  @override
+  List<Object?> get props => [user];
 }
 
-class RegistrationOtpSent extends AuthState {
-  final String phone;
-  const RegistrationOtpSent({required this.phone});
-
+class AuthOffline extends AuthState {
   @override
-  List<Object?> get props => [phone];
-}
-
-class RegistrationOtpVerified extends AuthState {
-  final String phone;
-  const RegistrationOtpVerified({required this.phone});
-
+  final UserModel user;
+  const AuthOffline({required this.user});
   @override
-  List<Object?> get props => [phone];
+  List<Object?> get props => [user];
 }
 
 class AuthError extends AuthState {
@@ -93,6 +64,26 @@ class AuthError extends AuthState {
   List<Object?> get props => [message];
 }
 
-class RegistrationSuccess extends AuthState {
-  const RegistrationSuccess();
+// Process States (UI transient states shouldn't dictate core routing, 
+// but some are necessary to convey loading context if no other Bloc manages it).
+// To satisfy the UI without destroying the new state model, we include these but 
+// they must not be used as the ultimate route determinant.
+class AuthLoading extends AuthState {}
+
+// Optional transient states that UI currently listens to (e.g., inside AuthChoicePage)
+// Ideally, these would move to a distinct RegistrationCubit later.
+class OtpSent extends AuthState {
+  final String phone;
+  const OtpSent({required this.phone});
+  @override
+  List<Object?> get props => [phone];
+}
+
+class OtpVerifying extends AuthState {}
+
+class RegistrationOtpSent extends AuthState {
+  final String phone;
+  const RegistrationOtpSent({required this.phone});
+  @override
+  List<Object?> get props => [phone];
 }

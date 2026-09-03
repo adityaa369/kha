@@ -1,7 +1,7 @@
 ﻿import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:khatha/core/network/api_client.dart';
-import 'package:khatha/config/constants.dart';
+
 import 'package:uuid/uuid.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 

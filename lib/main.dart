@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,8 +8,6 @@ import 'config/theme.dart';
 import 'config/constants.dart';
 import 'core/blocs/auth/auth_cubit.dart';
 import 'core/blocs/loans/loan_cubit.dart';
-import 'core/blocs/loans/portfolio_cubit.dart';
-import 'data/repositories/loan_repository.dart';
 import 'core/blocs/loans/portfolio_cubit.dart';
 import 'data/repositories/loan_repository.dart';
 import 'core/blocs/chit_funds/chit_fund_cubit.dart';
@@ -174,8 +172,8 @@ class KhaataApp extends StatelessWidget {
                                 decoration: BoxDecoration(
                                   color: Colors.red.shade900,
                                   borderRadius: BorderRadius.circular(12.r),
-                                  boxShadow: [
-                                    const BoxShadow(color: Colors.black26, blurRadius: 8, offset: Offset(0, 4))
+                                  boxShadow: const [
+                                    BoxShadow(color: Colors.black26, blurRadius: 8, offset: Offset(0, 4))
                                   ]
                                 ),
                                 child: Column(
@@ -247,16 +245,40 @@ class _NotificationListenerWidgetState
   StreamSubscription? _sub;
   StreamSubscription? _openSub;
 
-  Future<void> _handleNotificationRouting(RemoteMessage message) async {
-    if (message.data['type'] == 'LOAN_CREATED') {
-      router.go(AppConstants.myLoans);
-    } else if (message.data['type'] == 'LOAN_OTP' ||
-        message.data['type'] == 'LOAN_INIT_OTP') {
-      router.go(AppConstants.notifications);
-    } else if (message.data['type'] == 'CHIT_AUCTION_START') {
-      // Deep link into the live auction room â€” use push so back button works
+Future<void> _handleNotificationRouting(RemoteMessage message) async {
+    final type = message.data['type'] as String?;
+    final loanId = message.data['loanId'] as String?;
+    final intentId = message.data['intentId'] as String?;
+    final eventId = message.data['eventId'] as String?; // UI dedup if necessary
+
+    if (type == 'PAYMENT_COMMITTED' || 
+        type == 'CREDIT_ADDED' || 
+        type == 'LOAN_ACCEPTED' || 
+        type == 'LOAN_CLOSED' || 
+        type == 'LOAN_FROZEN') {
+      if (loanId != null) router.go('${AppConstants.loanDetails}/$loanId');
+    } else if (type == 'LOAN_CREATED' || type == 'LOAN_OTP' || type == 'LOAN_INIT_OTP') {
+      if (loanId != null) {
+        // We can go to approval directly, or loan details. 
+        // We'll map to approval to be explicit.
+        router.go('${AppConstants.loanApproval}/$loanId');
+      } else {
+        router.go(AppConstants.notifications);
+      }
+    } else if (type == 'ADD_CREDIT_INTENT') {
+      if (intentId != null) {
+        router.go('/add-credit-approval/$intentId?loanId=${loanId ?? ''}');
+      }
+    } else if (type == 'CLOSE_INTENT') {
+      if (intentId != null) {
+        router.go('/close-loan-approval/$intentId?loanId=${loanId ?? ''}');
+      }
+    } else if (type == 'CHIT_AUCTION_START') {
       final ledgerId = message.data['ledgerId'] ?? '';
       router.push('/chit-live-auction?ledgerId=$ledgerId');
+    } else {
+      // Unknown type -> Generic Notifications Inbox
+      router.go(AppConstants.notifications);
     }
   }
 
@@ -276,15 +298,14 @@ class _NotificationListenerWidgetState
       _handleNotificationRouting(message);
     });
 
-    FirebaseMessaging.instance.getInitialMessage().then((
+FirebaseMessaging.instance.getInitialMessage().then((
       RemoteMessage? message,
     ) {
       if (message != null) {
-        Future.delayed(const Duration(milliseconds: 500), () {
-          if (mounted) {
-            _handleNotificationRouting(message);
-          }
-        });
+        // 4F-4G: Execute immediately. Router will preserve intent if AuthCubit is still Initial.
+        if (mounted) {
+          _handleNotificationRouting(message);
+        }
       }
     });
   }

@@ -43,10 +43,10 @@ void main() {
     const String lastName = 'Doe';
 
     blocTest<AuthCubit, AuthState>(
-      'emits [AuthLoading, PersonalDetailsSaved] when API call is successful',
+      'emits [AuthLoading, AuthenticatedEmailUnverified] when API call is successful',
       build: () {
         when(
-          () => mockApiClient.post(any(), data: any(named: 'data')),
+          () => mockApiClient.put(any(), data: any(named: 'data')),
         ).thenAnswer(
           (_) async => Response(
             requestOptions: RequestOptions(path: '/auth/register'),
@@ -78,14 +78,14 @@ void main() {
         email: testEmail,
         phone: testPhone,
       ),
-      expect: () => [isA<AuthLoading>(), isA<PersonalDetailsSaved>()],
+      expect: () => [isA<AuthLoading>(), isA<AuthenticatedEmailUnverified>()],
     );
 
     blocTest<AuthCubit, AuthState>(
       'emits [AuthLoading, AuthError] when API call fails',
       build: () {
         when(
-          () => mockApiClient.post(any(), data: any(named: 'data')),
+          () => mockApiClient.put(any(), data: any(named: 'data')),
         ).thenAnswer(
           (_) async => Response(
             requestOptions: RequestOptions(path: '/auth/register'),
@@ -108,6 +108,7 @@ void main() {
           'message',
           'Failed to save details',
         ),
+        isA<Unauthenticated>(),
       ],
     );
   });

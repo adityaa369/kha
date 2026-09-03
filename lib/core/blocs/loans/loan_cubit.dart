@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'loan_state.dart';
+import '../../../data/models/loan_model.dart';
 import '../../../../data/repositories/loan_repository.dart';
 import '../../error/failures.dart';
 
@@ -17,6 +18,15 @@ class LoanCubit extends Cubit<LoanState> {
   void resetError() {
     if (state is LoanError) {
       emit(LoanInitial());
+    }
+  }
+
+
+  Future<LoanModel?> getLoanById(String loanId) async {
+    try {
+      return await _repository.getLoanById(loanId);
+    } catch (e) {
+      return null;
     }
   }
 
@@ -127,18 +137,10 @@ class LoanCubit extends Cubit<LoanState> {
     }
   }
 
-  Future<bool> verifyLenderOtp(
-    String loanId,
-    String otp,
-    String verificationId,
-  ) async {
+  Future<bool> verifyLenderOtp(String loanId) async {
     emit(LoanLoading());
     try {
-      final success = await _repository.verifyLenderOtp(
-        loanId,
-        otp,
-        verificationId,
-      );
+      final success = await _repository.verifyLenderOtp(loanId);
       if (success) {
         await fetchLoans();
       }
@@ -166,13 +168,9 @@ class LoanCubit extends Cubit<LoanState> {
   }
 
   // Close Loan
-  Future<bool> closeLoan(
-    String loanId,
-    String otp,
-    String verificationId,
-  ) async {
+  Future<bool> closeLoan(String loanId) async {
     try {
-      final success = await _repository.closeLoan(loanId, otp, verificationId);
+      final success = await _repository.closeLoan(loanId);
       if (success) {
         await fetchLoans();
       }
@@ -195,31 +193,17 @@ class LoanCubit extends Cubit<LoanState> {
     }
   }
 
-  Future<bool> recordPayment(String loanId, int amount, String otp, String verificationId) async {
-      try {
-        final success = await _repository.recordPayment(loanId, amount, otp, verificationId);
-        if (success) await fetchLoans();
-        return success;
-      } on Failure catch (f) {
-        emit(LoanError(f.message));
-        rethrow;
-      } catch (e) {
-        emit(LoanError('Failed to record payment: $e'));
-        throw ServerFailure(e.toString());
-      }
-    }
-
-  Future<bool> recordInterest(String loanId, int amount, String otp, String verificationId) async {
+  Future<bool> recordPayment(String loanId, {required double amountRupees}) async {
     try {
-      final success = await _repository.recordInterest(loanId, amount, otp, verificationId);
+      final success = await _repository.recordPayment(loanId, amountRupees: amountRupees);
       if (success) await fetchLoans();
       return success;
     } on Failure catch (f) {
       emit(LoanError(f.message));
-      return false;
+      rethrow;
     } catch (e) {
-      emit(LoanError('Failed to record interest payment: $e'));
-      return false;
+      emit(LoanError('Failed to record payment: $e'));
+      throw ServerFailure(e.toString());
     }
   }
 
@@ -237,26 +221,17 @@ class LoanCubit extends Cubit<LoanState> {
     }
   }
 
-  Future<bool> addCredit(String loanId, int amountPaise) async {
-      try {
-        final success = await _repository.addCredit(loanId, amountPaise);
-        if (success) await fetchLoans();
-        return success;
-      } on Failure catch (f) {
-        emit(LoanError(f.message));
-        rethrow;
-      } catch (e) {
-        emit(LoanError('Failed to add credit: $e'));
-        throw ServerFailure(e.toString());
-      }
-    }
-
-  // Resend Loan OTP
-  Future<bool> resendOtp(String loanId) async {
+  Future<bool> addCredit(String loanId, {required double amountRupees}) async {
     try {
-      return await _repository.resendOtp(loanId);
+      final success = await _repository.addCredit(loanId, amountRupees: amountRupees);
+      if (success) await fetchLoans();
+      return success;
+    } on Failure catch (f) {
+      emit(LoanError(f.message));
+      rethrow;
     } catch (e) {
-      return false;
+      emit(LoanError('Failed to add credit: $e'));
+      throw ServerFailure(e.toString());
     }
   }
 

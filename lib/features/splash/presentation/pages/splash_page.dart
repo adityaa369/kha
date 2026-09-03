@@ -93,23 +93,14 @@ class _SplashPageState extends State<SplashPage>
   void _handleNavigation(AuthState state) async {
     if (!mounted) return;
 
-    if (state is AuthenticatedFull) {
+    if (state is AuthenticatedKycComplete || state is AuthOffline) {
       // Token valid, but require Biometric Unlock
       setState(() => _isLocked = true);
       _attemptBiometricUnlock(showFailureMessage: false);
-    } else if (state is OtpVerified ||
-        state is RegistrationOtpVerified ||
-        state is AuthenticatedUnverified) {
-      final user = state is AuthenticatedUnverified ? state.user : null;
-      if (user != null && user.firstName.isNotEmpty) {
-        context.go(AppConstants.panDetails);
-      } else {
-        context.go(AppConstants.personalDetails);
-      }
-    } else if (state is PersonalDetailsSaved) {
-      context.go(AppConstants.panDetails);
-    } else if (state is PanDetailsSaved) {
+    } else if (state is AuthenticatedEmailVerifiedKycIncomplete) {
       context.go(AppConstants.processing);
+    } else if (state is AuthenticatedEmailUnverified) {
+      context.go(AppConstants.personalDetails);
     } else if (state is Unauthenticated || state is AuthError) {
       context.go(AppConstants.login);
     }

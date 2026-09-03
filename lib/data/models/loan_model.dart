@@ -1,7 +1,6 @@
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:equatable/equatable.dart';
-import 'dart:math' as math;
 
 enum LoanStatus {
   pendingApproval('pending_approval'),
@@ -122,8 +121,12 @@ class LoanModel extends Equatable {
   final int emiAmountPaise;
   final int totalPayablePaise;
   final int paidAmountPaise;
+  final int principalOutstandingPaise;
+  final int interestOutstandingPaise;
+  final int feesOutstandingPaise;
+  final String? financialStatus;
 
-  final String? documentUrl;
+  final String? documentId;
   final List<TransactionModel> transactions;
   final List<MonthTrackingModel> monthsTracking;
 
@@ -151,7 +154,11 @@ class LoanModel extends Equatable {
     this.emiAmountPaise = 0,
     this.totalPayablePaise = 0,
     this.paidAmountPaise = 0,
-    this.documentUrl,
+    this.principalOutstandingPaise = 0,
+    this.interestOutstandingPaise = 0,
+    this.feesOutstandingPaise = 0,
+    this.financialStatus,
+    this.documentId,
     this.transactions = const [],
     this.monthsTracking = const [],
   });
@@ -204,7 +211,11 @@ class LoanModel extends Equatable {
       emiAmountPaise: parsePaise('emiAmountPaise', 'emiAmount'),
       totalPayablePaise: parsePaise('totalPayablePaise', 'totalPayable'),
       paidAmountPaise: parsePaise('paidAmountPaise', 'paidAmount'),
-      documentUrl: json['documentUrl'] ?? json['document_url'],
+      principalOutstandingPaise: parsePaise('principalOutstandingPaise', 'principalOutstanding'),
+      interestOutstandingPaise: parsePaise('interestOutstandingPaise', 'interestOutstanding'),
+      feesOutstandingPaise: parsePaise('feesOutstandingPaise', 'feesOutstanding'),
+      financialStatus: json['financialStatus'],
+      documentId: json['documentId'] ?? json['documentUrl'] ?? json['document_url'],
       transactions: parseTransactions(json['transactions']),
       monthsTracking: parseMonthsTracking(json['monthsTracking']),
     );
@@ -233,13 +244,14 @@ class LoanModel extends Equatable {
 
   Map<String, dynamic> toJsonForCreate() {
     return {
-      'borrowerName': borrowerName,
-      'borrowerPhone': mobile,
-      'borrowerAadhar': aadhar,
-      'amount': amountPaise,
-      'interestRate': interestRate,
-      'durationMonths': durationMonths,
-      'loanType': type,
+      'borrower_name': borrowerName,
+      'borrower_phone': mobile,
+      'borrower_aadhar': aadhar,
+      'amount': amount, // Fixed: Sends explicit rupees to backend
+      'interest_rate': interestRate,
+      'duration_months': durationMonths,
+      'type': type,
+      'documentId': documentId,
     };
   }
 
@@ -248,6 +260,10 @@ class LoanModel extends Equatable {
   double get amount => amountPaise / 100;
   double get emiAmount => emiAmountPaise / 100;
   double get totalPayableAmount => totalPayablePaise / 100;
+  
+  // 4F-4 Presentation-derived total
+  int get totalOutstandingPaise => principalOutstandingPaise + interestOutstandingPaise + feesOutstandingPaise;
+  double get totalOutstandingAmount => totalOutstandingPaise / 100;
   double get paidAmount => paidAmountPaise / 100;
 
   
@@ -274,14 +290,7 @@ class LoanModel extends Equatable {
   }
 
   double get remainingAmount {
-    // Rely STRICTLY on backend values to avoid conflicting arithmetic.
-    // The backend's totalPayablePaise is the full lifecycle cost.
-    if (totalPayablePaise > 0) {
-      int remainingPaise = totalPayablePaise - paidAmountPaise;
-      if (remainingPaise < 0) remainingPaise = 0;
-      return remainingPaise / 100;
-    }
-    return 0.0;
+    return (totalPayablePaise - paidAmountPaise) / 100;
   }
 
   String get displayCounterpartyName {
@@ -335,7 +344,7 @@ class LoanModel extends Equatable {
   List<Object?> get props => [
     id, lenderId, userId, borrowerName, lenderName, lenderPhone,
     amountPaise, status, progress, startDate, type, emiAmountPaise,
-    totalPayablePaise, documentUrl, paidAmountPaise, transactions, monthsTracking
+    totalPayablePaise, documentId, paidAmountPaise, transactions, monthsTracking
   ];
 }
 
