@@ -61,15 +61,34 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
     }
 
     if (!mounted) return;
+    
+    if (_loan!.pendingIntentId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Missing consent intent. Please refresh.', style: TextStyle(color: Colors.white)),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     setState(() => _isApproving = true);
 
-    final success = await context.read<LoanCubit>().verifyLoan(_loan!.id);
+    final success = await context.read<LoanCubit>().verifyLoan(_loan!.id, _loan!.pendingIntentId!);
 
     if (mounted) {
       setState(() => _isApproving = false);
     }
 
-    if (!success && mounted) {
+    if (success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Agreement accepted successfully!', style: TextStyle(color: Colors.white)),
+          backgroundColor: Colors.green,
+        ),
+      );
+      context.pop();
+    } else if (!success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
@@ -149,7 +168,7 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
                     SizedBox(width: 12.w),
                     Expanded(
                       child: Text(
-                        loan.status == 'pending_otp'
+                        loan.status == 'pending_approval'
                             ? 'Awaiting your signature'
                             : 'Awaiting completion',
                         style: const TextStyle(
@@ -208,7 +227,7 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
                     ),
                     SizedBox(height: 8.h),
                     Text(
-                      '₹${NumberFormat('#,##0').format(loan.amount / 100)}',
+                      '₹${NumberFormat('#,##0').format(loan.amount)}',
                       style: TextStyle(
                         fontSize: 32.sp,
                         fontWeight: FontWeight.bold,
@@ -216,58 +235,6 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
                       ),
                     ),
                     SizedBox(height: 24.h),
-
-                    // Temporary OTP Display Box for Testing
-                    if (loan.status == 'pending_otp') ...[
-                      Container(
-                        padding: EdgeInsets.all(16.w),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[50],
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.grey.shade300),
-                        ),
-                        child: Column(
-                          children: [
-                            Text(
-                              'Share this OTP with Lender',
-                              style: TextStyle(
-                                fontSize: 13.sp,
-                                color: Colors.grey[600],
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            SizedBox(height: 12.h),
-                            Text(
-                              loan.otp == 'FIREBASE_OTP'
-                                  ? 'Verified by App'
-                                  : (loan.otp ?? '-'),
-                              style: TextStyle(
-                                fontSize: loan.otp == 'FIREBASE_OTP'
-                                    ? 24.sp
-                                    : 32.sp,
-                                fontWeight: FontWeight.bold,
-                                color: KhaataTheme.textDark,
-                                letterSpacing: loan.otp == 'FIREBASE_OTP'
-                                    ? 1
-                                    : 4,
-                              ),
-                            ),
-                            SizedBox(height: 8.h),
-                            Text(
-                              loan.otp == 'FIREBASE_OTP'
-                                  ? 'Digital handshake complete'
-                                  : 'This confirms your agreement to the loan terms',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 12.sp,
-                                color: Colors.grey[500],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(height: 24.h),
-                    ],
 
                     const Divider(),
                     SizedBox(height: 16.h),
@@ -299,14 +266,14 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
               SizedBox(height: 32.h),
 
               // Action Buttons
-              if (loan.status == 'pending_otp')
+              if (loan.status == 'pending_approval')
                 PrimaryButton(
                   text: 'Sign & Accept Terms',
                   isLoading: _isApproving,
                   onPressed: _approveLoan,
                 ),
               SizedBox(height: 16.h),
-              if (loan.status == 'pending_otp')
+              if (loan.status == 'pending_approval')
                 SizedBox(
                   width: double.infinity,
                   child: TextButton(

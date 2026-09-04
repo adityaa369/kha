@@ -3,6 +3,8 @@ import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../widgets/flexible_payment_sheet.dart';
+import '../widgets/close_loan_sheet.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -31,8 +33,10 @@ class HandLoanDetailsPage extends StatelessWidget {
               )
             : loan;
 
+        final bool isLenderView = state is LoansLoaded && state.givenLoans.any((l) => l.id == loan.id);
+
         return Scaffold(
-          backgroundColor: KhaataTheme.backgroundGrey,
+          backgroundColor: Colors.grey.shade50,
           appBar: AppBar(
             backgroundColor: Colors.white,
             elevation: 0,
@@ -51,6 +55,7 @@ class HandLoanDetailsPage extends StatelessWidget {
             ),
             centerTitle: true,
           ),
+          bottomNavigationBar: _bottomBar(context, activeLoan, isLender: isLenderView),
           body: RefreshIndicator(
             onRefresh: () async => context.read<LoanCubit>().fetchLoans(),
             child: SingleChildScrollView(
@@ -62,7 +67,7 @@ class HandLoanDetailsPage extends StatelessWidget {
                   SizedBox(height: 16.h),
                   _statsCard(activeLoan),
                   SizedBox(height: 16.h),
-                  _repaymentChecklist(activeLoan),
+                  _repaymentChecklist(context, activeLoan),
                   SizedBox(height: 16.h),
                   _recentTransactions(activeLoan),
                   SizedBox(height: 16.h),
@@ -79,16 +84,131 @@ class HandLoanDetailsPage extends StatelessWidget {
     );
   }
 
-  // ———————————————————————————————————————————————————————————————————————————
+  // ─── Bottom Bar ────────────────────────────────────────────────────────────
+
+  Widget _bottomBar(BuildContext context, LoanModel loan, {bool isLender = false}) {
+    if (['closed', 'completed', 'pending_approval', 'pending_otp'].contains(loan.status)) return const SizedBox.shrink();
+    
+    String? currentUserId;
+    try {
+      currentUserId = context.read<AuthCubit>().state.user?.id;
+    } catch (_) {}
+
+    final bool isActuallyLender = isLender || loan.lenderId == currentUserId;
+    if (!isActuallyLender) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Colors.grey.shade200)),
+      ),
+      child: SafeArea(
+        child: Row(
+          children: [
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () => FlexiblePaymentSheet.show(context, loan, 'Record Payment', 'record_payment'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green.shade50,
+                  foregroundColor: Colors.green.shade700,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                  padding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 4.w),
+                ),
+                child: Text('💳 Record Payment', style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.bold)),
+              ),
+            ),
+            SizedBox(width: 8.w),
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: () => CloseLoanSheet.show(context, loan),
+                icon: Icon(Icons.check_circle_outline, size: 16.sp),
+                label: Text('Close Loan', style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.bold)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red.shade50,
+                  foregroundColor: Colors.red.shade700,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                  padding: EdgeInsets.symmetric(vertical: 14.h),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────———————————————————————————————————————————————————————————————————————————
+
+  void _toggleMonth(
+    BuildContext context,
+    LoanModel loan,
+    int monthIndex,
+    int currentPaid,
+    int duration,
+  ) async {
+    final bool markingAsPaid = monthIndex >= currentPaid;
+    
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(markingAsPaid ? 'Mark as Paid?' : 'Mark as Unpaid?'),
+        content: Text(
+          markingAsPaid 
+              ? 'Are you sure you want to mark Month ${monthIndex + 1} as paid?'
+              : 'Are you sure you want to mark Month ${monthIndex + 1} as unpaid?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: markingAsPaid ? Colors.green.shade700 : Colors.red.shade700,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Confirm'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true || !context.mounted) return;
+
+    // Show loading popup
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    final loanCubit = context.read<LoanCubit>();
+    double newProgress;
+
+    if (monthIndex < currentPaid) {
+      newProgress = monthIndex / duration;
+    } else {
+      newProgress = (monthIndex + 1) / duration;
+    }
+
+    newProgress = newProgress.clamp(0.0, 1.0);
+    await loanCubit.updateProgress(loan.id, newProgress);
+
+    if (context.mounted) {
+      Navigator.pop(context); // Close loading spinner
+    }
+  }
 
   Widget _profileCard(BuildContext context, LoanModel loan) {
     String? currentUserId;
     try {
-      final authState = context.read<AuthCubit>().state;
-      if (authState is AuthenticatedKycComplete) currentUserId = authState.user.id;
-      if (authState is AuthenticatedEmailVerifiedKycIncomplete) {
-        currentUserId = authState.user.id;
-      }
+      currentUserId = context.read<AuthCubit>().state.user?.id;
     } catch (_) {}
 
     final isLender = loan.lenderId == currentUserId;
@@ -399,10 +519,10 @@ class HandLoanDetailsPage extends StatelessWidget {
   Widget _creditOverviewCard(LoanModel loan) {
     final duration = loan.durationMonths ?? 0;
     final emi = loan.emiAmount ?? 0.0;
-    final totalPayable = loan.totalPayableAmount ?? (emi * duration);
+    final totalPayable = (loan.totalPayableAmount != null && loan.totalPayableAmount! > 0) ? loan.totalPayableAmount! : loan.amount;
     final progress = loan.progress.clamp(0.0, 1.0);
     final amountPaid = loan.paidAmount;
-    final amountPending = loan.remainingAmount;
+    final amountPending = loan.remainingAmount > 0 ? loan.remainingAmount : (loan.amount - loan.paidAmount);
 
     return Container(
       padding: EdgeInsets.all(16.w),
@@ -1019,10 +1139,18 @@ class HandLoanDetailsPage extends StatelessWidget {
 
 
 
-  Widget _repaymentChecklist(LoanModel loan) {
+  Widget _repaymentChecklist(BuildContext context, LoanModel loan) {
     final duration = loan.durationMonths ?? 0;
     final progress = loan.progress.clamp(0.0, 1.0);
     final paidMonths = (duration * progress).round();
+
+    String? currentUserId;
+    try {
+      currentUserId = context.read<AuthCubit>().state.user?.id;
+    } catch (_) {}
+    final isLender = loan.lenderId == currentUserId;
+    final isActive = loan.status == 'active';
+    final canEdit = isLender && isActive;
 
     return Container(
       padding: EdgeInsets.all(16.w),
@@ -1050,9 +1178,11 @@ class HandLoanDetailsPage extends StatelessWidget {
                   final isPaid = index < paidMonths;
                   final dueDate = (loan.startDate ?? loan.activatedAt ?? loan.createdAt ?? DateTime.now()).add(Duration(days: (index + 1) * 30));
 
-                  return Container(
-                    margin: EdgeInsets.only(right: 12.w),
-                    child: Column(
+                  return GestureDetector(
+                    onTap: canEdit ? () => _toggleMonth(context, loan, index, paidMonths, duration) : null,
+                    child: Container(
+                      margin: EdgeInsets.only(right: 12.w),
+                      child: Column(
                       children: [
                         Text(
                           '${_monthName(dueDate.month)} ${dueDate.year}',
@@ -1076,6 +1206,7 @@ class HandLoanDetailsPage extends StatelessWidget {
                         ),
                       ],
                     ),
+                  ),
                   );
                 }),
               ),

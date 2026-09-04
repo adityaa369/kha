@@ -544,6 +544,8 @@ class _GreetingSection extends StatelessWidget {
               String name = 'User';
               if (state is AuthenticatedKycComplete) {
                 name = state.user.firstName;
+              } else if (state is AuthenticatedEmailUnverified) {
+                name = state.user.firstName;
               }
               return Row(
                 children: [

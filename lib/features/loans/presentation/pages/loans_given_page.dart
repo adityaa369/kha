@@ -280,7 +280,7 @@ class _GivenLoanCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => context.push(AppConstants.lenderLoanDetails, extra: loan),
+      onTap: () => context.push('${AppConstants.loanDetails}/${loan.id}'),
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
         decoration: BoxDecoration(

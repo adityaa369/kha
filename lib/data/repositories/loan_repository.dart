@@ -126,9 +126,9 @@ class LoanRepository extends BaseRepository {
     });
   }
 
-  Future<bool> verifyLoan(String loanId) async {
+  Future<bool> verifyLoan(String loanId, String intentId) async {
     return await handleApiCall(() async {
-      final response = await _api.post('/loans/$loanId/verify', data: {});
+      final response = await _api.post('/loans/$loanId/verify', data: {'intentId': intentId});
       final data = response.data;
       if (data is Map && data['success'] == true) return true;
       final errMsg = (data is Map) ? data['message']?.toString() : null;

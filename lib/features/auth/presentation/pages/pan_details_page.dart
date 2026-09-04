@@ -44,17 +44,13 @@ class _PanDetailsPageState extends State<PanDetailsPage> {
       child: Scaffold(
         backgroundColor: Colors.white,
         appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: KhaataTheme.textDark),
-          onPressed: () => context.pop(),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
         ),
-      ),
       body: BlocListener<AuthCubit, AuthState>(
         listener: (context, state) {
           if (!mounted) return;
-          if (state is AuthenticatedKycComplete || state is AuthenticatedKycComplete) {
+          if (state is AuthenticatedKycComplete || state is AuthenticatedEmailUnverified) {
             context.push(AppConstants.processing);
           } else if (state is AuthError) {
             ScaffoldMessenger.of(

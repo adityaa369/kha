@@ -133,17 +133,22 @@ class KhaataApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
+    return MultiRepositoryProvider(
       providers: [
-        BlocProvider.value(value: systemStateCubit),
-        BlocProvider(create: (_) => AuthCubit()..checkAuthStatus()),
-        BlocProvider(create: (_) => LoanCubit()),
-        BlocProvider(create: (_) => PortfolioCubit(LoanRepository())),
-        BlocProvider(create: (_) => ChitFundCubit(ChitFundRepository())),
-        BlocProvider(create: (_) => NotificationCubit(ApiClient())..fetchNotifications()),
-        BlocProvider<AdminCubit>(create: (_) => AdminCubit()),
+        RepositoryProvider(create: (_) => LoanRepository()),
+        RepositoryProvider(create: (_) => ChitFundRepository()),
       ],
-      child: NotificationListenerWidget(
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider.value(value: systemStateCubit),
+          BlocProvider(create: (_) => AuthCubit()..checkAuthStatus()),
+          BlocProvider(create: (_) => LoanCubit()),
+          BlocProvider(create: (context) => PortfolioCubit(context.read<LoanRepository>())),
+          BlocProvider(create: (context) => ChitFundCubit(context.read<ChitFundRepository>())),
+          BlocProvider(create: (_) => NotificationCubit(ApiClient())..fetchNotifications()),
+          BlocProvider<AdminCubit>(create: (_) => AdminCubit()),
+        ],
+        child: NotificationListenerWidget(
         child: ScreenUtilInit(
           designSize: const Size(375, 812),
           minTextAdapt: true,
@@ -226,6 +231,7 @@ class KhaataApp extends StatelessWidget {
             );
           },
         ),
+      ),
       ),
     );
   }

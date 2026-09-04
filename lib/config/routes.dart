@@ -84,11 +84,14 @@ final router = GoRouter(
     }
 
     // KYC Progress
-    if (authState is AuthenticatedEmailVerifiedKycIncomplete) {
-      final user = authState.user;
+    if (authState is AuthenticatedEmailVerifiedKycIncomplete || authState is AuthenticatedEmailUnverified) {
+      final user = authState is AuthenticatedEmailVerifiedKycIncomplete 
+          ? authState.user 
+          : (authState as AuthenticatedEmailUnverified).user;
+
       if (user.firstName.isEmpty) {
         if (state.uri.path != AppConstants.personalDetails) return AppConstants.personalDetails;
-      } else {
+      } else if (!user.isKycComplete) {
         if (state.uri.path != AppConstants.panDetails) return AppConstants.panDetails;
       }
       return null;

@@ -14,6 +14,7 @@ class UserModel extends Equatable {
   final String? dob;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final bool? backendKycComplete;
 
   const UserModel({
     required this.id,
@@ -29,6 +30,7 @@ class UserModel extends Equatable {
     this.dob,
     this.createdAt,
     this.updatedAt,
+    this.backendKycComplete,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -44,6 +46,7 @@ class UserModel extends Equatable {
       aadhar: json['aadhar'],
       gender: json['gender'],
       dob: json['dob'],
+      backendKycComplete: json['isKycComplete'],
       createdAt: json['created_at'] != null || json['createdAt'] != null
           ? DateTime.parse(json['created_at'] ?? json['createdAt'])
           : null,
@@ -66,6 +69,7 @@ class UserModel extends Equatable {
       'aadhar': aadhar,
       'gender': gender,
       'dob': dob,
+      'isKycComplete': backendKycComplete,
     };
   }
 
@@ -93,6 +97,7 @@ class UserModel extends Equatable {
     String? dob,
     DateTime? createdAt,
     DateTime? updatedAt,
+    bool? backendKycComplete,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -108,6 +113,7 @@ class UserModel extends Equatable {
       dob: dob ?? this.dob,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      backendKycComplete: backendKycComplete ?? this.backendKycComplete,
     );
   }
 
@@ -121,12 +127,13 @@ class UserModel extends Equatable {
   }
 
   bool get isKycComplete =>
-      pan != null &&
+      (backendKycComplete == true) || 
+      (pan != null &&
       pan!.isNotEmpty &&
       aadhar != null &&
       aadhar!.isNotEmpty &&
       dob != null &&
-      dob!.isNotEmpty;
+      dob!.isNotEmpty);
 
   @override
   List<Object?> get props => [
@@ -143,5 +150,6 @@ class UserModel extends Equatable {
     dob,
     createdAt,
     updatedAt,
+    backendKycComplete,
   ];
 }

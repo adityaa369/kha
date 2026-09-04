@@ -318,7 +318,7 @@ class _LoanCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        context.push(AppConstants.loanDetails, extra: loan);
+        context.push('${AppConstants.loanDetails}/${loan.id}');
       },
       child: Container(
         decoration: BoxDecoration(
@@ -458,7 +458,7 @@ class _LoanCard extends StatelessWidget {
                       height: 48.h,
                       child: ElevatedButton(
                         onPressed: () {
-                          context.push('/loan-approval', extra: loan);
+                          context.push('${AppConstants.loanApproval}/${loan.id}');
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: KhaataTheme.primaryBlue,

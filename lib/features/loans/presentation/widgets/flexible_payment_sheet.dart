@@ -83,9 +83,7 @@ class _FlexiblePaymentSheetViewState extends State<_FlexiblePaymentSheetView> {
   double get _enteredAmount => double.tryParse(_amountCtrl.text) ?? 0;
   
   double get _newBalance {
-    final currentBalance = (widget.loan.principalOutstandingPaise + 
-                           widget.loan.interestOutstandingPaise + 
-                           widget.loan.feesOutstandingPaise) / 100.0;
+    final currentBalance = widget.loan.remainingAmount;
     if (widget.actionType == 'add_credit') {
       return currentBalance + _enteredAmount;
     }

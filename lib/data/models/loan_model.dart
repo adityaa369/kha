@@ -127,6 +127,7 @@ class LoanModel extends Equatable {
   final String? financialStatus;
 
   final String? documentId;
+  final String? pendingIntentId;
   final List<TransactionModel> transactions;
   final List<MonthTrackingModel> monthsTracking;
 
@@ -159,6 +160,7 @@ class LoanModel extends Equatable {
     this.feesOutstandingPaise = 0,
     this.financialStatus,
     this.documentId,
+    this.pendingIntentId,
     this.transactions = const [],
     this.monthsTracking = const [],
   });
@@ -208,14 +210,17 @@ class LoanModel extends Equatable {
       aadhar: json['borrowerAadhar']?.toString() ?? json['aadhar']?.toString(),
       createdAt: TransactionModel._parseDate(json['createdAt'] ?? json['created_at']),
       updatedAt: TransactionModel._parseDate(json['updatedAt'] ?? json['updated_at']),
+      
       emiAmountPaise: parsePaise('emiAmountPaise', 'emiAmount'),
       totalPayablePaise: parsePaise('totalPayablePaise', 'totalPayable'),
       paidAmountPaise: parsePaise('paidAmountPaise', 'paidAmount'),
       principalOutstandingPaise: parsePaise('principalOutstandingPaise', 'principalOutstanding'),
       interestOutstandingPaise: parsePaise('interestOutstandingPaise', 'interestOutstanding'),
       feesOutstandingPaise: parsePaise('feesOutstandingPaise', 'feesOutstanding'),
-      financialStatus: json['financialStatus'],
-      documentId: json['documentId'] ?? json['documentUrl'] ?? json['document_url'],
+      financialStatus: json['financialStatus']?.toString(),
+
+      documentId: json['documentId']?.toString(),
+      pendingIntentId: json['pendingIntentId']?.toString(),
       transactions: parseTransactions(json['transactions']),
       monthsTracking: parseMonthsTracking(json['monthsTracking']),
     );
@@ -290,7 +295,8 @@ class LoanModel extends Equatable {
   }
 
   double get remainingAmount {
-    return (totalPayablePaise - paidAmountPaise) / 100;
+    if (totalPayablePaise > 0) return (totalPayablePaise - paidAmountPaise) / 100;
+    return (amountPaise - paidAmountPaise) / 100;
   }
 
   String get displayCounterpartyName {
@@ -344,7 +350,7 @@ class LoanModel extends Equatable {
   List<Object?> get props => [
     id, lenderId, userId, borrowerName, lenderName, lenderPhone,
     amountPaise, status, progress, startDate, type, emiAmountPaise,
-    totalPayablePaise, documentId, paidAmountPaise, transactions, monthsTracking
+    totalPayablePaise, documentId, pendingIntentId, paidAmountPaise, transactions, monthsTracking
   ];
 }
 
