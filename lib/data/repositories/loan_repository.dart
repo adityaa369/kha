@@ -126,13 +126,23 @@ class LoanRepository extends BaseRepository {
     });
   }
 
-  Future<bool> verifyLoan(String loanId, String intentId) async {
+  Future<bool> verifyLoan(String loanId, String intentId, String otp) async {
     return await handleApiCall(() async {
-      final response = await _api.post('/loans/$loanId/verify', data: {'intentId': intentId});
+      final response = await _api.post('/loans/$loanId/verify', data: {'intentId': intentId, 'otp': otp});
       final data = response.data;
       if (data is Map && data['success'] == true) return true;
       final errMsg = (data is Map) ? data['message']?.toString() : null;
       throw ServerFailure(errMsg ?? 'Failed to verify loan');
+    });
+  }
+
+  Future<bool> requestConsentOtp(String loanId) async {
+    return await handleApiCall(() async {
+      final response = await _api.post('/loans/$loanId/resend-otp');
+      final data = response.data;
+      if (data is Map && data['success'] == true) return true;
+      final errMsg = (data is Map) ? data['message']?.toString() : null;
+      throw ServerFailure(errMsg ?? 'Failed to request OTP');
     });
   }
 
@@ -215,7 +225,7 @@ class LoanRepository extends BaseRepository {
     }
   }
 
-    Future<bool> recordPayment(String loanId, {required double amountRupees, String? idempotencyKey}) async {
+    Future<bool> recordPayment(String loanId, {required int amountPaise, String? idempotencyKey}) async {
     return await handleApiCall(() async {
       try {
         final idToken = await getValidIdToken();
@@ -225,7 +235,7 @@ class LoanRepository extends BaseRepository {
         
         final response = await _api.post(
           '/loans/$loanId/record-payment',
-          data: {'amount': amountRupees, 'idToken': idToken},
+          data: {'amountPaise': amountPaise, 'idToken': idToken},
           options: options,
         );
         if (response.data['success'] == true) return true;
@@ -234,7 +244,7 @@ class LoanRepository extends BaseRepository {
         if (e.response?.statusCode == 400 && e.response?.data['message'] == 'Invalid idToken') {
           final newToken = await getValidIdToken(forceRefresh: true);
           final retryOpts = e.requestOptions;
-          retryOpts.data = {'amount': amountRupees, 'idToken': newToken};
+          retryOpts.data = {'amountPaise': amountPaise, 'idToken': newToken};
           final retryResponse = await _api.dio.fetch(retryOpts);
           if (retryResponse.data['success'] == true) return true;
         }
@@ -258,7 +268,7 @@ class LoanRepository extends BaseRepository {
   }
 
     // Deprecated direct addCredit, now uses intent flow
-  Future<bool> addCredit(String loanId, {required double amountRupees}) async {
+  Future<bool> addCredit(String loanId, {required int amountPaise}) async {
     throw UnimplementedError("addCredit must now use the Two-Stage intent flow.");
   }
 
@@ -349,7 +359,7 @@ Future<IntentModel> getIntent(String intentId) async {
     });
   }
 
-  Future<String> createAddCreditIntent({required String loanId, required double amountRupees}) async {
+  Future<String> createAddCreditIntent({required String loanId, required int amountPaise}) async {
     return await handleApiCall(() async {
       final idToken = await getValidIdToken();
       final response = await _api.post(
@@ -357,7 +367,7 @@ Future<IntentModel> getIntent(String intentId) async {
         data: {
           'loanId': loanId,
           'action': 'ADD_CREDIT',
-          'amountPaise': (amountRupees * 100).toInt(),
+          'amountPaise': amountPaise,
           'idToken': idToken,
         },
       );
@@ -368,14 +378,14 @@ Future<IntentModel> getIntent(String intentId) async {
     });
   }
 
-  Future<bool> commitAddCredit({required String loanId, required String intentId, required double amountRupees}) async {
+  Future<bool> commitAddCredit({required String loanId, required String intentId, required int amountPaise}) async {
     return await handleApiCall(() async {
       try {
         final idToken = await getValidIdToken();
         // Uses the same generic ApiClient post with intentId to commit
         final response = await _api.post(
           '/loans/$loanId/add-credit',
-          data: {'intentId': intentId, 'amount': amountRupees, 'idToken': idToken},
+          data: {'intentId': intentId, 'amountPaise': amountPaise, 'idToken': idToken},
         );
         return response.statusCode == 200;
       } on DioException catch (e) {
@@ -383,7 +393,7 @@ Future<IntentModel> getIntent(String intentId) async {
           // Token refresh retry
           final newToken = await getValidIdToken(forceRefresh: true);
           final retryOpts = e.requestOptions;
-          retryOpts.data = {'intentId': intentId, 'amount': amountRupees, 'idToken': newToken};
+          retryOpts.data = {'intentId': intentId, 'amountPaise': amountPaise, 'idToken': newToken};
           final retryResponse = await _api.dio.fetch(retryOpts);
           if (retryResponse.data['success'] == true) return true;
         }

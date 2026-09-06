@@ -7,14 +7,14 @@ import '../../../../data/repositories/loan_repository.dart';
 import '../../error/failures.dart';
 
 class PaymentAttempt extends Equatable {
-  final double amountRupees;
+  final int amountPaise;
   final String idempotencyKey;
 
-  PaymentAttempt({required this.amountRupees, String? key}) 
+  PaymentAttempt({required this.amountPaise, String? key}) 
     : idempotencyKey = key ?? const Uuid().v4();
 
   @override
-  List<Object?> get props => [amountRupees, idempotencyKey];
+  List<Object?> get props => [amountPaise, idempotencyKey];
 }
 
 abstract class PaymentFlowState extends Equatable {
@@ -66,21 +66,21 @@ class PaymentFlowCubit extends Cubit<PaymentFlowState> {
 
   void reset() => emit(const PaymentIdle());
 
-  Future<void> submitPayment(double amountRupees) async {
+  Future<void> submitPayment(int amountPaise) async {
     if (state is PaymentSubmitting || state is PaymentReconciling) return;
     
     PaymentAttempt attempt;
-    if (state is PaymentIdle && (state as PaymentIdle).failedAttempt != null && (state as PaymentIdle).failedAttempt!.amountRupees == amountRupees) {
+    if (state is PaymentIdle && (state as PaymentIdle).failedAttempt != null && (state as PaymentIdle).failedAttempt!.amountPaise == amountPaise) {
       attempt = (state as PaymentIdle).failedAttempt!;
     } else {
-      attempt = PaymentAttempt(amountRupees: amountRupees);
+      attempt = PaymentAttempt(amountPaise: amountPaise);
     }
     emit(PaymentSubmitting());
     
     try {
       final success = await _repository.recordPayment(
         _loanId, 
-        amountRupees: attempt.amountRupees,
+        amountPaise: attempt.amountPaise,
         idempotencyKey: attempt.idempotencyKey,
       );
       

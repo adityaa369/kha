@@ -245,13 +245,13 @@ class _TopBarState extends State<_TopBar> {
   }
 
   Future<void> _fetchLocation() async {
-    debugPrint('KHAATA_DEBUG: _fetchLocation starting...');
+    
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      debugPrint('KHAATA_DEBUG: location services enabled = $serviceEnabled');
+      
       if (!serviceEnabled) {
         Position? lastPos = await Geolocator.getLastKnownPosition();
-        debugPrint('KHAATA_DEBUG: last known position = $lastPos');
+        
         if (lastPos != null) {
           await _decodeAndSetLocation(lastPos);
           return;
@@ -261,10 +261,10 @@ class _TopBarState extends State<_TopBar> {
       }
 
       LocationPermission permission = await Geolocator.checkPermission();
-      debugPrint('KHAATA_DEBUG: checked location permission = $permission');
+      
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
-        debugPrint('KHAATA_DEBUG: requested location permission = $permission');
+        
         if (permission == LocationPermission.denied) {
           if (mounted) setState(() => locationText = 'Location Denied');
           return;
@@ -282,13 +282,11 @@ class _TopBarState extends State<_TopBar> {
           timeLimit: Duration(seconds: 10),
         ),
       );
-      debugPrint(
-        'KHAATA_DEBUG: current position = ${position.latitude}, ${position.longitude}',
-      );
+      
 
       await _decodeAndSetLocation(position);
     } catch (e) {
-      debugPrint('KHAATA_DEBUG: error in _fetchLocation = $e');
+      
       try {
         Position? lastPos = await Geolocator.getLastKnownPosition();
         if (lastPos != null) {
@@ -304,19 +302,15 @@ class _TopBarState extends State<_TopBar> {
 
   Future<void> _decodeAndSetLocation(Position position) async {
     try {
-      debugPrint(
-        'KHAATA_DEBUG: placemark decoding for ${position.latitude}, ${position.longitude}...',
-      );
+      
       List<Placemark> placemarks = await placemarkFromCoordinates(
         position.latitude,
         position.longitude,
       );
-      debugPrint('KHAATA_DEBUG: placemarks found = ${placemarks.length}');
+      
       if (placemarks.isNotEmpty) {
         Placemark place = placemarks[0];
-        debugPrint(
-          'KHAATA_DEBUG: placemark[0] details: locality=${place.locality}, subLocality=${place.subLocality}, subAdmin=${place.subAdministrativeArea}, name=${place.name}, adminArea=${place.administrativeArea}',
-        );
+        
 
         // Select the most precise city/town/village name
         String city = 'Unknown';
@@ -341,7 +335,7 @@ class _TopBarState extends State<_TopBar> {
             ? _getStateAbbreviation(place.administrativeArea!)
             : '';
         String finalLoc = '$city${state.isNotEmpty ? ', $state' : ''}';
-        debugPrint('KHAATA_DEBUG: setting locationText to: $finalLoc');
+        
         if (mounted) {
           setState(() {
             locationText = finalLoc;
@@ -349,7 +343,7 @@ class _TopBarState extends State<_TopBar> {
         }
       }
     } catch (e) {
-      debugPrint('KHAATA_DEBUG: error in _decodeAndSetLocation = $e');
+      
     }
   }
 

@@ -438,7 +438,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
   }
 
   Widget _loanCard(Map<String, dynamic> loan) {
-    final amount = (loan['amount'] ?? 0).toDouble();
+    final amount = (loan['amountPaise'] != null ? loan['amountPaise'] / 100.0 : (loan['amount'] ?? 0).toDouble());
     final status = loan['status'] ?? 'unknown';
     final type = loan['loanType'] ?? 'loan';
     final borrower = loan['borrowerName'] ?? 'Unknown';

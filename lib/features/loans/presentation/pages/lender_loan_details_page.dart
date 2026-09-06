@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -68,8 +68,7 @@ class LenderLoanDetailsPage extends StatelessWidget {
         final duration = activeLoan.durationMonths ?? 1;
         final progress = activeLoan.progress.clamp(0.0, 1.0);
         final paidMonths = (duration * progress).round();
-        final isClosed =
-            activeLoan.status == 'closed' || activeLoan.status == 'completed';
+        final isClosed = activeLoan.loanStatus.isFinished;
         final isPending =
             activeLoan.status == 'pending_otp' ||
             activeLoan.status == 'pending_approval';

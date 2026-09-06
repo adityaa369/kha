@@ -11,18 +11,21 @@ enum LoanStatus {
   dueSoon('due_soon'),
   defaulted('defaulted'),
   rejected('rejected'),
-  closed('closed');
+  closed('closed'),
+  cancelled('cancelled'),
+  expired('expired'),
+  unknown('unknown');
 
   final String value;
   const LoanStatus(this.value);
 
   bool get isPending => this == LoanStatus.pendingApproval || this == LoanStatus.pendingOtp;
-  bool get isFinished => this == LoanStatus.completed || this == LoanStatus.closed || this == LoanStatus.defaulted || this == LoanStatus.rejected;
+  bool get isFinished => this == LoanStatus.completed || this == LoanStatus.closed || this == LoanStatus.defaulted || this == LoanStatus.rejected || this == LoanStatus.cancelled || this == LoanStatus.expired || this == LoanStatus.unknown;
 
   factory LoanStatus.fromString(String status) {
     return LoanStatus.values.firstWhere(
       (e) => e.value == status,
-      orElse: () => LoanStatus.active,
+      orElse: () => LoanStatus.unknown,
     );
   }
 }
@@ -45,9 +48,15 @@ class TransactionModel extends Equatable {
   factory TransactionModel.fromJson(Map<String, dynamic> json) {
     return TransactionModel(
       type: json['type'] ?? 'payment',
-      amountPaise: json['amountPaise'] is int 
-          ? json['amountPaise'] 
-          : ((json['amount'] is num ? json['amount'] : 0.0) * 100).toInt(),
+      amountPaise: (() {
+      if (json['amountPaise'] is int) return json['amountPaise'];
+      if (json['amountPaise'] is double) return (json['amountPaise'] as double).toInt();
+      if (json['amountPaise'] != null) {
+        final parsed = int.tryParse(json['amountPaise'].toString());
+        if (parsed != null) return parsed;
+      }
+      throw FormatException('Missing or invalid amountPaise in transaction response');
+    })(),
       note: json['note'],
       recordedAt: _parseDate(json['recordedAt']),
       recordedBy: json['recordedBy'],
@@ -166,10 +175,22 @@ class LoanModel extends Equatable {
   });
 
   factory LoanModel.fromJson(Map<String, dynamic> json) {
-    int parsePaise(String paiseKey, String amountKey) {
+        int parsePaiseStrict(String paiseKey) {
       if (json[paiseKey] is int) return json[paiseKey];
-      final amt = _parseDouble(json[amountKey]);
-      if (amt != null) return (amt * 100).toInt();
+      if (json[paiseKey] is double) return (json[paiseKey] as double).toInt();
+      if (json[paiseKey] != null) {
+        final parsed = int.tryParse(json[paiseKey].toString());
+        if (parsed != null) return parsed;
+      }
+      throw FormatException('Missing or invalid ' + paiseKey + ' in financial response');
+    }
+
+    int parsePaiseOptional(String paiseKey) {
+      if (json[paiseKey] == null) return 0;
+      if (json[paiseKey] is int) return json[paiseKey];
+      if (json[paiseKey] is double) return (json[paiseKey] as double).toInt();
+      final parsed = int.tryParse(json[paiseKey].toString());
+      if (parsed != null) return parsed;
       return 0;
     }
 
@@ -195,7 +216,7 @@ class LoanModel extends Equatable {
       lenderName: json['lenderName'] ?? json['lender_name'],
       lenderPhone: json['lenderPhone']?.toString() ?? json['lender_phone']?.toString(),
       initials: json['initials'] ?? _generateInitials(json['lenderName'] ?? json['borrowerName'] ?? json['borrower_name'] ?? ''),
-      amountPaise: parsePaise('amountPaise', 'amount'),
+      amountPaise: parsePaiseStrict('amountPaise'),
       interestRate: _parseDouble(json['interestRate']) ?? _parseDouble(json['interest_rate']),
       durationMonths: json['durationMonths'] is int
           ? json['durationMonths']
@@ -211,12 +232,12 @@ class LoanModel extends Equatable {
       createdAt: TransactionModel._parseDate(json['createdAt'] ?? json['created_at']),
       updatedAt: TransactionModel._parseDate(json['updatedAt'] ?? json['updated_at']),
       
-      emiAmountPaise: parsePaise('emiAmountPaise', 'emiAmount'),
-      totalPayablePaise: parsePaise('totalPayablePaise', 'totalPayable'),
-      paidAmountPaise: parsePaise('paidAmountPaise', 'paidAmount'),
-      principalOutstandingPaise: parsePaise('principalOutstandingPaise', 'principalOutstanding'),
-      interestOutstandingPaise: parsePaise('interestOutstandingPaise', 'interestOutstanding'),
-      feesOutstandingPaise: parsePaise('feesOutstandingPaise', 'feesOutstanding'),
+      emiAmountPaise: parsePaiseOptional('emiAmountPaise'),
+      totalPayablePaise: parsePaiseOptional('totalPayablePaise'),
+      paidAmountPaise: parsePaiseOptional('paidAmountPaise'),
+      principalOutstandingPaise: parsePaiseStrict('principalOutstandingPaise'),
+      interestOutstandingPaise: parsePaiseOptional('interestOutstandingPaise'),
+      feesOutstandingPaise: parsePaiseOptional('feesOutstandingPaise'),
       financialStatus: json['financialStatus']?.toString(),
 
       documentId: json['documentId']?.toString(),

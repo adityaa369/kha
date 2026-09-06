@@ -27,7 +27,7 @@ class AddCreditApprovalPage extends StatelessWidget {
         repository: context.read<LoanRepository>(),
         loanId: loanId,
         initialIntentId: intentId,
-        initialAmountRupees: amountRupees,
+        
       ),
       child: const _AddCreditApprovalView(),
     );
@@ -120,7 +120,7 @@ class _AddCreditApprovalView extends StatelessWidget {
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
                         children: [
-                          _buildRow('Amount:', '₹ ${currencyFmt.format(state.amountRupees)}', true),
+                          _buildRow('Amount:', '₹ ${currencyFmt.format((state as dynamic).amountRupees ?? 0)}', true),
                           const SizedBox(height: 12),
                           _buildRow('Intent ID:', state.intentId.length > 8 ? state.intentId.substring(0,8) : state.intentId, false),
                         ],

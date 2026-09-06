@@ -3,7 +3,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../config/theme.dart';
 import '../../../../config/constants.dart';
-import '../../../../shared/widgets/buttons/primary_button.dart';
 
 class LoanConfirmationPage extends StatelessWidget {
   final Map<String, dynamic> loanData;
@@ -123,9 +122,7 @@ class LoanConfirmationPage extends StatelessWidget {
               
               SizedBox(height: 48.h),
               
-              PrimaryButton(
-                text: 'Go to Given Loans',
-                onPressed: () {
+              ElevatedButton(child: Text('Go to Given Loans'), onPressed: () {
                   context.go(AppConstants.loansGiven);
                 },
               ),

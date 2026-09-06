@@ -301,7 +301,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
       'borrower_name': _borrowerNameController.text,
       'borrower_aadhar': _aadharController.text,
       'borrower_address': _addressController.text,
-      'amount': double.tryParse(_amountController.text) ?? 0.0,
+      'amountPaise': (int.tryParse(_amountController.text) ?? 0) * 100,
       'interest_rate': widget.loanType == 'interest_credit'
           ? (double.tryParse(_interestController.text) ?? 0.0)
           : 0.0,
@@ -326,7 +326,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
           'loan_id': result['id'],
           'borrower_name': _borrowerNameController.text,
           'borrower_phone': phone,
-          'amount': double.tryParse(_amountController.text) ?? 0.0,
+          'amountPaise': (int.tryParse(_amountController.text) ?? 0) * 100,
         },
       );
     } else if (mounted) {

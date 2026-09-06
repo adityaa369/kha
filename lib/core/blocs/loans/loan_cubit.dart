@@ -95,11 +95,11 @@ class LoanCubit extends Cubit<LoanState> {
     }
   }
 
-  // Verify/Approve loan agreement with intent
-  Future<bool> verifyLoan(String loanId, String intentId) async {
+  // Verify/Approve loan agreement with intent and OTP
+  Future<bool> verifyLoan(String loanId, String intentId, String otp) async {
     emit(LoanLoading());
     try {
-      final success = await _repository.verifyLoan(loanId, intentId);
+      final success = await _repository.verifyLoan(loanId, intentId, otp);
       if (success) {
         emit(const LoanVerificationSuccess());
         await fetchLoans();
@@ -110,6 +110,15 @@ class LoanCubit extends Cubit<LoanState> {
       return false;
     } catch (e) {
       emit(LoanError('Failed to verify loan: $e'));
+      return false;
+    }
+  }
+
+  Future<bool> requestConsentOtp(String loanId) async {
+    try {
+      return await _repository.requestConsentOtp(loanId);
+    } catch (e) {
+      emit(LoanError('Failed to request OTP: $e'));
       return false;
     }
   }
@@ -193,9 +202,9 @@ class LoanCubit extends Cubit<LoanState> {
     }
   }
 
-  Future<bool> recordPayment(String loanId, {required double amountRupees}) async {
+  Future<bool> recordPayment(String loanId, {required int amountPaise}) async {
     try {
-      final success = await _repository.recordPayment(loanId, amountRupees: amountRupees);
+      final success = await _repository.recordPayment(loanId, amountPaise: amountPaise);
       if (success) await fetchLoans();
       return success;
     } on Failure catch (f) {
@@ -221,9 +230,9 @@ class LoanCubit extends Cubit<LoanState> {
     }
   }
 
-  Future<bool> addCredit(String loanId, {required double amountRupees}) async {
+  Future<bool> addCredit(String loanId, {required int amountPaise}) async {
     try {
-      final success = await _repository.addCredit(loanId, amountRupees: amountRupees);
+      final success = await _repository.addCredit(loanId, amountPaise: amountPaise);
       if (success) await fetchLoans();
       return success;
     } on Failure catch (f) {

@@ -17,29 +17,29 @@ class AddCreditCreatingIntent extends AddCreditFlowState {}
 
 class AddCreditAwaitingConsent extends AddCreditFlowState {
   final String intentId;
-  final double amountRupees;
-  const AddCreditAwaitingConsent(this.intentId, this.amountRupees);
+  final int amountPaise;
+  const AddCreditAwaitingConsent(this.intentId, this.amountPaise);
 
   @override
-  List<Object?> get props => [intentId, amountRupees];
+  List<Object?> get props => [intentId, amountPaise];
 }
 
 class AddCreditAuthorizing extends AddCreditFlowState {
   final String intentId;
-  final double amountRupees;
-  const AddCreditAuthorizing(this.intentId, this.amountRupees);
+  final int amountPaise;
+  const AddCreditAuthorizing(this.intentId, this.amountPaise);
   
   @override
-  List<Object?> get props => [intentId, amountRupees];
+  List<Object?> get props => [intentId, amountPaise];
 }
 
 class AddCreditCommitting extends AddCreditFlowState {
   final String intentId;
-  final double amountRupees;
-  const AddCreditCommitting(this.intentId, this.amountRupees);
+  final int amountPaise;
+  const AddCreditCommitting(this.intentId, this.amountPaise);
   
   @override
-  List<Object?> get props => [intentId, amountRupees];
+  List<Object?> get props => [intentId, amountPaise];
 }
 
 class AddCreditSuccess extends AddCreditFlowState {}
@@ -60,11 +60,11 @@ class AddCreditFlowCubit extends Cubit<AddCreditFlowState> {
     required LoanRepository repository,
     required String loanId,
     String? initialIntentId,
-    double? initialAmountRupees,
+    int? initialAmountPaise,
   }) : _repository = repository,
        _loanId = loanId,
-       super(initialIntentId != null && initialAmountRupees != null 
-         ? AddCreditAwaitingConsent(initialIntentId, initialAmountRupees) 
+       super(initialIntentId != null && initialAmountPaise != null 
+         ? AddCreditAwaitingConsent(initialIntentId, initialAmountPaise) 
          : AddCreditIdle());
 
   void reset() => emit(AddCreditIdle());
@@ -87,8 +87,8 @@ class AddCreditFlowCubit extends Cubit<AddCreditFlowState> {
       } else if (intent.status == 'REJECTED') {
         emit(const AddCreditRejectedState(BusinessLogicFailure('INTENT_REJECTED')));
       } else if (intent.status == 'PENDING') {
-        final amountRupees = (intent.payload['amountPaise'] ?? 0) / 100.0;
-        emit(AddCreditAwaitingConsent(intentId, amountRupees));
+        final amountPaise = intent.payload['amountPaise'] ?? 0;
+        emit(AddCreditAwaitingConsent(intentId, amountPaise));
       } else {
         emit(const AddCreditRejectedState(ServerFailure('Unknown intent status')));
       }
@@ -102,7 +102,7 @@ class AddCreditFlowCubit extends Cubit<AddCreditFlowState> {
   }
 
   // Lender Action: Create Intent
-  Future<void> createIntent(double amountRupees) async {
+  Future<void> createIntent(int amountPaise) async {
     if (state is! AddCreditIdle) return;
     
     emit(AddCreditCreatingIntent());
@@ -110,9 +110,9 @@ class AddCreditFlowCubit extends Cubit<AddCreditFlowState> {
     try {
       final intentId = await _repository.createAddCreditIntent(
         loanId: _loanId, 
-        amountRupees: amountRupees,
+        amountPaise: amountPaise,
       );
-      emit(AddCreditAwaitingConsent(intentId, amountRupees));
+      emit(AddCreditAwaitingConsent(intentId, amountPaise));
     } on DioException catch (e) {
       emit(AddCreditRejectedState(_mapDioErrorToFailure(e)));
     } on Failure catch (f) {
@@ -128,18 +128,18 @@ class AddCreditFlowCubit extends Cubit<AddCreditFlowState> {
     
     final currentState = state as AddCreditAwaitingConsent;
     final intentId = currentState.intentId;
-    final amountRupees = currentState.amountRupees;
+    final amountPaise = currentState.amountPaise;
     
-    emit(AddCreditAuthorizing(intentId, amountRupees));
+    emit(AddCreditAuthorizing(intentId, amountPaise));
     
     try {
       // The idToken is fetched inside the repository during addCredit
-      emit(AddCreditCommitting(intentId, amountRupees));
+      emit(AddCreditCommitting(intentId, amountPaise));
       
       final success = await _repository.commitAddCredit(
         loanId: _loanId, 
         intentId: intentId,
-        amountRupees: amountRupees,
+        amountPaise: amountPaise,
       );
       
       if (success) {
@@ -150,12 +150,12 @@ class AddCreditFlowCubit extends Cubit<AddCreditFlowState> {
     } on TimeoutException {
       // For Add Credit, we do not auto-recreate intent.
       // Reconcile the existing intent.
-      await reconcile(intentId, amountRupees);
+      await reconcile(intentId, amountPaise);
     } on DioException catch (e) {
       if (e.type == DioExceptionType.connectionTimeout || 
           e.type == DioExceptionType.receiveTimeout || 
           e.type == DioExceptionType.sendTimeout) {
-        await reconcile(intentId, amountRupees);
+        await reconcile(intentId, amountPaise);
       } else {
         emit(AddCreditRejectedState(_mapDioErrorToFailure(e)));
       }
@@ -167,14 +167,14 @@ class AddCreditFlowCubit extends Cubit<AddCreditFlowState> {
   }
 
   // Reconcile network unknowns
-  Future<void> reconcile(String intentId, double amountRupees) async {
+  Future<void> reconcile(String intentId, int amountPaise) async {
     try {
       final status = await _repository.checkIntentStatus(intentId);
       if (status == 'CONSUMED' || status == 'COMMITTED') {
         emit(AddCreditSuccess());
       } else if (status == 'PENDING') {
         // Safe to retry commit
-        emit(AddCreditAwaitingConsent(intentId, amountRupees));
+        emit(AddCreditAwaitingConsent(intentId, amountPaise));
       } else if (status == 'EXPIRED') {
         emit(const AddCreditRejectedState(BusinessLogicFailure('INTENT_EXPIRED')));
       } else if (status == 'REJECTED') {

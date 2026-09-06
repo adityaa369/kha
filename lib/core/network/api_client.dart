@@ -149,14 +149,14 @@ class ApiClient {
           onRequest: (options, handler) {
             final safeHeaders = Map<String, dynamic>.from(options.headers);
             if (safeHeaders.containsKey('Authorization')) safeHeaders['Authorization'] = 'Bearer [REDACTED]';
-            debugPrint('[API] ${options.method} ${options.uri}');
+            
             return handler.next(options);
           },
           onResponse: (response, handler) {
             return handler.next(response);
           },
           onError: (e, handler) {
-            debugPrint('[API ERR] ${e.response?.statusCode} ${e.requestOptions.uri}');
+            
             return handler.next(e);
           },
         ),

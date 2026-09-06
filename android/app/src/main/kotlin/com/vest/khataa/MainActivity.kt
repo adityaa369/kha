@@ -1,4 +1,4 @@
-package com.example.khatha
+package com.vest.khataa
 
 import io.flutter.embedding.android.FlutterFragmentActivity
 

@@ -2,14 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../config/theme.dart';
-import '../../../../core/widgets/buttons.dart';
+import 'package:intl/intl.dart';
+import 'package:pin_code_fields/pin_code_fields.dart';
 import '../../../../core/blocs/loans/loan_cubit.dart';
 import '../../../../core/blocs/loans/loan_state.dart';
 import '../../../../data/models/loan_model.dart';
-import 'package:intl/intl.dart';
 import '../../../../core/services/biometric_auth_service.dart';
+import '../../../../config/theme.dart';
 import '../../../../config/constants.dart';
+import 'dart:async';
 
 class LoanApprovalPage extends StatefulWidget {
   final String loanId;
@@ -22,13 +23,27 @@ class LoanApprovalPage extends StatefulWidget {
 
 class _LoanApprovalPageState extends State<LoanApprovalPage> {
   bool _isApproving = false;
+  bool _isOtpSent = false;
+  String _currentOtp = '';
   LoanModel? _loan;
   bool _isLoading = true;
+  int _resendTimer = 30;
+  bool _canResend = false;
+  late StreamController<ErrorAnimationType> _errorController;
+  final TextEditingController _otpController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
+    _errorController = StreamController<ErrorAnimationType>();
     _fetchLoan();
+  }
+
+  @override
+  void dispose() {
+    _otpController.dispose();
+    _errorController.close();
+    super.dispose();
   }
 
   Future<void> _fetchLoan() async {
@@ -41,6 +56,62 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
     }
   }
 
+  void _startResendTimer() {
+    if (!mounted) return;
+    setState(() {
+      _canResend = false;
+      _resendTimer = 30;
+    });
+    _tickTimer();
+  }
+
+  void _tickTimer() {
+    if (!mounted) return;
+    if (_resendTimer > 0) {
+      Future.delayed(const Duration(seconds: 1), () {
+        if (!mounted) return;
+        setState(() {
+          _resendTimer--;
+        });
+        _tickTimer();
+      });
+    } else {
+      setState(() {
+        _canResend = true;
+      });
+    }
+  }
+
+  void _requestOtp() async {
+    if (_loan == null) return;
+    setState(() => _isApproving = true);
+    
+    final success = await context.read<LoanCubit>().requestConsentOtp(_loan!.id);
+    
+    if (!mounted) return;
+    setState(() => _isApproving = false);
+    
+    if (success) {
+      setState(() {
+        _isOtpSent = true;
+      });
+      _startResendTimer();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('OTP requested successfully', style: TextStyle(color: Colors.white)),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to request OTP', style: TextStyle(color: Colors.white)),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   void _approveLoan() async {
     if (_loan == null) return;
     
@@ -49,10 +120,7 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text(
-              'Biometric signature required to accept loan.',
-              style: TextStyle(color: Colors.white),
-            ),
+            content: Text('Authentication required to accept agreement'),
             backgroundColor: Colors.red,
           ),
         );
@@ -74,7 +142,7 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
 
     setState(() => _isApproving = true);
 
-    final success = await context.read<LoanCubit>().verifyLoan(_loan!.id, _loan!.pendingIntentId!);
+    final success = await context.read<LoanCubit>().verifyLoan(_loan!.id, _loan!.pendingIntentId!, _currentOtp);
 
     if (mounted) {
       setState(() => _isApproving = false);
@@ -89,10 +157,11 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
       );
       context.pop();
     } else if (!success && mounted) {
+      _errorController.add(ErrorAnimationType.shake);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Failed to accept agreement. Try again.',
+            'Failed to accept agreement. Check OTP and try again.',
             style: TextStyle(color: Colors.white),
           ),
           backgroundColor: Colors.red,
@@ -265,13 +334,73 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
               ),
               SizedBox(height: 32.h),
 
-              // Action Buttons
-              if (loan.status == 'pending_approval')
+              if (loan.status == 'pending_approval' && !_isOtpSent)
+                PrimaryButton(
+                  text: 'Request OTP to Sign',
+                  isLoading: _isApproving,
+                  onPressed: _requestOtp,
+                ),
+
+              if (loan.status == 'pending_approval' && _isOtpSent) ...[
+                Text(
+                  'Enter 6-digit OTP sent to your phone',
+                  style: TextStyle(fontSize: 14.sp, color: KhaataTheme.textGrey),
+                ),
+                SizedBox(height: 16.h),
+                PinCodeTextField(
+                  appContext: context,
+                  length: 6,
+                  controller: _otpController,
+                  keyboardType: TextInputType.number,
+                  autoFocus: true,
+                  errorAnimationController: _errorController,
+                  pinTheme: PinTheme(
+                    shape: PinCodeFieldShape.box,
+                    borderRadius: BorderRadius.circular(12.r),
+                    fieldHeight: 50.h,
+                    fieldWidth: 45.w,
+                    activeFillColor: Colors.grey[100],
+                    inactiveFillColor: Colors.grey[100],
+                    selectedFillColor: Colors.blue[50],
+                    activeColor: KhaataTheme.primaryBlue,
+                    inactiveColor: Colors.grey[300],
+                    selectedColor: KhaataTheme.primaryBlue,
+                  ),
+                  cursorColor: KhaataTheme.primaryBlue,
+                  enableActiveFill: true,
+                  onChanged: (value) {
+                    setState(() => _currentOtp = value);
+                  },
+                ),
+                SizedBox(height: 16.h),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Didn\'t receive code? ',
+                      style: TextStyle(fontSize: 14.sp, color: KhaataTheme.textGrey),
+                    ),
+                    TextButton(
+                      onPressed: _canResend ? _requestOtp : null,
+                      child: Text(
+                        _canResend ? 'Resend' : 'Resend in ${_resendTimer}s',
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w600,
+                          color: _canResend ? KhaataTheme.primaryBlue : Colors.grey[400],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 24.h),
                 PrimaryButton(
                   text: 'Sign & Accept Terms',
                   isLoading: _isApproving,
-                  onPressed: _approveLoan,
+                  onPressed: _currentOtp.length == 6 ? _approveLoan : null,
                 ),
+              ],
+              
               SizedBox(height: 16.h),
               if (loan.status == 'pending_approval')
                 SizedBox(

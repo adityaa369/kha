@@ -45,14 +45,14 @@ void main() async {
               ? const AppleDebugProvider()
               : const AppleDeviceCheckProvider(),
         );
-        debugPrint("Firebase App Check activated successfully.");
+        
       } catch (e) {
-        debugPrint("Firebase App Check activation failed: $e");
+        
       }
       try {
         NotificationService.initialize();
       } catch (e) {
-        debugPrint("Notification init failed: $e");
+        
       }
     });
 

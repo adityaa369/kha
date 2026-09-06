@@ -9,7 +9,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:119567932403:android:0825bf2ed995c992a91086",
         "android_client_info": {
-          "package_name": "com.example.khatha"
+          "package_name": "com.vest.khataa"
         }
       },
       "oauth_client": [
@@ -17,7 +17,7 @@
           "client_id": "119567932403-mcso8c9p6aaf2ah2hsuo5ttlv72m8vlt.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.example.khatha",
+            "package_name": "com.vest.khataa",
             "certificate_hash": "beab32de115fb1d5b335d57fd04863f8a76ecff0"
           }
         },
@@ -42,7 +42,7 @@
               "client_id": "119567932403-2vcl856kveb35k0bb5ip0rq66d99j3tt.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.example.khatha"
+                "bundle_id": "com.vest.khataa"
               }
             }
           ]

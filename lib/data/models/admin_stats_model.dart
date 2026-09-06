@@ -27,8 +27,8 @@ class AdminStats {
     totalChits: json['totalChits'] ?? 0,
     activeLoans: json['activeLoans'] ?? 0,
     activeChits: json['activeChits'] ?? 0,
-    totalLoanVolume: (json['totalLoanVolume'] ?? 0).toDouble(),
-    totalChitVolume: (json['totalChitVolume'] ?? 0).toDouble(),
+    totalLoanVolume: (json['totalLoanVolumePaise'] != null ? json['totalLoanVolumePaise'] / 100.0 : (json['totalLoanVolume'] ?? 0).toDouble()),
+    totalChitVolume: (json['totalChitVolumePaise'] != null ? json['totalChitVolumePaise'] / 100.0 : (json['totalChitVolume'] ?? 0).toDouble()),
     newUsers: json['newUsers'] ?? 0,
     newLoans: json['newLoans'] ?? 0,
   );

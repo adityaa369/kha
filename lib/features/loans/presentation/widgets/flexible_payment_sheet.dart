@@ -80,23 +80,23 @@ class _FlexiblePaymentSheetViewState extends State<_FlexiblePaymentSheetView> {
     _amountCtrl.addListener(() => setState(() {}));
   }
 
-  double get _enteredAmount => double.tryParse(_amountCtrl.text) ?? 0;
+  int get _enteredAmountPaise => (int.tryParse(_amountCtrl.text) ?? 0) * 100;
   
-  double get _newBalance {
-    final currentBalance = widget.loan.remainingAmount;
+  int get _newBalancePaise {
+    final currentBalancePaise = widget.loan.principalOutstandingPaise;
     if (widget.actionType == 'add_credit') {
-      return currentBalance + _enteredAmount;
+      return currentBalancePaise + _enteredAmountPaise;
     }
-    return (currentBalance - _enteredAmount).clamp(0.0, double.infinity);
+    return (currentBalancePaise - _enteredAmountPaise).clamp(0, 9999999999);
   }
 
   void _processPayment() {
-    if (_enteredAmount <= 0) return;
+    if (_enteredAmountPaise <= 0) return;
     
     if (widget.actionType == 'add_credit') {
-      context.read<AddCreditFlowCubit>().createIntent(_enteredAmount);
+      context.read<AddCreditFlowCubit>().createIntent(_enteredAmountPaise);
     } else {
-      context.read<PaymentFlowCubit>().submitPayment(_enteredAmount);
+      context.read<PaymentFlowCubit>().submitPayment(_enteredAmountPaise);
     }
   }
 
@@ -124,7 +124,7 @@ class _FlexiblePaymentSheetViewState extends State<_FlexiblePaymentSheetView> {
           isUnknown: false,
           successMessage: 'Add Credit intent sent to borrower for approval.',
           onAction: _processPayment,
-          isActionDisabled: state is AddCreditCreatingIntent || _enteredAmount <= 0,
+          isActionDisabled: state is AddCreditCreatingIntent || _enteredAmountPaise <= 0,
         );
       },
     );
@@ -146,7 +146,7 @@ class _FlexiblePaymentSheetViewState extends State<_FlexiblePaymentSheetView> {
           isUnknown: state is PaymentUnknown,
           successMessage: 'Payment Recorded Successfully',
           onAction: _processPayment,
-          isActionDisabled: state is PaymentSubmitting || state is PaymentReconciling || _enteredAmount <= 0,
+          isActionDisabled: state is PaymentSubmitting || state is PaymentReconciling || _enteredAmountPaise <= 0,
           onReconcile: state is PaymentUnknown ? () => context.read<PaymentFlowCubit>().reconcile(state.attempt) : null,
         );
       },
@@ -216,13 +216,13 @@ class _FlexiblePaymentSheetViewState extends State<_FlexiblePaymentSheetView> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text('Remaining Balance:'),
-                  Text('₹ ${_currencyFmt.format(_newBalance)}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Text('₹ ${_currencyFmt.format(_newBalancePaise / 100)}', style: const TextStyle(fontWeight: FontWeight.bold)),
                 ],
               ),
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: isActionDisabled ? null : onAction,
-                child: Text(isProcessing ? 'Processing...' : 'Submit ₹${_currencyFmt.format(_enteredAmount)}'),
+                child: Text(isProcessing ? 'Processing...' : 'Submit ₹${_currencyFmt.format(_enteredAmountPaise / 100)}'),
               )
             ],
           ],

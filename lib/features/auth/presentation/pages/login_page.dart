@@ -27,15 +27,15 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _handleLogin() {
-    debugPrint('[_handleLogin] Button clicked. Validating...');
+    
     if (_formKey.currentState?.validate() ?? false) {
-      debugPrint('[_handleLogin] Validation passed. Calling loginWithPassword...');
+      
       final phone = _phoneController.text.trim();
       final password = _passwordController.text;
       context.read<AuthCubit>().loginWithPassword(phone, password);
     } else {
-      debugPrint('[_handleLogin] Validation FAILED!');
-      debugPrint('[_handleLogin] Phone: ${_phoneController.text}, Password length: ${_passwordController.text.length}');
+      
+      
     }
   }
 
@@ -88,7 +88,7 @@ class _LoginPageState extends State<LoginPage> {
           }
         },
         builder: (context, state) {
-            debugPrint('[LoginPage build] Current AuthState: $state');
+            
           return SafeArea(
             child: SingleChildScrollView(
               child: Column(
