@@ -13,27 +13,30 @@ void main() {
   }
 
   group('Batch 2A Frontend Regression', () {
-    test('LoanModel strictly parses amountPaise and does not infer from legacy amount', () {
-      final validJson = {
-        '_id': 'loan_123',
-        'lender': 'lender1',
-        'borrower': 'borrower1',
-        'amountPaise': 68000000,
-        'principalOutstandingPaise': 68000000,
-        'amount': 6800.0 
-      };
+    test(
+      'LoanModel strictly parses amountPaise and does not infer from legacy amount',
+      () {
+        final validJson = {
+          '_id': 'loan_123',
+          'lender': 'lender1',
+          'borrower': 'borrower1',
+          'amountPaise': 68000000,
+          'principalOutstandingPaise': 68000000,
+          'amount': 6800.0,
+        };
 
-      final loan = LoanModel.fromJson(validJson);
-      
-      expect(loan.amountPaise, 68000000);
-      expect(loan.principalOutstandingPaise, 68000000);
-      
-      expect(loan.amount, 680000.0); 
-      expect(loan.amount, isNot(6800.0)); 
-      
-      final displayAmount = '₹${formatCurrency(loan.amount)}';
-      expect(displayAmount, '₹6,80,000');
-    });
+        final loan = LoanModel.fromJson(validJson);
+
+        expect(loan.amountPaise, 68000000);
+        expect(loan.principalOutstandingPaise, 68000000);
+
+        expect(loan.amount, 680000.0);
+        expect(loan.amount, isNot(6800.0));
+
+        final displayAmount = '₹${formatCurrency(loan.amount)}';
+        expect(displayAmount, '₹6,80,000');
+      },
+    );
 
     test('LoanModel throws FormatException if amountPaise is missing', () {
       final invalidJson = {
@@ -41,10 +44,13 @@ void main() {
         'lender': 'lender1',
         'borrower': 'borrower1',
         'principalOutstandingPaise': 68000000,
-        'amount': 680000.0 
+        'amount': 680000.0,
       };
 
-      expect(() => LoanModel.fromJson(invalidJson), throwsA(isA<FormatException>()));
+      expect(
+        () => LoanModel.fromJson(invalidJson),
+        throwsA(isA<FormatException>()),
+      );
     });
   });
 }

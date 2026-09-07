@@ -35,7 +35,6 @@ class SecurityState {
 
 class SecurityCubit extends Cubit<SecurityState> {
   final SecurityRepository _repository;
-  
 
   SecurityCubit(this._repository) : super(SecurityState());
 
@@ -45,7 +44,9 @@ class SecurityCubit extends Cubit<SecurityState> {
       final rt = await SecureStorage.getRefreshToken();
       final sessions = await _repository.getSessions(rt);
       final events = await _repository.getSecurityEvents();
-      emit(state.copyWith(isLoading: false, sessions: sessions, events: events));
+      emit(
+        state.copyWith(isLoading: false, sessions: sessions, events: events),
+      );
     } catch (e) {
       emit(state.copyWith(isLoading: false, error: e.toString()));
     }
@@ -66,7 +67,7 @@ class SecurityCubit extends Cubit<SecurityState> {
       emit(state.copyWith(isLoading: true));
       final rt = await SecureStorage.getRefreshToken();
       if (rt == null) throw Exception('No current session context found.');
-      
+
       await _repository.revokeOtherSessions(rt);
       await loadSecurityData(); // Refresh list
     } catch (e) {

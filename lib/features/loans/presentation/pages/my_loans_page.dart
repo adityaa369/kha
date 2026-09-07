@@ -458,7 +458,9 @@ class _LoanCard extends StatelessWidget {
                       height: 48.h,
                       child: ElevatedButton(
                         onPressed: () {
-                          context.push('${AppConstants.loanApproval}/${loan.id}');
+                          context.push(
+                            '${AppConstants.loanApproval}/${loan.id}',
+                          );
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: KhaataTheme.primaryBlue,

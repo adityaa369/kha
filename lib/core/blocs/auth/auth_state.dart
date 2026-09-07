@@ -64,9 +64,9 @@ class AuthError extends AuthState {
   List<Object?> get props => [message];
 }
 
-// Process States (UI transient states shouldn't dictate core routing, 
+// Process States (UI transient states shouldn't dictate core routing,
 // but some are necessary to convey loading context if no other Bloc manages it).
-// To satisfy the UI without destroying the new state model, we include these but 
+// To satisfy the UI without destroying the new state model, we include these but
 // they must not be used as the ultimate route determinant.
 class AuthLoading extends AuthState {}
 

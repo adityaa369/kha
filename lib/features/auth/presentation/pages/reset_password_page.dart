@@ -1,3 +1,4 @@
+import 'package:khataa/core/utils/error_handler.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -40,12 +41,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
         listener: (context, state) {
           if (!mounted) return;
           if (state is AuthError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: KhaataTheme.dangerRed,
-              ),
-            );
+            ErrorHandler.showError(context, state.message);
           } else if (state is AuthenticatedKycComplete) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
@@ -72,7 +68,10 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                           SizedBox(height: 40.h),
                           IconButton(
                             onPressed: () => context.go('/login'),
-                            icon: const Icon(Icons.arrow_back, color: Colors.white),
+                            icon: const Icon(
+                              Icons.arrow_back,
+                              color: Colors.white,
+                            ),
                             padding: EdgeInsets.zero,
                             alignment: Alignment.centerLeft,
                           ),
@@ -112,10 +111,19 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                                     labelText: 'New Password',
                                     prefixIcon: const Icon(Icons.lock_outline),
                                     suffixIcon: IconButton(
-                                      icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
-                                      onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                                      icon: Icon(
+                                        _obscurePassword
+                                            ? Icons.visibility_off
+                                            : Icons.visibility,
+                                      ),
+                                      onPressed: () => setState(
+                                        () => _obscurePassword =
+                                            !_obscurePassword,
+                                      ),
                                     ),
-                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12.r),
+                                    ),
                                   ),
                                 ),
                                 SizedBox(height: 20.h),
@@ -123,14 +131,18 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                                   controller: _confirmPasswordController,
                                   obscureText: _obscurePassword,
                                   validator: (val) {
-                                    if (val == null || val.isEmpty) return 'Confirm your password';
-                                    if (val != _passwordController.text) return 'Passwords do not match';
+                                    if (val == null || val.isEmpty)
+                                      return 'Confirm your password';
+                                    if (val != _passwordController.text)
+                                      return 'Passwords do not match';
                                     return null;
                                   },
                                   decoration: InputDecoration(
                                     labelText: 'Confirm New Password',
                                     prefixIcon: const Icon(Icons.lock_outline),
-                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12.r),
+                                    ),
                                   ),
                                 ),
                                 SizedBox(height: 32.h),
@@ -138,18 +150,25 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                                   width: double.infinity,
                                   height: 52.h,
                                   child: ElevatedButton(
-                                    onPressed: state is AuthLoading ? null : _handleReset,
+                                    onPressed: state is AuthLoading
+                                        ? null
+                                        : _handleReset,
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: KhaataTheme.primaryBlue,
                                       shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(16.r),
+                                        borderRadius: BorderRadius.circular(
+                                          16.r,
+                                        ),
                                       ),
                                     ),
                                     child: state is AuthLoading
                                         ? SizedBox(
                                             width: 24.w,
                                             height: 24.w,
-                                            child: const CircularProgressIndicator(color: Colors.white),
+                                            child:
+                                                const CircularProgressIndicator(
+                                                  color: Colors.white,
+                                                ),
                                           )
                                         : Text(
                                             'Reset Password',
@@ -177,4 +196,3 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
     );
   }
 }
-

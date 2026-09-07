@@ -13,7 +13,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:khatha/data/models/user_model.dart';
 
 class MockLoanRepository extends Mock implements LoanRepository {}
+
 class MockAuthCubit extends Mock implements AuthCubit {}
+
 class MockLoanCubit extends Mock implements LoanCubit {}
 
 void main() {
@@ -35,15 +37,16 @@ void main() {
       FlutterError.presentError(details);
     };
 
-    
     when(() => mockAuthCubit.stream).thenAnswer((_) => const Stream.empty());
     when(() => mockAuthCubit.state).thenReturn(
-      const AuthenticatedKycComplete(user: UserModel(
-        id: 'user_123',
-        firstName: 'Current',
-        lastName: 'User',
-        phone: '+919999999999',
-      ))
+      const AuthenticatedKycComplete(
+        user: UserModel(
+          id: 'user_123',
+          firstName: 'Current',
+          lastName: 'User',
+          phone: '+919999999999',
+        ),
+      ),
     );
   });
 
@@ -51,21 +54,22 @@ void main() {
     return ScreenUtilInit(
       designSize: const Size(360, 690),
       builder: (_, __) => MaterialApp(
-      home: MultiBlocProvider(
-        providers: [
-          BlocProvider<AuthCubit>.value(value: mockAuthCubit),
-          BlocProvider<LoanCubit>.value(value: mockLoanCubit),
-          RepositoryProvider<LoanRepository>.value(value: mockRepo),
-        ],
-        child: child,
+        home: MultiBlocProvider(
+          providers: [
+            BlocProvider<AuthCubit>.value(value: mockAuthCubit),
+            BlocProvider<LoanCubit>.value(value: mockLoanCubit),
+            RepositoryProvider<LoanRepository>.value(value: mockRepo),
+          ],
+          child: child,
+        ),
       ),
-    ),
     );
   }
 
   group('4F-4G FCM Deep-Link Integration', () {
-    testWidgets('Critical Compound Test - Valid Loan renders securely', (WidgetTester tester) async {
-      
+    testWidgets('Critical Compound Test - Valid Loan renders securely', (
+      WidgetTester tester,
+    ) async {
       final originalOnError = FlutterError.onError;
       FlutterError.onError = (FlutterErrorDetails details) {
         if (details.exceptionAsString().contains('overflowed')) return;
@@ -74,7 +78,7 @@ void main() {
       const validLoan = LoanModel(
         id: 'valid_loan_123',
         lenderId: 'lender_456',
-        userId: 'user_123', 
+        userId: 'user_123',
         borrowerName: 'Current User',
         initials: 'CU',
         amountPaise: 100000,
@@ -86,10 +90,13 @@ void main() {
         paidAmountPaise: 50000,
       );
 
-      when(() => mockRepo.getLoanById('valid_loan_123'))
-          .thenAnswer((_) async => validLoan);
+      when(
+        () => mockRepo.getLoanById('valid_loan_123'),
+      ).thenAnswer((_) async => validLoan);
 
-      await tester.pumpWidget(buildTestableWidget(const LoanDetailsPage(loanId: 'valid_loan_123')));
+      await tester.pumpWidget(
+        buildTestableWidget(const LoanDetailsPage(loanId: 'valid_loan_123')),
+      );
 
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
@@ -98,23 +105,35 @@ void main() {
       verify(() => mockRepo.getLoanById('valid_loan_123')).called(1);
     });
 
-    testWidgets('Critical Compound Test - Unauthorized Loan via tampered payload yields safe 403', (WidgetTester tester) async {
-      
-      final originalOnError = FlutterError.onError;
-      FlutterError.onError = (FlutterErrorDetails details) {
-        if (details.exceptionAsString().contains('overflowed')) return;
-        originalOnError?.call(details);
-      };
-      when(() => mockRepo.getLoanById('another_users_loan'))
-          .thenAnswer((_) async => throw const AuthFailure("You don't have permission to view this loan."));
+    testWidgets(
+      'Critical Compound Test - Unauthorized Loan via tampered payload yields safe 403',
+      (WidgetTester tester) async {
+        final originalOnError = FlutterError.onError;
+        FlutterError.onError = (FlutterErrorDetails details) {
+          if (details.exceptionAsString().contains('overflowed')) return;
+          originalOnError?.call(details);
+        };
+        when(() => mockRepo.getLoanById('another_users_loan')).thenAnswer(
+          (_) async => throw const AuthFailure(
+            "You don't have permission to view this loan.",
+          ),
+        );
 
-      await tester.pumpWidget(buildTestableWidget(const LoanDetailsPage(loanId: 'another_users_loan')));
+        await tester.pumpWidget(
+          buildTestableWidget(
+            const LoanDetailsPage(loanId: 'another_users_loan'),
+          ),
+        );
 
-      await tester.pumpAndSettle();
+        await tester.pumpAndSettle();
 
-      expect(find.text('50000'), findsNothing);
-      expect(find.text("You don't have permission to view this loan."), findsOneWidget);
-      expect(find.byIcon(Icons.lock_outline), findsOneWidget);
-    });
+        expect(find.text('50000'), findsNothing);
+        expect(
+          find.text("You don't have permission to view this loan."),
+          findsOneWidget,
+        );
+        expect(find.byIcon(Icons.lock_outline), findsOneWidget);
+      },
+    );
   });
 }

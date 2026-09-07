@@ -40,7 +40,9 @@ class ChitFundRepository {
   Future<List<ChitFundModel>> getVacantChits() async {
     final response = await _apiClient.get('/chitfunds/managed');
     final data = response.data;
-    final List list = (data is Map && data['chits'] is List) ? data['chits'] : [];
+    final List list = (data is Map && data['chits'] is List)
+        ? data['chits']
+        : [];
     final result = list.map((e) => ChitFundModel.fromJson(e)).toList();
     // Cache to secure storage
     await SecureStorage.saveCachedVacantChits(jsonEncode(list));
@@ -51,7 +53,10 @@ class ChitFundRepository {
     try {
       final cached = await SecureStorage.getCachedVacantChits();
       if (cached == null) return null;
-      final List list = await compute((String s) => jsonDecode(s) as List, cached);
+      final List list = await compute(
+        (String s) => jsonDecode(s) as List,
+        cached,
+      );
       return list.map((e) => ChitFundModel.fromJson(e)).toList();
     } catch (_) {
       return null;
@@ -71,7 +76,9 @@ class ChitFundRepository {
   Future<List<ChitInviteModel>> getMyInvites() async {
     final response = await _apiClient.get('/chitfunds/invites');
     final data = response.data;
-    final List list = (data is Map && data['invites'] is List) ? data['invites'] : [];
+    final List list = (data is Map && data['invites'] is List)
+        ? data['invites']
+        : [];
     final result = list.map((e) => ChitInviteModel.fromJson(e)).toList();
     await SecureStorage.saveCachedMyInvites(jsonEncode(list));
     return result;
@@ -81,7 +88,10 @@ class ChitFundRepository {
     try {
       final cached = await SecureStorage.getCachedMyInvites();
       if (cached == null) return null;
-      final List list = await compute((String s) => jsonDecode(s) as List, cached);
+      final List list = await compute(
+        (String s) => jsonDecode(s) as List,
+        cached,
+      );
       return list.map((e) => ChitInviteModel.fromJson(e)).toList();
     } catch (_) {
       return null;
@@ -93,7 +103,9 @@ class ChitFundRepository {
   Future<List<Map<String, dynamic>>> getMyChits() async {
     final response = await _apiClient.get('/chitfunds/joined');
     final data = response.data;
-    final List list = (data is Map && data['chits'] is List) ? data['chits'] : [];
+    final List list = (data is Map && data['chits'] is List)
+        ? data['chits']
+        : [];
     final result = List<Map<String, dynamic>>.from(list);
     await SecureStorage.saveCachedMyChits(jsonEncode(result));
     return result;
@@ -103,7 +115,10 @@ class ChitFundRepository {
     try {
       final cached = await SecureStorage.getCachedMyChits();
       if (cached == null) return null;
-      final List list = await compute((String s) => jsonDecode(s) as List, cached);
+      final List list = await compute(
+        (String s) => jsonDecode(s) as List,
+        cached,
+      );
       return List<Map<String, dynamic>>.from(list);
     } catch (_) {
       return null;
@@ -159,10 +174,7 @@ class ChitFundRepository {
   ) async {
     await _apiClient.post(
       '/chitfunds/$chitId/open-auction-month',
-      data: {
-        'monthNumber': monthNumber,
-        'baseAmount': baseAmount,
-      },
+      data: {'monthNumber': monthNumber, 'baseAmount': baseAmount},
     );
     return true;
   }
@@ -233,4 +245,3 @@ class ChitFundRepository {
     return true;
   }
 }
-

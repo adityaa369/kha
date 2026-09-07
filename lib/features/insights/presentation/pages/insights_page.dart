@@ -71,7 +71,12 @@ class _InsightsPageState extends State<InsightsPage> {
                       if (state is PortfolioLoading) {
                         return const Center(child: CircularProgressIndicator());
                       } else if (state is PortfolioError) {
-                        return Center(child: Text(state.message, style: const TextStyle(color: Colors.red)));
+                        return Center(
+                          child: Text(
+                            state.message,
+                            style: const TextStyle(color: Colors.red),
+                          ),
+                        );
                       } else if (state is PortfolioLoaded) {
                         final summary = state.summary;
                         final fmt = NumberFormat('#,##0', 'en_IN');

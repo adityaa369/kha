@@ -1,3 +1,4 @@
+import 'package:khataa/core/utils/error_handler.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
@@ -70,19 +71,7 @@ class _ChitGroupAdminPageState extends State<ChitGroupAdminPage> {
         body: BlocConsumer<ChitFundCubit, ChitFundState>(
           listener: (context, state) {
             if (state is ChitFundActionSuccess) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.message),
-                  backgroundColor: KhaataTheme.accentGreen,
-                ),
-              );
-            } else if (state is ChitFundError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.message),
-                  backgroundColor: KhaataTheme.dangerRed,
-                ),
-              );
+              ErrorHandler.showError(context, state.message);
             }
           },
           builder: (context, state) {

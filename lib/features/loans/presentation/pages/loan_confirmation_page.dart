@@ -117,12 +117,18 @@ class LoanConfirmationPage extends StatelessWidget {
               Text(
                 'The borrower has been notified. The agreement will remain in pending state until they review and approve it on their device.',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14.sp, color: KhaataTheme.textGrey, height: 1.5),
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  color: KhaataTheme.textGrey,
+                  height: 1.5,
+                ),
               ),
-              
+
               SizedBox(height: 48.h),
-              
-              ElevatedButton(child: Text('Go to Given Loans'), onPressed: () {
+
+              ElevatedButton(
+                child: Text('Go to Given Loans'),
+                onPressed: () {
                   context.go(AppConstants.loansGiven);
                 },
               ),

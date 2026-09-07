@@ -7,7 +7,6 @@ import 'package:flutter/services.dart';
 /// Jailbreak detection requires flutter_jailbreak_detection package
 /// (add to pubspec.yaml when ready — currently using fallback).
 class SecurityService {
-
   /// Prevents screenshots on sensitive screens.
   /// Call in initState of screens like loan details, auction page.
   static Future<void> preventScreenshots() async {
@@ -69,8 +68,9 @@ class SecurityService {
       for (final file in suspiciousFiles) {
         try {
           // This will throw if file doesn't exist (which is the normal/safe case)
-          await const MethodChannel('khatha/security')
-              .invokeMethod<bool>('checkFile', {'path': file});
+          await const MethodChannel(
+            'khatha/security',
+          ).invokeMethod<bool>('checkFile', {'path': file});
           return true; // File exists = potentially rooted
         } catch (_) {
           // File doesn't exist or channel not implemented — continue

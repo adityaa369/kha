@@ -28,98 +28,134 @@ void main() {
   }
 
   group('4F-4F Secure Document Viewer', () {
-    testWidgets('1. Correct user retrieves signed URL and 7. Signed URL is not persisted (cleared on dispose)', (WidgetTester tester) async {
-      when(() => mockRepo.getSignedDocumentUrl('doc_123'))
-          .thenAnswer((_) async => DocumentResponse(url: 'https://storage.googleapis.com/signed-url-123', contentType: 'image/jpeg'));
+    testWidgets(
+      '1. Correct user retrieves signed URL and 7. Signed URL is not persisted (cleared on dispose)',
+      (WidgetTester tester) async {
+        when(() => mockRepo.getSignedDocumentUrl('doc_123')).thenAnswer(
+          (_) async => DocumentResponse(
+            url: 'https://storage.googleapis.com/signed-url-123',
+            contentType: 'image/jpeg',
+          ),
+        );
 
-      await tester.pumpWidget(buildTestableWidget(
-        const SecureDocumentViewer(documentId: 'doc_123'),
-      ));
+        await tester.pumpWidget(
+          buildTestableWidget(
+            const SecureDocumentViewer(documentId: 'doc_123'),
+          ),
+        );
 
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+        expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
-      await tester.pumpAndSettle();
+        await tester.pumpAndSettle();
 
-      verify(() => mockRepo.getSignedDocumentUrl('doc_123')).called(1);
-      
-      // Should show Image.network
-      final imageFinder = find.byType(Image);
-      expect(imageFinder, findsOneWidget);
-      
-      final image = tester.widget<Image>(imageFinder);
-      final networkImage = image.image as NetworkImage;
-      expect(networkImage.url, 'https://storage.googleapis.com/signed-url-123');
-    });
+        verify(() => mockRepo.getSignedDocumentUrl('doc_123')).called(1);
+
+        // Should show Image.network
+        final imageFinder = find.byType(Image);
+        expect(imageFinder, findsOneWidget);
+
+        final image = tester.widget<Image>(imageFinder);
+        final networkImage = image.image as NetworkImage;
+        expect(
+          networkImage.url,
+          'https://storage.googleapis.com/signed-url-123',
+        );
+      },
+    );
 
     testWidgets('3. Wrong user gets 403', (WidgetTester tester) async {
-      when(() => mockRepo.getSignedDocumentUrl('doc_123'))
-          .thenThrow(const AuthFailure("You don't have access to this document."));
+      when(
+        () => mockRepo.getSignedDocumentUrl('doc_123'),
+      ).thenThrow(const AuthFailure("You don't have access to this document."));
 
-      await tester.pumpWidget(buildTestableWidget(
-        const SecureDocumentViewer(documentId: 'doc_123'),
-      ));
-      
+      await tester.pumpWidget(
+        buildTestableWidget(const SecureDocumentViewer(documentId: 'doc_123')),
+      );
+
       await tester.pumpAndSettle();
 
-      expect(find.text("You don't have access to this document."), findsOneWidget);
+      expect(
+        find.text("You don't have access to this document."),
+        findsOneWidget,
+      );
       expect(find.byIcon(Icons.error_outline), findsOneWidget);
     });
 
     testWidgets('4. Unknown document gets 404', (WidgetTester tester) async {
-      when(() => mockRepo.getSignedDocumentUrl('doc_123'))
-          .thenThrow(const ValidationFailure("Document unavailable or not found."));
+      when(() => mockRepo.getSignedDocumentUrl('doc_123')).thenThrow(
+        const ValidationFailure("Document unavailable or not found."),
+      );
 
-      await tester.pumpWidget(buildTestableWidget(
-        const SecureDocumentViewer(documentId: 'doc_123'),
-      ));
-      
+      await tester.pumpWidget(
+        buildTestableWidget(const SecureDocumentViewer(documentId: 'doc_123')),
+      );
+
       await tester.pumpAndSettle();
 
       expect(find.text("Document unavailable or not found."), findsOneWidget);
     });
 
-    testWidgets('8. Signed URL expiry can be refreshed', (WidgetTester tester) async {
+    testWidgets('8. Signed URL expiry can be refreshed', (
+      WidgetTester tester,
+    ) async {
       // First attempt fails due to expiry/network
-      when(() => mockRepo.getSignedDocumentUrl('doc_123'))
-          .thenThrow(const NetworkFailure("Failed to load document securely."));
+      when(
+        () => mockRepo.getSignedDocumentUrl('doc_123'),
+      ).thenThrow(const NetworkFailure("Failed to load document securely."));
 
-      await tester.pumpWidget(buildTestableWidget(
-        const SecureDocumentViewer(documentId: 'doc_123'),
-      ));
-      
+      await tester.pumpWidget(
+        buildTestableWidget(const SecureDocumentViewer(documentId: 'doc_123')),
+      );
+
       await tester.pumpAndSettle();
-      
+
       // Should show Retry button
       final retryButton = find.text('Retry');
       expect(retryButton, findsOneWidget);
-      
+
       // Setup successful response for retry
-      when(() => mockRepo.getSignedDocumentUrl('doc_123'))
-          .thenAnswer((_) async => DocumentResponse(url: 'https://storage.googleapis.com/new-signed-url-123', contentType: 'image/jpeg'));
-          
+      when(() => mockRepo.getSignedDocumentUrl('doc_123')).thenAnswer(
+        (_) async => DocumentResponse(
+          url: 'https://storage.googleapis.com/new-signed-url-123',
+          contentType: 'image/jpeg',
+        ),
+      );
+
       await tester.tap(retryButton);
       await tester.pumpAndSettle();
-      
+
       // Should show Image.network
       final imageFinder = find.byType(Image);
       expect(imageFinder, findsOneWidget);
       final image = tester.widget<Image>(imageFinder);
       final networkImage = image.image as NetworkImage;
-      expect(networkImage.url, 'https://storage.googleapis.com/new-signed-url-123');
+      expect(
+        networkImage.url,
+        'https://storage.googleapis.com/new-signed-url-123',
+      );
     });
 
-    testWidgets('12. PDF renders (shows PDF viewer placeholder based on backend contentType)', (WidgetTester tester) async {
-      when(() => mockRepo.getSignedDocumentUrl('doc_pdf_123'))
-          .thenAnswer((_) async => DocumentResponse(url: 'https://storage.googleapis.com/signed-url-pdf', contentType: 'application/pdf'));
+    testWidgets(
+      '12. PDF renders (shows PDF viewer placeholder based on backend contentType)',
+      (WidgetTester tester) async {
+        when(() => mockRepo.getSignedDocumentUrl('doc_pdf_123')).thenAnswer(
+          (_) async => DocumentResponse(
+            url: 'https://storage.googleapis.com/signed-url-pdf',
+            contentType: 'application/pdf',
+          ),
+        );
 
-      await tester.pumpWidget(buildTestableWidget(
-        const SecureDocumentViewer(documentId: 'doc_pdf_123'),
-      ));
-      
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(
+          buildTestableWidget(
+            const SecureDocumentViewer(documentId: 'doc_pdf_123'),
+          ),
+        );
 
-      expect(find.byIcon(Icons.picture_as_pdf), findsOneWidget);
-      expect(find.text('PDF loaded securely.'), findsOneWidget);
-    });
+        await tester.pumpAndSettle();
+
+        expect(find.byIcon(Icons.picture_as_pdf), findsOneWidget);
+        expect(find.text('PDF loaded securely.'), findsOneWidget);
+      },
+    );
   });
 }

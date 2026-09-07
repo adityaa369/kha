@@ -33,7 +33,6 @@ class AppConstants {
   static const String chitMemberDetail = '/chit-member-detail';
 
   // API Configurations
-  
 
   static const String _prodUrl = 'https://khataa-backend.onrender.com';
   static String get baseUrl {

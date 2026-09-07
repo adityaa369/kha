@@ -220,16 +220,22 @@ class ChitFundCubit extends Cubit<ChitFundState> {
     try {
       emit(ChitFundLoading());
       final result = await _repository.getMemberDetail(chitId);
-      emit(ChitMemberDetailLoaded(
-        memberData: Map<String, dynamic>.from(result['subscription'] ?? {}),
-        auctionHistory: List<Map<String, dynamic>>.from(
-          (result['auctionHistory'] ?? []).map((e) => Map<String, dynamic>.from(e))
+      emit(
+        ChitMemberDetailLoaded(
+          memberData: Map<String, dynamic>.from(result['subscription'] ?? {}),
+          auctionHistory: List<Map<String, dynamic>>.from(
+            (result['auctionHistory'] ?? []).map(
+              (e) => Map<String, dynamic>.from(e),
+            ),
+          ),
+          paymentHistory: List<Map<String, dynamic>>.from(
+            (result['paymentHistory'] ?? []).map(
+              (e) => Map<String, dynamic>.from(e),
+            ),
+          ),
+          chitInfo: Map<String, dynamic>.from(result['chitInfo'] ?? {}),
         ),
-        paymentHistory: List<Map<String, dynamic>>.from(
-          (result['paymentHistory'] ?? []).map((e) => Map<String, dynamic>.from(e))
-        ),
-        chitInfo: Map<String, dynamic>.from(result['chitInfo'] ?? {}),
-      ));
+      );
     } catch (e) {
       emit(ChitFundError(e.toString()));
     }
@@ -243,7 +249,12 @@ class ChitFundCubit extends Cubit<ChitFundState> {
     required bool isPaid,
   }) async {
     try {
-      await _repository.verifyMonthPayment(chitId, monthNumber, subscriberId, isPaid);
+      await _repository.verifyMonthPayment(
+        chitId,
+        monthNumber,
+        subscriberId,
+        isPaid,
+      );
       // Silently reload dashboard
       final data = await _repository.getAdminDashboard(chitId);
       emit(ChitAdminDashboardLoaded(data));

@@ -24,7 +24,9 @@ class NotificationModel {
       body: json['body'] ?? '',
       type: json['type'] ?? 'general',
       isRead: json['isRead'] ?? false,
-      createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : DateTime.now(),
+      createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'])
+          : DateTime.now(),
       data: json['data'] ?? {},
     );
   }

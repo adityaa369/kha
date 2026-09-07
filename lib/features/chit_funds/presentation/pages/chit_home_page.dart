@@ -19,10 +19,15 @@ class ChitHomePage extends StatefulWidget {
   State<ChitHomePage> createState() => _ChitHomePageState();
 }
 
-class _ChitHomePageState extends State<ChitHomePage> with SingleTickerProviderStateMixin {
+class _ChitHomePageState extends State<ChitHomePage>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final NumberFormat _currencyFormat = NumberFormat.currency(locale: 'en_IN', symbol: '₹', decimalDigits: 0);
-  
+  final NumberFormat _currencyFormat = NumberFormat.currency(
+    locale: 'en_IN',
+    symbol: '₹',
+    decimalDigits: 0,
+  );
+
   final Color _primaryColor = const Color(0xFF059669);
   final Color _secondaryColor = const Color(0xFF10B981);
   final Color _bgColor = const Color(0xFFF8FAFC);
@@ -54,14 +59,20 @@ class _ChitHomePageState extends State<ChitHomePage> with SingleTickerProviderSt
         if (state is ChitFundActionSuccess) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(state.message, style: GoogleFonts.inter(color: Colors.white)),
+              content: Text(
+                state.message,
+                style: GoogleFonts.inter(color: Colors.white),
+              ),
               backgroundColor: _primaryColor,
             ),
           );
         } else if (state is ChitFundError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(state.message, style: GoogleFonts.inter(color: Colors.white)),
+              content: Text(
+                state.message,
+                style: GoogleFonts.inter(color: Colors.white),
+              ),
               backgroundColor: _dangerColor,
             ),
           );
@@ -74,10 +85,17 @@ class _ChitHomePageState extends State<ChitHomePage> with SingleTickerProviderSt
         body: BlocBuilder<ChitFundCubit, ChitFundState>(
           builder: (context, state) {
             if (state is ChitFundLoading) {
-              return Center(child: CircularProgressIndicator(color: _primaryColor));
+              return Center(
+                child: CircularProgressIndicator(color: _primaryColor),
+              );
             }
             if (state is ChitFundError) {
-              return Center(child: Text(state.message, style: const TextStyle(color: Colors.red)));
+              return Center(
+                child: Text(
+                  state.message,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              );
             }
 
             int activeGroups = 0;
@@ -96,14 +114,19 @@ class _ChitHomePageState extends State<ChitHomePage> with SingleTickerProviderSt
               pendingInvites = state.pendingInvites;
               activeGroups = mySubscriptions.length;
               for (var sub in mySubscriptions) {
-                totalPoolValue += (sub['totalValue'] as num?)?.toDouble() ?? 0.0;
+                totalPoolValue +=
+                    (sub['totalValue'] as num?)?.toDouble() ?? 0.0;
               }
               pendingInvitesCount = pendingInvites.length;
             }
 
             return Column(
               children: [
-                _buildSummaryBanner(activeGroups, totalPoolValue, pendingInvitesCount),
+                _buildSummaryBanner(
+                  activeGroups,
+                  totalPoolValue,
+                  pendingInvitesCount,
+                ),
                 _buildTabBar(pendingInvitesCount),
                 Expanded(
                   child: TabBarView(
@@ -128,7 +151,10 @@ class _ChitHomePageState extends State<ChitHomePage> with SingleTickerProviderSt
           icon: const Icon(Icons.add, color: Colors.white),
           label: Text(
             'New Group',
-            style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w600),
+            style: GoogleFonts.inter(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ),
@@ -164,7 +190,10 @@ class _ChitHomePageState extends State<ChitHomePage> with SingleTickerProviderSt
               alignment: Alignment.center,
               children: [
                 IconButton(
-                  icon: const Icon(Icons.notifications_outlined, color: Colors.white),
+                  icon: const Icon(
+                    Icons.notifications_outlined,
+                    color: Colors.white,
+                  ),
                   onPressed: () {
                     context.push(AppConstants.notifications);
                   },
@@ -197,7 +226,11 @@ class _ChitHomePageState extends State<ChitHomePage> with SingleTickerProviderSt
     );
   }
 
-  Widget _buildSummaryBanner(int activeGroups, double totalPoolValue, int pendingInvitesCount) {
+  Widget _buildSummaryBanner(
+    int activeGroups,
+    double totalPoolValue,
+    int pendingInvitesCount,
+  ) {
     return Container(
       width: double.infinity,
       margin: EdgeInsets.all(16.r),
@@ -223,9 +256,16 @@ class _ChitHomePageState extends State<ChitHomePage> with SingleTickerProviderSt
         children: [
           _buildStatColumn('Active Groups', activeGroups.toString()),
           Container(height: 40.h, width: 1.w, color: _borderColor),
-          _buildStatColumn('Total Pool', _currencyFormat.format(totalPoolValue)),
+          _buildStatColumn(
+            'Total Pool',
+            _currencyFormat.format(totalPoolValue),
+          ),
           Container(height: 40.h, width: 1.w, color: _borderColor),
-          _buildStatColumn('Invites', pendingInvitesCount.toString(), showDot: pendingInvitesCount > 0),
+          _buildStatColumn(
+            'Invites',
+            pendingInvitesCount.toString(),
+            showDot: pendingInvitesCount > 0,
+          ),
         ],
       ),
     );
@@ -245,9 +285,12 @@ class _ChitHomePageState extends State<ChitHomePage> with SingleTickerProviderSt
               Container(
                 width: 6.r,
                 height: 6.r,
-                decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-              )
-            ]
+                decoration: const BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ],
           ],
         ),
         SizedBox(height: 4.h),
@@ -272,7 +315,10 @@ class _ChitHomePageState extends State<ChitHomePage> with SingleTickerProviderSt
         indicatorWeight: 3,
         labelColor: Colors.white,
         unselectedLabelColor: Colors.white.withValues(alpha: 0.08),
-        labelStyle: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14.sp),
+        labelStyle: GoogleFonts.inter(
+          fontWeight: FontWeight.w600,
+          fontSize: 14.sp,
+        ),
         tabs: [
           const Tab(text: 'My Joined'),
           const Tab(text: 'I Manage'),
@@ -284,17 +330,23 @@ class _ChitHomePageState extends State<ChitHomePage> with SingleTickerProviderSt
                 if (pendingInvitesCount > 0) ...[
                   SizedBox(width: 4.w),
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 6.w,
+                      vertical: 2.h,
+                    ),
                     decoration: BoxDecoration(
                       color: _dangerColor,
                       borderRadius: BorderRadius.circular(10.r),
                     ),
                     child: Text(
                       pendingInvitesCount.toString(),
-                      style: GoogleFonts.inter(color: Colors.white, fontSize: 10.sp),
+                      style: GoogleFonts.inter(
+                        color: Colors.white,
+                        fontSize: 10.sp,
+                      ),
                     ),
                   ),
-                ]
+                ],
               ],
             ),
           ),
@@ -306,7 +358,10 @@ class _ChitHomePageState extends State<ChitHomePage> with SingleTickerProviderSt
   Widget _buildMyJoinedTab(List<Map<String, dynamic>> subscriptions) {
     if (subscriptions.isEmpty) {
       return Center(
-        child: Text('No joined groups yet', style: GoogleFonts.inter(color: _textColorGrey)),
+        child: Text(
+          'No joined groups yet',
+          style: GoogleFonts.inter(color: _textColorGrey),
+        ),
       );
     }
     return ListView.builder(
@@ -324,7 +379,8 @@ class _ChitHomePageState extends State<ChitHomePage> with SingleTickerProviderSt
         final isLive = status == 'LIVE' || activeAuctionMonth != null;
 
         return GestureDetector(
-          onTap: () => context.push('/chit-member-detail', extra: sub['chitId']),
+          onTap: () =>
+              context.push('/chit-member-detail', extra: sub['chitId']),
           child: Container(
             margin: EdgeInsets.only(bottom: 12.h),
             padding: EdgeInsets.all(16.r),
@@ -364,13 +420,20 @@ class _ChitHomePageState extends State<ChitHomePage> with SingleTickerProviderSt
                   SizedBox(height: 4.h),
                   Text(
                     'Live Auction Month ${activeAuctionMonth ?? completedMonths + 1}',
-                    style: GoogleFonts.inter(color: _warningColor, fontSize: 12.sp, fontWeight: FontWeight.w600),
+                    style: GoogleFonts.inter(
+                      color: _warningColor,
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ],
                 SizedBox(height: 12.h),
                 Text(
                   'Pot Value: ${_currencyFormat.format(totalValue)}',
-                  style: GoogleFonts.inter(color: _textColorGrey, fontSize: 13.sp),
+                  style: GoogleFonts.inter(
+                    color: _textColorGrey,
+                    fontSize: 13.sp,
+                  ),
                 ),
                 SizedBox(height: 8.h),
                 Row(
@@ -379,9 +442,13 @@ class _ChitHomePageState extends State<ChitHomePage> with SingleTickerProviderSt
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(4.r),
                         child: LinearProgressIndicator(
-                          value: totalMonths > 0 ? completedMonths / totalMonths : 0,
+                          value: totalMonths > 0
+                              ? completedMonths / totalMonths
+                              : 0,
                           backgroundColor: _borderColor,
-                          valueColor: AlwaysStoppedAnimation<Color>(_primaryColor),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            _primaryColor,
+                          ),
                           minHeight: 6.h,
                         ),
                       ),
@@ -389,7 +456,11 @@ class _ChitHomePageState extends State<ChitHomePage> with SingleTickerProviderSt
                     SizedBox(width: 8.w),
                     Text(
                       '$completedMonths/$totalMonths months',
-                      style: GoogleFonts.inter(color: _textColorGrey, fontSize: 12.sp, fontWeight: FontWeight.w500),
+                      style: GoogleFonts.inter(
+                        color: _textColorGrey,
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ],
                 ),
@@ -399,11 +470,19 @@ class _ChitHomePageState extends State<ChitHomePage> with SingleTickerProviderSt
                   children: [
                     Text(
                       'Due: ${_currencyFormat.format(dueAmount)}',
-                      style: GoogleFonts.inter(color: _dangerColor, fontSize: 14.sp, fontWeight: FontWeight.bold),
+                      style: GoogleFonts.inter(
+                        color: _dangerColor,
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     Text(
                       'View Details →',
-                      style: GoogleFonts.inter(color: _primaryColor, fontSize: 14.sp, fontWeight: FontWeight.w600),
+                      style: GoogleFonts.inter(
+                        color: _primaryColor,
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ],
                 ),
@@ -418,7 +497,10 @@ class _ChitHomePageState extends State<ChitHomePage> with SingleTickerProviderSt
   Widget _buildIManageTab(List<ChitFundModel> ownedChits) {
     if (ownedChits.isEmpty) {
       return Center(
-        child: Text('You don\'t manage any groups', style: GoogleFonts.inter(color: _textColorGrey)),
+        child: Text(
+          'You don\'t manage any groups',
+          style: GoogleFonts.inter(color: _textColorGrey),
+        ),
       );
     }
     return ListView.builder(
@@ -432,7 +514,8 @@ class _ChitHomePageState extends State<ChitHomePage> with SingleTickerProviderSt
         final status = chit.status;
 
         return GestureDetector(
-          onTap: () => context.push(AppConstants.chitAdminDashboard, extra: chit.id),
+          onTap: () =>
+              context.push(AppConstants.chitAdminDashboard, extra: chit.id),
           child: Container(
             margin: EdgeInsets.only(bottom: 12.h),
             padding: EdgeInsets.all(16.r),
@@ -477,15 +560,22 @@ class _ChitHomePageState extends State<ChitHomePage> with SingleTickerProviderSt
                         children: [
                           Text(
                             '$currentSubscribersCount/$totalMonths members joined',
-                            style: GoogleFonts.inter(color: _textColorGrey, fontSize: 13.sp),
+                            style: GoogleFonts.inter(
+                              color: _textColorGrey,
+                              fontSize: 13.sp,
+                            ),
                           ),
                           SizedBox(height: 6.h),
                           ClipRRect(
                             borderRadius: BorderRadius.circular(4.r),
                             child: LinearProgressIndicator(
-                              value: totalMonths > 0 ? currentSubscribersCount / totalMonths : 0,
+                              value: totalMonths > 0
+                                  ? currentSubscribersCount / totalMonths
+                                  : 0,
                               backgroundColor: _borderColor,
-                              valueColor: AlwaysStoppedAnimation<Color>(_secondaryColor),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                _secondaryColor,
+                              ),
                               minHeight: 4.h,
                             ),
                           ),
@@ -494,8 +584,14 @@ class _ChitHomePageState extends State<ChitHomePage> with SingleTickerProviderSt
                     ),
                     SizedBox(width: 16.w),
                     Text(
-                      status == 'registration' ? 'Invite Members →' : 'Manage Group →',
-                      style: GoogleFonts.inter(color: _primaryColor, fontSize: 13.sp, fontWeight: FontWeight.w600),
+                      status == 'registration'
+                          ? 'Invite Members →'
+                          : 'Manage Group →',
+                      style: GoogleFonts.inter(
+                        color: _primaryColor,
+                        fontSize: 13.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ],
                 ),
@@ -510,7 +606,10 @@ class _ChitHomePageState extends State<ChitHomePage> with SingleTickerProviderSt
   Widget _buildInvitesTab(List<ChitInviteModel> invites) {
     if (invites.isEmpty) {
       return Center(
-        child: Text('No pending invites', style: GoogleFonts.inter(color: _textColorGrey)),
+        child: Text(
+          'No pending invites',
+          style: GoogleFonts.inter(color: _textColorGrey),
+        ),
       );
     }
     return ListView.builder(
@@ -553,14 +652,23 @@ class _ChitHomePageState extends State<ChitHomePage> with SingleTickerProviderSt
               SizedBox(height: 4.h),
               Text(
                 'Invited by $senderName',
-                style: GoogleFonts.inter(color: _textColorGrey, fontSize: 13.sp),
+                style: GoogleFonts.inter(
+                  color: _textColorGrey,
+                  fontSize: 13.sp,
+                ),
               ),
               SizedBox(height: 12.h),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildInviteInfoCol('Pot Value', _currencyFormat.format(potValue)),
-                  _buildInviteInfoCol('Monthly', _currencyFormat.format(monthlyAmount)),
+                  _buildInviteInfoCol(
+                    'Pot Value',
+                    _currencyFormat.format(potValue),
+                  ),
+                  _buildInviteInfoCol(
+                    'Monthly',
+                    _currencyFormat.format(monthlyAmount),
+                  ),
                   _buildInviteInfoCol('Duration', '$duration months'),
                 ],
               ),
@@ -571,13 +679,21 @@ class _ChitHomePageState extends State<ChitHomePage> with SingleTickerProviderSt
                     child: OutlinedButton(
                       style: OutlinedButton.styleFrom(
                         side: BorderSide(color: _dangerColor),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
                         padding: EdgeInsets.symmetric(vertical: 14.h),
                       ),
-                      onPressed: () => context.read<ChitFundCubit>().respondToInvite(invite.id, 'declined'),
+                      onPressed: () => context
+                          .read<ChitFundCubit>()
+                          .respondToInvite(invite.id, 'declined'),
                       child: Text(
                         'Decline',
-                        style: GoogleFonts.inter(color: _dangerColor, fontWeight: FontWeight.w600, fontSize: 14.sp),
+                        style: GoogleFonts.inter(
+                          color: _dangerColor,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14.sp,
+                        ),
                       ),
                     ),
                   ),
@@ -586,19 +702,27 @@ class _ChitHomePageState extends State<ChitHomePage> with SingleTickerProviderSt
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: _primaryColor,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
                         padding: EdgeInsets.symmetric(vertical: 14.h),
                         elevation: 0,
                       ),
-                      onPressed: () => context.read<ChitFundCubit>().respondToInvite(invite.id, 'accepted'),
+                      onPressed: () => context
+                          .read<ChitFundCubit>()
+                          .respondToInvite(invite.id, 'accepted'),
                       child: Text(
                         'Accept & Join',
-                        style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14.sp),
+                        style: GoogleFonts.inter(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14.sp,
+                        ),
                       ),
                     ),
                   ),
                 ],
-              )
+              ),
             ],
           ),
         );
@@ -617,7 +741,11 @@ class _ChitHomePageState extends State<ChitHomePage> with SingleTickerProviderSt
         SizedBox(height: 2.h),
         Text(
           value,
-          style: GoogleFonts.inter(color: _textColorDark, fontSize: 14.sp, fontWeight: FontWeight.w600),
+          style: GoogleFonts.inter(
+            color: _textColorDark,
+            fontSize: 14.sp,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ],
     );
@@ -677,8 +805,14 @@ class _ChitHomePageState extends State<ChitHomePage> with SingleTickerProviderSt
         unselectedItemColor: _textColorGrey,
         showSelectedLabels: true,
         showUnselectedLabels: true,
-        selectedLabelStyle: GoogleFonts.inter(fontSize: 10.sp, fontWeight: FontWeight.w600),
-        unselectedLabelStyle: GoogleFonts.inter(fontSize: 10.sp, fontWeight: FontWeight.w500),
+        selectedLabelStyle: GoogleFonts.inter(
+          fontSize: 10.sp,
+          fontWeight: FontWeight.w600,
+        ),
+        unselectedLabelStyle: GoogleFonts.inter(
+          fontSize: 10.sp,
+          fontWeight: FontWeight.w500,
+        ),
         onTap: (index) {
           switch (index) {
             case 0:
@@ -687,7 +821,10 @@ class _ChitHomePageState extends State<ChitHomePage> with SingleTickerProviderSt
             case 1:
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('No active auction to bid in', style: GoogleFonts.inter(color: Colors.white)),
+                  content: Text(
+                    'No active auction to bid in',
+                    style: GoogleFonts.inter(color: Colors.white),
+                  ),
                   backgroundColor: _dangerColor,
                 ),
               );
@@ -701,13 +838,28 @@ class _ChitHomePageState extends State<ChitHomePage> with SingleTickerProviderSt
           }
         },
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_outlined), activeIcon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.gavel_outlined), activeIcon: Icon(Icons.gavel), label: 'Bid'),
-          BottomNavigationBarItem(icon: Icon(Icons.notifications_outlined), activeIcon: Icon(Icons.notifications), label: 'Alerts'),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline), activeIcon: Icon(Icons.person), label: 'Profile'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.gavel_outlined),
+            activeIcon: Icon(Icons.gavel),
+            label: 'Bid',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.notifications_outlined),
+            activeIcon: Icon(Icons.notifications),
+            label: 'Alerts',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
+            label: 'Profile',
+          ),
         ],
       ),
     );
   }
 }
-

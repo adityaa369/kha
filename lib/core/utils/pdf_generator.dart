@@ -6,7 +6,10 @@ import '../../data/models/loan_model.dart';
 import '../../data/models/repayment_timeline_model.dart';
 
 class PdfGenerator {
-  static Future<void> generateAndShareStatement(LoanModel loan, RepaymentTimelineModel timelineModel) async {
+  static Future<void> generateAndShareStatement(
+    LoanModel loan,
+    RepaymentTimelineModel timelineModel,
+  ) async {
     final pdf = pw.Document();
 
     // Load font for Rupee symbol and normal text
@@ -23,10 +26,7 @@ class PdfGenerator {
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
         margin: const pw.EdgeInsets.all(32),
-        theme: pw.ThemeData.withFont(
-          base: font,
-          bold: fontBold,
-        ),
+        theme: pw.ThemeData.withFont(base: font, bold: fontBold),
         header: (context) {
           return pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -34,14 +34,39 @@ class PdfGenerator {
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
-                  pw.Text('Khataa Loan Statement', style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold, color: PdfColors.blue800)),
-                  pw.Text('CONFIDENTIAL', style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey500)),
+                  pw.Text(
+                    'Khataa Loan Statement',
+                    style: pw.TextStyle(
+                      fontSize: 24,
+                      fontWeight: pw.FontWeight.bold,
+                      color: PdfColors.blue800,
+                    ),
+                  ),
+                  pw.Text(
+                    'CONFIDENTIAL',
+                    style: const pw.TextStyle(
+                      fontSize: 10,
+                      color: PdfColors.grey500,
+                    ),
+                  ),
                 ],
               ),
               pw.SizedBox(height: 4),
-              pw.Text('Statement Generated: ${dateTimeFmt.format(generatedTime)}', style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
+              pw.Text(
+                'Statement Generated: ${dateTimeFmt.format(generatedTime)}',
+                style: const pw.TextStyle(
+                  fontSize: 10,
+                  color: PdfColors.grey700,
+                ),
+              ),
               if (timelineModel.anchorSource != null)
-                pw.Text('Anchor Source: ${timelineModel.anchorSource}', style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey500)),
+                pw.Text(
+                  'Anchor Source: ${timelineModel.anchorSource}',
+                  style: const pw.TextStyle(
+                    fontSize: 10,
+                    color: PdfColors.grey500,
+                  ),
+                ),
               pw.Divider(thickness: 1, color: PdfColors.grey300),
               pw.SizedBox(height: 12),
             ],
@@ -56,11 +81,17 @@ class PdfGenerator {
                 children: [
                   pw.Text(
                     'This is a read-only temporal snapshot of flexible payment activity. Generated via Khataa.',
-                    style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
+                    style: const pw.TextStyle(
+                      fontSize: 9,
+                      color: PdfColors.grey600,
+                    ),
                   ),
                   pw.Text(
                     'Page ${context.pageNumber} of ${context.pagesCount}',
-                    style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
+                    style: const pw.TextStyle(
+                      fontSize: 9,
+                      color: PdfColors.grey600,
+                    ),
                   ),
                 ],
               ),
@@ -69,7 +100,14 @@ class PdfGenerator {
         },
         build: (context) => [
           // Section 1: Loan Summary
-          pw.Text('1. Loan Summary', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: PdfColors.blue800)),
+          pw.Text(
+            '1. Loan Summary',
+            style: pw.TextStyle(
+              fontSize: 14,
+              fontWeight: pw.FontWeight.bold,
+              color: PdfColors.blue800,
+            ),
+          ),
           pw.SizedBox(height: 8),
           pw.Container(
             padding: const pw.EdgeInsets.all(12),
@@ -87,8 +125,16 @@ class PdfGenerator {
                       _buildInfoRow('Reference ID:', loan.id),
                       _buildInfoRow('Type:', loan.type.toUpperCase()),
                       _buildInfoRow('Status:', loan.status.toUpperCase()),
-                      _buildInfoRow('Duration:', '${loan.durationMonths ?? 0} Months'),
-                      _buildInfoRow('Activation Date:', loan.startDate != null ? dateFmt.format(loan.startDate!) : '-'),
+                      _buildInfoRow(
+                        'Duration:',
+                        '${loan.durationMonths ?? 0} Months',
+                      ),
+                      _buildInfoRow(
+                        'Activation Date:',
+                        loan.startDate != null
+                            ? dateFmt.format(loan.startDate!)
+                            : '-',
+                      ),
                     ],
                   ),
                 ),
@@ -98,7 +144,12 @@ class PdfGenerator {
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
                       _buildInfoRow('Lender:', loan.lenderName ?? 'Lender'),
-                      _buildInfoRow('Borrower:', loan.borrowerName.isNotEmpty ? loan.borrowerName : 'Borrower'),
+                      _buildInfoRow(
+                        'Borrower:',
+                        loan.borrowerName.isNotEmpty
+                            ? loan.borrowerName
+                            : 'Borrower',
+                      ),
                       // Phone numbers intentionally excluded unless explicitly requested to preserve privacy
                     ],
                   ),
@@ -109,22 +160,55 @@ class PdfGenerator {
           pw.SizedBox(height: 24),
 
           // Section 2: Financial Summary
-          pw.Text('2. Financial Summary', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: PdfColors.blue800)),
+          pw.Text(
+            '2. Financial Summary',
+            style: pw.TextStyle(
+              fontSize: 14,
+              fontWeight: pw.FontWeight.bold,
+              color: PdfColors.blue800,
+            ),
+          ),
           pw.SizedBox(height: 8),
           pw.Row(
             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
             children: [
-              _buildMetricBox('Original Principal', 'Rs. ${currencyFmt.format(loan.amount)}'),
-              _buildMetricBox('Total Payable', 'Rs. ${currencyFmt.format(loan.totalPayableAmount)}'),
-              _buildMetricBox('Total Paid', 'Rs. ${currencyFmt.format(loan.paidAmount)}'),
-              _buildMetricBox('Remaining Balance', 'Rs. ${currencyFmt.format(loan.remainingAmount)}'),
+              _buildMetricBox(
+                'Original Principal',
+                'Rs. ${currencyFmt.format(loan.amount)}',
+              ),
+              _buildMetricBox(
+                'Total Payable',
+                'Rs. ${currencyFmt.format(loan.totalPayableAmount)}',
+              ),
+              _buildMetricBox(
+                'Total Paid',
+                'Rs. ${currencyFmt.format(loan.paidAmount)}',
+              ),
+              _buildMetricBox(
+                'Remaining Balance',
+                'Rs. ${currencyFmt.format(loan.remainingAmount)}',
+              ),
             ],
           ),
           pw.SizedBox(height: 24),
 
           // Section 3: Repayment Timeline
-          pw.Text('3. Flexible Repayment Timeline', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: PdfColors.blue800)),
-          pw.Text('This timeline records actual payment activity. It does not reflect fixed EMIs or monthly obligations.', style: pw.TextStyle(fontSize: 10, fontStyle: pw.FontStyle.italic, color: PdfColors.grey600)),
+          pw.Text(
+            '3. Flexible Repayment Timeline',
+            style: pw.TextStyle(
+              fontSize: 14,
+              fontWeight: pw.FontWeight.bold,
+              color: PdfColors.blue800,
+            ),
+          ),
+          pw.Text(
+            'This timeline records actual payment activity. It does not reflect fixed EMIs or monthly obligations.',
+            style: pw.TextStyle(
+              fontSize: 10,
+              fontStyle: pw.FontStyle.italic,
+              color: PdfColors.grey600,
+            ),
+          ),
           pw.SizedBox(height: 12),
           ...timelineModel.timeline.map((period) {
             final isRecorded = period.hasPayments;
@@ -143,21 +227,32 @@ class PdfGenerator {
                     children: [
                       pw.Text(
                         'Period ${period.periodIndex} (${dateFmt.format(period.periodStart)} - ${dateFmt.format(period.periodEnd)})',
-                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 11),
+                        style: pw.TextStyle(
+                          fontWeight: pw.FontWeight.bold,
+                          fontSize: 11,
+                        ),
                       ),
                       pw.Text(
                         isRecorded ? 'RECORDED' : 'NO_PAYMENT_RECORDED',
                         style: pw.TextStyle(
                           fontWeight: pw.FontWeight.bold,
                           fontSize: 10,
-                          color: isRecorded ? PdfColors.green700 : PdfColors.grey600,
+                          color: isRecorded
+                              ? PdfColors.green700
+                              : PdfColors.grey600,
                         ),
                       ),
                     ],
                   ),
                   pw.SizedBox(height: 8),
                   if (!isRecorded)
-                    pw.Text('No payment was recorded during this period.', style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600))
+                    pw.Text(
+                      'No payment was recorded during this period.',
+                      style: const pw.TextStyle(
+                        fontSize: 10,
+                        color: PdfColors.grey600,
+                      ),
+                    )
                   else ...[
                     ...period.transactions.map((tx) {
                       return pw.Padding(
@@ -165,8 +260,14 @@ class PdfGenerator {
                         child: pw.Row(
                           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                           children: [
-                            pw.Text('${dateFmt.format(tx.recordedAt)} - ${tx.type == 'interest_payment' ? 'Interest' : 'Principal'} Payment', style: const pw.TextStyle(fontSize: 10)),
-                            pw.Text('Rs. ${currencyFmt.format(tx.amount)}', style: const pw.TextStyle(fontSize: 10)),
+                            pw.Text(
+                              '${dateFmt.format(tx.recordedAt)} - ${tx.type == 'interest_payment' ? 'Interest' : 'Principal'} Payment',
+                              style: const pw.TextStyle(fontSize: 10),
+                            ),
+                            pw.Text(
+                              'Rs. ${currencyFmt.format(tx.amount)}',
+                              style: const pw.TextStyle(fontSize: 10),
+                            ),
                           ],
                         ),
                       );
@@ -175,10 +276,16 @@ class PdfGenerator {
                     pw.Row(
                       mainAxisAlignment: pw.MainAxisAlignment.end,
                       children: [
-                        pw.Text('Period Total: Rs. ${currencyFmt.format(period.totalPaid)}', style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
+                        pw.Text(
+                          'Period Total: Rs. ${currencyFmt.format(period.totalPaid)}',
+                          style: pw.TextStyle(
+                            fontSize: 10,
+                            fontWeight: pw.FontWeight.bold,
+                          ),
+                        ),
                       ],
                     ),
-                  ]
+                  ],
                 ],
               ),
             );
@@ -187,7 +294,14 @@ class PdfGenerator {
           // Post-term
           if (timelineModel.postTermTransactions.isNotEmpty) ...[
             pw.SizedBox(height: 12),
-            pw.Text('Post-Term Payment Activity', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold, color: PdfColors.orange800)),
+            pw.Text(
+              'Post-Term Payment Activity',
+              style: pw.TextStyle(
+                fontSize: 12,
+                fontWeight: pw.FontWeight.bold,
+                color: PdfColors.orange800,
+              ),
+            ),
             pw.SizedBox(height: 8),
             pw.Container(
               padding: const pw.EdgeInsets.all(10),
@@ -203,8 +317,14 @@ class PdfGenerator {
                     child: pw.Row(
                       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                       children: [
-                        pw.Text('${dateFmt.format(tx.recordedAt)} - Post-term Payment', style: const pw.TextStyle(fontSize: 10)),
-                        pw.Text('Rs. ${currencyFmt.format(tx.amount)}', style: const pw.TextStyle(fontSize: 10)),
+                        pw.Text(
+                          '${dateFmt.format(tx.recordedAt)} - Post-term Payment',
+                          style: const pw.TextStyle(fontSize: 10),
+                        ),
+                        pw.Text(
+                          'Rs. ${currencyFmt.format(tx.amount)}',
+                          style: const pw.TextStyle(fontSize: 10),
+                        ),
                       ],
                     ),
                   );
@@ -212,9 +332,16 @@ class PdfGenerator {
               ),
             ),
           ],
-          
+
           pw.SizedBox(height: 24),
-          pw.Text('4. Transaction Ledger', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: PdfColors.blue800)),
+          pw.Text(
+            '4. Transaction Ledger',
+            style: pw.TextStyle(
+              fontSize: 14,
+              fontWeight: pw.FontWeight.bold,
+              color: PdfColors.blue800,
+            ),
+          ),
           pw.SizedBox(height: 8),
           _buildTransactionTable(timelineModel, dateFmt, currencyFmt),
         ],
@@ -222,7 +349,10 @@ class PdfGenerator {
     );
 
     final bytes = await pdf.save();
-    await Printing.sharePdf(bytes: bytes, filename: 'Khataa_Statement_${loan.id}.pdf');
+    await Printing.sharePdf(
+      bytes: bytes,
+      filename: 'Khataa_Statement_${loan.id}.pdf',
+    );
   }
 
   static pw.Widget _buildInfoRow(String label, String value) {
@@ -233,10 +363,16 @@ class PdfGenerator {
         children: [
           pw.SizedBox(
             width: 100,
-            child: pw.Text(label, style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
+            child: pw.Text(
+              label,
+              style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
+            ),
           ),
           pw.Expanded(
-            child: pw.Text(value, style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
+            child: pw.Text(
+              value,
+              style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
+            ),
           ),
         ],
       ),
@@ -254,27 +390,40 @@ class PdfGenerator {
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          pw.Text(label, style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey700)),
+          pw.Text(
+            label,
+            style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey700),
+          ),
           pw.SizedBox(height: 4),
-          pw.Text(value, style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold)),
+          pw.Text(
+            value,
+            style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold),
+          ),
         ],
       ),
     );
   }
 
-  static pw.Widget _buildTransactionTable(RepaymentTimelineModel timeline, DateFormat dateFmt, NumberFormat currencyFmt) {
+  static pw.Widget _buildTransactionTable(
+    RepaymentTimelineModel timeline,
+    DateFormat dateFmt,
+    NumberFormat currencyFmt,
+  ) {
     // Combine all transactions
     final allTxs = <RepaymentTransactionModel>[];
     for (final period in timeline.timeline) {
       allTxs.addAll(period.transactions);
     }
     allTxs.addAll(timeline.postTermTransactions);
-    
+
     // Sort chronologically
     allTxs.sort((a, b) => a.recordedAt.compareTo(b.recordedAt));
 
     if (allTxs.isEmpty) {
-      return pw.Text('No transactions recorded.', style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600));
+      return pw.Text(
+        'No transactions recorded.',
+        style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
+      );
     }
 
     return pw.Table(
@@ -290,20 +439,79 @@ class PdfGenerator {
         pw.TableRow(
           decoration: const pw.BoxDecoration(color: PdfColors.grey100),
           children: [
-            pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text('Date', style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold))),
-            pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text('Type', style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold))),
-            pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text('Note', style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold))),
-            pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text('Amount', style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold), textAlign: pw.TextAlign.right)),
+            pw.Padding(
+              padding: const pw.EdgeInsets.all(6),
+              child: pw.Text(
+                'Date',
+                style: pw.TextStyle(
+                  fontSize: 9,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
+            ),
+            pw.Padding(
+              padding: const pw.EdgeInsets.all(6),
+              child: pw.Text(
+                'Type',
+                style: pw.TextStyle(
+                  fontSize: 9,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
+            ),
+            pw.Padding(
+              padding: const pw.EdgeInsets.all(6),
+              child: pw.Text(
+                'Note',
+                style: pw.TextStyle(
+                  fontSize: 9,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
+            ),
+            pw.Padding(
+              padding: const pw.EdgeInsets.all(6),
+              child: pw.Text(
+                'Amount',
+                style: pw.TextStyle(
+                  fontSize: 9,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+                textAlign: pw.TextAlign.right,
+              ),
+            ),
           ],
         ),
         // Rows
         ...allTxs.map((tx) {
           return pw.TableRow(
             children: [
-              pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text(dateFmt.format(tx.recordedAt), style: const pw.TextStyle(fontSize: 9))),
-              pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text(tx.type, style: const pw.TextStyle(fontSize: 9))),
-              pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text(tx.note.isNotEmpty ? tx.note : '-', style: const pw.TextStyle(fontSize: 9))),
-              pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text('Rs. ${currencyFmt.format(tx.amount)}', style: const pw.TextStyle(fontSize: 9), textAlign: pw.TextAlign.right)),
+              pw.Padding(
+                padding: const pw.EdgeInsets.all(6),
+                child: pw.Text(
+                  dateFmt.format(tx.recordedAt),
+                  style: const pw.TextStyle(fontSize: 9),
+                ),
+              ),
+              pw.Padding(
+                padding: const pw.EdgeInsets.all(6),
+                child: pw.Text(tx.type, style: const pw.TextStyle(fontSize: 9)),
+              ),
+              pw.Padding(
+                padding: const pw.EdgeInsets.all(6),
+                child: pw.Text(
+                  tx.note.isNotEmpty ? tx.note : '-',
+                  style: const pw.TextStyle(fontSize: 9),
+                ),
+              ),
+              pw.Padding(
+                padding: const pw.EdgeInsets.all(6),
+                child: pw.Text(
+                  'Rs. ${currencyFmt.format(tx.amount)}',
+                  style: const pw.TextStyle(fontSize: 9),
+                  textAlign: pw.TextAlign.right,
+                ),
+              ),
             ],
           );
         }),

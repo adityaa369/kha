@@ -60,13 +60,14 @@ void main() {
   });
 
   group('4F-2 Boot & Authoritative State Tests', () {
-    
     // 1. App boot with valid token
     blocTest<AuthCubit, AuthState>(
       'App boot with valid token emits AuthenticatedKycComplete',
       setUp: () async {
         await SecureStorage.saveToken('valid_token');
-        await SecureStorage.saveUserData(jsonEncode(kycCompleteUser.toFullJson()));
+        await SecureStorage.saveUserData(
+          jsonEncode(kycCompleteUser.toFullJson()),
+        );
         when(() => mockApiClient.get('/auth/me')).thenAnswer(
           (_) async => Response(
             requestOptions: RequestOptions(path: '/auth/me'),
@@ -77,10 +78,7 @@ void main() {
       },
       build: () => authCubit,
       act: (cubit) => cubit.checkAuthStatus(),
-      expect: () => [
-        isA<AuthInitial>(),
-        isA<AuthenticatedKycComplete>(),
-      ],
+      expect: () => [isA<AuthInitial>(), isA<AuthenticatedKycComplete>()],
     );
 
     // 2. App boot with expired token / 3. revoked user
@@ -91,20 +89,20 @@ void main() {
         when(() => mockApiClient.get('/auth/me')).thenThrow(
           DioException(
             requestOptions: RequestOptions(path: '/auth/me'),
-            response: Response(requestOptions: RequestOptions(path: '/'), statusCode: 401),
+            response: Response(
+              requestOptions: RequestOptions(path: '/'),
+              statusCode: 401,
+            ),
           ),
         );
       },
       build: () => authCubit,
       act: (cubit) => cubit.checkAuthStatus(),
-      expect: () => [
-        isA<AuthInitial>(),
-        isA<Unauthenticated>(),
-      ],
+      expect: () => [isA<AuthInitial>(), isA<Unauthenticated>()],
       verify: (_) async {
         final token = await SecureStorage.getToken();
         expect(token, isNull);
-      }
+      },
     );
 
     // 4. /auth/me timeout & 5. network failure
@@ -112,7 +110,9 @@ void main() {
       'App boot with network timeout falls back to AuthOffline',
       setUp: () async {
         await SecureStorage.saveToken('valid_token');
-        await SecureStorage.saveUserData(jsonEncode(kycCompleteUser.toFullJson()));
+        await SecureStorage.saveUserData(
+          jsonEncode(kycCompleteUser.toFullJson()),
+        );
         when(() => mockApiClient.get('/auth/me')).thenThrow(
           DioException(
             requestOptions: RequestOptions(path: '/auth/me'),
@@ -122,10 +122,7 @@ void main() {
       },
       build: () => authCubit,
       act: (cubit) => cubit.checkAuthStatus(),
-      expect: () => [
-        isA<AuthInitial>(),
-        isA<AuthOffline>(),
-      ],
+      expect: () => [isA<AuthInitial>(), isA<AuthOffline>()],
     );
 
     // 6. email-unverified routing check
@@ -143,10 +140,7 @@ void main() {
       },
       build: () => authCubit,
       act: (cubit) => cubit.checkAuthStatus(),
-      expect: () => [
-        isA<AuthInitial>(),
-        isA<AuthenticatedEmailUnverified>(),
-      ],
+      expect: () => [isA<AuthInitial>(), isA<AuthenticatedEmailUnverified>()],
     );
 
     // 7. KYC-incomplete routing check
@@ -178,14 +172,11 @@ void main() {
       },
       build: () => authCubit,
       act: (cubit) => cubit.logout(),
-      expect: () => [
-        isA<AuthLoading>(),
-        isA<Unauthenticated>(),
-      ],
+      expect: () => [isA<AuthLoading>(), isA<Unauthenticated>()],
       verify: (_) async {
         final token = await SecureStorage.getToken();
         expect(token, isNull);
-      }
+      },
     );
   });
 }

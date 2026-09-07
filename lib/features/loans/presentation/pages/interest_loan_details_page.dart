@@ -18,8 +18,9 @@ class InterestLoanDetailsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => InterestScheduleCubit(repository: context.read<LoanRepository>())
-        ..fetchSchedule(loan.id),
+      create: (context) =>
+          InterestScheduleCubit(repository: context.read<LoanRepository>())
+            ..fetchSchedule(loan.id),
       child: _InterestLoanDetailsView(loan: loan),
     );
   }
@@ -39,7 +40,11 @@ class _InterestLoanDetailsView extends StatelessWidget {
     final themePrimary = Colors.teal.shade700;
     final themeBg = Colors.teal.shade50;
     final isClosed = loan.status == 'closed' || loan.status == 'completed';
-    final isTerminal = isClosed || loan.status == 'rejected' || loan.status == 'cancelled' || loan.status == 'expired';
+    final isTerminal =
+        isClosed ||
+        loan.status == 'rejected' ||
+        loan.status == 'cancelled' ||
+        loan.status == 'expired';
 
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
@@ -68,8 +73,7 @@ class _InterestLoanDetailsView extends StatelessWidget {
               SizedBox(height: 24.h),
               if (!isTerminal && loan.financialStatus != 'FROZEN')
                 _buildActionButtons(context, themePrimary),
-              if (loan.financialStatus == 'FROZEN')
-                _buildFrozenWarning(),
+              if (loan.financialStatus == 'FROZEN') _buildFrozenWarning(),
             ],
           ),
         ),
@@ -93,7 +97,9 @@ class _InterestLoanDetailsView extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                loan.borrowerName.isEmpty ? loan.userId ?? 'Unknown' : loan.borrowerName,
+                loan.borrowerName.isEmpty
+                    ? loan.userId ?? 'Unknown'
+                    : loan.borrowerName,
                 style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 4.h),
@@ -108,10 +114,12 @@ class _InterestLoanDetailsView extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 10.sp,
                     fontWeight: FontWeight.bold,
-                    color: isClosed ? Colors.grey.shade700 : Colors.green.shade700,
+                    color: isClosed
+                        ? Colors.grey.shade700
+                        : Colors.green.shade700,
                   ),
                 ),
-              )
+              ),
             ],
           ),
           Container(
@@ -123,10 +131,16 @@ class _InterestLoanDetailsView extends StatelessWidget {
             ),
             alignment: Alignment.center,
             child: Text(
-              loan.borrowerName.isNotEmpty ? loan.borrowerName[0].toUpperCase() : 'B',
-              style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold, color: primary),
+              loan.borrowerName.isNotEmpty
+                  ? loan.borrowerName[0].toUpperCase()
+                  : 'B',
+              style: TextStyle(
+                fontSize: 20.sp,
+                fontWeight: FontWeight.bold,
+                color: primary,
+              ),
             ),
-          )
+          ),
         ],
       ),
     );
@@ -147,39 +161,66 @@ class _InterestLoanDetailsView extends StatelessWidget {
             children: [
               Icon(Icons.assignment_outlined, color: primary, size: 20.sp),
               SizedBox(width: 8.w),
-              Text('Agreement Terms', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold)),
+              Text(
+                'Agreement Terms',
+                style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold),
+              ),
             ],
           ),
           Divider(height: 24.h),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Interest Method', style: TextStyle(color: Colors.grey.shade600, fontSize: 12.sp)),
-              Text('SIMPLE_ORIGINAL_PRINCIPAL', style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w600)),
+              Text(
+                'Interest Method',
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 12.sp),
+              ),
+              Text(
+                'SIMPLE_ORIGINAL_PRINCIPAL',
+                style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w600),
+              ),
             ],
           ),
           SizedBox(height: 8.h),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Interest Rate', style: TextStyle(color: Colors.grey.shade600, fontSize: 12.sp)),
-              Text(loan.displayInterestRate, style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w600)),
+              Text(
+                'Interest Rate',
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 12.sp),
+              ),
+              Text(
+                loan.displayInterestRate,
+                style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w600),
+              ),
             ],
           ),
           SizedBox(height: 8.h),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Original Principal', style: TextStyle(color: Colors.grey.shade600, fontSize: 12.sp)),
-              Text('₹${_fmt(loan.amount)}', style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w600)),
+              Text(
+                'Original Principal',
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 12.sp),
+              ),
+              Text(
+                '₹${_fmt(loan.amount)}',
+                style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w600),
+              ),
             ],
           ),
           SizedBox(height: 8.h),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Accrual Convention', style: TextStyle(color: Colors.grey.shade600, fontSize: 12.sp)),
-              Text('ACT/365 Fixed', style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w600)),
+              Text(
+                'Accrual Convention',
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 12.sp),
+              ),
+              Text(
+                'ACT/365 Fixed',
+                style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w600),
+              ),
             ],
           ),
         ],
@@ -193,8 +234,10 @@ class _InterestLoanDetailsView extends StatelessWidget {
         InterestScheduleModel? schedule;
         if (state is InterestScheduleLoaded) {
           schedule = state.schedule;
-        } else if (state is InterestScheduleLoading) schedule = state.lastKnownData;
-        else if (state is InterestScheduleError) schedule = state.lastKnownData;
+        } else if (state is InterestScheduleLoading)
+          schedule = state.lastKnownData;
+        else if (state is InterestScheduleError)
+          schedule = state.lastKnownData;
 
         return Container(
           padding: EdgeInsets.all(16.w),
@@ -207,25 +250,59 @@ class _InterestLoanDetailsView extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(Icons.account_balance_wallet, color: Colors.white70, size: 20.sp),
+                  Icon(
+                    Icons.account_balance_wallet,
+                    color: Colors.white70,
+                    size: 20.sp,
+                  ),
                   SizedBox(width: 8.w),
-                  Text('Authoritative Ledger Balances', style: TextStyle(color: Colors.white, fontSize: 14.sp, fontWeight: FontWeight.bold)),
+                  Text(
+                    'Authoritative Ledger Balances',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   const Spacer(),
                   if (state is InterestScheduleLoading)
-                    SizedBox(width: 16.w, height: 16.w, child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)),
+                    SizedBox(
+                      width: 16.w,
+                      height: 16.w,
+                      child: const CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    ),
                   if (state is InterestScheduleError)
-                    Icon(Icons.error_outline, color: Colors.red.shade200, size: 20.sp),
+                    Icon(
+                      Icons.error_outline,
+                      color: Colors.red.shade200,
+                      size: 20.sp,
+                    ),
                 ],
               ),
               Divider(height: 24.h, color: Colors.white24),
               Row(
                 children: [
                   Expanded(
-                    child: _statBox('Accrued Interest', schedule != null ? '₹${_fmt(schedule.totalAccruedPaise / 100.0)}' : '-', Colors.white),
+                    child: _statBox(
+                      'Accrued Interest',
+                      schedule != null
+                          ? '₹${_fmt(schedule.totalAccruedPaise / 100.0)}'
+                          : '-',
+                      Colors.white,
+                    ),
                   ),
                   SizedBox(width: 12.w),
                   Expanded(
-                    child: _statBox('Interest Paid', schedule != null ? '₹${_fmt(schedule.totalPaidPaise / 100.0)}' : '-', Colors.white),
+                    child: _statBox(
+                      'Interest Paid',
+                      schedule != null
+                          ? '₹${_fmt(schedule.totalPaidPaise / 100.0)}'
+                          : '-',
+                      Colors.white,
+                    ),
                   ),
                 ],
               ),
@@ -233,11 +310,21 @@ class _InterestLoanDetailsView extends StatelessWidget {
               Row(
                 children: [
                   Expanded(
-                    child: _statBox('Principal Outstanding', '₹${_fmt(loan.principalOutstandingPaise / 100.0)}', Colors.white),
+                    child: _statBox(
+                      'Principal Outstanding',
+                      '₹${_fmt(loan.principalOutstandingPaise / 100.0)}',
+                      Colors.white,
+                    ),
                   ),
                   SizedBox(width: 12.w),
                   Expanded(
-                    child: _statBox('Interest Outstanding', schedule != null ? '₹${_fmt(schedule.outstandingInterestPaise / 100.0)}' : '-', Colors.orange.shade200),
+                    child: _statBox(
+                      'Interest Outstanding',
+                      schedule != null
+                          ? '₹${_fmt(schedule.outstandingInterestPaise / 100.0)}'
+                          : '-',
+                      Colors.orange.shade200,
+                    ),
                   ),
                 ],
               ),
@@ -252,9 +339,19 @@ class _InterestLoanDetailsView extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: TextStyle(color: Colors.white70, fontSize: 11.sp)),
+        Text(
+          label,
+          style: TextStyle(color: Colors.white70, fontSize: 11.sp),
+        ),
         SizedBox(height: 4.h),
-        Text(value, style: TextStyle(color: valueColor, fontSize: 16.sp, fontWeight: FontWeight.bold)),
+        Text(
+          value,
+          style: TextStyle(
+            color: valueColor,
+            fontSize: 16.sp,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ],
     );
   }
@@ -265,8 +362,10 @@ class _InterestLoanDetailsView extends StatelessWidget {
         InterestScheduleModel? schedule;
         if (state is InterestScheduleLoaded) {
           schedule = state.schedule;
-        } else if (state is InterestScheduleLoading) schedule = state.lastKnownData;
-        else if (state is InterestScheduleError) schedule = state.lastKnownData;
+        } else if (state is InterestScheduleLoading)
+          schedule = state.lastKnownData;
+        else if (state is InterestScheduleError)
+          schedule = state.lastKnownData;
 
         return Container(
           padding: EdgeInsets.all(16.w),
@@ -282,55 +381,118 @@ class _InterestLoanDetailsView extends StatelessWidget {
                 children: [
                   Icon(Icons.calendar_month, color: primary, size: 20.sp),
                   SizedBox(width: 8.w),
-                  Text('Interest Timeline', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold)),
+                  Text(
+                    'Interest Timeline',
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ],
               ),
               Divider(height: 24.h),
               if (schedule == null && state is InterestScheduleLoading)
                 const Center(child: CircularProgressIndicator())
               else if (schedule == null && state is InterestScheduleError)
-                Center(child: Text('Failed to load schedule', style: TextStyle(color: Colors.red.shade400)))
-              else if (schedule != null && schedule.schedule.isEmpty)
-                Center(child: Text('No interest accrued or paid yet', style: TextStyle(color: Colors.grey.shade500)))
-              else if (schedule != null)
-                ...schedule.schedule.map((p) => Padding(
-                  padding: EdgeInsets.only(bottom: 16.h),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(p.month, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.sp)),
-                      SizedBox(height: 8.h),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('Accrued', style: TextStyle(color: Colors.grey.shade600, fontSize: 12.sp)),
-                          Text('₹${_fmt(p.accruedPaise / 100.0)}', style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w600, color: Colors.blue.shade700)),
-                        ],
-                      ),
-                      SizedBox(height: 4.h),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('Paid', style: TextStyle(color: Colors.grey.shade600, fontSize: 12.sp)),
-                          Text('₹${_fmt(p.paidPaise / 100.0)}', style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w600, color: Colors.green.shade700)),
-                        ],
-                      ),
-                      SizedBox(height: 4.h),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('Outstanding', style: TextStyle(color: Colors.grey.shade600, fontSize: 12.sp)),
-                          Text('₹${_fmt((p.accruedPaise - p.paidPaise) / 100.0)}', style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w600, color: Colors.orange.shade700)),
-                        ],
-                      ),
-                      Divider(height: 16.h),
-                    ],
+                Center(
+                  child: Text(
+                    'Failed to load schedule',
+                    style: TextStyle(color: Colors.red.shade400),
                   ),
-                )),
+                )
+              else if (schedule != null && schedule.schedule.isEmpty)
+                Center(
+                  child: Text(
+                    'No interest accrued or paid yet',
+                    style: TextStyle(color: Colors.grey.shade500),
+                  ),
+                )
+              else if (schedule != null)
+                ...schedule.schedule.map(
+                  (p) => Padding(
+                    padding: EdgeInsets.only(bottom: 16.h),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          p.month,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13.sp,
+                          ),
+                        ),
+                        SizedBox(height: 8.h),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Accrued',
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontSize: 12.sp,
+                              ),
+                            ),
+                            Text(
+                              '₹${_fmt(p.accruedPaise / 100.0)}',
+                              style: TextStyle(
+                                fontSize: 12.sp,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.blue.shade700,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 4.h),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Paid',
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontSize: 12.sp,
+                              ),
+                            ),
+                            Text(
+                              '₹${_fmt(p.paidPaise / 100.0)}',
+                              style: TextStyle(
+                                fontSize: 12.sp,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.green.shade700,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 4.h),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Outstanding',
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontSize: 12.sp,
+                              ),
+                            ),
+                            Text(
+                              '₹${_fmt((p.accruedPaise - p.paidPaise) / 100.0)}',
+                              style: TextStyle(
+                                fontSize: 12.sp,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.orange.shade700,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Divider(height: 16.h),
+                      ],
+                    ),
+                  ),
+                ),
             ],
           ),
         );
-      }
+      },
     );
   }
 
@@ -351,12 +513,11 @@ class _InterestLoanDetailsView extends StatelessWidget {
               'This loan is temporarily locked while its financial records are being verified.',
               style: TextStyle(color: Colors.orange.shade900, fontSize: 12.sp),
             ),
-          )
+          ),
         ],
       ),
     );
   }
-
 
   Widget _buildActionButtons(BuildContext context, Color primary) {
     return Column(
@@ -365,7 +526,12 @@ class _InterestLoanDetailsView extends StatelessWidget {
           children: [
             Expanded(
               child: ElevatedButton.icon(
-                onPressed: () => FlexiblePaymentSheet.show(context, loan, 'Record Payment', 'payment'),
+                onPressed: () => FlexiblePaymentSheet.show(
+                  context,
+                  loan,
+                  'Record Payment',
+                  'payment',
+                ),
                 icon: const Icon(Icons.payment, size: 18),
                 label: const Text('Record Payment'),
                 style: ElevatedButton.styleFrom(
@@ -378,7 +544,12 @@ class _InterestLoanDetailsView extends StatelessWidget {
             SizedBox(width: 12.w),
             Expanded(
               child: OutlinedButton.icon(
-                onPressed: () => FlexiblePaymentSheet.show(context, loan, 'Add Credit', 'add_credit'),
+                onPressed: () => FlexiblePaymentSheet.show(
+                  context,
+                  loan,
+                  'Add Credit',
+                  'add_credit',
+                ),
                 icon: const Icon(Icons.add_circle_outline, size: 18),
                 label: const Text('Add Credit'),
                 style: OutlinedButton.styleFrom(
@@ -407,5 +578,4 @@ class _InterestLoanDetailsView extends StatelessWidget {
       ],
     );
   }
-
 }

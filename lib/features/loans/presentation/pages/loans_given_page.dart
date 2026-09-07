@@ -233,7 +233,6 @@ class LoansGivenPage extends StatelessWidget {
                     ? '₹ ${_formatCurrency(loan.totalPayable!)}'
                     : null,
                 onCloseLoan: () => CloseLoanSheet.show(context, loan),
-
               ),
             );
           },

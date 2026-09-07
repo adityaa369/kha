@@ -1,4 +1,4 @@
-﻿import 'package:equatable/equatable.dart';
+import 'package:equatable/equatable.dart';
 
 class RepaymentTransactionModel extends Equatable {
   final String type;
@@ -16,7 +16,9 @@ class RepaymentTransactionModel extends Equatable {
   factory RepaymentTransactionModel.fromJson(Map<String, dynamic> json) {
     return RepaymentTransactionModel(
       type: json['type'] ?? 'payment',
-      amountPaise: json['amountPaise'] as int? ?? ((json['amount'] as num?)?.toInt() ?? 0) * 100,
+      amountPaise:
+          json['amountPaise'] as int? ??
+          ((json['amount'] as num?)?.toInt() ?? 0) * 100,
       note: json['note'] ?? '',
       recordedAt: DateTime.parse(json['recordedAt']),
     );
@@ -65,14 +67,14 @@ class RepaymentPeriodModel extends Equatable {
 
   @override
   List<Object> get props => [
-        periodIndex,
-        periodStart,
-        periodEnd,
-        status,
-        hasPayments,
-        totalPaidPaise,
-        transactions,
-      ];
+    periodIndex,
+    periodStart,
+    periodEnd,
+    status,
+    hasPayments,
+    totalPaidPaise,
+    transactions,
+  ];
 }
 
 class RepaymentTimelineModel extends Equatable {
@@ -103,18 +105,22 @@ class RepaymentTimelineModel extends Equatable {
         postTermTransactions: const [],
       );
     }
-    
+
     final data = json['data'] ?? {};
     return RepaymentTimelineModel(
       trackingEnabled: true,
       durationMonths: data['durationMonths'] as int?,
-      startDate: data['startDate'] != null ? DateTime.parse(data['startDate']) : null,
+      startDate: data['startDate'] != null
+          ? DateTime.parse(data['startDate'])
+          : null,
       anchorSource: data['anchorSource'] as String?,
-      timeline: (data['timeline'] as List?)
+      timeline:
+          (data['timeline'] as List?)
               ?.map((e) => RepaymentPeriodModel.fromJson(e))
               .toList() ??
           [],
-      postTermTransactions: (data['postTermTransactions'] as List?)
+      postTermTransactions:
+          (data['postTermTransactions'] as List?)
               ?.map((e) => RepaymentTransactionModel.fromJson(e))
               .toList() ??
           [],
@@ -123,13 +129,12 @@ class RepaymentTimelineModel extends Equatable {
 
   @override
   List<Object?> get props => [
-        trackingEnabled,
-        reason,
-        durationMonths,
-        startDate,
-        anchorSource,
-        timeline,
-        postTermTransactions,
-      ];
+    trackingEnabled,
+    reason,
+    durationMonths,
+    startDate,
+    anchorSource,
+    timeline,
+    postTermTransactions,
+  ];
 }
-

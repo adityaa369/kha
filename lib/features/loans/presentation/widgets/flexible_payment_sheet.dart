@@ -22,7 +22,12 @@ class FlexiblePaymentSheet extends StatelessWidget {
     required this.actionType,
   });
 
-  static void show(BuildContext context, LoanModel loan, String title, String actionType) {
+  static void show(
+    BuildContext context,
+    LoanModel loan,
+    String title,
+    String actionType,
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -34,7 +39,11 @@ class FlexiblePaymentSheet extends StatelessWidget {
               repository: ctx.read<khatha.LoanRepository>(),
               loanId: loan.id,
             ),
-            child: FlexiblePaymentSheet(loan: loan, title: title, actionType: actionType),
+            child: FlexiblePaymentSheet(
+              loan: loan,
+              title: title,
+              actionType: actionType,
+            ),
           );
         } else {
           return BlocProvider(
@@ -42,7 +51,11 @@ class FlexiblePaymentSheet extends StatelessWidget {
               repository: ctx.read<khatha.LoanRepository>(),
               loanId: loan.id,
             ),
-            child: FlexiblePaymentSheet(loan: loan, title: title, actionType: actionType),
+            child: FlexiblePaymentSheet(
+              loan: loan,
+              title: title,
+              actionType: actionType,
+            ),
           );
         }
       },
@@ -51,7 +64,11 @@ class FlexiblePaymentSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _FlexiblePaymentSheetView(loan: loan, title: title, actionType: actionType);
+    return _FlexiblePaymentSheetView(
+      loan: loan,
+      title: title,
+      actionType: actionType,
+    );
   }
 }
 
@@ -67,7 +84,8 @@ class _FlexiblePaymentSheetView extends StatefulWidget {
   });
 
   @override
-  State<_FlexiblePaymentSheetView> createState() => _FlexiblePaymentSheetViewState();
+  State<_FlexiblePaymentSheetView> createState() =>
+      _FlexiblePaymentSheetViewState();
 }
 
 class _FlexiblePaymentSheetViewState extends State<_FlexiblePaymentSheetView> {
@@ -81,7 +99,7 @@ class _FlexiblePaymentSheetViewState extends State<_FlexiblePaymentSheetView> {
   }
 
   int get _enteredAmountPaise => (int.tryParse(_amountCtrl.text) ?? 0) * 100;
-  
+
   int get _newBalancePaise {
     final currentBalancePaise = widget.loan.principalOutstandingPaise;
     if (widget.actionType == 'add_credit') {
@@ -92,7 +110,7 @@ class _FlexiblePaymentSheetViewState extends State<_FlexiblePaymentSheetView> {
 
   void _processPayment() {
     if (_enteredAmountPaise <= 0) return;
-    
+
     if (widget.actionType == 'add_credit') {
       context.read<AddCreditFlowCubit>().createIntent(_enteredAmountPaise);
     } else {
@@ -112,19 +130,23 @@ class _FlexiblePaymentSheetViewState extends State<_FlexiblePaymentSheetView> {
     return BlocConsumer<AddCreditFlowCubit, AddCreditFlowState>(
       listener: (context, state) {
         if (state is AddCreditSuccess) {
-           context.read<LoanCubit>().fetchLoans();
+          context.read<LoanCubit>().fetchLoans();
         } else if (state is AddCreditRejectedState) {
-           ErrorHandler.showError(context, state.failure.message);
+          ErrorHandler.showError(context, state.failure.message);
         }
       },
       builder: (context, state) {
         return _buildSheetLayout(
-          isProcessing: state is AddCreditCreatingIntent || state is AddCreditCommitting,
-          isSuccess: state is AddCreditAwaitingConsent, // For lender, intent creation success
+          isProcessing:
+              state is AddCreditCreatingIntent || state is AddCreditCommitting,
+          isSuccess:
+              state
+                  is AddCreditAwaitingConsent, // For lender, intent creation success
           isUnknown: false,
           successMessage: 'Add Credit intent sent to borrower for approval.',
           onAction: _processPayment,
-          isActionDisabled: state is AddCreditCreatingIntent || _enteredAmountPaise <= 0,
+          isActionDisabled:
+              state is AddCreditCreatingIntent || _enteredAmountPaise <= 0,
         );
       },
     );
@@ -134,20 +156,26 @@ class _FlexiblePaymentSheetViewState extends State<_FlexiblePaymentSheetView> {
     return BlocConsumer<PaymentFlowCubit, PaymentFlowState>(
       listener: (context, state) {
         if (state is PaymentSuccess) {
-           context.read<LoanCubit>().fetchLoans();
+          context.read<LoanCubit>().fetchLoans();
         } else if (state is PaymentRejected) {
-           ErrorHandler.showError(context, state.failure.message);
+          ErrorHandler.showError(context, state.failure.message);
         }
       },
       builder: (context, state) {
         return _buildSheetLayout(
-          isProcessing: state is PaymentSubmitting || state is PaymentReconciling,
+          isProcessing:
+              state is PaymentSubmitting || state is PaymentReconciling,
           isSuccess: state is PaymentSuccess,
           isUnknown: state is PaymentUnknown,
           successMessage: 'Payment Recorded Successfully',
           onAction: _processPayment,
-          isActionDisabled: state is PaymentSubmitting || state is PaymentReconciling || _enteredAmountPaise <= 0,
-          onReconcile: state is PaymentUnknown ? () => context.read<PaymentFlowCubit>().reconcile(state.attempt) : null,
+          isActionDisabled:
+              state is PaymentSubmitting ||
+              state is PaymentReconciling ||
+              _enteredAmountPaise <= 0,
+          onReconcile: state is PaymentUnknown
+              ? () => context.read<PaymentFlowCubit>().reconcile(state.attempt)
+              : null,
         );
       },
     );
@@ -163,7 +191,9 @@ class _FlexiblePaymentSheetViewState extends State<_FlexiblePaymentSheetView> {
     VoidCallback? onReconcile,
   }) {
     return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
       child: Container(
         decoration: BoxDecoration(
           color: Theme.of(context).scaffoldBackgroundColor,
@@ -177,35 +207,60 @@ class _FlexiblePaymentSheetViewState extends State<_FlexiblePaymentSheetView> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(widget.title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
+                Text(
+                  widget.title,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.pop(context),
+                ),
               ],
             ),
             const SizedBox(height: 24),
             if (isSuccess) ...[
               const Icon(Icons.check_circle, color: Colors.green, size: 64),
               const SizedBox(height: 16),
-              Text(successMessage, textAlign: TextAlign.center, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              Text(
+                successMessage,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: () => Navigator.pop(context),
                 child: const Text('Done'),
-              )
+              ),
             ] else if (isUnknown) ...[
               const Icon(Icons.hourglass_empty, color: Colors.orange, size: 64),
               const SizedBox(height: 16),
-              const Text('Payment Processing...', textAlign: TextAlign.center, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const Text(
+                'Payment Processing...',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 8),
-              const Text('We are checking the status of your transaction with the server.', textAlign: TextAlign.center),
+              const Text(
+                'We are checking the status of your transaction with the server.',
+                textAlign: TextAlign.center,
+              ),
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: onReconcile,
                 child: const Text('Refresh Status'),
-              )
+              ),
             ] else ...[
               TextField(
                 controller: _amountCtrl,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 decoration: const InputDecoration(
                   labelText: 'Amount (₹)',
                   prefixText: '₹ ',
@@ -216,14 +271,21 @@ class _FlexiblePaymentSheetViewState extends State<_FlexiblePaymentSheetView> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text('Remaining Balance:'),
-                  Text('₹ ${_currencyFmt.format(_newBalancePaise / 100)}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Text(
+                    '₹ ${_currencyFmt.format(_newBalancePaise / 100)}',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ],
               ),
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: isActionDisabled ? null : onAction,
-                child: Text(isProcessing ? 'Processing...' : 'Submit ₹${_currencyFmt.format(_enteredAmountPaise / 100)}'),
-              )
+                child: Text(
+                  isProcessing
+                      ? 'Processing...'
+                      : 'Submit ₹${_currencyFmt.format(_enteredAmountPaise / 100)}',
+                ),
+              ),
             ],
           ],
         ),

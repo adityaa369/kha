@@ -1,4 +1,4 @@
-﻿import 'package:equatable/equatable.dart';
+import 'package:equatable/equatable.dart';
 
 class PortfolioSummaryModel extends Equatable {
   final int loanCount;
@@ -32,10 +32,10 @@ class PortfolioSummaryModel extends Equatable {
 
   @override
   List<Object> get props => [
-        loanCount,
-        activeLoanCount,
-        totalLentPaise,
-        totalCollectedPaise,
-        outstandingPaise,
-      ];
+    loanCount,
+    activeLoanCount,
+    totalLentPaise,
+    totalCollectedPaise,
+    outstandingPaise,
+  ];
 }

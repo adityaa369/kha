@@ -67,5 +67,10 @@ class ChitMemberDetailLoaded extends ChitFundState {
   });
 
   @override
-  List<Object?> get props => [memberData, auctionHistory, paymentHistory, chitInfo];
+  List<Object?> get props => [
+    memberData,
+    auctionHistory,
+    paymentHistory,
+    chitInfo,
+  ];
 }

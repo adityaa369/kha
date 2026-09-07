@@ -27,44 +27,49 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _handleLogin() {
-    
     if (_formKey.currentState?.validate() ?? false) {
-      
       final phone = _phoneController.text.trim();
       final password = _passwordController.text;
       context.read<AuthCubit>().loginWithPassword(phone, password);
-    } else {
-      
-      
-    }
+    } else {}
   }
 
   void _handleForgotPassword() {
     final phone = _phoneController.text.trim();
     if (phone.isEmpty || phone.length < 10) {
-      DialogUtils.showErrorDialog(context, 'Please enter your 10-digit phone number first.');
+      DialogUtils.showErrorDialog(
+        context,
+        'Please enter your 10-digit phone number first.',
+      );
       return;
     }
-    
+
     // Show confirmation dialog
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Reset Password'),
-        content: Text('We will send an OTP to +91 $phone to verify your identity.'),
+        content: Text(
+          'We will send an OTP to +91 $phone to verify your identity.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: KhaataTheme.primaryBlue),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: KhaataTheme.primaryBlue,
+            ),
             onPressed: () {
               Navigator.pop(ctx);
               // context.read<AuthCubit>().startPasswordReset(phone);
               context.push('/otp', extra: phone);
             },
-            child: const Text('Send OTP', style: TextStyle(color: Colors.white)),
+            child: const Text(
+              'Send OTP',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -88,7 +93,6 @@ class _LoginPageState extends State<LoginPage> {
           }
         },
         builder: (context, state) {
-            
           return SafeArea(
             child: SingleChildScrollView(
               child: Column(
@@ -519,8 +523,3 @@ class _SocialButton extends StatelessWidget {
     );
   }
 }
-
-
-
-
-

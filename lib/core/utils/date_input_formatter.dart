@@ -7,7 +7,7 @@ class DateInputFormatter extends TextInputFormatter {
     TextEditingValue newValue,
   ) {
     var text = newValue.text;
-    
+
     // Allow deleting (backspace) without forcing formatting issues
     if (newValue.selection.baseOffset == 0) {
       return newValue;
@@ -21,7 +21,7 @@ class DateInputFormatter extends TextInputFormatter {
       }
     }
     text = newText;
-    
+
     // Remove existing slashes to re-format
     text = text.replaceAll('/', '');
 
@@ -38,10 +38,14 @@ class DateInputFormatter extends TextInputFormatter {
     }
 
     // If the user typed 2 characters and hasn't typed the slash, append it.
-    if (text.length == 2 && oldValue.text.length < newValue.text.length && !newValue.text.endsWith('/')) {
-        out += '/';
-    } else if (text.length == 4 && oldValue.text.length < newValue.text.length && !newValue.text.endsWith('/')) {
-        out += '/';
+    if (text.length == 2 &&
+        oldValue.text.length < newValue.text.length &&
+        !newValue.text.endsWith('/')) {
+      out += '/';
+    } else if (text.length == 4 &&
+        oldValue.text.length < newValue.text.length &&
+        !newValue.text.endsWith('/')) {
+      out += '/';
     }
 
     return TextEditingValue(

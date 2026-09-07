@@ -13,7 +13,9 @@ class SecurityEventModel {
     return SecurityEventModel(
       eventType: json['eventType'] ?? 'UNKNOWN',
       result: json['result'] ?? 'UNKNOWN',
-      createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : DateTime.now(),
+      createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'])
+          : DateTime.now(),
     );
   }
 }

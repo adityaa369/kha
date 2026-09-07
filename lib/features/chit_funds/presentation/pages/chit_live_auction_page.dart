@@ -1,3 +1,4 @@
+import 'package:khataa/core/utils/error_handler.dart';
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
@@ -28,7 +29,7 @@ class _ChitLiveAuctionPageState extends State<ChitLiveAuctionPage> {
   int _timeLeftSeconds = 0;
   bool _auctionEnded = false;
   bool _isPlacingBid = false;
-  List<Map<String, dynamic>> _bidFeed = []; 
+  List<Map<String, dynamic>> _bidFeed = [];
   final TextEditingController _bidController = TextEditingController();
   Timer? _countdownTimer;
 
@@ -39,14 +40,18 @@ class _ChitLiveAuctionPageState extends State<ChitLiveAuctionPage> {
   }
 
   void _initSocket() {
-    final serverUrl = dotenv.env['BASE_URL']?.replaceAll('/api', '') 
-        ?? 'https://khataa-backend.onrender.com';
-    _socket = io.io(serverUrl, io.OptionBuilder()
-      .setTransports(['websocket'])
-      .disableAutoConnect()
-      .build());
+    final serverUrl =
+        dotenv.env['BASE_URL']?.replaceAll('/api', '') ??
+        'https://khataa-backend.onrender.com';
+    _socket = io.io(
+      serverUrl,
+      io.OptionBuilder()
+          .setTransports(['websocket'])
+          .disableAutoConnect()
+          .build(),
+    );
     _socket.connect();
-    
+
     _socket.onConnect((_) {
       if (!mounted) return;
       _reconnectAttempts = 0; // Reset backoff on successful connect
@@ -54,11 +59,14 @@ class _ChitLiveAuctionPageState extends State<ChitLiveAuctionPage> {
       final authState = context.read<AuthCubit>().state;
       String userId = 'unknown';
       if (authState is AuthenticatedKycComplete) userId = authState.user.id;
-      _socket.emit('join_auction', {'ledgerId': widget.ledgerId, 'userId': userId});
+      _socket.emit('join_auction', {
+        'ledgerId': widget.ledgerId,
+        'userId': userId,
+      });
     });
-    
+
     _socket.on('auction_sync', (data) => _handleAuctionData(data));
-    
+
     _socket.on('bid_update', (data) {
       if (!mounted) return;
       _handleAuctionData(data);
@@ -71,7 +79,7 @@ class _ChitLiveAuctionPageState extends State<ChitLiveAuctionPage> {
         if (_bidFeed.length > 20) _bidFeed = _bidFeed.take(20).toList();
       });
     });
-    
+
     _socket.on('auction_ended', (data) {
       if (!mounted) return;
       _countdownTimer?.cancel();
@@ -83,7 +91,7 @@ class _ChitLiveAuctionPageState extends State<ChitLiveAuctionPage> {
         _timeLeftSeconds = 0;
       });
     });
-    
+
     _socket.onDisconnect((_) {
       if (!mounted) return;
       setState(() => _isConnected = false);
@@ -96,7 +104,9 @@ class _ChitLiveAuctionPageState extends State<ChitLiveAuctionPage> {
   void _scheduleReconnect() {
     if (!mounted || _auctionEnded) return;
     // Exponential backoff: 3s, 6s, 12s, 24s, 30s cap
-    final delay = Duration(seconds: math.min(3 * math.pow(2, _reconnectAttempts).toInt(), 30));
+    final delay = Duration(
+      seconds: math.min(3 * math.pow(2, _reconnectAttempts).toInt(), 30),
+    );
     Future.delayed(delay, () {
       if (!mounted || _isConnected || _auctionEnded) return;
       _reconnectAttempts++;
@@ -117,7 +127,9 @@ class _ChitLiveAuctionPageState extends State<ChitLiveAuctionPage> {
       if (data['endTime'] != null) {
         final endTime = data['endTime'] as int;
         final now = DateTime.now().millisecondsSinceEpoch;
-        _timeLeftSeconds = ((endTime - now) / 1000).clamp(0, double.infinity).toInt();
+        _timeLeftSeconds = ((endTime - now) / 1000)
+            .clamp(0, double.infinity)
+            .toInt();
         _startCountdown();
       }
     });
@@ -142,50 +154,37 @@ class _ChitLiveAuctionPageState extends State<ChitLiveAuctionPage> {
 
   Future<void> _placeBid() async {
     if (_auctionEnded || _isPlacingBid) return;
-    
+
     final bidAmount = double.tryParse(_bidController.text.replaceAll(',', ''));
     if (bidAmount == null || bidAmount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Please enter a valid bid amount'),
-        backgroundColor: KhaataTheme.dangerRed,
-      ));
-      return;
-    }
-    
-    if (_currentLowestBid > 0 && bidAmount >= _currentLowestBid) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Bid must be LOWER than current lowest bid of ₹${_currentLowestBid.toStringAsFixed(0)}'),
-        backgroundColor: KhaataTheme.warningYellow,
-      ));
-      return;
-    }
-    
-    // Capture context-dependent values BEFORE any async gap
-    final authCubit = context.read<AuthCubit>();
-    final messenger = ScaffoldMessenger.of(context);
-
-    final authenticated = await BiometricAuthService.authenticate();
-    if (!authenticated) {
-      if (mounted) {
-        messenger.showSnackBar(const SnackBar(
-          content: Text('Biometric authentication failed. Bid not placed.'),
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a valid bid amount'),
           backgroundColor: KhaataTheme.dangerRed,
-        ));
-      }
+        ),
+      );
       return;
     }
-    
+
+    if (_currentLowestBid > 0 && bidAmount >= _currentLowestBid) {
+      ErrorHandler.showError(
+        context,
+        'Bid must be LOWER than current lowest bid of ₹${_currentLowestBid.toStringAsFixed(0)}',
+      );
+      return;
+    }
+
     setState(() => _isPlacingBid = true);
     final authState = authCubit.state;
     String userId = 'unknown';
     if (authState is AuthenticatedKycComplete) userId = authState.user.id;
-    
+
     _socket.emit('place_bid', {
       'ledgerId': widget.ledgerId,
       'userId': userId,
       'bidAmount': bidAmount,
     });
-    
+
     _bidController.clear();
     if (mounted) setState(() => _isPlacingBid = false);
   }
@@ -239,10 +238,7 @@ class _ChitLiveAuctionPageState extends State<ChitLiveAuctionPage> {
             ),
             Text(
               'Bidding Room',
-              style: GoogleFonts.inter(
-                color: Colors.white70,
-                fontSize: 12.sp,
-              ),
+              style: GoogleFonts.inter(color: Colors.white70, fontSize: 12.sp),
             ),
           ],
         ),
@@ -251,10 +247,12 @@ class _ChitLiveAuctionPageState extends State<ChitLiveAuctionPage> {
             padding: EdgeInsets.only(right: 16.w),
             child: Icon(
               Icons.circle,
-              color: _isConnected ? const Color(0xFF34D399) : KhaataTheme.dangerRed,
+              color: _isConnected
+                  ? const Color(0xFF34D399)
+                  : KhaataTheme.dangerRed,
               size: 12.w,
             ),
-          )
+          ),
         ],
       ),
       body: SingleChildScrollView(
@@ -275,7 +273,7 @@ class _ChitLiveAuctionPageState extends State<ChitLiveAuctionPage> {
                   ),
                 ),
               ),
-              
+
             Padding(
               padding: EdgeInsets.all(16.w),
               child: Column(
@@ -323,9 +321,13 @@ class _ChitLiveAuctionPageState extends State<ChitLiveAuctionPage> {
                 ),
                 SizedBox(height: 8.h),
                 Text(
-                  _auctionEnded ? 'AUCTION ENDED' : _formatTime(_timeLeftSeconds),
+                  _auctionEnded
+                      ? 'AUCTION ENDED'
+                      : _formatTime(_timeLeftSeconds),
                   style: GoogleFonts.inter(
-                    color: _auctionEnded ? KhaataTheme.dangerRed : KhaataTheme.primaryBlue,
+                    color: _auctionEnded
+                        ? KhaataTheme.dangerRed
+                        : KhaataTheme.primaryBlue,
                     fontSize: _auctionEnded ? 28.sp : 48.sp,
                     fontWeight: FontWeight.bold,
                   ),
@@ -341,7 +343,9 @@ class _ChitLiveAuctionPageState extends State<ChitLiveAuctionPage> {
               ),
               child: const LinearProgressIndicator(
                 backgroundColor: Colors.transparent,
-                valueColor: AlwaysStoppedAnimation<Color>(KhaataTheme.primaryBlue),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  KhaataTheme.primaryBlue,
+                ),
               ),
             ),
         ],
@@ -389,7 +393,11 @@ class _ChitLiveAuctionPageState extends State<ChitLiveAuctionPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.emoji_events, color: KhaataTheme.primaryBlue, size: 16.w),
+                Icon(
+                  Icons.emoji_events,
+                  color: KhaataTheme.primaryBlue,
+                  size: 16.w,
+                ),
                 SizedBox(width: 4.w),
                 Text(
                   'Leading: $_currentWinnerName',
@@ -481,8 +489,9 @@ class _ChitLiveAuctionPageState extends State<ChitLiveAuctionPage> {
                 separatorBuilder: (context, index) => SizedBox(height: 12.h),
                 itemBuilder: (context, index) {
                   final bid = _bidFeed[index];
-                  final isWinning = bid['winnerId'] == _currentWinnerId && index == 0;
-                  
+                  final isWinning =
+                      bid['winnerId'] == _currentWinnerId && index == 0;
+
                   return Row(
                     children: [
                       Text(
@@ -505,17 +514,26 @@ class _ChitLiveAuctionPageState extends State<ChitLiveAuctionPage> {
                         ),
                       ),
                       Container(
-                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8.w,
+                          vertical: 4.h,
+                        ),
                         decoration: BoxDecoration(
-                          color: isWinning ? KhaataTheme.primaryBlue.withValues(alpha: 0.1) : Colors.transparent,
+                          color: isWinning
+                              ? KhaataTheme.primaryBlue.withValues(alpha: 0.1)
+                              : Colors.transparent,
                           borderRadius: BorderRadius.circular(8.r),
                         ),
                         child: Text(
                           '₹${(bid['amount'] as double).toStringAsFixed(0)}',
                           style: GoogleFonts.inter(
-                            color: isWinning ? KhaataTheme.primaryBlue : KhaataTheme.textDark,
+                            color: isWinning
+                                ? KhaataTheme.primaryBlue
+                                : KhaataTheme.textDark,
                             fontSize: 14.sp,
-                            fontWeight: isWinning ? FontWeight.bold : FontWeight.normal,
+                            fontWeight: isWinning
+                                ? FontWeight.bold
+                                : FontWeight.normal,
                           ),
                         ),
                       ),
@@ -599,8 +617,15 @@ class _ChitLiveAuctionPageState extends State<ChitLiveAuctionPage> {
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: _isPlacingBid ? null : _placeBid,
-              icon: _isPlacingBid 
-                  ? SizedBox(width: 20.w, height: 20.w, child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+              icon: _isPlacingBid
+                  ? SizedBox(
+                      width: 20.w,
+                      height: 20.w,
+                      child: const CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
                   : const Icon(Icons.fingerprint, color: Colors.white),
               label: Text(
                 _isPlacingBid ? 'Authorizing...' : 'Authorize & Place Bid',
@@ -645,10 +670,7 @@ class _ChitLiveAuctionPageState extends State<ChitLiveAuctionPage> {
           SizedBox(height: 16.h),
           Text(
             'Winner: $_currentWinnerName',
-            style: GoogleFonts.inter(
-              color: Colors.white,
-              fontSize: 16.sp,
-            ),
+            style: GoogleFonts.inter(color: Colors.white, fontSize: 16.sp),
           ),
           SizedBox(height: 8.h),
           Text(
@@ -663,10 +685,7 @@ class _ChitLiveAuctionPageState extends State<ChitLiveAuctionPage> {
           Text(
             'The backend is calculating dividends for all members...',
             textAlign: TextAlign.center,
-            style: GoogleFonts.inter(
-              color: Colors.white70,
-              fontSize: 12.sp,
-            ),
+            style: GoogleFonts.inter(color: Colors.white70, fontSize: 12.sp),
           ),
           SizedBox(height: 24.h),
           OutlinedButton(

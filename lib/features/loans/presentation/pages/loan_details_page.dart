@@ -61,10 +61,13 @@ class _LoanDetailsPageState extends State<LoanDetailsPage> {
             currentUserId = authState.user.id;
           }
 
-          final isLender = currentUserId != null && loan.lenderId == currentUserId;
+          final isLender =
+              currentUserId != null && loan.lenderId == currentUserId;
 
           if (isLender) {
-            return LenderLoanDetailsPage(loan: loan); // Passing the model we just fetched
+            return LenderLoanDetailsPage(
+              loan: loan,
+            ); // Passing the model we just fetched
           } else {
             final type = loan.type.toLowerCase().replaceAll('_', '');
             if (type == 'businesscredit') {

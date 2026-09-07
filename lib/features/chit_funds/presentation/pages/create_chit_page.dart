@@ -17,7 +17,11 @@ class CreateChitGroupPage extends StatefulWidget {
 class _CreateChitGroupPageState extends State<CreateChitGroupPage> {
   int _currentStep = 0;
   final PageController _pageController = PageController();
-  final NumberFormat _currencyFormat = NumberFormat.currency(locale: 'en_IN', symbol: '₹', decimalDigits: 0);
+  final NumberFormat _currencyFormat = NumberFormat.currency(
+    locale: 'en_IN',
+    symbol: '₹',
+    decimalDigits: 0,
+  );
 
   final Color _primaryColor = const Color(0xFF059669);
   final Color _bgColor = const Color(0xFFF8FAFC);
@@ -34,7 +38,8 @@ class _CreateChitGroupPageState extends State<CreateChitGroupPage> {
   double commissionPercent = 5.0;
   String branchName = 'KPHB-CAO';
 
-  double get monthlySubscription => totalMonths > 0 ? totalValue / totalMonths : 0;
+  double get monthlySubscription =>
+      totalMonths > 0 ? totalValue / totalMonths : 0;
 
   @override
   void dispose() {
@@ -47,7 +52,7 @@ class _CreateChitGroupPageState extends State<CreateChitGroupPage> {
       if (!_formKey.currentState!.validate()) return;
       _formKey.currentState!.save();
     }
-    
+
     if (_currentStep < 2) {
       setState(() => _currentStep++);
       _pageController.animateToPage(
@@ -76,7 +81,10 @@ class _CreateChitGroupPageState extends State<CreateChitGroupPage> {
         if (state is ChitFundActionSuccess) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(state.message, style: GoogleFonts.inter(color: Colors.white)),
+              content: Text(
+                state.message,
+                style: GoogleFonts.inter(color: Colors.white),
+              ),
               backgroundColor: _primaryColor,
             ),
           );
@@ -84,7 +92,10 @@ class _CreateChitGroupPageState extends State<CreateChitGroupPage> {
         } else if (state is ChitFundError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(state.message, style: GoogleFonts.inter(color: Colors.white)),
+              content: Text(
+                state.message,
+                style: GoogleFonts.inter(color: Colors.white),
+              ),
               backgroundColor: _dangerColor,
             ),
           );
@@ -121,11 +132,7 @@ class _CreateChitGroupPageState extends State<CreateChitGroupPage> {
               child: PageView(
                 controller: _pageController,
                 physics: const NeverScrollableScrollPhysics(),
-                children: [
-                  _buildStep1(),
-                  _buildStep2(),
-                  _buildStep3(),
-                ],
+                children: [_buildStep1(), _buildStep2(), _buildStep3()],
               ),
             ),
           ],
@@ -215,16 +222,17 @@ class _CreateChitGroupPageState extends State<CreateChitGroupPage> {
               style: GoogleFonts.inter(color: _textColorGrey, fontSize: 14.sp),
             ),
             SizedBox(height: 32.h),
-            
+
             _buildLabel('Chit Group Name'),
             TextFormField(
               initialValue: name,
               decoration: _inputDecoration('e.g. Dream Home Fund'),
-              validator: (val) => val == null || val.isEmpty ? 'Required' : null,
+              validator: (val) =>
+                  val == null || val.isEmpty ? 'Required' : null,
               onSaved: (val) => name = val ?? '',
             ),
             SizedBox(height: 24.h),
-            
+
             _buildLabel('Total Pot Value (₹)'),
             TextFormField(
               initialValue: totalValue > 0 ? totalValue.toStringAsFixed(0) : '',
@@ -232,13 +240,14 @@ class _CreateChitGroupPageState extends State<CreateChitGroupPage> {
               decoration: _inputDecoration('e.g. 500000'),
               validator: (val) {
                 if (val == null || val.isEmpty) return 'Required';
-                if (double.tryParse(val) == null || double.parse(val) <= 0) return 'Must be > 0';
+                if (double.tryParse(val) == null || double.parse(val) <= 0)
+                  return 'Must be > 0';
                 return null;
               },
               onSaved: (val) => totalValue = double.tryParse(val ?? '') ?? 0,
             ),
             SizedBox(height: 24.h),
-            
+
             _buildLabel('Duration in Months'),
             TextFormField(
               initialValue: totalMonths > 0 ? totalMonths.toString() : '',
@@ -246,24 +255,34 @@ class _CreateChitGroupPageState extends State<CreateChitGroupPage> {
               decoration: _inputDecoration('e.g. 20'),
               validator: (val) {
                 if (val == null || val.isEmpty) return 'Required';
-                if (int.tryParse(val) == null || int.parse(val) <= 0) return 'Must be > 0';
+                if (int.tryParse(val) == null || int.parse(val) <= 0)
+                  return 'Must be > 0';
                 return null;
               },
               onSaved: (val) => totalMonths = int.tryParse(val ?? '') ?? 0,
             ),
             SizedBox(height: 48.h),
-            
+
             SizedBox(
               width: double.infinity,
               height: 54.h,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _primaryColor,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
                   elevation: 0,
                 ),
                 onPressed: _nextStep,
-                child: Text('Next', style: GoogleFonts.inter(color: Colors.white, fontSize: 16.sp, fontWeight: FontWeight.w600)),
+                child: Text(
+                  'Next',
+                  style: GoogleFonts.inter(
+                    color: Colors.white,
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ),
           ],
@@ -275,7 +294,9 @@ class _CreateChitGroupPageState extends State<CreateChitGroupPage> {
   Widget _buildStep2() {
     double exampleBid = totalValue * 0.97;
     double commissionAmt = (totalValue * commissionPercent) / 100;
-    double dividend = (totalValue - exampleBid - commissionAmt) / (totalMonths > 0 ? totalMonths : 1);
+    double dividend =
+        (totalValue - exampleBid - commissionAmt) /
+        (totalMonths > 0 ? totalMonths : 1);
 
     return SingleChildScrollView(
       padding: EdgeInsets.all(24.r),
@@ -310,12 +331,19 @@ class _CreateChitGroupPageState extends State<CreateChitGroupPage> {
                     children: [
                       Text(
                         '${_currencyFormat.format(monthlySubscription)}/month',
-                        style: GoogleFonts.inter(color: _textColorDark, fontSize: 16.sp, fontWeight: FontWeight.w600),
+                        style: GoogleFonts.inter(
+                          color: _textColorDark,
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       SizedBox(height: 4.h),
                       Text(
                         'Total Value ÷ Duration = ${_currencyFormat.format(totalValue)} ÷ $totalMonths months',
-                        style: GoogleFonts.inter(color: _textColorGrey, fontSize: 12.sp),
+                        style: GoogleFonts.inter(
+                          color: _textColorGrey,
+                          fontSize: 12.sp,
+                        ),
                       ),
                     ],
                   ),
@@ -331,7 +359,11 @@ class _CreateChitGroupPageState extends State<CreateChitGroupPage> {
               _buildLabel('Commission %'),
               Text(
                 '${commissionPercent.toStringAsFixed(1)}%',
-                style: GoogleFonts.inter(color: _primaryColor, fontSize: 20.sp, fontWeight: FontWeight.bold),
+                style: GoogleFonts.inter(
+                  color: _primaryColor,
+                  fontSize: 20.sp,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),
@@ -380,12 +412,19 @@ class _CreateChitGroupPageState extends State<CreateChitGroupPage> {
               children: [
                 Text(
                   'Live Preview (Example)',
-                  style: GoogleFonts.inter(color: _textColorDark, fontSize: 14.sp, fontWeight: FontWeight.w600),
+                  style: GoogleFonts.inter(
+                    color: _textColorDark,
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 SizedBox(height: 8.h),
                 Text(
                   'Example: Bid ${_currencyFormat.format(exampleBid)} → Commission: ${_currencyFormat.format(commissionAmt)} → Dividend: ${_currencyFormat.format(dividend > 0 ? dividend : 0)}/member',
-                  style: GoogleFonts.inter(color: _textColorGrey, fontSize: 13.sp),
+                  style: GoogleFonts.inter(
+                    color: _textColorGrey,
+                    fontSize: 13.sp,
+                  ),
                 ),
               ],
             ),
@@ -398,11 +437,20 @@ class _CreateChitGroupPageState extends State<CreateChitGroupPage> {
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: _primaryColor,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
                 elevation: 0,
               ),
               onPressed: _nextStep,
-              child: Text('Next', style: GoogleFonts.inter(color: Colors.white, fontSize: 16.sp, fontWeight: FontWeight.w600)),
+              child: Text(
+                'Next',
+                style: GoogleFonts.inter(
+                  color: Colors.white,
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ),
         ],
@@ -451,13 +499,22 @@ class _CreateChitGroupPageState extends State<CreateChitGroupPage> {
               children: [
                 _buildSummaryRow('Group Name', name),
                 Divider(color: _borderColor, height: 24.h),
-                _buildSummaryRow('Pot Value', _currencyFormat.format(totalValue)),
+                _buildSummaryRow(
+                  'Pot Value',
+                  _currencyFormat.format(totalValue),
+                ),
                 Divider(color: _borderColor, height: 24.h),
                 _buildSummaryRow('Duration', '$totalMonths months'),
                 Divider(color: _borderColor, height: 24.h),
-                _buildSummaryRow('Monthly Installment', _currencyFormat.format(monthlySubscription)),
+                _buildSummaryRow(
+                  'Monthly Installment',
+                  _currencyFormat.format(monthlySubscription),
+                ),
                 Divider(color: _borderColor, height: 24.h),
-                _buildSummaryRow('Commission', '${commissionPercent.toStringAsFixed(1)}%'),
+                _buildSummaryRow(
+                  'Commission',
+                  '${commissionPercent.toStringAsFixed(1)}%',
+                ),
                 Divider(color: _borderColor, height: 24.h),
                 _buildSummaryRow('Branch', branchName),
               ],
@@ -471,7 +528,9 @@ class _CreateChitGroupPageState extends State<CreateChitGroupPage> {
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: _primaryColor,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
                 elevation: 0,
               ),
               onPressed: () {
@@ -486,7 +545,11 @@ class _CreateChitGroupPageState extends State<CreateChitGroupPage> {
               },
               child: Text(
                 'Create Group & Start Inviting',
-                style: GoogleFonts.inter(color: Colors.white, fontSize: 16.sp, fontWeight: FontWeight.w600),
+                style: GoogleFonts.inter(
+                  color: Colors.white,
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ),
@@ -497,12 +560,18 @@ class _CreateChitGroupPageState extends State<CreateChitGroupPage> {
             child: OutlinedButton(
               style: OutlinedButton.styleFrom(
                 side: BorderSide(color: _borderColor),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
               ),
               onPressed: _prevStep,
               child: Text(
                 'Edit Details',
-                style: GoogleFonts.inter(color: _textColorDark, fontSize: 16.sp, fontWeight: FontWeight.w600),
+                style: GoogleFonts.inter(
+                  color: _textColorDark,
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ),
@@ -521,7 +590,11 @@ class _CreateChitGroupPageState extends State<CreateChitGroupPage> {
         ),
         Text(
           value,
-          style: GoogleFonts.inter(color: _textColorDark, fontSize: 14.sp, fontWeight: FontWeight.w600),
+          style: GoogleFonts.inter(
+            color: _textColorDark,
+            fontSize: 14.sp,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ],
     );
@@ -544,7 +617,9 @@ class _CreateChitGroupPageState extends State<CreateChitGroupPage> {
   InputDecoration _inputDecoration(String hint) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: GoogleFonts.inter(color: _textColorGrey.withValues(alpha: 0.7)),
+      hintStyle: GoogleFonts.inter(
+        color: _textColorGrey.withValues(alpha: 0.7),
+      ),
       filled: true,
       fillColor: Colors.white,
       contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),

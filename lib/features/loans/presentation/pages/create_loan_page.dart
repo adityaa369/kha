@@ -226,7 +226,11 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
         final bytes = await _selectedDocumentFile!.readAsBytes();
         final fileName = _selectedDocumentName ?? 'document.pdf';
         final fileType = 'application/pdf'; // Or derive dynamically if needed
-        final documentId = await context.read<LoanCubit>().uploadDocument(fileName, fileType, bytes);
+        final documentId = await context.read<LoanCubit>().uploadDocument(
+          fileName,
+          fileType,
+          bytes,
+        );
         _finalizeLoanCreation(phone, documentId);
       } catch (e) {
         setState(() => _isLoading = false);
@@ -513,7 +517,9 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
                 controller: _borrowerNameController,
                 prefixIcon: const Icon(Icons.person_outline),
                 textCapitalization: TextCapitalization.words,
-                validator: (val) => val == null || val.trim().length < 3 ? 'Name is required (min 3 chars)' : null,
+                validator: (val) => val == null || val.trim().length < 3
+                    ? 'Name is required (min 3 chars)'
+                    : null,
               ),
               SizedBox(height: 16.h),
               KhaataTextField(
@@ -526,7 +532,9 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
                   FilteringTextInputFormatter.digitsOnly,
                   LengthLimitingTextInputFormatter(10),
                 ],
-                validator: (val) => val == null || val.length != 10 ? 'Enter valid 10-digit number' : null,
+                validator: (val) => val == null || val.length != 10
+                    ? 'Enter valid 10-digit number'
+                    : null,
               ),
             ],
           ),
@@ -538,10 +546,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const _NumberedHeader(
-                number: 2,
-                title: 'Interest Details',
-              ),
+              const _NumberedHeader(number: 2, title: 'Interest Details'),
               SizedBox(height: 16.h),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -565,7 +570,12 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
                       ),
                       keyboardType: TextInputType.number,
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      validator: (val) => val == null || val.isEmpty || (double.tryParse(val) ?? 0) <= 0 ? 'Enter a valid amount' : null,
+                      validator: (val) =>
+                          val == null ||
+                              val.isEmpty ||
+                              (double.tryParse(val) ?? 0) <= 0
+                          ? 'Enter a valid amount'
+                          : null,
                     ),
                   ),
                   SizedBox(width: 16.w),
@@ -592,7 +602,8 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
                       validator: (val) {
                         if (val == null || val.isEmpty) return 'Required';
                         final r = double.tryParse(val);
-                        if (r == null || r <= 0 || r > 100) return 'Enter 0-100%';
+                        if (r == null || r <= 0 || r > 100)
+                          return 'Enter 0-100%';
                         return null;
                       },
                     ),
@@ -668,7 +679,9 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
                 controller: _borrowerNameController,
                 prefixIcon: const Icon(Icons.person_outline),
                 textCapitalization: TextCapitalization.words,
-                validator: (val) => val == null || val.trim().length < 3 ? 'Name is required (min 3 chars)' : null,
+                validator: (val) => val == null || val.trim().length < 3
+                    ? 'Name is required (min 3 chars)'
+                    : null,
               ),
               SizedBox(height: 16.h),
               KhaataTextField(
@@ -681,7 +694,9 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
                   FilteringTextInputFormatter.digitsOnly,
                   LengthLimitingTextInputFormatter(10),
                 ],
-                validator: (val) => val == null || val.length != 10 ? 'Enter valid 10-digit number' : null,
+                validator: (val) => val == null || val.length != 10
+                    ? 'Enter valid 10-digit number'
+                    : null,
               ),
             ],
           ),
@@ -702,7 +717,12 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
                 prefixIcon: const Icon(Icons.currency_rupee),
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                validator: (val) => val == null || val.isEmpty || (double.tryParse(val) ?? 0) <= 0 ? 'Enter a valid amount' : null,
+                validator: (val) =>
+                    val == null ||
+                        val.isEmpty ||
+                        (double.tryParse(val) ?? 0) <= 0
+                    ? 'Enter a valid amount'
+                    : null,
               ),
               SizedBox(height: 16.h),
               Row(
@@ -831,7 +851,9 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
                       hint: 'Enter customer name',
                       controller: _borrowerNameController,
                       prefixIcon: const Icon(Icons.person_outline),
-                      validator: (val) => val == null || val.trim().length < 3 ? 'Name is required (min 3 chars)' : null,
+                      validator: (val) => val == null || val.trim().length < 3
+                          ? 'Name is required (min 3 chars)'
+                          : null,
                     ),
                   ),
                   SizedBox(width: 16.w),
@@ -846,7 +868,9 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
                         FilteringTextInputFormatter.digitsOnly,
                         LengthLimitingTextInputFormatter(10),
                       ],
-                      validator: (val) => val == null || val.length != 10 ? 'Enter valid 10-digit number' : null,
+                      validator: (val) => val == null || val.length != 10
+                          ? 'Enter valid 10-digit number'
+                          : null,
                     ),
                   ),
                 ],
@@ -884,7 +908,12 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
                       prefixIcon: const Icon(Icons.currency_rupee),
                       keyboardType: TextInputType.number,
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      validator: (val) => val == null || val.isEmpty || (double.tryParse(val) ?? 0) <= 0 ? 'Enter a valid amount' : null,
+                      validator: (val) =>
+                          val == null ||
+                              val.isEmpty ||
+                              (double.tryParse(val) ?? 0) <= 0
+                          ? 'Enter a valid amount'
+                          : null,
                     ),
                   ),
                   SizedBox(width: 16.w),
@@ -1255,5 +1284,3 @@ class _DashedUploadBox extends StatelessWidget {
     );
   }
 }
-
-

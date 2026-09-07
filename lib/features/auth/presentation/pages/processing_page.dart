@@ -1,3 +1,4 @@
+import 'package:khataa/core/utils/error_handler.dart';
 import 'dart:math' show cos, sin;
 
 import 'package:flutter/material.dart';
@@ -51,17 +52,7 @@ class _ProcessingPageState extends State<ProcessingPage>
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: Colors.red,
-            action: SnackBarAction(
-              label: 'Retry',
-              textColor: Colors.white,
-              onPressed: _completeFlow,
-            ),
-          ),
-        );
+        ErrorHandler.showError(context, 'Error: $e');
       }
     }
   }
@@ -194,4 +185,3 @@ class GaugePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
-

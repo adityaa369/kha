@@ -23,32 +23,41 @@ void main() {
   });
 
   group('Chit Fund Full Lifecycle Test', () {
-    
     // 1. Creation Phase
     blocTest<ChitFundCubit, ChitFundState>(
       'Step 1: Admin creates a new Chit Fund group',
       build: () {
-        when(() => mockRepository.createChitFund(
-              name: 'Test Group',
-              totalValue: 500000,
-              totalMonths: 20,
-              commissionPercent: 5.0,
-              branchName: 'KPHB-CAO',
-            )).thenAnswer((_) async => ChitFundModel.fromJson({
-              '_id': 'chit_123',
-              'name': 'Test Group',
-              'totalValue': 500000,
-              'totalMonths': 20,
-              'monthlySubscription': 25000,
-              'commissionPercentage': 5.0,
-              'status': 'FORMING',
-              'currentSubscribersCount': 1,
-            }));
-        
+        when(
+          () => mockRepository.createChitFund(
+            name: 'Test Group',
+            totalValue: 500000,
+            totalMonths: 20,
+            commissionPercent: 5.0,
+            branchName: 'KPHB-CAO',
+          ),
+        ).thenAnswer(
+          (_) async => ChitFundModel.fromJson({
+            '_id': 'chit_123',
+            'name': 'Test Group',
+            'totalValue': 500000,
+            'totalMonths': 20,
+            'monthlySubscription': 25000,
+            'commissionPercentage': 5.0,
+            'status': 'FORMING',
+            'currentSubscribersCount': 1,
+          }),
+        );
+
         // Mock the reload calls that happen after success
-        when(() => mockRepository.getCachedVacantChits()).thenAnswer((_) async => []);
-        when(() => mockRepository.getCachedMyInvites()).thenAnswer((_) async => []);
-        when(() => mockRepository.getCachedMyChits()).thenAnswer((_) async => []);
+        when(
+          () => mockRepository.getCachedVacantChits(),
+        ).thenAnswer((_) async => []);
+        when(
+          () => mockRepository.getCachedMyInvites(),
+        ).thenAnswer((_) async => []);
+        when(
+          () => mockRepository.getCachedMyChits(),
+        ).thenAnswer((_) async => []);
         when(() => mockRepository.getVacantChits()).thenAnswer((_) async => []);
         when(() => mockRepository.getMyInvites()).thenAnswer((_) async => []);
         when(() => mockRepository.getMyChits()).thenAnswer((_) async => []);
@@ -72,12 +81,19 @@ void main() {
     blocTest<ChitFundCubit, ChitFundState>(
       'Step 2: Admin sends an invite to a user',
       build: () {
-        when(() => mockRepository.sendInvite('chit_123', '9876543210'))
-            .thenAnswer((_) async => true);
-            
-        when(() => mockRepository.getCachedVacantChits()).thenAnswer((_) async => []);
-        when(() => mockRepository.getCachedMyInvites()).thenAnswer((_) async => []);
-        when(() => mockRepository.getCachedMyChits()).thenAnswer((_) async => []);
+        when(
+          () => mockRepository.sendInvite('chit_123', '9876543210'),
+        ).thenAnswer((_) async => true);
+
+        when(
+          () => mockRepository.getCachedVacantChits(),
+        ).thenAnswer((_) async => []);
+        when(
+          () => mockRepository.getCachedMyInvites(),
+        ).thenAnswer((_) async => []);
+        when(
+          () => mockRepository.getCachedMyChits(),
+        ).thenAnswer((_) async => []);
         when(() => mockRepository.getVacantChits()).thenAnswer((_) async => []);
         when(() => mockRepository.getMyInvites()).thenAnswer((_) async => []);
         when(() => mockRepository.getMyChits()).thenAnswer((_) async => []);
@@ -96,12 +112,19 @@ void main() {
     blocTest<ChitFundCubit, ChitFundState>(
       'Step 3: User accepts the invite and joins the group',
       build: () {
-        when(() => mockRepository.respondToInvite('inv_456', 'accepted'))
-            .thenAnswer((_) async => true);
-            
-        when(() => mockRepository.getCachedVacantChits()).thenAnswer((_) async => []);
-        when(() => mockRepository.getCachedMyInvites()).thenAnswer((_) async => []);
-        when(() => mockRepository.getCachedMyChits()).thenAnswer((_) async => []);
+        when(
+          () => mockRepository.respondToInvite('inv_456', 'accepted'),
+        ).thenAnswer((_) async => true);
+
+        when(
+          () => mockRepository.getCachedVacantChits(),
+        ).thenAnswer((_) async => []);
+        when(
+          () => mockRepository.getCachedMyInvites(),
+        ).thenAnswer((_) async => []);
+        when(
+          () => mockRepository.getCachedMyChits(),
+        ).thenAnswer((_) async => []);
         when(() => mockRepository.getVacantChits()).thenAnswer((_) async => []);
         when(() => mockRepository.getMyInvites()).thenAnswer((_) async => []);
         when(() => mockRepository.getMyChits()).thenAnswer((_) async => []);
@@ -120,11 +143,13 @@ void main() {
     blocTest<ChitFundCubit, ChitFundState>(
       'Step 4: Admin opens the live auction for the month',
       build: () {
-        when(() => mockRepository.openAuctionMonth('chit_123', 1, 500000.0))
-            .thenAnswer((_) async => true);
-        
-        when(() => mockRepository.getAdminDashboard('chit_123'))
-            .thenAnswer((_) async => {'status': 'LIVE', 'activeMonth': 1});
+        when(
+          () => mockRepository.openAuctionMonth('chit_123', 1, 500000.0),
+        ).thenAnswer((_) async => true);
+
+        when(
+          () => mockRepository.getAdminDashboard('chit_123'),
+        ).thenAnswer((_) async => {'status': 'LIVE', 'activeMonth': 1});
 
         return chitFundCubit;
       },
@@ -135,7 +160,9 @@ void main() {
       ),
       expect: () => [
         isA<ChitFundLoading>(),
-        const ChitFundActionSuccess('Auction opened successfully! Notifications sent.'),
+        const ChitFundActionSuccess(
+          'Auction opened successfully! Notifications sent.',
+        ),
         isA<ChitFundLoading>(),
         isA<ChitAdminDashboardLoaded>(),
       ],
@@ -145,18 +172,18 @@ void main() {
     blocTest<ChitFundCubit, ChitFundState>(
       'Step 5: User submits a discount bid during the live auction',
       build: () {
-        when(() => mockRepository.submitBid('chit_123', 50000.0)) // Bidding 50k discount
+        when(
+              () => mockRepository.submitBid('chit_123', 50000.0),
+            ) // Bidding 50k discount
             .thenAnswer((_) async => true);
-            
-        when(() => mockRepository.getAdminDashboard('chit_123'))
-            .thenAnswer((_) async => {'status': 'LIVE'});
+
+        when(
+          () => mockRepository.getAdminDashboard('chit_123'),
+        ).thenAnswer((_) async => {'status': 'LIVE'});
 
         return chitFundCubit;
       },
-      act: (cubit) => cubit.submitBid(
-        chitId: 'chit_123',
-        bidDiscount: 50000.0,
-      ),
+      act: (cubit) => cubit.submitBid(chitId: 'chit_123', bidDiscount: 50000.0),
       expect: () => [
         isA<ChitFundLoading>(),
         const ChitFundActionSuccess('Bid submitted successfully!'),
@@ -169,14 +196,17 @@ void main() {
     blocTest<ChitFundCubit, ChitFundState>(
       'Step 6: Auction completes, winner declared, dividends distributed',
       build: () {
-        when(() => mockRepository.finalizeAuction(
-              chitId: 'chit_123',
-              winnerUserId: 'user_999',
-              bidDiscount: 50000.0,
-            )).thenAnswer((_) async => {'success': true});
-            
-        when(() => mockRepository.getAdminDashboard('chit_123'))
-            .thenAnswer((_) async => {'status': 'COMPLETED'});
+        when(
+          () => mockRepository.finalizeAuction(
+            chitId: 'chit_123',
+            winnerUserId: 'user_999',
+            bidDiscount: 50000.0,
+          ),
+        ).thenAnswer((_) async => {'success': true});
+
+        when(
+          () => mockRepository.getAdminDashboard('chit_123'),
+        ).thenAnswer((_) async => {'status': 'COMPLETED'});
 
         return chitFundCubit;
       },

@@ -1,4 +1,4 @@
-﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:khatha/data/models/portfolio_summary_model.dart';
 
 void main() {
@@ -16,7 +16,7 @@ void main() {
 
       expect(model.loanCount, 10);
       expect(model.activeLoanCount, 5);
-      
+
       // Internal state should be strict integers
       expect(model.totalLentPaise, 5000000);
       expect(model.outstandingPaise, 3000000);

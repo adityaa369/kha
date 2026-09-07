@@ -1,4 +1,4 @@
-﻿import 'dart:io';
+import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:khatha/core/network/api_client.dart';
 import 'package:khatha/core/blocs/system/system_state_cubit.dart';
@@ -14,10 +14,13 @@ void main() {
   setUp(() async {
     TestWidgetsFlutterBinding.ensureInitialized();
     HttpOverrides.global = null;
-    const MethodChannel channel = MethodChannel('plugins.it_nomads.com/flutter_secure_storage');
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(channel, (MethodCall methodCall) async {
-      return null;
-    });
+    const MethodChannel channel = MethodChannel(
+      'plugins.it_nomads.com/flutter_secure_storage',
+    );
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
+          return null;
+        });
 
     dotenv.testLoad(fileInput: '''API_URL=http://localhost:5000''');
 
@@ -35,27 +38,32 @@ void main() {
     await server.close();
   });
 
-  test('F.2 Kill Switch response triggers global PAUSED state and preserves failure', () async {
-    server.listen((HttpRequest request) {
-      request.response
-        ..statusCode = 503
-        ..write('{"success":false, "message":"Financial operations are temporarily suspended."}')
-        ..close();
-    });
+  test(
+    'F.2 Kill Switch response triggers global PAUSED state and preserves failure',
+    () async {
+      server.listen((HttpRequest request) {
+        request.response
+          ..statusCode = 503
+          ..write(
+            '{"success":false, "message":"Financial operations are temporarily suspended."}',
+          )
+          ..close();
+      });
 
-    expect(systemStateCubit.state, SystemState.normal);
+      expect(systemStateCubit.state, SystemState.normal);
 
-    try {
-      await ApiClient().post('/test');
-      fail('Expected DioException');
-    } on DioException catch (e) {
-      // original API failure preserved
-      expect(e.response?.statusCode, 503);
-    }
+      try {
+        await ApiClient().post('/test');
+        fail('Expected DioException');
+      } on DioException catch (e) {
+        // original API failure preserved
+        expect(e.response?.statusCode, 503);
+      }
 
-    // Global state transitioned to paused
-    expect(systemStateCubit.state, SystemState.financialOperationsPaused);
-  });
+      // Global state transitioned to paused
+      expect(systemStateCubit.state, SystemState.financialOperationsPaused);
+    },
+  );
 
   test('F.2 Recovery to NORMAL state works', () async {
     systemStateCubit.pauseFinancialOperations();

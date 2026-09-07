@@ -85,7 +85,8 @@ class BusinessLoanDetailsPage extends StatelessWidget {
     String? currentUserId;
     try {
       final authState = context.read<AuthCubit>().state;
-      if (authState is AuthenticatedKycComplete) currentUserId = authState.user.id;
+      if (authState is AuthenticatedKycComplete)
+        currentUserId = authState.user.id;
       if (authState is AuthenticatedEmailVerifiedKycIncomplete) {
         currentUserId = authState.user.id;
       }
@@ -239,9 +240,14 @@ class BusinessLoanDetailsPage extends StatelessWidget {
   // â”€â”€â”€ Stats Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Widget _statsCard(LoanModel loan) {
-    final actualStart = loan.startDate ?? loan.activatedAt ?? loan.createdAt ?? DateTime.now();
+    final actualStart =
+        loan.startDate ?? loan.activatedAt ?? loan.createdAt ?? DateTime.now();
     final startStr = _dateStr(actualStart);
-    final endStr = loan.endDate != null ? _dateStr(loan.endDate!) : _dateStr(actualStart.add(Duration(days: (loan.durationMonths ?? 0) * 30)));
+    final endStr = loan.endDate != null
+        ? _dateStr(loan.endDate!)
+        : _dateStr(
+            actualStart.add(Duration(days: (loan.durationMonths ?? 0) * 30)),
+          );
     final duration = loan.durationMonths ?? 0;
     final progress = loan.progress.clamp(0.0, 1.0);
     return Container(
@@ -318,7 +324,6 @@ class BusinessLoanDetailsPage extends StatelessWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    
                     Expanded(
                       child: _stat(
                         'Progress',
@@ -468,10 +473,7 @@ class BusinessLoanDetailsPage extends StatelessWidget {
           SizedBox(height: 12.h),
           const Row(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              
-              Expanded(child: SizedBox()),
-            ],
+            children: [Expanded(child: SizedBox())],
           ),
         ],
       ),
@@ -485,7 +487,11 @@ class BusinessLoanDetailsPage extends StatelessWidget {
       children: [
         Text(
           label,
-          style: TextStyle(color: Colors.white60, fontSize: 11.sp, fontWeight: FontWeight.w400),
+          style: TextStyle(
+            color: Colors.white60,
+            fontSize: 11.sp,
+            fontWeight: FontWeight.w400,
+          ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
@@ -886,7 +892,11 @@ class BusinessLoanDetailsPage extends StatelessWidget {
           children: [
             Text(
               'Recent Transactions',
-              style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w700, color: Colors.black87),
+              style: TextStyle(
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w700,
+                color: Colors.black87,
+              ),
             ),
             Container(
               padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
@@ -896,7 +906,11 @@ class BusinessLoanDetailsPage extends StatelessWidget {
               ),
               child: Text(
                 '${txns.length} records',
-                style: TextStyle(fontSize: 11.sp, color: _primary, fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  fontSize: 11.sp,
+                  color: _primary,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ],
@@ -913,55 +927,88 @@ class BusinessLoanDetailsPage extends StatelessWidget {
             ),
             child: Column(
               children: [
-                Icon(Icons.receipt_long_outlined, color: Colors.grey.shade400, size: 32.sp),
+                Icon(
+                  Icons.receipt_long_outlined,
+                  color: Colors.grey.shade400,
+                  size: 32.sp,
+                ),
                 SizedBox(height: 8.h),
-                Text('No transactions recorded yet', style: TextStyle(color: Colors.grey, fontSize: 12.sp)),
+                Text(
+                  'No transactions recorded yet',
+                  style: TextStyle(color: Colors.grey, fontSize: 12.sp),
+                ),
                 SizedBox(height: 4.h),
-                Text('Use Record Payment below to log payments', style: TextStyle(color: Colors.grey.shade400, fontSize: 11.sp)),
+                Text(
+                  'Use Record Payment below to log payments',
+                  style: TextStyle(
+                    color: Colors.grey.shade400,
+                    fontSize: 11.sp,
+                  ),
+                ),
               ],
             ),
           )
         else
-          ...txns.map((tx) => _txItem(
-            _txIcon(tx.type as String? ?? ''),
-            _txColor(tx.type as String? ?? ''),
-            _txTitle(tx.type as String? ?? ''),
-            tx.note ?? '',
-            _txAmountStr(tx.type as String? ?? '', (tx.amount as num?)?.toDouble() ?? 0),
-            _txDateStr(tx.recordedAt),
-            _txIsPositive(tx.type as String? ?? ''),
-          )),
+          ...txns.map(
+            (tx) => _txItem(
+              _txIcon(tx.type as String? ?? ''),
+              _txColor(tx.type as String? ?? ''),
+              _txTitle(tx.type as String? ?? ''),
+              tx.note ?? '',
+              _txAmountStr(
+                tx.type as String? ?? '',
+                (tx.amount as num?)?.toDouble() ?? 0,
+              ),
+              _txDateStr(tx.recordedAt),
+              _txIsPositive(tx.type as String? ?? ''),
+            ),
+          ),
       ],
     );
   }
 
   IconData _txIcon(String type) {
     switch (type) {
-      case 'payment': return Icons.arrow_downward;
-      case 'interest_payment': return Icons.percent;
-      case 'credit_added': return Icons.add_circle_outline;
-      case 'loan_given': return Icons.arrow_upward;
-      default: return Icons.swap_horiz;
+      case 'payment':
+        return Icons.arrow_downward;
+      case 'interest_payment':
+        return Icons.percent;
+      case 'credit_added':
+        return Icons.add_circle_outline;
+      case 'loan_given':
+        return Icons.arrow_upward;
+      default:
+        return Icons.swap_horiz;
     }
   }
 
   Color _txColor(String type) {
     switch (type) {
-      case 'payment': return Colors.green.shade600;
-      case 'interest_payment': return Colors.teal.shade600;
-      case 'credit_added': return Colors.orange.shade600;
-      case 'loan_given': return Colors.red.shade400;
-      default: return Colors.grey;
+      case 'payment':
+        return Colors.green.shade600;
+      case 'interest_payment':
+        return Colors.teal.shade600;
+      case 'credit_added':
+        return Colors.orange.shade600;
+      case 'loan_given':
+        return Colors.red.shade400;
+      default:
+        return Colors.grey;
     }
   }
 
   String _txTitle(String type) {
     switch (type) {
-      case 'payment': return 'Payment Received';
-      case 'interest_payment': return 'Interest Received';
-      case 'credit_added': return 'Credit Added';
-      case 'loan_given': return 'Loan Disbursed';
-      default: return 'Transaction';
+      case 'payment':
+        return 'Payment Received';
+      case 'interest_payment':
+        return 'Interest Received';
+      case 'credit_added':
+        return 'Credit Added';
+      case 'loan_given':
+        return 'Loan Disbursed';
+      default:
+        return 'Transaction';
     }
   }
 
@@ -976,21 +1023,45 @@ class BusinessLoanDetailsPage extends StatelessWidget {
     if (rawDate == null) return '';
     try {
       final dt = DateTime.parse(rawDate.toString()).toLocal();
-      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const months = [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
+      ];
       return '${dt.day.toString().padLeft(2, '0')} ${months[dt.month - 1]} ${dt.year}';
     } catch (_) {
       return '';
     }
   }
 
-  Widget _txItem(IconData icon, Color color, String title, String subtitle, String amount, String date, bool isPositive) {
+  Widget _txItem(
+    IconData icon,
+    Color color,
+    String title,
+    String subtitle,
+    String amount,
+    String date,
+    bool isPositive,
+  ) {
     return Padding(
       padding: EdgeInsets.only(bottom: 12.h),
       child: Row(
         children: [
           Container(
             padding: EdgeInsets.all(10.w),
-            decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
             child: Icon(icon, color: color, size: 16.sp),
           ),
           SizedBox(width: 12.w),
@@ -998,26 +1069,46 @@ class BusinessLoanDetailsPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.sp, color: Colors.black87)),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13.sp,
+                    color: Colors.black87,
+                  ),
+                ),
                 SizedBox(height: 2.h),
-                Text(subtitle, style: TextStyle(color: Colors.grey, fontSize: 11.sp)),
+                Text(
+                  subtitle,
+                  style: TextStyle(color: Colors.grey, fontSize: 11.sp),
+                ),
               ],
             ),
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(amount, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.sp, color: isPositive ? Colors.green.shade700 : Colors.red.shade600)),
+              Text(
+                amount,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13.sp,
+                  color: isPositive
+                      ? Colors.green.shade700
+                      : Colors.red.shade600,
+                ),
+              ),
               SizedBox(height: 2.h),
-              Text(date, style: TextStyle(color: Colors.grey, fontSize: 11.sp)),
+              Text(
+                date,
+                style: TextStyle(color: Colors.grey, fontSize: 11.sp),
+              ),
             ],
           ),
         ],
       ),
     );
   }
-
-
 
   Widget _repaymentChecklist(LoanModel loan) {
     final duration = loan.durationMonths ?? 0;
@@ -1035,10 +1126,15 @@ class BusinessLoanDetailsPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            loan.type.toLowerCase().contains('interest') || loan.type.toLowerCase().contains('home')
+            loan.type.toLowerCase().contains('interest') ||
+                    loan.type.toLowerCase().contains('home')
                 ? 'Monthly Interest Overview'
                 : 'Monthly Payment Overview',
-            style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w700, color: Colors.black87),
+            style: TextStyle(
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w700,
+              color: Colors.black87,
+            ),
           ),
           SizedBox(height: 12.h),
           if (duration > 0)
@@ -1048,7 +1144,12 @@ class BusinessLoanDetailsPage extends StatelessWidget {
               child: Row(
                 children: List.generate(duration, (index) {
                   final isPaid = index < paidMonths;
-                  final dueDate = (loan.startDate ?? loan.activatedAt ?? loan.createdAt ?? DateTime.now()).add(Duration(days: (index + 1) * 30));
+                  final dueDate =
+                      (loan.startDate ??
+                              loan.activatedAt ??
+                              loan.createdAt ??
+                              DateTime.now())
+                          .add(Duration(days: (index + 1) * 30));
 
                   return Container(
                     margin: EdgeInsets.only(right: 12.w),
@@ -1056,7 +1157,10 @@ class BusinessLoanDetailsPage extends StatelessWidget {
                       children: [
                         Text(
                           '${_monthName(dueDate.month)} ${dueDate.year}',
-                          style: TextStyle(fontSize: 10.sp, color: Colors.grey.shade600),
+                          style: TextStyle(
+                            fontSize: 10.sp,
+                            color: Colors.grey.shade600,
+                          ),
                         ),
                         SizedBox(height: 6.h),
                         Container(
@@ -1064,7 +1168,12 @@ class BusinessLoanDetailsPage extends StatelessWidget {
                           height: 55.h,
                           decoration: BoxDecoration(
                             color: isPaid ? Colors.green.shade50 : Colors.white,
-                            border: Border.all(color: isPaid ? Colors.green : Colors.red.shade200, width: 1.5),
+                            border: Border.all(
+                              color: isPaid
+                                  ? Colors.green
+                                  : Colors.red.shade200,
+                              width: 1.5,
+                            ),
                             borderRadius: BorderRadius.circular(8.r),
                           ),
                           alignment: Alignment.center,
@@ -1086,8 +1195,20 @@ class BusinessLoanDetailsPage extends StatelessWidget {
   }
 
   String _monthName(int m) {
-    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
     return months[m - 1];
   }
-
 }

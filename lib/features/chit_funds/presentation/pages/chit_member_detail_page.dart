@@ -1,3 +1,4 @@
+import 'package:khataa/core/utils/error_handler.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -31,12 +32,7 @@ class _ChitMemberDetailPageState extends State<ChitMemberDetailPage> {
       body: BlocConsumer<ChitFundCubit, ChitFundState>(
         listener: (context, state) {
           if (state is ChitFundError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: KhaataTheme.dangerRed,
-              ),
-            );
+            ErrorHandler.showError(context, state.message);
           }
         },
         builder: (context, state) {
@@ -163,7 +159,11 @@ class _ChitMemberDetailPageState extends State<ChitMemberDetailPage> {
           backgroundColor: KhaataTheme.primaryBlue,
           iconTheme: const IconThemeData(color: Colors.white),
           flexibleSpace: FlexibleSpaceBar(
-            titlePadding: EdgeInsets.only(left: 48.w, bottom: 16.h, right: 16.w),
+            titlePadding: EdgeInsets.only(
+              left: 48.w,
+              bottom: 16.h,
+              right: 16.w,
+            ),
             title: Text(
               chitName,
               style: GoogleFonts.inter(
@@ -186,7 +186,10 @@ class _ChitMemberDetailPageState extends State<ChitMemberDetailPage> {
                     top: 48.h,
                     right: 16.w,
                     child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 12.w,
+                        vertical: 6.h,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(20.r),
@@ -194,7 +197,9 @@ class _ChitMemberDetailPageState extends State<ChitMemberDetailPage> {
                       child: Text(
                         isActive ? 'ACTIVE ●' : 'REGISTRATION',
                         style: GoogleFonts.inter(
-                          color: isActive ? Colors.white : KhaataTheme.warningYellow,
+                          color: isActive
+                              ? Colors.white
+                              : KhaataTheme.warningYellow,
                           fontWeight: FontWeight.bold,
                           fontSize: 12.sp,
                         ),
@@ -234,7 +239,7 @@ class _ChitMemberDetailPageState extends State<ChitMemberDetailPage> {
     final monthlyEmi = state.chitInfo['monthlyContribution'] ?? 0.0;
     final dividendEarned = state.memberData['dividendEarnedThisMonth'] ?? 0.0;
     final prizePool = state.chitInfo['totalValue'] ?? 0.0;
-    
+
     // Check if nextDueDate exists in chitInfo or memberData
     DateTime? nextDue;
     if (state.chitInfo['nextDueDate'] != null) {
@@ -250,7 +255,9 @@ class _ChitMemberDetailPageState extends State<ChitMemberDetailPage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16.r),
-        border: const Border(left: BorderSide(color: KhaataTheme.primaryBlue, width: 4)),
+        border: const Border(
+          left: BorderSide(color: KhaataTheme.primaryBlue, width: 4),
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.06),
@@ -324,12 +331,8 @@ class _ChitMemberDetailPageState extends State<ChitMemberDetailPage> {
           SizedBox(height: 24.h),
           Row(
             children: [
-              Expanded(
-                child: _buildStatColumn('Monthly EMI', '₹$monthlyEmi'),
-              ),
-              Expanded(
-                child: _buildNextDueColumn(nextDue),
-              ),
+              Expanded(child: _buildStatColumn('Monthly EMI', '₹$monthlyEmi')),
+              Expanded(child: _buildNextDueColumn(nextDue)),
             ],
           ),
           SizedBox(height: 16.h),
@@ -342,9 +345,7 @@ class _ChitMemberDetailPageState extends State<ChitMemberDetailPage> {
                   valueColor: KhaataTheme.primaryBlue,
                 ),
               ),
-              Expanded(
-                child: _buildStatColumn('Prize Pool', '₹$prizePool'),
-              ),
+              Expanded(child: _buildStatColumn('Prize Pool', '₹$prizePool')),
             ],
           ),
           if (hasWonAuction) ...[
@@ -370,7 +371,7 @@ class _ChitMemberDetailPageState extends State<ChitMemberDetailPage> {
                 ],
               ),
             ),
-          ]
+          ],
         ],
       ),
     );
@@ -415,7 +416,10 @@ class _ChitMemberDetailPageState extends State<ChitMemberDetailPage> {
     );
   }
 
-  Widget _buildAuctionHistoryCard(List<dynamic> auctionHistory, Map<String, dynamic> chitInfo) {
+  Widget _buildAuctionHistoryCard(
+    List<dynamic> auctionHistory,
+    Map<String, dynamic> chitInfo,
+  ) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -465,7 +469,7 @@ class _ChitMemberDetailPageState extends State<ChitMemberDetailPage> {
               final winnerName = auction['winnerName'] ?? 'Someone';
               final prizeAmount = auction['prizeAmount'] ?? 0;
               final dividendPerMember = auction['dividendPerMember'] ?? 0;
-              
+
               return Padding(
                 padding: EdgeInsets.only(bottom: 12.h),
                 child: Row(
@@ -522,8 +526,9 @@ class _ChitMemberDetailPageState extends State<ChitMemberDetailPage> {
                 ),
               );
             }),
-            
-          if (chitInfo['status'] == 'active' && chitInfo['completedMonths'] != null)
+
+          if (chitInfo['status'] == 'active' &&
+              chitInfo['completedMonths'] != null)
             Padding(
               padding: EdgeInsets.only(top: 8.h),
               child: Row(
@@ -557,7 +562,10 @@ class _ChitMemberDetailPageState extends State<ChitMemberDetailPage> {
                     ),
                   ),
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 8.w,
+                      vertical: 4.h,
+                    ),
                     decoration: BoxDecoration(
                       color: KhaataTheme.warningYellow.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12.r),
@@ -598,7 +606,11 @@ class _ChitMemberDetailPageState extends State<ChitMemberDetailPage> {
         children: [
           Row(
             children: [
-              Icon(Icons.calendar_today, color: KhaataTheme.textGrey, size: 20.w),
+              Icon(
+                Icons.calendar_today,
+                color: KhaataTheme.textGrey,
+                size: 20.w,
+              ),
               SizedBox(width: 8.w),
               Text(
                 'PAYMENT HISTORY',
@@ -626,10 +638,11 @@ class _ChitMemberDetailPageState extends State<ChitMemberDetailPage> {
           else
             ...paymentHistory.map((payment) {
               final status = payment['status'] ?? 'pending';
-              final monthLabel = payment['monthLabel'] ?? 'Month ${payment['monthNumber']}';
+              final monthLabel =
+                  payment['monthLabel'] ?? 'Month ${payment['monthNumber']}';
               final amount = payment['amount'] ?? 0;
               final dividendEarned = payment['dividendEarned'] ?? 0;
-              
+
               IconData icon;
               Color iconColor;
               if (status == 'paid') {

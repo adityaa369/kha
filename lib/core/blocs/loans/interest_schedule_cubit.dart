@@ -7,7 +7,7 @@ import '../../error/failures.dart';
 
 abstract class InterestScheduleState extends Equatable {
   const InterestScheduleState();
-  
+
   @override
   List<Object?> get props => [];
 }
@@ -17,7 +17,7 @@ class InterestScheduleInitial extends InterestScheduleState {}
 class InterestScheduleLoading extends InterestScheduleState {
   final InterestScheduleModel? lastKnownData;
   const InterestScheduleLoading({this.lastKnownData});
-  
+
   @override
   List<Object?> get props => [lastKnownData];
 }
@@ -25,7 +25,7 @@ class InterestScheduleLoading extends InterestScheduleState {
 class InterestScheduleLoaded extends InterestScheduleState {
   final InterestScheduleModel schedule;
   const InterestScheduleLoaded(this.schedule);
-  
+
   @override
   List<Object?> get props => [schedule];
 }
@@ -34,7 +34,7 @@ class InterestScheduleError extends InterestScheduleState {
   final Failure failure;
   final InterestScheduleModel? lastKnownData;
   const InterestScheduleError(this.failure, {this.lastKnownData});
-  
+
   @override
   List<Object?> get props => [failure, lastKnownData];
 }
@@ -43,8 +43,8 @@ class InterestScheduleCubit extends Cubit<InterestScheduleState> {
   final LoanRepository _repository;
 
   InterestScheduleCubit({required LoanRepository repository})
-      : _repository = repository,
-        super(InterestScheduleInitial());
+    : _repository = repository,
+      super(InterestScheduleInitial());
 
   Future<void> fetchSchedule(String loanId) async {
     InterestScheduleModel? lastData;
@@ -57,7 +57,7 @@ class InterestScheduleCubit extends Cubit<InterestScheduleState> {
     }
 
     emit(InterestScheduleLoading(lastKnownData: lastData));
-    
+
     try {
       final schedule = await _repository.getInterestSchedule(loanId);
       emit(InterestScheduleLoaded(schedule));

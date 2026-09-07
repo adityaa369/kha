@@ -41,11 +41,11 @@ class _CloseLoanApprovalView extends StatelessWidget {
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () {
-             if (GoRouter.of(context).canPop()) {
-               context.pop();
-             } else {
-               context.go('/home');
-             }
+            if (GoRouter.of(context).canPop()) {
+              context.pop();
+            } else {
+              context.go('/home');
+            }
           },
         ),
       ),
@@ -53,7 +53,10 @@ class _CloseLoanApprovalView extends StatelessWidget {
         listener: (context, state) {
           if (state is CloseLoanSuccess) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Loan closed successfully.'), backgroundColor: Colors.green),
+              const SnackBar(
+                content: Text('Loan closed successfully.'),
+                backgroundColor: Colors.green,
+              ),
             );
             Future.delayed(const Duration(seconds: 1), () {
               if (GoRouter.of(context).canPop()) {
@@ -74,12 +77,15 @@ class _CloseLoanApprovalView extends StatelessWidget {
                 children: [
                   CircularProgressIndicator(),
                   SizedBox(height: 16),
-                  Text('Processing closure...', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  Text(
+                    'Processing closure...',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
                 ],
               ),
             );
           }
-          
+
           if (state is CloseLoanSuccess) {
             return const Center(
               child: Column(
@@ -87,19 +93,26 @@ class _CloseLoanApprovalView extends StatelessWidget {
                 children: [
                   Icon(Icons.check_circle, color: Colors.green, size: 64),
                   SizedBox(height: 16),
-                  Text('Loan Closed', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  Text(
+                    'Loan Closed',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
                 ],
               ),
             );
           }
-          
+
           if (state is CloseLoanAwaitingConsent) {
             return Padding(
               padding: const EdgeInsets.all(24.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 64),
+                  const Icon(
+                    Icons.warning_amber_rounded,
+                    color: Colors.orange,
+                    size: 64,
+                  ),
                   const SizedBox(height: 24),
                   const Text(
                     'Lender Requested to Close Loan',
@@ -118,24 +131,33 @@ class _CloseLoanApprovalView extends StatelessWidget {
                     children: [
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: () => context.read<CloseLoanFlowCubit>().rejectIntent(),
+                          onPressed: () =>
+                              context.read<CloseLoanFlowCubit>().rejectIntent(),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: Colors.red,
                             side: const BorderSide(color: Colors.red),
                             padding: const EdgeInsets.symmetric(vertical: 16),
                           ),
-                          child: const Text('Reject', style: TextStyle(fontSize: 16)),
+                          child: const Text(
+                            'Reject',
+                            style: TextStyle(fontSize: 16),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: () => context.read<CloseLoanFlowCubit>().approveIntent(),
+                          onPressed: () => context
+                              .read<CloseLoanFlowCubit>()
+                              .approveIntent(),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: KhaataTheme.primaryBlue,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                           ),
-                          child: const Text('Approve Closure', style: TextStyle(fontSize: 16, color: Colors.white)),
+                          child: const Text(
+                            'Approve Closure',
+                            style: TextStyle(fontSize: 16, color: Colors.white),
+                          ),
                         ),
                       ),
                     ],
@@ -144,7 +166,7 @@ class _CloseLoanApprovalView extends StatelessWidget {
               ),
             );
           }
-          
+
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,

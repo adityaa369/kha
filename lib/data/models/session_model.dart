@@ -17,8 +17,12 @@ class SessionModel {
     return SessionModel(
       id: json['_id'] ?? '',
       deviceInfo: json['deviceInfo'] ?? 'Unknown Device',
-      lastUsedAt: json['lastUsedAt'] != null ? DateTime.parse(json['lastUsedAt']) : DateTime.now(),
-      expiresAt: json['expiresAt'] != null ? DateTime.parse(json['expiresAt']) : DateTime.now(),
+      lastUsedAt: json['lastUsedAt'] != null
+          ? DateTime.parse(json['lastUsedAt'])
+          : DateTime.now(),
+      expiresAt: json['expiresAt'] != null
+          ? DateTime.parse(json['expiresAt'])
+          : DateTime.now(),
       isCurrent: json['isCurrent'] == true,
     );
   }

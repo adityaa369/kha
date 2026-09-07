@@ -21,7 +21,6 @@ class LoanCubit extends Cubit<LoanState> {
     }
   }
 
-
   Future<LoanModel?> getLoanById(String loanId) async {
     try {
       return await _repository.getLoanById(loanId);
@@ -124,19 +123,18 @@ class LoanCubit extends Cubit<LoanState> {
   }
 
   // Verify Lender OTP
-  
+
   Future<bool> deleteLoan(String loanId) async {
     try {
       await _repository.deleteLoan(loanId);
-      
+
       if (state is LoansLoaded) {
         final current = state as LoansLoaded;
         final myLoans = current.myLoans.where((l) => l.id != loanId).toList();
-        final givenLoans = current.givenLoans.where((l) => l.id != loanId).toList();
-        emit(LoansLoaded(
-          myLoans: myLoans,
-          givenLoans: givenLoans,
-        ));
+        final givenLoans = current.givenLoans
+            .where((l) => l.id != loanId)
+            .toList();
+        emit(LoansLoaded(myLoans: myLoans, givenLoans: givenLoans));
       } else {
         fetchLoans(); // Refresh if we were in some other state
       }
@@ -204,7 +202,10 @@ class LoanCubit extends Cubit<LoanState> {
 
   Future<bool> recordPayment(String loanId, {required int amountPaise}) async {
     try {
-      final success = await _repository.recordPayment(loanId, amountPaise: amountPaise);
+      final success = await _repository.recordPayment(
+        loanId,
+        amountPaise: amountPaise,
+      );
       if (success) await fetchLoans();
       return success;
     } on Failure catch (f) {
@@ -216,9 +217,17 @@ class LoanCubit extends Cubit<LoanState> {
     }
   }
 
-  Future<bool> toggleMonthStatus(String loanId, int monthIndex, String status) async {
+  Future<bool> toggleMonthStatus(
+    String loanId,
+    int monthIndex,
+    String status,
+  ) async {
     try {
-      final success = await _repository.toggleMonthStatus(loanId, monthIndex, status);
+      final success = await _repository.toggleMonthStatus(
+        loanId,
+        monthIndex,
+        status,
+      );
       if (success) await fetchLoans();
       return success;
     } on Failure catch (f) {
@@ -232,7 +241,10 @@ class LoanCubit extends Cubit<LoanState> {
 
   Future<bool> addCredit(String loanId, {required int amountPaise}) async {
     try {
-      final success = await _repository.addCredit(loanId, amountPaise: amountPaise);
+      final success = await _repository.addCredit(
+        loanId,
+        amountPaise: amountPaise,
+      );
       if (success) await fetchLoans();
       return success;
     } on Failure catch (f) {
@@ -286,6 +298,3 @@ class LoanCubit extends Cubit<LoanState> {
     }
   }
 }
-
-
-

@@ -13,7 +13,6 @@ import '../../core/error/failures.dart';
 import '../../core/utils/secure_storage.dart';
 import 'base_repository.dart';
 
-
 class DocumentResponse {
   final String url;
   final String contentType;
@@ -44,7 +43,6 @@ class LoanRepository extends BaseRepository {
       throw const ServerFailure('Failed to load portfolio summary');
     });
   }
-
 
   Future<LoanModel> getLoanById(String loanId) async {
     return await handleApiCall(() async {
@@ -97,7 +95,9 @@ class LoanRepository extends BaseRepository {
       final cachedJsonStr = await SecureStorage.getCachedLoans();
       if (cachedJsonStr != null) {
         final Map<String, dynamic> cachedMap = await compute(
-          (String s) => jsonDecode(s) as Map<String, dynamic>, cachedJsonStr);
+          (String s) => jsonDecode(s) as Map<String, dynamic>,
+          cachedJsonStr,
+        );
         final List myLoansJson = cachedMap['myLoans'] ?? [];
         final List givenLoansJson = cachedMap['givenLoans'] ?? [];
 
@@ -128,7 +128,10 @@ class LoanRepository extends BaseRepository {
 
   Future<bool> verifyLoan(String loanId, String intentId, String otp) async {
     return await handleApiCall(() async {
-      final response = await _api.post('/loans/$loanId/verify', data: {'intentId': intentId, 'otp': otp});
+      final response = await _api.post(
+        '/loans/$loanId/verify',
+        data: {'intentId': intentId, 'otp': otp},
+      );
       final data = response.data;
       if (data is Map && data['success'] == true) return true;
       final errMsg = (data is Map) ? data['message']?.toString() : null;
@@ -146,19 +149,20 @@ class LoanRepository extends BaseRepository {
     });
   }
 
-    Future<void> deleteLoan(String loanId) async {
+  Future<void> deleteLoan(String loanId) async {
     final response = await _api.delete('/loans/$loanId');
     if (response.statusCode != 200) {
       throw Exception('Failed to delete loan');
     }
   }
 
-    @visibleForTesting
+  @visibleForTesting
   Future<String> getValidIdToken({bool forceRefresh = false}) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) throw const AuthFailure('No Firebase session found');
     final token = await user.getIdToken(forceRefresh);
-    if (token == null) throw const AuthFailure('Failed to generate Firebase token');
+    if (token == null)
+      throw const AuthFailure('Failed to generate Firebase token');
     return token;
   }
 
@@ -171,9 +175,12 @@ class LoanRepository extends BaseRepository {
           data: {'idToken': idToken},
         );
         if (response.data['success'] == true) return true;
-        throw ServerFailure(response.data['message']?.toString() ?? 'Failed to verify');
+        throw ServerFailure(
+          response.data['message']?.toString() ?? 'Failed to verify',
+        );
       } on DioException catch (e) {
-        if (e.response?.statusCode == 400 && e.response?.data['message'] == 'Invalid idToken') {
+        if (e.response?.statusCode == 400 &&
+            e.response?.data['message'] == 'Invalid idToken') {
           final newToken = await getValidIdToken(forceRefresh: true);
           final retryOpts = e.requestOptions;
           retryOpts.data = {'idToken': newToken};
@@ -185,9 +192,11 @@ class LoanRepository extends BaseRepository {
     });
   }
 
-    // Deprecated direct closeLoan, now uses intent flow via CloseLoanFlowCubit
+  // Deprecated direct closeLoan, now uses intent flow via CloseLoanFlowCubit
   Future<bool> closeLoan(String loanId) async {
-    throw UnimplementedError("closeLoan must now use the Two-Stage intent flow.");
+    throw UnimplementedError(
+      "closeLoan must now use the Two-Stage intent flow.",
+    );
   }
 
   Future<bool> requestClosureOtp(String loanId) async {
@@ -219,29 +228,38 @@ class LoanRepository extends BaseRepository {
       }
     } catch (e) {
       if (e.toString().contains('429') || e.toString().contains('recently')) {
-        throw Exception('A payment nudge was already sent recently. Please wait 24 hours.');
+        throw Exception(
+          'A payment nudge was already sent recently. Please wait 24 hours.',
+        );
       }
       rethrow;
     }
   }
 
-    Future<bool> recordPayment(String loanId, {required int amountPaise, String? idempotencyKey}) async {
+  Future<bool> recordPayment(
+    String loanId, {
+    required int amountPaise,
+    String? idempotencyKey,
+  }) async {
     return await handleApiCall(() async {
       try {
         final idToken = await getValidIdToken();
-        final options = idempotencyKey != null 
-          ? Options(headers: {'x-idempotency-key': idempotencyKey}) 
-          : null;
-        
+        final options = idempotencyKey != null
+            ? Options(headers: {'x-idempotency-key': idempotencyKey})
+            : null;
+
         final response = await _api.post(
           '/loans/$loanId/record-payment',
           data: {'amountPaise': amountPaise, 'idToken': idToken},
           options: options,
         );
         if (response.data['success'] == true) return true;
-        throw ServerFailure(response.data['message']?.toString() ?? 'Failed to record payment');
+        throw ServerFailure(
+          response.data['message']?.toString() ?? 'Failed to record payment',
+        );
       } on DioException catch (e) {
-        if (e.response?.statusCode == 400 && e.response?.data['message'] == 'Invalid idToken') {
+        if (e.response?.statusCode == 400 &&
+            e.response?.data['message'] == 'Invalid idToken') {
           final newToken = await getValidIdToken(forceRefresh: true);
           final retryOpts = e.requestOptions;
           retryOpts.data = {'amountPaise': amountPaise, 'idToken': newToken};
@@ -253,8 +271,11 @@ class LoanRepository extends BaseRepository {
     });
   }
 
-    
-  Future<bool> toggleMonthStatus(String loanId, int monthIndex, String status) async {
+  Future<bool> toggleMonthStatus(
+    String loanId,
+    int monthIndex,
+    String status,
+  ) async {
     return await handleApiCall(() async {
       final response = await _api.patch(
         '/loans/$loanId/months/$monthIndex',
@@ -267,9 +288,11 @@ class LoanRepository extends BaseRepository {
     });
   }
 
-    // Deprecated direct addCredit, now uses intent flow
+  // Deprecated direct addCredit, now uses intent flow
   Future<bool> addCredit(String loanId, {required int amountPaise}) async {
-    throw UnimplementedError("addCredit must now use the Two-Stage intent flow.");
+    throw UnimplementedError(
+      "addCredit must now use the Two-Stage intent flow.",
+    );
   }
 
   Future<bool> updateProgress(String loanId, double progress) async {
@@ -299,8 +322,6 @@ class LoanRepository extends BaseRepository {
     });
   }
 
-
-
   Future<InterestScheduleModel> getInterestSchedule(String loanId) async {
     return await handleApiCall(() async {
       final response = await _api.get('/loans/$loanId/interest-schedule');
@@ -311,13 +332,15 @@ class LoanRepository extends BaseRepository {
     });
   }
 
-Future<DocumentResponse> getSignedDocumentUrl(String documentId) async {
+  Future<DocumentResponse> getSignedDocumentUrl(String documentId) async {
     return await handleApiCall(() async {
       final response = await _api.get('/documents/$documentId');
       if (response.statusCode == 200) {
         return DocumentResponse(
           url: response.data['url'] as String,
-          contentType: response.data['contentType'] as String? ?? 'application/octet-stream',
+          contentType:
+              response.data['contentType'] as String? ??
+              'application/octet-stream',
         );
       }
       throw const ServerFailure('Failed to get document URL');
@@ -348,8 +371,7 @@ Future<DocumentResponse> getSignedDocumentUrl(String documentId) async {
     });
   }
 
-
-Future<IntentModel> getIntent(String intentId) async {
+  Future<IntentModel> getIntent(String intentId) async {
     return await handleApiCall(() async {
       final response = await _api.get('/intents/$intentId');
       if (response.data != null && response.data['success'] == true) {
@@ -359,7 +381,10 @@ Future<IntentModel> getIntent(String intentId) async {
     });
   }
 
-  Future<String> createAddCreditIntent({required String loanId, required int amountPaise}) async {
+  Future<String> createAddCreditIntent({
+    required String loanId,
+    required int amountPaise,
+  }) async {
     return await handleApiCall(() async {
       final idToken = await getValidIdToken();
       final response = await _api.post(
@@ -378,22 +403,35 @@ Future<IntentModel> getIntent(String intentId) async {
     });
   }
 
-  Future<bool> commitAddCredit({required String loanId, required String intentId, required int amountPaise}) async {
+  Future<bool> commitAddCredit({
+    required String loanId,
+    required String intentId,
+    required int amountPaise,
+  }) async {
     return await handleApiCall(() async {
       try {
         final idToken = await getValidIdToken();
         // Uses the same generic ApiClient post with intentId to commit
         final response = await _api.post(
           '/loans/$loanId/add-credit',
-          data: {'intentId': intentId, 'amountPaise': amountPaise, 'idToken': idToken},
+          data: {
+            'intentId': intentId,
+            'amountPaise': amountPaise,
+            'idToken': idToken,
+          },
         );
         return response.statusCode == 200;
       } on DioException catch (e) {
-        if (e.response?.statusCode == 401 && e.response?.data['code'] == 'INVALID_TOKEN') {
+        if (e.response?.statusCode == 401 &&
+            e.response?.data['code'] == 'INVALID_TOKEN') {
           // Token refresh retry
           final newToken = await getValidIdToken(forceRefresh: true);
           final retryOpts = e.requestOptions;
-          retryOpts.data = {'intentId': intentId, 'amountPaise': amountPaise, 'idToken': newToken};
+          retryOpts.data = {
+            'intentId': intentId,
+            'amountPaise': amountPaise,
+            'idToken': newToken,
+          };
           final retryResponse = await _api.dio.fetch(retryOpts);
           if (retryResponse.data['success'] == true) return true;
         }
@@ -402,17 +440,12 @@ Future<IntentModel> getIntent(String intentId) async {
     });
   }
 
-
   Future<String> createCloseIntent({required String loanId}) async {
     return await handleApiCall(() async {
       final idToken = await getValidIdToken();
       final response = await _api.post(
         '/intents',
-        data: {
-          'loanId': loanId,
-          'action': 'CLOSE_LOAN',
-          'idToken': idToken,
-        },
+        data: {'loanId': loanId, 'action': 'CLOSE_LOAN', 'idToken': idToken},
       );
       if (response.statusCode == 201) {
         return response.data['intentId'] as String;
@@ -421,7 +454,10 @@ Future<IntentModel> getIntent(String intentId) async {
     });
   }
 
-  Future<bool> commitClose({required String loanId, required String intentId}) async {
+  Future<bool> commitClose({
+    required String loanId,
+    required String intentId,
+  }) async {
     return await handleApiCall(() async {
       try {
         final idToken = await getValidIdToken();
@@ -431,7 +467,8 @@ Future<IntentModel> getIntent(String intentId) async {
         );
         return response.statusCode == 200;
       } on DioException catch (e) {
-        if (e.response?.statusCode == 401 && e.response?.data['code'] == 'INVALID_TOKEN') {
+        if (e.response?.statusCode == 401 &&
+            e.response?.data['code'] == 'INVALID_TOKEN') {
           final newToken = await getValidIdToken(forceRefresh: true);
           final retryOpts = e.requestOptions;
           retryOpts.data = {'intentId': intentId, 'idToken': newToken};

@@ -245,13 +245,12 @@ class _TopBarState extends State<_TopBar> {
   }
 
   Future<void> _fetchLocation() async {
-    
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      
+
       if (!serviceEnabled) {
         Position? lastPos = await Geolocator.getLastKnownPosition();
-        
+
         if (lastPos != null) {
           await _decodeAndSetLocation(lastPos);
           return;
@@ -261,10 +260,10 @@ class _TopBarState extends State<_TopBar> {
       }
 
       LocationPermission permission = await Geolocator.checkPermission();
-      
+
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
-        
+
         if (permission == LocationPermission.denied) {
           if (mounted) setState(() => locationText = 'Location Denied');
           return;
@@ -282,11 +281,9 @@ class _TopBarState extends State<_TopBar> {
           timeLimit: Duration(seconds: 10),
         ),
       );
-      
 
       await _decodeAndSetLocation(position);
     } catch (e) {
-      
       try {
         Position? lastPos = await Geolocator.getLastKnownPosition();
         if (lastPos != null) {
@@ -302,15 +299,13 @@ class _TopBarState extends State<_TopBar> {
 
   Future<void> _decodeAndSetLocation(Position position) async {
     try {
-      
       List<Placemark> placemarks = await placemarkFromCoordinates(
         position.latitude,
         position.longitude,
       );
-      
+
       if (placemarks.isNotEmpty) {
         Placemark place = placemarks[0];
-        
 
         // Select the most precise city/town/village name
         String city = 'Unknown';
@@ -335,16 +330,14 @@ class _TopBarState extends State<_TopBar> {
             ? _getStateAbbreviation(place.administrativeArea!)
             : '';
         String finalLoc = '$city${state.isNotEmpty ? ', $state' : ''}';
-        
+
         if (mounted) {
           setState(() {
             locationText = finalLoc;
           });
         }
       }
-    } catch (e) {
-      
-    }
+    } catch (e) {}
   }
 
   String _getStateAbbreviation(String state) {
@@ -814,32 +807,35 @@ class _PaymentsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<LoanCubit, LoanState>(
-        builder: (context, state) {
-          if (state is LoanError) {
-            return Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text('Failed to load loans', style: TextStyle(color: Colors.red, fontSize: 14.sp)),
-                    SizedBox(height: 8.h),
-                    TextButton(
-                      onPressed: () => context.read<LoanCubit>().fetchLoans(),
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
+      builder: (context, state) {
+        if (state is LoanError) {
+          return Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Failed to load loans',
+                    style: TextStyle(color: Colors.red, fontSize: 14.sp),
+                  ),
+                  SizedBox(height: 8.h),
+                  TextButton(
+                    onPressed: () => context.read<LoanCubit>().fetchLoans(),
+                    child: const Text('Retry'),
+                  ),
+                ],
               ),
-            );
-          }
-          
-          if (state is! LoansLoaded) {
-            return Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
-              child: const Center(child: CircularProgressIndicator()),
-            );
-          }
+            ),
+          );
+        }
+
+        if (state is! LoansLoaded) {
+          return Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
+            child: const Center(child: CircularProgressIndicator()),
+          );
+        }
 
         final loans = state.myLoans;
         final now = DateTime.now();
@@ -848,8 +844,7 @@ class _PaymentsSection extends StatelessWidget {
         List<Map<String, dynamic>> dueList = [];
 
         for (final loan in loans) {
-          if (loan.loanStatus.isFinished ||
-              loan.loanStatus.isPending) {
+          if (loan.loanStatus.isFinished || loan.loanStatus.isPending) {
             continue;
           }
 
@@ -1275,4 +1270,3 @@ class _ExploreCard extends StatelessWidget {
     );
   }
 }
-

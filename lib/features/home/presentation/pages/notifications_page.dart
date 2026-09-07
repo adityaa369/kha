@@ -33,7 +33,8 @@ class NotificationsPage extends StatelessWidget {
           }
 
           return RefreshIndicator(
-            onRefresh: () => context.read<NotificationCubit>().fetchNotifications(),
+            onRefresh: () =>
+                context.read<NotificationCubit>().fetchNotifications(),
             color: KhaataTheme.primaryBlue,
             child: notifications.isEmpty
                 ? ListView(
@@ -65,7 +66,9 @@ class NotificationsPage extends StatelessWidget {
                       final notif = notifications[index];
                       return _NotificationTile(
                         notification: notif,
-                        onTap: () => context.read<NotificationCubit>().markAsRead(notif, index),
+                        onTap: () => context
+                            .read<NotificationCubit>()
+                            .markAsRead(notif, index),
                       );
                     },
                   ),
@@ -91,10 +94,14 @@ class _NotificationTile extends StatelessWidget {
         margin: EdgeInsets.only(bottom: 12.h),
         padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(
-          color: isRead ? Colors.white : const Color(0xFFF0F7FF), // slight blue tint if unread
+          color: isRead
+              ? Colors.white
+              : const Color(0xFFF0F7FF), // slight blue tint if unread
           borderRadius: BorderRadius.circular(16.r),
           border: Border.all(
-            color: isRead ? Colors.grey.shade200 : KhaataTheme.primaryBlue.withValues(alpha: 0.3),
+            color: isRead
+                ? Colors.grey.shade200
+                : KhaataTheme.primaryBlue.withValues(alpha: 0.3),
           ),
         ),
         child: Row(
@@ -103,7 +110,9 @@ class _NotificationTile extends StatelessWidget {
             Container(
               padding: EdgeInsets.all(10.w),
               decoration: BoxDecoration(
-                color: isRead ? Colors.grey.shade100 : KhaataTheme.primaryBlue.withValues(alpha: 0.1),
+                color: isRead
+                    ? Colors.grey.shade100
+                    : KhaataTheme.primaryBlue.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -125,7 +134,9 @@ class _NotificationTile extends StatelessWidget {
                           notification.title,
                           style: TextStyle(
                             fontSize: 16.sp,
-                            fontWeight: isRead ? FontWeight.w600 : FontWeight.bold,
+                            fontWeight: isRead
+                                ? FontWeight.w600
+                                : FontWeight.bold,
                             color: KhaataTheme.textDark,
                           ),
                         ),

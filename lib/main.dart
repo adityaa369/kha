@@ -45,15 +45,10 @@ void main() async {
               ? const AppleDebugProvider()
               : const AppleDeviceCheckProvider(),
         );
-        
-      } catch (e) {
-        
-      }
+      } catch (e) {}
       try {
         NotificationService.initialize();
-      } catch (e) {
-        
-      }
+      } catch (e) {}
     });
 
     await dotenv.load(fileName: ".env");
@@ -92,11 +87,26 @@ void main() async {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.error_outline, color: KhaataTheme.primaryBlue, size: 60),
+                const Icon(
+                  Icons.error_outline,
+                  color: KhaataTheme.primaryBlue,
+                  size: 60,
+                ),
                 const SizedBox(height: 16),
-                const Text('Something went wrong', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
+                const Text(
+                  'Something went wrong',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
                 const SizedBox(height: 8),
-                Text(details.exceptionAsString(), textAlign: TextAlign.center, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                Text(
+                  details.exceptionAsString(),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
               ],
             ),
           ),
@@ -143,95 +153,132 @@ class KhaataApp extends StatelessWidget {
           BlocProvider.value(value: systemStateCubit),
           BlocProvider(create: (_) => AuthCubit()..checkAuthStatus()),
           BlocProvider(create: (_) => LoanCubit()),
-          BlocProvider(create: (context) => PortfolioCubit(context.read<LoanRepository>())),
-          BlocProvider(create: (context) => ChitFundCubit(context.read<ChitFundRepository>())),
-          BlocProvider(create: (_) => NotificationCubit(ApiClient())..fetchNotifications()),
+          BlocProvider(
+            create: (context) => PortfolioCubit(context.read<LoanRepository>()),
+          ),
+          BlocProvider(
+            create: (context) =>
+                ChitFundCubit(context.read<ChitFundRepository>()),
+          ),
+          BlocProvider(
+            create: (_) => NotificationCubit(ApiClient())..fetchNotifications(),
+          ),
           BlocProvider<AdminCubit>(create: (_) => AdminCubit()),
         ],
         child: NotificationListenerWidget(
-        child: ScreenUtilInit(
-          designSize: const Size(375, 812),
-          minTextAdapt: true,
-          splitScreenMode: true,
-          builder: (context, child) {
-            return MaterialApp.router(
-              debugShowCheckedModeBanner: false,
-              title: 'Khaata',
-              theme: KhaataTheme.lightTheme,
-              routerConfig: router,
-              builder: (context, routerWidget) {
-                return BlocBuilder<SystemStateCubit, SystemState>(
-                  builder: (context, systemState) {
-                    return Stack(
-                      children: [
-                        if (routerWidget != null) routerWidget,
-                        if (systemState == SystemState.financialOperationsPaused)
-                          Positioned(
-                            top: 40.h,
-                            left: 16.w,
-                            right: 16.w,
-                            child: Material(
-                              color: Colors.transparent,
-                              child: Container(
-                                padding: EdgeInsets.all(16.w),
-                                decoration: BoxDecoration(
-                                  color: Colors.red.shade900,
-                                  borderRadius: BorderRadius.circular(12.r),
-                                  boxShadow: const [
-                                    BoxShadow(color: Colors.black26, blurRadius: 8, offset: Offset(0, 4))
-                                  ]
-                                ),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Icon(Icons.warning_amber_rounded, color: Colors.white, size: 24.sp),
-                                        SizedBox(width: 12.w),
-                                        Expanded(
-                                          child: Text(
-                                            '🔴 SERVICE PAUSED\nFinancial operations are temporarily unavailable. Your funds are safe.',
-                                            style: TextStyle(color: Colors.white, fontSize: 13.sp, fontWeight: FontWeight.bold),
+          child: ScreenUtilInit(
+            designSize: const Size(375, 812),
+            minTextAdapt: true,
+            splitScreenMode: true,
+            builder: (context, child) {
+              return MaterialApp.router(
+                debugShowCheckedModeBanner: false,
+                title: 'Khaata',
+                theme: KhaataTheme.lightTheme,
+                routerConfig: router,
+                builder: (context, routerWidget) {
+                  return BlocBuilder<SystemStateCubit, SystemState>(
+                    builder: (context, systemState) {
+                      return Stack(
+                        children: [
+                          if (routerWidget != null) routerWidget,
+                          if (systemState ==
+                              SystemState.financialOperationsPaused)
+                            Positioned(
+                              top: 40.h,
+                              left: 16.w,
+                              right: 16.w,
+                              child: Material(
+                                color: Colors.transparent,
+                                child: Container(
+                                  padding: EdgeInsets.all(16.w),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red.shade900,
+                                    borderRadius: BorderRadius.circular(12.r),
+                                    boxShadow: const [
+                                      BoxShadow(
+                                        color: Colors.black26,
+                                        blurRadius: 8,
+                                        offset: Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.warning_amber_rounded,
+                                            color: Colors.white,
+                                            size: 24.sp,
+                                          ),
+                                          SizedBox(width: 12.w),
+                                          Expanded(
+                                            child: Text(
+                                              '🔴 SERVICE PAUSED\nFinancial operations are temporarily unavailable. Your funds are safe.',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 13.sp,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      SizedBox(height: 12.h),
+                                      ElevatedButton(
+                                        onPressed: () async {
+                                          try {
+                                            final response = await ApiClient()
+                                                .dio
+                                                .get(
+                                                  'https://khataa-backend.onrender.com/health/live',
+                                                );
+                                            if (response.statusCode == 200) {
+                                              if (context.mounted) {
+                                                context
+                                                    .read<SystemStateCubit>()
+                                                    .resumeOperations();
+                                                ScaffoldMessenger.of(
+                                                  context,
+                                                ).showSnackBar(
+                                                  const SnackBar(
+                                                    content: Text(
+                                                      'Operations resumed successfully!',
+                                                    ),
+                                                  ),
+                                                );
+                                              }
+                                            }
+                                          } catch (e) {}
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.white,
+                                          foregroundColor: Colors.red.shade900,
+                                          minimumSize: Size(
+                                            double.infinity,
+                                            36.h,
                                           ),
                                         ),
-                                      ],
-                                    ),
-                                    SizedBox(height: 12.h),
-                                    ElevatedButton(
-                                      onPressed: () async {
-                                        try {
-                                          final response = await ApiClient().dio.get('https://khataa-backend.onrender.com/health/live');
-                                          if (response.statusCode == 200) {
-                                            if (context.mounted) {
-                                              context.read<SystemStateCubit>().resumeOperations();
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                const SnackBar(content: Text('Operations resumed successfully!'))
-                                              );
-                                            }
-                                          }
-                                        } catch (e) {}
-                                      },
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.white,
-                                        foregroundColor: Colors.red.shade900,
-                                        minimumSize: Size(double.infinity, 36.h),
+                                        child: const Text(
+                                          'Check Status / Retry',
+                                        ),
                                       ),
-                                      child: const Text('Check Status / Retry'),
-                                    )
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                      ],
-                    );
-                  },
-                );
-              },
-            );
-          },
+                        ],
+                      );
+                    },
+                  );
+                },
+              );
+            },
+          ),
         ),
-      ),
       ),
     );
   }
@@ -251,21 +298,23 @@ class _NotificationListenerWidgetState
   StreamSubscription? _sub;
   StreamSubscription? _openSub;
 
-Future<void> _handleNotificationRouting(RemoteMessage message) async {
+  Future<void> _handleNotificationRouting(RemoteMessage message) async {
     final type = message.data['type'] as String?;
     final loanId = message.data['loanId'] as String?;
     final intentId = message.data['intentId'] as String?;
     final eventId = message.data['eventId'] as String?; // UI dedup if necessary
 
-    if (type == 'PAYMENT_COMMITTED' || 
-        type == 'CREDIT_ADDED' || 
-        type == 'LOAN_ACCEPTED' || 
-        type == 'LOAN_CLOSED' || 
+    if (type == 'PAYMENT_COMMITTED' ||
+        type == 'CREDIT_ADDED' ||
+        type == 'LOAN_ACCEPTED' ||
+        type == 'LOAN_CLOSED' ||
         type == 'LOAN_FROZEN') {
       if (loanId != null) router.go('${AppConstants.loanDetails}/$loanId');
-    } else if (type == 'LOAN_CREATED' || type == 'LOAN_OTP' || type == 'LOAN_INIT_OTP') {
+    } else if (type == 'LOAN_CREATED' ||
+        type == 'LOAN_OTP' ||
+        type == 'LOAN_INIT_OTP') {
       if (loanId != null) {
-        // We can go to approval directly, or loan details. 
+        // We can go to approval directly, or loan details.
         // We'll map to approval to be explicit.
         router.go('${AppConstants.loanApproval}/$loanId');
       } else {
@@ -304,7 +353,7 @@ Future<void> _handleNotificationRouting(RemoteMessage message) async {
       _handleNotificationRouting(message);
     });
 
-FirebaseMessaging.instance.getInitialMessage().then((
+    FirebaseMessaging.instance.getInitialMessage().then((
       RemoteMessage? message,
     ) {
       if (message != null) {
@@ -326,7 +375,3 @@ FirebaseMessaging.instance.getInitialMessage().then((
   @override
   Widget build(BuildContext context) => widget.child;
 }
-
-
-
-

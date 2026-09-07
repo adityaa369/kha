@@ -19,8 +19,16 @@ enum LoanStatus {
   final String value;
   const LoanStatus(this.value);
 
-  bool get isPending => this == LoanStatus.pendingApproval || this == LoanStatus.pendingOtp;
-  bool get isFinished => this == LoanStatus.completed || this == LoanStatus.closed || this == LoanStatus.defaulted || this == LoanStatus.rejected || this == LoanStatus.cancelled || this == LoanStatus.expired || this == LoanStatus.unknown;
+  bool get isPending =>
+      this == LoanStatus.pendingApproval || this == LoanStatus.pendingOtp;
+  bool get isFinished =>
+      this == LoanStatus.completed ||
+      this == LoanStatus.closed ||
+      this == LoanStatus.defaulted ||
+      this == LoanStatus.rejected ||
+      this == LoanStatus.cancelled ||
+      this == LoanStatus.expired ||
+      this == LoanStatus.unknown;
 
   factory LoanStatus.fromString(String status) {
     return LoanStatus.values.firstWhere(
@@ -49,14 +57,17 @@ class TransactionModel extends Equatable {
     return TransactionModel(
       type: json['type'] ?? 'payment',
       amountPaise: (() {
-      if (json['amountPaise'] is int) return json['amountPaise'];
-      if (json['amountPaise'] is double) return (json['amountPaise'] as double).toInt();
-      if (json['amountPaise'] != null) {
-        final parsed = int.tryParse(json['amountPaise'].toString());
-        if (parsed != null) return parsed;
-      }
-      throw FormatException('Missing or invalid amountPaise in transaction response');
-    })(),
+        if (json['amountPaise'] is int) return json['amountPaise'];
+        if (json['amountPaise'] is double)
+          return (json['amountPaise'] as double).toInt();
+        if (json['amountPaise'] != null) {
+          final parsed = int.tryParse(json['amountPaise'].toString());
+          if (parsed != null) return parsed;
+        }
+        throw FormatException(
+          'Missing or invalid amountPaise in transaction response',
+        );
+      })(),
       note: json['note'],
       recordedAt: _parseDate(json['recordedAt']),
       recordedBy: json['recordedBy'],
@@ -96,7 +107,9 @@ class MonthTrackingModel extends Equatable {
     return MonthTrackingModel(
       monthIndex: json['monthIndex'] as int? ?? 1,
       status: json['status'] as String? ?? 'unpaid',
-      markedPaidAt: json['markedPaidAt'] != null ? DateTime.tryParse(json['markedPaidAt'].toString()) : null,
+      markedPaidAt: json['markedPaidAt'] != null
+          ? DateTime.tryParse(json['markedPaidAt'].toString())
+          : null,
       markedBy: json['markedBy'] as String?,
     );
   }
@@ -126,7 +139,7 @@ class LoanModel extends Equatable {
   final String? aadhar;
   final DateTime? createdAt;
   final DateTime? updatedAt;
-  
+
   final int emiAmountPaise;
   final int totalPayablePaise;
   final int paidAmountPaise;
@@ -175,14 +188,16 @@ class LoanModel extends Equatable {
   });
 
   factory LoanModel.fromJson(Map<String, dynamic> json) {
-        int parsePaiseStrict(String paiseKey) {
+    int parsePaiseStrict(String paiseKey) {
       if (json[paiseKey] is int) return json[paiseKey];
       if (json[paiseKey] is double) return (json[paiseKey] as double).toInt();
       if (json[paiseKey] != null) {
         final parsed = int.tryParse(json[paiseKey].toString());
         if (parsed != null) return parsed;
       }
-      throw FormatException('Missing or invalid ' + paiseKey + ' in financial response');
+      throw FormatException(
+        'Missing or invalid ' + paiseKey + ' in financial response',
+      );
     }
 
     int parsePaiseOptional(String paiseKey) {
@@ -196,14 +211,18 @@ class LoanModel extends Equatable {
 
     List<TransactionModel> parseTransactions(dynamic txns) {
       if (txns is List) {
-        return txns.map((t) => TransactionModel.fromJson(t as Map<String, dynamic>)).toList();
+        return txns
+            .map((t) => TransactionModel.fromJson(t as Map<String, dynamic>))
+            .toList();
       }
       return [];
     }
 
     List<MonthTrackingModel> parseMonthsTracking(dynamic months) {
       if (months is List) {
-        return months.map((m) => MonthTrackingModel.fromJson(m as Map<String, dynamic>)).toList();
+        return months
+            .map((m) => MonthTrackingModel.fromJson(m as Map<String, dynamic>))
+            .toList();
       }
       return [];
     }
@@ -214,24 +233,42 @@ class LoanModel extends Equatable {
       userId: json['user_id']?.toString() ?? json['borrower']?.toString(),
       borrowerName: json['borrowerName'] ?? json['borrower_name'] ?? '',
       lenderName: json['lenderName'] ?? json['lender_name'],
-      lenderPhone: json['lenderPhone']?.toString() ?? json['lender_phone']?.toString(),
-      initials: json['initials'] ?? _generateInitials(json['lenderName'] ?? json['borrowerName'] ?? json['borrower_name'] ?? ''),
+      lenderPhone:
+          json['lenderPhone']?.toString() ?? json['lender_phone']?.toString(),
+      initials:
+          json['initials'] ??
+          _generateInitials(
+            json['lenderName'] ??
+                json['borrowerName'] ??
+                json['borrower_name'] ??
+                '',
+          ),
       amountPaise: parsePaiseStrict('amountPaise'),
-      interestRate: _parseDouble(json['interestRate']) ?? _parseDouble(json['interest_rate']),
+      interestRate:
+          _parseDouble(json['interestRate']) ??
+          _parseDouble(json['interest_rate']),
       durationMonths: json['durationMonths'] is int
           ? json['durationMonths']
           : int.tryParse(json['durationMonths']?.toString() ?? ''),
       status: json['status'] ?? 'pending_approval',
       progress: _parseDouble(json['progress']) ?? 0.0,
-      startDate: TransactionModel._parseDate(json['startDate'] ?? json['start_date']),
+      startDate: TransactionModel._parseDate(
+        json['startDate'] ?? json['start_date'],
+      ),
       endDate: TransactionModel._parseDate(json['endDate'] ?? json['end_date']),
-      activatedAt: TransactionModel._parseDate(json['activatedAt'] ?? json['activated_at']),
+      activatedAt: TransactionModel._parseDate(
+        json['activatedAt'] ?? json['activated_at'],
+      ),
       type: json['loanType'] ?? json['type'] ?? 'personal',
       mobile: json['borrowerPhone']?.toString() ?? json['mobile']?.toString(),
       aadhar: json['borrowerAadhar']?.toString() ?? json['aadhar']?.toString(),
-      createdAt: TransactionModel._parseDate(json['createdAt'] ?? json['created_at']),
-      updatedAt: TransactionModel._parseDate(json['updatedAt'] ?? json['updated_at']),
-      
+      createdAt: TransactionModel._parseDate(
+        json['createdAt'] ?? json['created_at'],
+      ),
+      updatedAt: TransactionModel._parseDate(
+        json['updatedAt'] ?? json['updated_at'],
+      ),
+
       emiAmountPaise: parsePaiseOptional('emiAmountPaise'),
       totalPayablePaise: parsePaiseOptional('totalPayablePaise'),
       paidAmountPaise: parsePaiseOptional('paidAmountPaise'),
@@ -286,13 +323,15 @@ class LoanModel extends Equatable {
   double get amount => amountPaise / 100;
   double get emiAmount => emiAmountPaise / 100;
   double get totalPayableAmount => totalPayablePaise / 100;
-  
+
   // 4F-4 Presentation-derived total
-  int get totalOutstandingPaise => principalOutstandingPaise + interestOutstandingPaise + feesOutstandingPaise;
+  int get totalOutstandingPaise =>
+      principalOutstandingPaise +
+      interestOutstandingPaise +
+      feesOutstandingPaise;
   double get totalOutstandingAmount => totalOutstandingPaise / 100;
   double get paidAmount => paidAmountPaise / 100;
 
-  
   String? get otp => id.length >= 6 ? id.substring(0, 6) : null;
   LoanStatus get loanStatus => LoanStatus.fromString(status);
   double? get totalPayable => totalPayablePaise > 0 ? totalPayableAmount : null;
@@ -316,7 +355,8 @@ class LoanModel extends Equatable {
   }
 
   double get remainingAmount {
-    if (totalPayablePaise > 0) return (totalPayablePaise - paidAmountPaise) / 100;
+    if (totalPayablePaise > 0)
+      return (totalPayablePaise - paidAmountPaise) / 100;
     return (amountPaise - paidAmountPaise) / 100;
   }
 
@@ -355,24 +395,45 @@ class LoanModel extends Equatable {
 
   String get statusDisplay {
     switch (status) {
-      case 'pending_approval': return 'Pending Approval';
-      case 'pending_otp': return 'Pending Setup';
-      case 'active': return 'On Track';
-      case 'due_soon': return 'Due Soon';
-      case 'overdue': return 'Overdue';
+      case 'pending_approval':
+        return 'Pending Approval';
+      case 'pending_otp':
+        return 'Pending Setup';
+      case 'active':
+        return 'On Track';
+      case 'due_soon':
+        return 'Due Soon';
+      case 'overdue':
+        return 'Overdue';
       case 'completed':
-      case 'closed': return 'Completed';
-      case 'defaulted': return 'Defaulted';
-      default: return 'Active';
+      case 'closed':
+        return 'Completed';
+      case 'defaulted':
+        return 'Defaulted';
+      default:
+        return 'Active';
     }
   }
 
   @override
   List<Object?> get props => [
-    id, lenderId, userId, borrowerName, lenderName, lenderPhone,
-    amountPaise, status, progress, startDate, type, emiAmountPaise,
-    totalPayablePaise, documentId, pendingIntentId, paidAmountPaise, transactions, monthsTracking
+    id,
+    lenderId,
+    userId,
+    borrowerName,
+    lenderName,
+    lenderPhone,
+    amountPaise,
+    status,
+    progress,
+    startDate,
+    type,
+    emiAmountPaise,
+    totalPayablePaise,
+    documentId,
+    pendingIntentId,
+    paidAmountPaise,
+    transactions,
+    monthsTracking,
   ];
 }
-
-

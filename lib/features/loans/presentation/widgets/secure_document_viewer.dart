@@ -1,19 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-
 import '../../../../data/repositories/loan_repository.dart';
 import '../../../../core/error/failures.dart';
 
 class SecureDocumentViewer extends StatefulWidget {
   final String documentId;
-  
 
-  const SecureDocumentViewer({
-    super.key,
-    required this.documentId,
-    
-  });
+  const SecureDocumentViewer({super.key, required this.documentId});
 
   @override
   State<SecureDocumentViewer> createState() => _SecureDocumentViewerState();
@@ -37,7 +31,9 @@ class _SecureDocumentViewerState extends State<SecureDocumentViewer> {
     });
 
     try {
-      final url = await context.read<LoanRepository>().getSignedDocumentUrl(widget.documentId);
+      final url = await context.read<LoanRepository>().getSignedDocumentUrl(
+        widget.documentId,
+      );
       if (mounted) {
         setState(() {
           _response = url;
@@ -79,7 +75,11 @@ class _SecureDocumentViewerState extends State<SecureDocumentViewer> {
           children: [
             Icon(Icons.error_outline, color: Colors.red.shade400, size: 48),
             const SizedBox(height: 16),
-            Text(_error!, textAlign: TextAlign.center, style: const TextStyle(color: Colors.black87)),
+            Text(
+              _error!,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.black87),
+            ),
             const SizedBox(height: 16),
             ElevatedButton.icon(
               onPressed: _fetchSignedUrl,
@@ -103,13 +103,20 @@ class _SecureDocumentViewerState extends State<SecureDocumentViewer> {
           children: [
             const Icon(Icons.picture_as_pdf, size: 64, color: Colors.redAccent),
             const SizedBox(height: 16),
-            const Text('PDF loaded securely.', style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text(
+              'PDF loaded securely.',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 8),
             ElevatedButton.icon(
               onPressed: () {
                 // In a real app, open flutter_pdfview or similar here.
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Opening PDF is not supported in this test env.')),
+                  const SnackBar(
+                    content: Text(
+                      'Opening PDF is not supported in this test env.',
+                    ),
+                  ),
                 );
               },
               icon: const Icon(Icons.open_in_new),
@@ -125,9 +132,8 @@ class _SecureDocumentViewerState extends State<SecureDocumentViewer> {
     return Image.network(
       _response!.url,
       fit: BoxFit.contain,
-      loadingBuilder: (ctx, child, p) => p == null
-          ? child
-          : const Center(child: CircularProgressIndicator()),
+      loadingBuilder: (ctx, child, p) =>
+          p == null ? child : const Center(child: CircularProgressIndicator()),
       errorBuilder: (_, __, ___) => Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,

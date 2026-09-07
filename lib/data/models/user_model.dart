@@ -40,7 +40,8 @@ class UserModel extends Equatable {
       lastName: json['lastName'] ?? json['last_name'] ?? '',
       phone: json['phone'] ?? '',
       email: json['email'],
-      isEmailVerified: json['isEmailVerified'] ?? json['is_email_verified'] ?? false,
+      isEmailVerified:
+          json['isEmailVerified'] ?? json['is_email_verified'] ?? false,
       isAdmin: json['isAdmin'] ?? json['is_admin'] ?? false,
       pan: json['pan'],
       aadhar: json['aadhar'],
@@ -127,13 +128,13 @@ class UserModel extends Equatable {
   }
 
   bool get isKycComplete =>
-      (backendKycComplete == true) || 
+      (backendKycComplete == true) ||
       (pan != null &&
-      pan!.isNotEmpty &&
-      aadhar != null &&
-      aadhar!.isNotEmpty &&
-      dob != null &&
-      dob!.isNotEmpty);
+          pan!.isNotEmpty &&
+          aadhar != null &&
+          aadhar!.isNotEmpty &&
+          dob != null &&
+          dob!.isNotEmpty);
 
   @override
   List<Object?> get props => [

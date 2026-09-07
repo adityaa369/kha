@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('Sprint 3.8 - Mobile Security & Hardening', () {
-    
     test('MOB-001 to MOB-003: Secure Storage Implementation', () {
       // print("[PASS] MOB-001: Tokens are stored in FlutterSecureStorage (EncryptedSharedPreferences/Keychain), NOT SharedPreferences.");
       // print("[PASS] MOB-002: Refresh Token successfully uses SecureStorage alongside Access Token.");
@@ -35,6 +34,5 @@ void main() {
       // print("[PASS] MOB-019: iOS KeychainAccessibility explicitly set to 'first_unlock_this_device'.");
       expect(true, isTrue);
     });
-    
   });
 }

@@ -85,12 +85,14 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
   void _requestOtp() async {
     if (_loan == null) return;
     setState(() => _isApproving = true);
-    
-    final success = await context.read<LoanCubit>().requestConsentOtp(_loan!.id);
-    
+
+    final success = await context.read<LoanCubit>().requestConsentOtp(
+      _loan!.id,
+    );
+
     if (!mounted) return;
     setState(() => _isApproving = false);
-    
+
     if (success) {
       setState(() {
         _isOtpSent = true;
@@ -98,14 +100,20 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
       _startResendTimer();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('OTP requested successfully', style: TextStyle(color: Colors.white)),
+          content: Text(
+            'OTP requested successfully',
+            style: TextStyle(color: Colors.white),
+          ),
           backgroundColor: Colors.green,
         ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Failed to request OTP', style: TextStyle(color: Colors.white)),
+          content: Text(
+            'Failed to request OTP',
+            style: TextStyle(color: Colors.white),
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -114,7 +122,7 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
 
   void _approveLoan() async {
     if (_loan == null) return;
-    
+
     final authenticated = await BiometricAuthService.authenticate();
     if (!authenticated) {
       if (mounted) {
@@ -129,11 +137,14 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
     }
 
     if (!mounted) return;
-    
+
     if (_loan!.pendingIntentId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Missing consent intent. Please refresh.', style: TextStyle(color: Colors.white)),
+          content: Text(
+            'Missing consent intent. Please refresh.',
+            style: TextStyle(color: Colors.white),
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -142,7 +153,11 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
 
     setState(() => _isApproving = true);
 
-    final success = await context.read<LoanCubit>().verifyLoan(_loan!.id, _loan!.pendingIntentId!, _currentOtp);
+    final success = await context.read<LoanCubit>().verifyLoan(
+      _loan!.id,
+      _loan!.pendingIntentId!,
+      _currentOtp,
+    );
 
     if (mounted) {
       setState(() => _isApproving = false);
@@ -151,7 +166,10 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
     if (success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Agreement accepted successfully!', style: TextStyle(color: Colors.white)),
+          content: Text(
+            'Agreement accepted successfully!',
+            style: TextStyle(color: Colors.white),
+          ),
           backgroundColor: Colors.green,
         ),
       );
@@ -189,9 +207,7 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
           backgroundColor: Colors.white,
           foregroundColor: KhaataTheme.textDark,
         ),
-        body: const Center(
-          child: Text('Loan not found.'),
-        ),
+        body: const Center(child: Text('Loan not found.')),
       );
     }
 
@@ -230,10 +246,7 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(
-                      Icons.pending_actions,
-                      color: Color(0xFFF59E0B),
-                    ),
+                    const Icon(Icons.pending_actions, color: Color(0xFFF59E0B)),
                     SizedBox(width: 12.w),
                     Expanded(
                       child: Text(
@@ -254,10 +267,7 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
               // Lender Info
               Text(
                 'Lender',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  color: Colors.grey[600],
-                ),
+                style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
               ),
               SizedBox(height: 4.h),
               Text(
@@ -319,15 +329,13 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
                       value: '${loan.durationMonths} Months',
                     ),
                     SizedBox(height: 12.h),
-                    _DetailRow(
-                      label: 'Type',
-                      value: loan.type.toUpperCase(),
-                    ),
+                    _DetailRow(label: 'Type', value: loan.type.toUpperCase()),
                     SizedBox(height: 12.h),
                     _DetailRow(
                       label: 'Date',
-                      value: DateFormat('MMM dd, yyyy')
-                          .format(loan.createdAt ?? DateTime.now()),
+                      value: DateFormat(
+                        'MMM dd, yyyy',
+                      ).format(loan.createdAt ?? DateTime.now()),
                     ),
                   ],
                 ),
@@ -352,7 +360,10 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
               if (loan.status == 'pending_approval' && _isOtpSent) ...[
                 Text(
                   'Enter 6-digit OTP sent to your phone',
-                  style: TextStyle(fontSize: 14.sp, color: KhaataTheme.textGrey),
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    color: KhaataTheme.textGrey,
+                  ),
                 ),
                 SizedBox(height: 16.h),
                 PinCodeTextField(
@@ -386,7 +397,10 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
                   children: [
                     Text(
                       'Didn\'t receive code? ',
-                      style: TextStyle(fontSize: 14.sp, color: KhaataTheme.textGrey),
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color: KhaataTheme.textGrey,
+                      ),
                     ),
                     TextButton(
                       onPressed: _canResend ? _requestOtp : null,
@@ -395,7 +409,9 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
                         style: TextStyle(
                           fontSize: 14.sp,
                           fontWeight: FontWeight.w600,
-                          color: _canResend ? KhaataTheme.primaryBlue : Colors.grey[400],
+                          color: _canResend
+                              ? KhaataTheme.primaryBlue
+                              : Colors.grey[400],
                         ),
                       ),
                     ),
@@ -418,7 +434,7 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
                   ),
                 ),
               ],
-              
+
               SizedBox(height: 16.h),
               if (loan.status == 'pending_approval')
                 SizedBox(
@@ -451,10 +467,7 @@ class _DetailRow extends StatelessWidget {
   final String label;
   final String value;
 
-  const _DetailRow({
-    required this.label,
-    required this.value,
-  });
+  const _DetailRow({required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
@@ -463,10 +476,7 @@ class _DetailRow extends StatelessWidget {
       children: [
         Text(
           label,
-          style: TextStyle(
-            color: Colors.grey[600],
-            fontSize: 14.sp,
-          ),
+          style: TextStyle(color: Colors.grey[600], fontSize: 14.sp),
         ),
         Text(
           value,

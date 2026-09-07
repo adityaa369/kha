@@ -97,7 +97,8 @@ class _SplashPageState extends State<SplashPage>
       // Token valid, but require Biometric Unlock
       setState(() => _isLocked = true);
       _attemptBiometricUnlock(showFailureMessage: false);
-    } else if (state is AuthenticatedEmailVerifiedKycIncomplete || state is AuthenticatedEmailUnverified) {
+    } else if (state is AuthenticatedEmailVerifiedKycIncomplete ||
+        state is AuthenticatedEmailUnverified) {
       context.go(AppConstants.home);
     } else if (state is Unauthenticated || state is AuthError) {
       context.go(AppConstants.login);
@@ -111,7 +112,10 @@ class _SplashPageState extends State<SplashPage>
     if (authenticated && mounted) {
       context.go(AppConstants.home);
     } else if (mounted && showFailureMessage) {
-      DialogUtils.showErrorDialog(context, 'Authentication failed. Please try again.');
+      DialogUtils.showErrorDialog(
+        context,
+        'Authentication failed. Please try again.',
+      );
     }
   }
 

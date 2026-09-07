@@ -163,7 +163,10 @@ class ProfilePage extends StatelessWidget {
                                       )
                                     : InkWell(
                                         onTap: () {
-                                          VerifyEmailBottomSheet.show(context, email!);
+                                          VerifyEmailBottomSheet.show(
+                                            context,
+                                            email!,
+                                          );
                                         },
                                         borderRadius: BorderRadius.circular(
                                           12.r,
@@ -224,12 +227,25 @@ class ProfilePage extends StatelessWidget {
                             ListTile(
                               leading: Container(
                                 padding: EdgeInsets.all(8.w),
-                                decoration: BoxDecoration(color: const Color(0xFFD1FAE5), borderRadius: BorderRadius.circular(8.r)),
-                                child: const Icon(Icons.admin_panel_settings, color: Color(0xFF059669), size: 20),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFD1FAE5),
+                                  borderRadius: BorderRadius.circular(8.r),
+                                ),
+                                child: const Icon(
+                                  Icons.admin_panel_settings,
+                                  color: Color(0xFF059669),
+                                  size: 20,
+                                ),
                               ),
-                              title: const Text('Admin Dashboard', style: TextStyle(fontWeight: FontWeight.w600)),
+                              title: const Text(
+                                'Admin Dashboard',
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
                               subtitle: const Text('Platform management'),
-                              trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+                              trailing: const Icon(
+                                Icons.chevron_right,
+                                color: Colors.grey,
+                              ),
                               onTap: () => context.push('/admin'),
                             ),
                             Divider(color: Colors.grey.shade200),
@@ -238,12 +254,14 @@ class ProfilePage extends StatelessWidget {
                             icon: Icons.person_outline,
                             title: 'Personal Details',
                             subtitle: 'Email, Gender, Pan, DOB, Address',
-                            onTap: () => context.push(AppConstants.personalDetails),
+                            onTap: () =>
+                                context.push(AppConstants.personalDetails),
                           ),
                           _MenuTile(
                             icon: Icons.security,
                             title: 'Security & Sessions',
-                            subtitle: 'Manage your active devices and security logs',
+                            subtitle:
+                                'Manage your active devices and security logs',
                             onTap: () => context.push('/profile/security'),
                           ),
                           Divider(

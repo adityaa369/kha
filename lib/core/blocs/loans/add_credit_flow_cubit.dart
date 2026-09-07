@@ -28,7 +28,7 @@ class AddCreditAuthorizing extends AddCreditFlowState {
   final String intentId;
   final int amountPaise;
   const AddCreditAuthorizing(this.intentId, this.amountPaise);
-  
+
   @override
   List<Object?> get props => [intentId, amountPaise];
 }
@@ -37,7 +37,7 @@ class AddCreditCommitting extends AddCreditFlowState {
   final String intentId;
   final int amountPaise;
   const AddCreditCommitting(this.intentId, this.amountPaise);
-  
+
   @override
   List<Object?> get props => [intentId, amountPaise];
 }
@@ -63,34 +63,46 @@ class AddCreditFlowCubit extends Cubit<AddCreditFlowState> {
     int? initialAmountPaise,
   }) : _repository = repository,
        _loanId = loanId,
-       super(initialIntentId != null && initialAmountPaise != null 
-         ? AddCreditAwaitingConsent(initialIntentId, initialAmountPaise) 
-         : AddCreditIdle());
+       super(
+         initialIntentId != null && initialAmountPaise != null
+             ? AddCreditAwaitingConsent(initialIntentId, initialAmountPaise)
+             : AddCreditIdle(),
+       );
 
   void reset() => emit(AddCreditIdle());
 
-// 4F-4G: Fetch Intent for Deep Linking
+  // 4F-4G: Fetch Intent for Deep Linking
   Future<void> loadIntent(String intentId) async {
     emit(AddCreditCreatingIntent()); // Reusing loading state
     try {
       final intent = await _repository.getIntent(intentId);
-      
+
       if (intent.action != 'ADD_CREDIT') {
-        emit(const AddCreditRejectedState(BusinessLogicFailure('INVALID_INTENT_TYPE')));
+        emit(
+          const AddCreditRejectedState(
+            BusinessLogicFailure('INVALID_INTENT_TYPE'),
+          ),
+        );
         return;
       }
-      
+
       if (intent.status == 'CONSUMED' || intent.status == 'COMMITTED') {
         emit(const AddCreditRejectedState(IntentConsumedFailure()));
       } else if (intent.status == 'EXPIRED') {
-        emit(const AddCreditRejectedState(BusinessLogicFailure('INTENT_EXPIRED')));
+        emit(
+          const AddCreditRejectedState(BusinessLogicFailure('INTENT_EXPIRED')),
+        );
       } else if (intent.status == 'REJECTED') {
-        emit(const AddCreditRejectedState(BusinessLogicFailure('INTENT_REJECTED')));
+        emit(
+          const AddCreditRejectedState(BusinessLogicFailure('INTENT_REJECTED')),
+        );
       } else if (intent.status == 'PENDING') {
         final amountPaise = intent.payload['amountPaise'] ?? 0;
         emit(AddCreditAwaitingConsent(intentId, amountPaise));
       } else {
-        emit(const AddCreditRejectedState(ServerFailure('Unknown intent status')));
+        emit(
+          const AddCreditRejectedState(ServerFailure('Unknown intent status')),
+        );
       }
     } on DioException catch (e) {
       emit(AddCreditRejectedState(_mapDioErrorToFailure(e)));
@@ -104,12 +116,12 @@ class AddCreditFlowCubit extends Cubit<AddCreditFlowState> {
   // Lender Action: Create Intent
   Future<void> createIntent(int amountPaise) async {
     if (state is! AddCreditIdle) return;
-    
+
     emit(AddCreditCreatingIntent());
-    
+
     try {
       final intentId = await _repository.createAddCreditIntent(
-        loanId: _loanId, 
+        loanId: _loanId,
         amountPaise: amountPaise,
       );
       emit(AddCreditAwaitingConsent(intentId, amountPaise));
@@ -125,23 +137,23 @@ class AddCreditFlowCubit extends Cubit<AddCreditFlowState> {
   // Borrower Action: Authorize and Commit
   Future<void> approveIntent() async {
     if (state is! AddCreditAwaitingConsent) return;
-    
+
     final currentState = state as AddCreditAwaitingConsent;
     final intentId = currentState.intentId;
     final amountPaise = currentState.amountPaise;
-    
+
     emit(AddCreditAuthorizing(intentId, amountPaise));
-    
+
     try {
       // The idToken is fetched inside the repository during addCredit
       emit(AddCreditCommitting(intentId, amountPaise));
-      
+
       final success = await _repository.commitAddCredit(
-        loanId: _loanId, 
+        loanId: _loanId,
         intentId: intentId,
         amountPaise: amountPaise,
       );
-      
+
       if (success) {
         emit(AddCreditSuccess());
       } else {
@@ -152,8 +164,8 @@ class AddCreditFlowCubit extends Cubit<AddCreditFlowState> {
       // Reconcile the existing intent.
       await reconcile(intentId, amountPaise);
     } on DioException catch (e) {
-      if (e.type == DioExceptionType.connectionTimeout || 
-          e.type == DioExceptionType.receiveTimeout || 
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.receiveTimeout ||
           e.type == DioExceptionType.sendTimeout) {
         await reconcile(intentId, amountPaise);
       } else {
@@ -176,11 +188,17 @@ class AddCreditFlowCubit extends Cubit<AddCreditFlowState> {
         // Safe to retry commit
         emit(AddCreditAwaitingConsent(intentId, amountPaise));
       } else if (status == 'EXPIRED') {
-        emit(const AddCreditRejectedState(BusinessLogicFailure('INTENT_EXPIRED')));
+        emit(
+          const AddCreditRejectedState(BusinessLogicFailure('INTENT_EXPIRED')),
+        );
       } else if (status == 'REJECTED') {
-        emit(const AddCreditRejectedState(BusinessLogicFailure('INTENT_REJECTED')));
+        emit(
+          const AddCreditRejectedState(BusinessLogicFailure('INTENT_REJECTED')),
+        );
       } else {
-        emit(const AddCreditRejectedState(ServerFailure('Unknown intent status')));
+        emit(
+          const AddCreditRejectedState(ServerFailure('Unknown intent status')),
+        );
       }
     } catch (e) {
       // If we can't reconcile, remain in an error state to let user retry reconciliation manually or fail gracefully
@@ -191,12 +209,12 @@ class AddCreditFlowCubit extends Cubit<AddCreditFlowState> {
   // Borrower Action: Reject Intent
   Future<void> rejectIntent() async {
     if (state is! AddCreditAwaitingConsent) return;
-    
+
     final intentId = (state as AddCreditAwaitingConsent).intentId;
     emit(AddCreditCommitting(intentId, 0)); // Rejecting
-    
+
     try {
-      // Optional backend reject endpoint, or just drop it. 
+      // Optional backend reject endpoint, or just drop it.
       // The rules say "Rejected intent causes zero financial delta"
       // If backend models it:
       await _repository.rejectIntent(intentId);
@@ -211,12 +229,18 @@ class AddCreditFlowCubit extends Cubit<AddCreditFlowState> {
     if (e.response?.data is Map && e.response?.data['code'] != null) {
       final code = e.response?.data['code'] as String;
       switch (code) {
-        case 'INTENT_EXPIRED': return const BusinessLogicFailure('INTENT_EXPIRED');
-        case 'INTENT_CONSUMED': return const IntentConsumedFailure();
-        case 'LOAN_FROZEN': return const BusinessLogicFailure('LOAN_FROZEN');
-        case 'TERMINAL_STATE': return const BusinessLogicFailure('TERMINAL_STATE');
-        case 'UNAUTHORIZED_ACTION': return const BusinessLogicFailure('UNAUTHORIZED_ACTION');
-        case 'VALIDATION_ERROR': return const ValidationFailure('VALIDATION_ERROR');
+        case 'INTENT_EXPIRED':
+          return const BusinessLogicFailure('INTENT_EXPIRED');
+        case 'INTENT_CONSUMED':
+          return const IntentConsumedFailure();
+        case 'LOAN_FROZEN':
+          return const BusinessLogicFailure('LOAN_FROZEN');
+        case 'TERMINAL_STATE':
+          return const BusinessLogicFailure('TERMINAL_STATE');
+        case 'UNAUTHORIZED_ACTION':
+          return const BusinessLogicFailure('UNAUTHORIZED_ACTION');
+        case 'VALIDATION_ERROR':
+          return const ValidationFailure('VALIDATION_ERROR');
       }
     }
     return const NetworkFailure();

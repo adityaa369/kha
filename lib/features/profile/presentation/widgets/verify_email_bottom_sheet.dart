@@ -1,3 +1,4 @@
+import 'package:khataa/core/utils/error_handler.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -76,13 +77,7 @@ class _VerifyEmailBottomSheetState extends State<VerifyEmailBottomSheet> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString().replaceAll('Exception: ', '')),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        ErrorHandler.showError(context, e.toString());
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -94,11 +89,13 @@ class _VerifyEmailBottomSheetState extends State<VerifyEmailBottomSheet> {
     try {
       await context.read<AuthCubit>().checkAuthStatus();
       if (!mounted) return;
-      
+
       final state = context.read<AuthCubit>().state;
       bool isVerified = false;
-      if (state is AuthenticatedKycComplete && state.user.isEmailVerified) isVerified = true;
-      if (state is AuthenticatedEmailUnverified && state.user.isEmailVerified) isVerified = true;
+      if (state is AuthenticatedKycComplete && state.user.isEmailVerified)
+        isVerified = true;
+      if (state is AuthenticatedEmailUnverified && state.user.isEmailVerified)
+        isVerified = true;
 
       if (isVerified) {
         context.pop();
@@ -199,16 +196,15 @@ class _VerifyEmailBottomSheetState extends State<VerifyEmailBottomSheet> {
           SizedBox(height: 24.h),
           Text(
             'Didn\'t receive it?',
-            style: TextStyle(
-              fontSize: 14.sp,
-              color: KhaataTheme.textGrey,
-            ),
+            style: TextStyle(fontSize: 14.sp, color: KhaataTheme.textGrey),
           ),
           SizedBox(height: 12.h),
           SizedBox(
             width: double.infinity,
             child: OutlinedButton(
-              onPressed: (_cooldownSeconds == 0 && !_isLoading) ? _handleResend : null,
+              onPressed: (_cooldownSeconds == 0 && !_isLoading)
+                  ? _handleResend
+                  : null,
               style: OutlinedButton.styleFrom(
                 padding: EdgeInsets.symmetric(vertical: 14.h),
                 side: BorderSide(
@@ -226,7 +222,9 @@ class _VerifyEmailBottomSheetState extends State<VerifyEmailBottomSheet> {
                       width: 20.sp,
                       child: const CircularProgressIndicator(
                         strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation(KhaataTheme.primaryBlue),
+                        valueColor: AlwaysStoppedAnimation(
+                          KhaataTheme.primaryBlue,
+                        ),
                       ),
                     )
                   : Text(

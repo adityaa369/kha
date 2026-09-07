@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+import 'package:khataa/core/utils/error_handler.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
@@ -46,9 +47,7 @@ class _SecurityHubPageState extends State<SecurityHubPage> {
       body: BlocConsumer<SecurityCubit, SecurityState>(
         listener: (context, state) {
           if (state.error != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.error!), backgroundColor: Colors.red),
-            );
+            ErrorHandler.showError(context, state.error!);
           }
         },
         builder: (context, state) {
@@ -56,8 +55,12 @@ class _SecurityHubPageState extends State<SecurityHubPage> {
             return const Center(child: CircularProgressIndicator());
           }
 
-          final currentSession = state.sessions.where((s) => s.isCurrent).firstOrNull;
-          final otherSessions = state.sessions.where((s) => !s.isCurrent).toList();
+          final currentSession = state.sessions
+              .where((s) => s.isCurrent)
+              .firstOrNull;
+          final otherSessions = state.sessions
+              .where((s) => !s.isCurrent)
+              .toList();
 
           return RefreshIndicator(
             onRefresh: () => context.read<SecurityCubit>().loadSecurityData(),
@@ -108,14 +111,16 @@ class _SecurityHubPageState extends State<SecurityHubPage> {
 
   Widget _buildSessionCard(BuildContext context, SessionModel session) {
     final bool isCurrent = session.isCurrent;
-    
+
     return Container(
       margin: EdgeInsets.only(bottom: 12.h),
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: isCurrent ? KhaataTheme.primaryBlue : Colors.grey.shade200),
+        border: Border.all(
+          color: isCurrent ? KhaataTheme.primaryBlue : Colors.grey.shade200,
+        ),
       ),
       child: Row(
         children: [
@@ -164,11 +169,10 @@ class _SecurityHubPageState extends State<SecurityHubPage> {
                 ),
                 SizedBox(height: 4.h),
                 Text(
-                  isCurrent ? 'Current device \u2022 Active now' : 'Last active: ${_formatDate(session.lastUsedAt)}',
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    color: Colors.black54,
-                  ),
+                  isCurrent
+                      ? 'Current device \u2022 Active now'
+                      : 'Last active: ${_formatDate(session.lastUsedAt)}',
+                  style: TextStyle(fontSize: 12.sp, color: Colors.black54),
                 ),
               ],
             ),
@@ -195,7 +199,9 @@ class _SecurityHubPageState extends State<SecurityHubPage> {
           foregroundColor: Colors.red.shade700,
           side: BorderSide(color: Colors.red.shade200),
           padding: EdgeInsets.symmetric(vertical: 14.h),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.r),
+          ),
         ),
       ),
     );
@@ -212,7 +218,8 @@ class _SecurityHubPageState extends State<SecurityHubPage> {
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: events.length,
-        separatorBuilder: (_, __) => Divider(height: 1, color: Colors.grey.shade100),
+        separatorBuilder: (_, __) =>
+            Divider(height: 1, color: Colors.grey.shade100),
         itemBuilder: (context, index) {
           final event = events[index];
           IconData icon;
@@ -221,7 +228,8 @@ class _SecurityHubPageState extends State<SecurityHubPage> {
           if (event.result == 'FAILED') {
             icon = Icons.warning_amber_rounded;
             color = Colors.orange;
-          } else if (event.eventType.contains('REVOKED') || event.eventType.contains('LOGOUT')) {
+          } else if (event.eventType.contains('REVOKED') ||
+              event.eventType.contains('LOGOUT')) {
             icon = Icons.logout;
             color = Colors.blueGrey;
           } else {
@@ -233,7 +241,11 @@ class _SecurityHubPageState extends State<SecurityHubPage> {
             leading: Icon(icon, color: color, size: 20.sp),
             title: Text(
               _formatEventType(event.eventType),
-              style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w600, color: Colors.black87),
+              style: TextStyle(
+                fontSize: 13.sp,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
             ),
             subtitle: Text(
               _formatDate(event.createdAt),
@@ -247,19 +259,24 @@ class _SecurityHubPageState extends State<SecurityHubPage> {
   }
 
   String _formatEventType(String type) {
-    return type.replaceAll('_', ' ').toLowerCase().split(' ').map((word) {
-      if (word.isEmpty) return '';
-      return word[0].toUpperCase() + word.substring(1);
-    }).join(' ');
+    return type
+        .replaceAll('_', ' ')
+        .toLowerCase()
+        .split(' ')
+        .map((word) {
+          if (word.isEmpty) return '';
+          return word[0].toUpperCase() + word.substring(1);
+        })
+        .join(' ');
   }
 
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final diff = now.difference(date);
-    
+
     if (diff.inMinutes < 60) return '${diff.inMinutes} minutes ago';
     if (diff.inHours < 24) return '${diff.inHours} hours ago';
-    
+
     return DateFormat('MMM d, h:mm a').format(date);
   }
 
@@ -292,7 +309,9 @@ class _SecurityHubPageState extends State<SecurityHubPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Sign out of all other devices'),
-        content: const Text('This will sign you out of every other active device. Your current device will remain signed in.'),
+        content: const Text(
+          'This will sign you out of every other active device. Your current device will remain signed in.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),

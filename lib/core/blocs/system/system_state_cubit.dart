@@ -1,9 +1,6 @@
-﻿import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-enum SystemState {
-  normal,
-  financialOperationsPaused,
-}
+enum SystemState { normal, financialOperationsPaused }
 
 class SystemStateCubit extends Cubit<SystemState> {
   SystemStateCubit() : super(SystemState.normal);

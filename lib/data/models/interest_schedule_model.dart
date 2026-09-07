@@ -51,19 +51,21 @@ class InterestScheduleModel extends Equatable {
       interestRateBps: json['interestRateBps'] as int,
       interestMethod: json['interestMethod'] as String,
       schedule: (json['schedule'] as List)
-          .map((e) => InterestPeriodViewModel.fromJson(e as Map<String, dynamic>))
+          .map(
+            (e) => InterestPeriodViewModel.fromJson(e as Map<String, dynamic>),
+          )
           .toList(),
     );
   }
 
   @override
   List<Object?> get props => [
-        totalAccruedPaise,
-        totalPaidPaise,
-        outstandingInterestPaise,
-        originalPrincipalPaise,
-        interestRateBps,
-        interestMethod,
-        schedule,
-      ];
+    totalAccruedPaise,
+    totalPaidPaise,
+    outstandingInterestPaise,
+    originalPrincipalPaise,
+    interestRateBps,
+    interestMethod,
+    schedule,
+  ];
 }

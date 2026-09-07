@@ -9,7 +9,14 @@ class SecurityRepository {
   SecurityRepository(this._apiClient);
 
   Future<List<SessionModel>> getSessions(String? currentRefreshToken) async {
-    final response = await _apiClient.get('/auth/sessions', options: Options(headers: currentRefreshToken != null ? {'x-refresh-token': currentRefreshToken} : {}));
+    final response = await _apiClient.get(
+      '/auth/sessions',
+      options: Options(
+        headers: currentRefreshToken != null
+            ? {'x-refresh-token': currentRefreshToken}
+            : {},
+      ),
+    );
     if (response.data['success'] == true) {
       final List data = response.data['sessions'] ?? [];
       return data.map((json) => SessionModel.fromJson(json)).toList();
@@ -39,7 +46,9 @@ class SecurityRepository {
       data: {'refreshToken': currentRefreshToken},
     );
     if (response.data['success'] != true) {
-      throw Exception(response.data['message'] ?? 'Failed to revoke other sessions');
+      throw Exception(
+        response.data['message'] ?? 'Failed to revoke other sessions',
+      );
     }
   }
 }

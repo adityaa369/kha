@@ -43,7 +43,6 @@ import '../core/blocs/security/security_cubit.dart';
 import '../data/repositories/security_repository.dart';
 import '../core/network/api_client.dart';
 
-
 import 'constants.dart';
 
 final router = GoRouter(
@@ -84,15 +83,18 @@ final router = GoRouter(
     }
 
     // KYC Progress
-    if (authState is AuthenticatedEmailVerifiedKycIncomplete || authState is AuthenticatedEmailUnverified) {
-      final user = authState is AuthenticatedEmailVerifiedKycIncomplete 
-          ? authState.user 
+    if (authState is AuthenticatedEmailVerifiedKycIncomplete ||
+        authState is AuthenticatedEmailUnverified) {
+      final user = authState is AuthenticatedEmailVerifiedKycIncomplete
+          ? authState.user
           : (authState as AuthenticatedEmailUnverified).user;
 
       if (user.firstName.isEmpty) {
-        if (state.uri.path != AppConstants.personalDetails) return AppConstants.personalDetails;
+        if (state.uri.path != AppConstants.personalDetails)
+          return AppConstants.personalDetails;
       } else if (!user.isKycComplete) {
-        if (state.uri.path != AppConstants.panDetails) return AppConstants.panDetails;
+        if (state.uri.path != AppConstants.panDetails)
+          return AppConstants.panDetails;
       }
       return null;
     }
@@ -198,10 +200,7 @@ final router = GoRouter(
       builder: (context, state) {
         final intentId = state.pathParameters['intentId'] ?? '';
         final loanId = state.uri.queryParameters['loanId'] ?? '';
-        return CloseLoanApprovalPage(
-          loanId: loanId,
-          intentId: intentId,
-        );
+        return CloseLoanApprovalPage(loanId: loanId, intentId: intentId);
       },
     ),
     GoRoute(
@@ -249,7 +248,8 @@ final router = GoRouter(
     GoRoute(
       path: '/chit-live-auction',
       builder: (context, state) {
-        final ledgerId = state.uri.queryParameters['ledgerId'] ?? 'demo_ledger_123';
+        final ledgerId =
+            state.uri.queryParameters['ledgerId'] ?? 'demo_ledger_123';
         return ChitLiveAuctionPage(ledgerId: ledgerId);
       },
     ),

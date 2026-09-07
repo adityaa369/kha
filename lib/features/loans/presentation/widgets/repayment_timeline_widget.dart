@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
@@ -16,22 +16,30 @@ class RepaymentTimelineWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => RepaymentTimelineCubit(LoanRepository())..fetchTimeline(loan.id),
+      create: (context) =>
+          RepaymentTimelineCubit(LoanRepository())..fetchTimeline(loan.id),
       child: BlocBuilder<RepaymentTimelineCubit, RepaymentTimelineState>(
         builder: (context, state) {
           if (state is RepaymentTimelineLoading) {
-            return const Center(child: Padding(
-              padding: EdgeInsets.all(20.0),
-              child: CircularProgressIndicator(),
-            ));
+            return const Center(
+              child: Padding(
+                padding: EdgeInsets.all(20.0),
+                child: CircularProgressIndicator(),
+              ),
+            );
           } else if (state is RepaymentTimelineError) {
-            return Center(child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Text(state.message, style: const TextStyle(color: Colors.red)),
-            ));
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Text(
+                  state.message,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              ),
+            );
           } else if (state is RepaymentTimelineLoaded) {
             final model = state.timelineModel;
-            
+
             if (!model.trackingEnabled) {
               return const SizedBox.shrink(); // Hide for chit loans or inactive
             }
@@ -40,7 +48,10 @@ class RepaymentTimelineWidget extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 16.w,
+                    vertical: 8.h,
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -53,19 +64,25 @@ class RepaymentTimelineWidget extends StatelessWidget {
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.picture_as_pdf, color: KhaataTheme.primaryBlue),
+                        icon: const Icon(
+                          Icons.picture_as_pdf,
+                          color: KhaataTheme.primaryBlue,
+                        ),
                         onPressed: () {
                           PdfGenerator.generateAndShareStatement(loan, model);
                         },
                         tooltip: 'Download Statement',
-                      )
+                      ),
                     ],
                   ),
                 ),
                 ...model.timeline.map((period) => _buildPeriodCard(period)),
                 if (model.postTermTransactions.isNotEmpty) ...[
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 16.w,
+                      vertical: 8.h,
+                    ),
                     child: Text(
                       'Post-Term Activity',
                       style: TextStyle(
@@ -75,8 +92,10 @@ class RepaymentTimelineWidget extends StatelessWidget {
                       ),
                     ),
                   ),
-                  ...model.postTermTransactions.map((tx) => _buildTransactionRow(tx, isPostTerm: true)),
-                ]
+                  ...model.postTermTransactions.map(
+                    (tx) => _buildTransactionRow(tx, isPostTerm: true),
+                  ),
+                ],
               ],
             );
           }
@@ -89,9 +108,9 @@ class RepaymentTimelineWidget extends StatelessWidget {
   Widget _buildPeriodCard(dynamic period) {
     final dateFormat = DateFormat('MMM dd');
     final currencyFmt = NumberFormat('#,##0', 'en_IN');
-    
+
     final bool hasActivity = period.hasPayments;
-    
+
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
       decoration: BoxDecoration(
@@ -106,7 +125,9 @@ class RepaymentTimelineWidget extends StatelessWidget {
             Container(
               padding: EdgeInsets.all(8.w),
               decoration: BoxDecoration(
-                color: hasActivity ? Colors.green.shade50 : Colors.grey.shade100,
+                color: hasActivity
+                    ? Colors.green.shade50
+                    : Colors.grey.shade100,
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -139,7 +160,9 @@ class RepaymentTimelineWidget extends StatelessWidget {
           ],
         ),
         trailing: Text(
-          hasActivity ? '₹${currencyFmt.format(period.totalPaid)}' : 'No Activity',
+          hasActivity
+              ? '₹${currencyFmt.format(period.totalPaid)}'
+              : 'No Activity',
           style: TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 14.sp,
@@ -149,16 +172,24 @@ class RepaymentTimelineWidget extends StatelessWidget {
         children: period.transactions.isEmpty
             ? [
                 Padding(
-                  padding: EdgeInsets.only(bottom: 16.h, left: 16.w, right: 16.w),
+                  padding: EdgeInsets.only(
+                    bottom: 16.h,
+                    left: 16.w,
+                    right: 16.w,
+                  ),
                   child: Text(
                     'No payments recorded during this period.',
-                    style: TextStyle(fontSize: 13.sp, color: KhaataTheme.textGrey, fontStyle: FontStyle.italic),
+                    style: TextStyle(
+                      fontSize: 13.sp,
+                      color: KhaataTheme.textGrey,
+                      fontStyle: FontStyle.italic,
+                    ),
                   ),
-                )
+                ),
               ]
             : period.transactions
-                .map<Widget>((tx) => _buildTransactionRow(tx))
-                .toList(),
+                  .map<Widget>((tx) => _buildTransactionRow(tx))
+                  .toList(),
       ),
     );
   }
@@ -166,16 +197,18 @@ class RepaymentTimelineWidget extends StatelessWidget {
   Widget _buildTransactionRow(dynamic tx, {bool isPostTerm = false}) {
     final currencyFmt = NumberFormat('#,##0', 'en_IN');
     final dateFmt = DateFormat('MMM dd, yyyy');
-    
+
     return Container(
-      margin: isPostTerm 
+      margin: isPostTerm
           ? EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h)
           : EdgeInsets.only(left: 48.w, right: 16.w, bottom: 8.h),
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
         color: isPostTerm ? Colors.orange.shade50 : Colors.grey.shade50,
         borderRadius: BorderRadius.circular(8.r),
-        border: Border.all(color: isPostTerm ? Colors.orange.shade200 : Colors.grey.shade200),
+        border: Border.all(
+          color: isPostTerm ? Colors.orange.shade200 : Colors.grey.shade200,
+        ),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -184,7 +217,9 @@ class RepaymentTimelineWidget extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                tx.type == 'interest_payment' ? 'Interest Payment' : 'Principal Payment',
+                tx.type == 'interest_payment'
+                    ? 'Interest Payment'
+                    : 'Principal Payment',
                 style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13.sp),
               ),
               SizedBox(height: 4.h),
@@ -207,4 +242,3 @@ class RepaymentTimelineWidget extends StatelessWidget {
     );
   }
 }
-

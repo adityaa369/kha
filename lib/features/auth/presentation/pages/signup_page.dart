@@ -125,7 +125,10 @@ class _SignupPageState extends State<SignupPage> {
   void _submitStep3() {
     if (_step3Key.currentState?.validate() ?? false) {
       if (!_termsAccepted) {
-        DialogUtils.showErrorDialog(context, 'Please accept the Terms of Service & Privacy Policy');
+        DialogUtils.showErrorDialog(
+          context,
+          'Please accept the Terms of Service & Privacy Policy',
+        );
         return;
       }
 
@@ -189,9 +192,10 @@ class _SignupPageState extends State<SignupPage> {
           if (state is AuthError) {
             DialogUtils.showErrorDialog(context, state.message);
           } else if (state is AuthenticatedEmailUnverified) {
-            DialogUtils.showSuccessDialog(context, 
-                  'Registration successful! Please login with your credentials.',
-                );
+            DialogUtils.showSuccessDialog(
+              context,
+              'Registration successful! Please login with your credentials.',
+            );
             context.go('/login');
           } else if (state is AuthenticatedEmailUnverified) {
             context.go('/home'); // Fallback direct home routing
@@ -951,43 +955,44 @@ class _SignupPageState extends State<SignupPage> {
               keyboardType: TextInputType.number,
               inputFormatters: [DateInputFormatter()],
               validator: (val) {
-                if (val == null || val.isEmpty) return 'Date of birth is required';
+                if (val == null || val.isEmpty)
+                  return 'Date of birth is required';
                 if (val.length != 10) return 'Enter a valid date (DD/MM/YYYY)';
                 return null;
               },
-                  style: TextStyle(
-                    fontSize: 13.sp,
-                    fontWeight: FontWeight.w600,
-                    color: KhaataTheme.textDark,
+              style: TextStyle(
+                fontSize: 13.sp,
+                fontWeight: FontWeight.w600,
+                color: KhaataTheme.textDark,
+              ),
+              decoration: InputDecoration(
+                prefixIcon: Icon(
+                  Icons.calendar_today_outlined,
+                  size: 20.sp,
+                  color: KhaataTheme.textGrey,
+                ),
+                filled: true,
+                fillColor: const Color(0xFFF3F4F6),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                  borderSide: const BorderSide(
+                    color: KhaataTheme.primaryBlue,
+                    width: 1.5,
                   ),
-                  decoration: InputDecoration(
-                    prefixIcon: Icon(
-                      Icons.calendar_today_outlined,
-                      size: 20.sp,
-                      color: KhaataTheme.textGrey,
-                    ),
-                    filled: true,
-                    fillColor: const Color(0xFFF3F4F6),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.r),
-                      borderSide: BorderSide.none,
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.r),
-                      borderSide: BorderSide.none,
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.r),
-                      borderSide: const BorderSide(
-                        color: KhaataTheme.primaryBlue,
-                        width: 1.5,
-                      ),
-                    ),
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 14.w,
-                      vertical: 12.h,
-                    ),
-                  ),
+                ),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 14.w,
+                  vertical: 12.h,
+                ),
+              ),
             ),
             SizedBox(height: 14.h),
 
@@ -1566,4 +1571,3 @@ class _SignupPageState extends State<SignupPage> {
     );
   }
 }
-

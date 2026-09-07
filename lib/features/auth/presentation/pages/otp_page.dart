@@ -249,10 +249,8 @@ class _OtpPageState extends State<OtpPage> {
                       _hasError = true;
                       _errorController?.add(ErrorAnimationType.shake);
                     });
-                    ScaffoldMessenger.of(
-                      context,
-                    );
-DialogUtils.showErrorDialog(context, state.message);
+                    ScaffoldMessenger.of(context);
+                    DialogUtils.showErrorDialog(context, state.message);
                   }
                 },
                 builder: (context, state) {
@@ -348,4 +346,3 @@ DialogUtils.showErrorDialog(context, state.message);
     );
   }
 }
-

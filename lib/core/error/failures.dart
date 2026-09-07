@@ -10,29 +10,42 @@ abstract class Failure extends Equatable {
 }
 
 class ServerFailure extends Failure {
-  const ServerFailure([super.message = 'Server failure occurred', String? code]) : super(code: code);
+  const ServerFailure([super.message = 'Server failure occurred', String? code])
+    : super(code: code);
 }
 
 class AuthFailure extends Failure {
-  const AuthFailure([super.message = 'Authentication failed', String? code]) : super(code: code);
+  const AuthFailure([super.message = 'Authentication failed', String? code])
+    : super(code: code);
 }
 
 class NetworkFailure extends Failure {
-  const NetworkFailure([super.message = 'No internet connection', String? code]) : super(code: code);
+  const NetworkFailure([super.message = 'No internet connection', String? code])
+    : super(code: code);
 }
 
 class ValidationFailure extends Failure {
-  const ValidationFailure([super.message = 'Invalid input data', String? code]) : super(code: code);
+  const ValidationFailure([super.message = 'Invalid input data', String? code])
+    : super(code: code);
 }
 
 class RateLimitedFailure extends Failure {
-  const RateLimitedFailure([super.message = 'Too many requests. Please try again later.', String? code = 'RATE_LIMITED']) : super(code: code);
+  const RateLimitedFailure([
+    super.message = 'Too many requests. Please try again later.',
+    String? code = 'RATE_LIMITED',
+  ]) : super(code: code);
 }
 
 class IntentConsumedFailure extends Failure {
-  const IntentConsumedFailure([super.message = 'This action was already completed.', String? code = 'INTENT_CONSUMED']) : super(code: code);
+  const IntentConsumedFailure([
+    super.message = 'This action was already completed.',
+    String? code = 'INTENT_CONSUMED',
+  ]) : super(code: code);
 }
 
 class BusinessLogicFailure extends Failure {
-  const BusinessLogicFailure([super.message = 'Operation rejected by business rules', String? code]) : super(code: code);
+  const BusinessLogicFailure([
+    super.message = 'Operation rejected by business rules',
+    String? code,
+  ]) : super(code: code);
 }

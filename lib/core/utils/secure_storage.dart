@@ -70,7 +70,7 @@ class SecureStorage {
     await _storage.delete(key: _myChitsKey);
   }
 
-    // Auth token methods
+  // Auth token methods
   static Future<void> saveToken(String token) async {
     await _storage.write(key: _tokenKey, value: token);
   }
@@ -149,5 +149,3 @@ class SecureStorage {
     await _storage.deleteAll();
   }
 }
-
-

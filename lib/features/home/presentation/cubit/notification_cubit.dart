@@ -29,7 +29,9 @@ class NotificationCubit extends Cubit<NotificationState> {
 
   Future<void> markAsRead(NotificationModel notif, int index) async {
     if (state is NotificationLoaded) {
-      final currentNotifs = List<NotificationModel>.from((state as NotificationLoaded).notifications);
+      final currentNotifs = List<NotificationModel>.from(
+        (state as NotificationLoaded).notifications,
+      );
       if (notif.isRead) return;
 
       try {
