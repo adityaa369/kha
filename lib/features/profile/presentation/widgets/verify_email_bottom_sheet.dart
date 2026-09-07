@@ -1,4 +1,4 @@
-import 'package:khataa/core/utils/error_handler.dart';
+import 'package:khatha/core/utils/error_handler.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
