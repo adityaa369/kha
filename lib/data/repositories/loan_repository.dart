@@ -341,7 +341,7 @@ Future<DocumentResponse> getSignedDocumentUrl(String documentId) async {
       );
       final data = response.data;
       if (data is Map && data['success'] == true) {
-        return data['url']?.toString() ?? '';
+        return data['documentId']?.toString() ?? '';
       }
       final errMsg = (data is Map) ? data['message']?.toString() : null;
       throw ServerFailure(errMsg ?? 'Failed to upload document');

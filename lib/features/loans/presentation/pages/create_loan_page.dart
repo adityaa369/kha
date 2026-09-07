@@ -223,15 +223,10 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
 
     if (_selectedDocumentFile != null) {
       try {
-        final ref = FirebaseStorage.instance
-            .ref()
-            .child('documents')
-            .child(
-              '${DateTime.now().millisecondsSinceEpoch}_${_selectedDocumentName ?? 'doc'}',
-            );
-        final uploadTask = ref.putFile(_selectedDocumentFile!);
-        final snapshot = await uploadTask;
-        final documentId = snapshot.ref.fullPath;
+        final bytes = await _selectedDocumentFile!.readAsBytes();
+        final fileName = _selectedDocumentName ?? 'document.pdf';
+        final fileType = 'application/pdf'; // Or derive dynamically if needed
+        final documentId = await context.read<LoanCubit>().uploadDocument(fileName, fileType, bytes);
         _finalizeLoanCreation(phone, documentId);
       } catch (e) {
         setState(() => _isLoading = false);
@@ -332,17 +327,31 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
     } else if (mounted) {
       final state = cubit.state;
       if (state is LoanError) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              state.message,
-              style: const TextStyle(color: Colors.white),
-            ),
-            backgroundColor: Colors.red,
-          ),
-        );
+        _showErrorDialog(state.message);
       }
     }
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.error_outline, color: Colors.red),
+            SizedBox(width: 8),
+            Text('Error'),
+          ],
+        ),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showBorrowerNotFoundDialog() {
