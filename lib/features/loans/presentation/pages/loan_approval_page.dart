@@ -335,10 +335,18 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
               SizedBox(height: 32.h),
 
               if (loan.status == 'pending_approval' && !_isOtpSent)
-                PrimaryButton(
-                  text: 'Request OTP to Sign',
-                  isLoading: _isApproving,
-                  onPressed: _requestOtp,
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _isApproving ? null : _requestOtp,
+                    child: _isApproving
+                        ? SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text('Request OTP to Sign'),
+                  ),
                 ),
 
               if (loan.status == 'pending_approval' && _isOtpSent) ...[
@@ -394,10 +402,20 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
                   ],
                 ),
                 SizedBox(height: 24.h),
-                PrimaryButton(
-                  text: 'Sign & Accept Terms',
-                  isLoading: _isApproving,
-                  onPressed: _currentOtp.length == 6 ? _approveLoan : null,
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _currentOtp.length == 6
+                        ? (_isApproving ? null : _approveLoan)
+                        : null,
+                    child: _isApproving
+                        ? SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text('Sign & Accept Terms'),
+                  ),
                 ),
               ],
               
