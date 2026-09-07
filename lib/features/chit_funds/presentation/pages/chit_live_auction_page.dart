@@ -175,7 +175,7 @@ class _ChitLiveAuctionPageState extends State<ChitLiveAuctionPage> {
     }
 
     setState(() => _isPlacingBid = true);
-    final authState = authCubit.state;
+    final authState = context.read<AuthCubit>().state;
     String userId = 'unknown';
     if (authState is AuthenticatedKycComplete) userId = authState.user.id;
 

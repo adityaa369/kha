@@ -58,7 +58,7 @@ class LoanConfirmationPage extends StatelessWidget {
                     ),
                     SizedBox(height: 12.h),
                     Text(
-                      '₹ ${loanData['amount']}',
+                      '₹ ${(loanData['amountPaise'] ?? 0) / 100}',
                       style: TextStyle(
                         fontSize: 32.sp,
                         fontWeight: FontWeight.bold,
