@@ -1,3 +1,4 @@
+import '../../../../core/utils/error_handler.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
@@ -11,6 +12,13 @@ class LoanConfirmationPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (loanData['amountPaise'] == null || loanData['amountPaise'] is! int) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ErrorHandler.showError(context, 'Contract Error: Missing or invalid amountPaise');
+        context.pop();
+      });
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -58,7 +66,7 @@ class LoanConfirmationPage extends StatelessWidget {
                     ),
                     SizedBox(height: 12.h),
                     Text(
-                      '₹ ${(loanData['amountPaise'] ?? 0) / 100}',
+                      '₹ ${loanData['amountPaise'] / 100}',
                       style: TextStyle(
                         fontSize: 32.sp,
                         fontWeight: FontWeight.bold,
