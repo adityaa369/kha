@@ -157,7 +157,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
           children: [
             Text('Borrower: ${_borrowerNameController.text}'),
             SizedBox(height: 8.h),
-            Text('Principal: â‚¹${amount.toStringAsFixed(2)}'),
+            Text('Principal: \u20B9${amount.toStringAsFixed(2)}'),
             if (widget.loanType == 'interest_credit') ...[
               SizedBox(height: 8.h),
               Text('Interest Rate: $rate% (Annual)'),
