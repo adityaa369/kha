@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:khatha/core/utils/dialog_utils.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import '../../../../config/theme.dart';
+import '../../../../config/constants.dart';
 import '../../../../core/blocs/auth/auth_cubit.dart';
 import '../../../../core/utils/date_input_formatter.dart';
 
@@ -160,7 +161,7 @@ class _SignupPageState extends State<SignupPage> {
       context.read<AuthCubit>().verifyOtp(
         phone,
         otp,
-        // registrationDetails: registrationDetails,
+        registrationDetails: registrationDetails,
       );
     }
   }
@@ -191,17 +192,7 @@ class _SignupPageState extends State<SignupPage> {
           if (!mounted) return;
           if (state is AuthError) {
             DialogUtils.showErrorDialog(context, state.message);
-          } else if (state is AuthenticatedEmailUnverified) {
-            DialogUtils.showSuccessDialog(
-              context,
-              'Registration successful! Please login with your credentials.',
-            );
-            context.go('/login');
-          } else if (state is AuthenticatedEmailUnverified) {
-            context.go('/home'); // Fallback direct home routing
-          } else if (state is AuthenticatedKycComplete) {
-            context.go('/home');
-          }
+          } else if (state is Authenticated) { context.go(AppConstants.home); }
         },
         builder: (context, state) {
           return SafeArea(
@@ -1571,3 +1562,4 @@ class _SignupPageState extends State<SignupPage> {
     );
   }
 }
+

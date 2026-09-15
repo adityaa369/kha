@@ -98,23 +98,19 @@ class AuthCubit extends Cubit<AuthState> {
     } catch (_) {}
 
     final user = _currentUser!;
-
-    // Evaluate backend source of truth for routing
-    if (!user.isEmailVerified) {
-      emit(AuthenticatedEmailUnverified(user: user));
-    } else if (!user.isKycComplete || user.firstName.isEmpty) {
-      emit(AuthenticatedEmailVerifiedKycIncomplete(user: user));
-    } else {
-      emit(AuthenticatedKycComplete(user: user));
-    }
+    emit(Authenticated(user: user));
   }
 
   // -------------------------------------------------------------
   // Workflow Methods (Note: They now trigger transient UI states
   // but eventually re-converge to _emitAuthoritativeState)
   // -------------------------------------------------------------
+  
+  bool _isSubmitting = false;
 
   Future<void> sendOtp(String phone) async {
+    if (_isSubmitting) return;
+    _isSubmitting = true;
     emit(AuthLoading());
     try {
       String formattedPhone = phone.trim();
@@ -128,10 +124,12 @@ class AuthCubit extends Cubit<AuthState> {
         phoneNumber: formattedPhone,
         verificationCompleted: (PhoneAuthCredential credential) async {},
         verificationFailed: (FirebaseAuthException e) {
+          _isSubmitting = false;
           emit(AuthError(e.message ?? 'Firebase Verification failed'));
           checkAuthStatus(); // Revert back to proper baseline on error
         },
         codeSent: (String verificationId, int? resendToken) {
+          _isSubmitting = false;
           _verificationId = verificationId;
           emit(OtpSent(phone: phone));
         },
@@ -140,12 +138,15 @@ class AuthCubit extends Cubit<AuthState> {
         },
       );
     } catch (e) {
+      _isSubmitting = false;
       emit(AuthError('Failed to send OTP: $e'));
       checkAuthStatus();
     }
   }
 
-  Future<void> verifyOtp(String phone, String otp) async {
+  Future<void> verifyOtp(String phone, String otp, {Map<String, dynamic>? registrationDetails}) async {
+    if (_isSubmitting) return;
+    _isSubmitting = true;
     emit(OtpVerifying());
     try {
       if (_verificationId == null) throw Exception('Verification ID missing');
@@ -162,11 +163,17 @@ class AuthCubit extends Cubit<AuthState> {
 
       if (idToken == null)
         throw Exception('Failed to retrieve Firebase ID Token');
+        
+      _verificationId = null; // Single-use! Clear it to prevent accidental reuse on resend.
 
       // Send ID Token to backend (Phase 4E Contract)
       final response = await _api.post(
         '/auth/verify-otp',
-        data: {'idToken': idToken, 'phone': phone},
+        data: {
+          'idToken': idToken, 
+          'phone': phone,
+          'registrationDetails': registrationDetails
+        },
       );
 
       final data = response.data;
@@ -207,6 +214,8 @@ class AuthCubit extends Cubit<AuthState> {
     } catch (e) {
       emit(AuthError('Verification failed: $e'));
       emit(Unauthenticated());
+    } finally {
+      _isSubmitting = false;
     }
   }
 
