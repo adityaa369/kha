@@ -584,6 +584,9 @@ exports.verifyEmail = async (req, res) => {
 };
 
 
+const MPinCredential = require('../models/MPinCredential');
+const { getRedisClient } = require('../config/redis');
+
 // @desc    Set up MPIN for the authenticated user
 // @route   POST /api/auth/mpin/setup
 // @access  Private
@@ -595,11 +598,24 @@ exports.setupMpin = async (req, res) => {
     try {
         const salt = await bcrypt.genSalt(12);
         const hash = await bcrypt.hash(mpin, salt);
-        await User.findByIdAndUpdate(req.user.id, {
-            mpinHash: hash,
-            mpinFailedAttempts: 0,
-            mpinLockoutUntil: null
-        });
+        
+        await MPinCredential.findOneAndUpdate(
+            { userId: req.user.id },
+            { 
+                userId: req.user.id,
+                firebaseUid: req.user.firebaseUid,
+                mpinHash: hash,
+                failedAttempts: 0,
+                lockoutUntil: null
+            },
+            { upsert: true, new: true }
+        );
+
+        const redisClient = getRedisClient();
+        if (redisClient) {
+            await redisClient.del(`mpin_attempts:${req.user.id}`);
+        }
+
         res.status(200).json({ success: true, message: 'MPIN setup successful' });
     } catch (err) {
         console.error('[Auth] setupMpin error:', err.message);
@@ -617,47 +633,47 @@ exports.verifyMpin = async (req, res) => {
     }
 
     try {
-        // Find user by phone, explicitly select mpin fields since select is false
-        let user = await User.findOne({ phone }).select('+mpinHash +mpinFailedAttempts +mpinLockoutUntil +firebaseUid');
+        const user = await User.findOne({ phone });
         if (!user) {
-            return res.status(401).json({ success: false, message: 'User not found' });
+            return res.status(401).json({ success: false, message: 'Invalid MPIN' });
         }
 
-        if (!user.mpinHash) {
-            return res.status(400).json({ success: false, message: 'MPIN not setup for this account' });
+        const mpinCred = await MPinCredential.findOne({ userId: user._id });
+        if (!mpinCred) {
+            return res.status(401).json({ success: false, message: 'Invalid MPIN' });
         }
 
-        // Check rate limiting
-        if (user.mpinLockoutUntil && user.mpinLockoutUntil > new Date()) {
-            return res.status(429).json({ success: false, message: 'Account locked. Try again later.' });
+        const redisClient = getRedisClient();
+        if (!redisClient) {
+            console.error('[Auth] verifyMpin: Redis rate limiting is unavailable. Failing closed.');
+            return res.status(500).json({ success: false, message: 'Authentication service unavailable' });
         }
 
-        const isMatch = await bcrypt.compare(mpin, user.mpinHash);
+        const rateLimitKey = `mpin_attempts:${user._id}`;
+        
+        let attempts = 0;
+        const currentAttempts = await redisClient.get(rateLimitKey);
+        if (currentAttempts && parseInt(currentAttempts) >= 5) {
+            return res.status(429).json({ success: false, message: 'Too many failed attempts. Account locked for 15 minutes.' });
+        }
+
+        const isMatch = await bcrypt.compare(mpin, mpinCred.mpinHash);
 
         if (!isMatch) {
-            let attempts = (user.mpinFailedAttempts || 0) + 1;
-            let updates = { mpinFailedAttempts: attempts };
-            if (attempts >= 5) {
-                // Lockout for 15 minutes
-                updates.mpinLockoutUntil = new Date(Date.now() + 15 * 60 * 1000);
-                updates.mpinFailedAttempts = 0; // Reset for after lockout
+            attempts = await redisClient.incr(rateLimitKey);
+            if (attempts === 1) {
+                await redisClient.expire(rateLimitKey, 15 * 60);
             }
-            await User.findByIdAndUpdate(user._id, updates);
-            
             if (attempts >= 5) {
                 return res.status(429).json({ success: false, message: 'Too many failed attempts. Account locked for 15 minutes.' });
             }
             return res.status(401).json({ success: false, message: 'Invalid MPIN' });
         }
 
-        // Success - reset attempts
-        if (user.mpinFailedAttempts > 0 || user.mpinLockoutUntil) {
-            await User.findByIdAndUpdate(user._id, { mpinFailedAttempts: 0, mpinLockoutUntil: null });
-        }
+        await redisClient.del(rateLimitKey);
 
-        // Use firebase-admin to mint a custom token
         const admin = require('firebase-admin');
-        const customToken = await admin.auth().createCustomToken(user.firebaseUid);
+        const customToken = await admin.auth().createCustomToken(mpinCred.firebaseUid);
 
         res.status(200).json({ success: true, customToken });
     } catch (err) {

@@ -100,7 +100,7 @@ class _MpinSetupPageState extends State<MpinSetupPage> {
                 listener: (context, state) {
                   if (state is Authenticated) {
                     DialogUtils.showSuccessDialog(context, 'MPIN setup successfully!');
-                    context.go(AppConstants.home);
+                    SecurityUtils.unsecureScreen(); context.go(AppConstants.home);
                   } else if (state is AuthError) {
                     DialogUtils.showErrorDialog(context, state.message);
                     setState(() {

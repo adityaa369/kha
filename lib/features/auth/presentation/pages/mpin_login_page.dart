@@ -75,10 +75,25 @@ class _MpinLoginPageState extends State<MpinLoginPage> {
               ),
               SizedBox(height: 40.h),
               
+              SizedBox(height: 16.h),
+              TextButton(
+                onPressed: () {
+                  SecurityUtils.unsecureScreen();
+                  context.go(AppConstants.login);
+                },
+                child: Text(
+                  'Forgot MPIN? Login with SMS',
+                  style: TextStyle(
+                    color: KhaataTheme.primaryBlue,
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
               BlocConsumer<AuthCubit, AuthState>(
                 listener: (context, state) {
                   if (state is Authenticated) {
-                    context.go(AppConstants.home);
+                    SecurityUtils.unsecureScreen(); context.go(AppConstants.home);
                   } else if (state is AuthError) {
                     DialogUtils.showErrorDialog(context, state.message);
                     _keypadKey.currentState?.reshuffle();
