@@ -7,6 +7,7 @@ import '../../../../core/blocs/auth/auth_cubit.dart';
 import 'dart:async';
 import '../../../../config/constants.dart';
 import '../../../../config/theme.dart';
+import '../../../../config/constants.dart';
 import '../../../../core/widgets/buttons.dart';
 import '../../../../core/utils/dialog_utils.dart';
 
@@ -239,11 +240,8 @@ class _OtpPageState extends State<OtpPage> {
                   if (!mounted) return;
                   if (state is PasswordResetRequired) {
                     context.go('/reset-password');
-                  } else if (state is AuthenticatedKycComplete ||
-                      state is AuthenticatedEmailUnverified) {
+                  } else if (state is Authenticated) {
                     context.go(AppConstants.home);
-                  } else if (state is AuthenticatedKycComplete) {
-                    context.push(AppConstants.personalDetails);
                   } else if (state is AuthError) {
                     setState(() {
                       _hasError = true;
@@ -256,7 +254,7 @@ class _OtpPageState extends State<OtpPage> {
                 builder: (context, state) {
                   return PrimaryButton(
                     text: 'Verify',
-                    isLoading: state is AuthLoading,
+                    isLoading: state is AuthLoading || state is OtpVerifying,
                     onPressed: _currentOtp.length == 6 ? _verifyOtp : null,
                   );
                 },
@@ -346,3 +344,6 @@ class _OtpPageState extends State<OtpPage> {
     );
   }
 }
+
+
+

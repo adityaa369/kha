@@ -192,7 +192,7 @@ class _SignupPageState extends State<SignupPage> {
           if (!mounted) return;
           if (state is AuthError) {
             DialogUtils.showErrorDialog(context, state.message);
-          } else if (state is Authenticated) { context.go(AppConstants.home); }
+          } else if (state is Authenticated) { DialogUtils.showSuccessDialog(context, 'Registration successful! Please log in.'); context.go(AppConstants.login); }
         },
         builder: (context, state) {
           return SafeArea(
@@ -1528,7 +1528,7 @@ class _SignupPageState extends State<SignupPage> {
             height: 52.h,
             child: ElevatedButton(
               onPressed:
-                  (state is AuthLoading || _otpController.text.length != 6)
+                  (state is AuthLoading || state is OtpVerifying || _otpController.text.length != 6)
                   ? null
                   : _verifyOtp,
               style: ElevatedButton.styleFrom(
@@ -1538,7 +1538,7 @@ class _SignupPageState extends State<SignupPage> {
                 ),
                 elevation: 0,
               ),
-              child: state is AuthLoading
+              child: state is AuthLoading || state is OtpVerifying
                   ? SizedBox(
                       width: 20.w,
                       height: 20.h,
