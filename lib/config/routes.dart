@@ -6,6 +6,8 @@ import '../features/splash/presentation/pages/splash_page.dart';
 import '../features/auth/presentation/pages/auth_choice_page.dart';
 import '../features/auth/presentation/pages/login_page.dart';
 import '../features/auth/presentation/pages/signup_page.dart';
+import '../features/auth/presentation/pages/mpin_login_page.dart';
+import '../features/auth/presentation/pages/mpin_setup_page.dart';
 import '../features/auth/presentation/pages/otp_page.dart';
 import '../features/auth/presentation/pages/personal_details_page.dart';
 import '../features/auth/presentation/pages/pan_details_page.dart';

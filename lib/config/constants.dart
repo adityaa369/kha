@@ -8,6 +8,8 @@ class AppConstants {
   static const String splash = '/';
   static const String welcome = '/welcome';
   static const String login = '/login';
+  static const String mpinLogin = '/mpin-login';
+  static const String mpinSetup = '/mpin-setup';
   static const String otp = '/otp';
   static const String personalDetails = '/personal-details';
   static const String panDetails = '/pan-details';

@@ -244,7 +244,30 @@ class _LoginPageState extends State<LoginPage> {
                                     ),
                             ),
                           ),
-                          SizedBox(height: 24.h),
+                          SizedBox(height: 16.h),
+                          Center(
+                            child: TextButton(
+                              onPressed: () {
+                                final phone = _phoneController.text.trim();
+                                if (phone.length == 10) {
+                                  context.push(AppConstants.mpinLogin, extra: phone);
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Please enter a valid 10-digit mobile number first')),
+                                  );
+                                }
+                              },
+                              child: Text(
+                                'Login with MPIN',
+                                style: TextStyle(
+                                  color: KhaataTheme.primaryBlue,
+                                  fontSize: 15.sp,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 16.h),
 
                           // Register link
                           Center(

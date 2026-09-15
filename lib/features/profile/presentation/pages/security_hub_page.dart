@@ -2,6 +2,8 @@ import 'package:khatha/core/utils/error_handler.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../config/constants.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../config/theme.dart';
@@ -70,6 +72,26 @@ class _SecurityHubPageState extends State<SecurityHubPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Setup MPIN Button
+                  Container(
+                    margin: EdgeInsets.only(bottom: 24.h),
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.pin, color: Colors.white),
+                      label: Text(
+                        'Setup MPIN for Login',
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: KhaataTheme.primaryBlue,
+                        padding: EdgeInsets.symmetric(vertical: 16.h),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                      ),
+                      onPressed: () => context.push(AppConstants.mpinSetup),
+                    ),
+                  ),
                   if (currentSession != null) ...[
                     _buildSectionTitle('Your Current Session'),
                     _buildSessionCard(context, currentSession),
