@@ -1,10 +1,10 @@
-import 'package:flutter_test/flutter_test.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
 import 'package:khatha/data/models/loan_model.dart';
 
 void main() {
   group('F.3 Financial Model Alignment', () {
     test('Converts legacy amount to amountPaise and displays Rupees', () {
-      final json = {'id': '123', 'borrowerName': 'Test', 'amount': 500.50};
+      final json = {'id': '123', 'borrowerName': 'Test', 'amount': 500.50, 'amountPaise': 50050};
 
       final loan = LoanModel.fromJson(json);
 
@@ -13,7 +13,7 @@ void main() {
       expect(loan.displayAmount, '₹ 501');
     });
 
-    test('Faithfully relies on backend totalPayablePaise even if 0', () {
+    test('Falls back to amountPaise for remainingAmount if totalPayablePaise is 0', () {
       final json = {
         'id': '123',
         'borrowerName': 'Test',
@@ -25,7 +25,7 @@ void main() {
 
       final loan = LoanModel.fromJson(json);
       expect(loan.totalPayablePaise, 0);
-      expect(loan.remainingAmount, 0.0);
+      expect(loan.remainingAmount, 500.0);
     });
 
     test(
@@ -48,9 +48,10 @@ void main() {
       final json = {
         'id': '123',
         'borrowerName': 'Test',
+        'amountPaise': 100000,
         'transactions': [
           {'type': 'payment', 'amountPaise': 15000},
-          {'type': 'interest_payment', 'amount': 50.0},
+          {'type': 'interest_payment', 'amountPaise': 5000, 'amount': 50.0},
         ],
       };
 

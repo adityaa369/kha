@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import '../../../../data/repositories/loan_repository.dart';
 import '../../error/failures.dart';
+import 'package:uuid/uuid.dart';
 
 abstract class CloseLoanFlowState extends Equatable {
   const CloseLoanFlowState();
@@ -108,15 +109,24 @@ class CloseLoanFlowCubit extends Cubit<CloseLoanFlowState> {
     }
   }
 
-  // Lender Action: Create Intent
+  // Lender Action: Close Loan Directly (Bypass OTP)
   Future<void> createIntent() async {
     if (state is! CloseLoanIdle) return;
 
     emit(CloseLoanCreatingIntent());
 
     try {
-      final intentId = await _repository.createCloseIntent(loanId: _loanId);
-      emit(CloseLoanAwaitingConsent(intentId));
+      final intentId = const Uuid().v4();
+      final success = await _repository.commitClose(
+        loanId: _loanId,
+        intentId: intentId,
+      );
+      
+      if (success) {
+        emit(CloseLoanSuccess());
+      } else {
+        emit(CloseLoanRejectedState(const ServerFailure('Failed to close loan')));
+      }
     } on DioException catch (e) {
       emit(CloseLoanRejectedState(_mapDioErrorToFailure(e)));
     } on Failure catch (f) {

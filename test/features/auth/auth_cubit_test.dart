@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -62,7 +62,7 @@ void main() {
   group('4F-2 Boot & Authoritative State Tests', () {
     // 1. App boot with valid token
     blocTest<AuthCubit, AuthState>(
-      'App boot with valid token emits AuthenticatedKycComplete',
+      'App boot with valid token emits Authenticated',
       setUp: () async {
         await SecureStorage.saveToken('valid_token');
         await SecureStorage.saveUserData(
@@ -78,7 +78,7 @@ void main() {
       },
       build: () => authCubit,
       act: (cubit) => cubit.checkAuthStatus(),
-      expect: () => [isA<AuthInitial>(), isA<AuthenticatedKycComplete>()],
+      expect: () => [isA<AuthInitial>(), isA<Authenticated>()],
     );
 
     // 2. App boot with expired token / 3. revoked user
@@ -127,7 +127,7 @@ void main() {
 
     // 6. email-unverified routing check
     blocTest<AuthCubit, AuthState>(
-      'Emits AuthenticatedEmailUnverified if email is not verified',
+      'Emits Authenticated if email is not verified',
       setUp: () async {
         await SecureStorage.saveToken('valid_token');
         when(() => mockApiClient.get('/auth/me')).thenAnswer(
@@ -140,12 +140,12 @@ void main() {
       },
       build: () => authCubit,
       act: (cubit) => cubit.checkAuthStatus(),
-      expect: () => [isA<AuthInitial>(), isA<AuthenticatedEmailUnverified>()],
+      expect: () => [isA<AuthInitial>(), isA<Authenticated>()],
     );
 
     // 7. KYC-incomplete routing check
     blocTest<AuthCubit, AuthState>(
-      'Emits AuthenticatedEmailVerifiedKycIncomplete if KYC missing',
+      'Emits Authenticated if KYC missing',
       setUp: () async {
         await SecureStorage.saveToken('valid_token');
         when(() => mockApiClient.get('/auth/me')).thenAnswer(
@@ -160,7 +160,7 @@ void main() {
       act: (cubit) => cubit.checkAuthStatus(),
       expect: () => [
         isA<AuthInitial>(),
-        isA<AuthenticatedEmailVerifiedKycIncomplete>(),
+        isA<Authenticated>(),
       ],
     );
 
@@ -180,3 +180,4 @@ void main() {
     );
   });
 }
+

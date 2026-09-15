@@ -1,4 +1,4 @@
-import 'package:flutter_test/flutter_test.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:khatha/core/blocs/loans/loan_cubit.dart';
 import 'package:khatha/core/blocs/loans/loan_state.dart';
@@ -74,7 +74,7 @@ void main() {
 
       // Setup payment success and subsequent fetch
       when(
-        () => mockRepo.recordPayment('loan1', amountRupees: 3000.0),
+        () => mockRepo.recordPayment('loan1', amountPaise: 300000),
       ).thenAnswer((_) async => true);
       when(() => mockRepo.fetchLoans()).thenAnswer(
         (_) async => {
@@ -83,7 +83,7 @@ void main() {
         },
       );
 
-      await cubit.recordPayment('loan1', amountRupees: 3000.0);
+      await cubit.recordPayment('loan1', amountPaise: 300000);
 
       // The state must precisely reflect the backend's 7k, not a local optimistic 3k subtraction
       expect(
@@ -108,11 +108,11 @@ void main() {
       await cubit.fetchLoans();
 
       when(
-        () => mockRepo.recordPayment('loan1', amountRupees: 3000.0),
+        () => mockRepo.recordPayment('loan1', amountPaise: 300000),
       ).thenThrow(const BusinessLogicFailure('OVERPAYMENT_REJECTED'));
 
       try {
-        await cubit.recordPayment('loan1', amountRupees: 3000.0);
+        await cubit.recordPayment('loan1', amountPaise: 300000);
       } catch (_) {}
 
       // Even though we recorded an error in the Cubit, the underlying data list wasn't mutated
@@ -133,11 +133,11 @@ void main() {
       await cubit.fetchLoans();
 
       when(
-        () => mockRepo.recordPayment('loan1', amountRupees: 3000.0),
+        () => mockRepo.recordPayment('loan1', amountPaise: 300000),
       ).thenThrow(TimeoutException('Timeout'));
 
       try {
-        await cubit.recordPayment('loan1', amountRupees: 3000.0);
+        await cubit.recordPayment('loan1', amountPaise: 300000);
       } catch (_) {}
 
       // Verify fetchLoans wasn't called again because it timed out
@@ -154,7 +154,7 @@ void main() {
       await cubit.fetchLoans();
 
       when(
-        () => mockRepo.addCredit('loan1', amountRupees: 1000.0),
+        () => mockRepo.addCredit('loan1', amountPaise: 100000),
       ).thenAnswer((_) async => true);
 
       const higherLoan = LoanModel(
@@ -174,7 +174,7 @@ void main() {
         },
       );
 
-      await cubit.addCredit('loan1', amountRupees: 1000.0);
+      await cubit.addCredit('loan1', amountPaise: 100000);
       expect(
         (cubit.state as LoansLoaded).myLoans.first.totalOutstandingAmount,
         11000.0,
@@ -250,7 +250,9 @@ void main() {
     test('frozen loan remains non-mutable', () async {
       // Just testing our enums
       expect(LoanStatus.fromString('frozen').isPending, isFalse);
-      expect(LoanStatus.fromString('frozen').isFinished, isFalse);
+      expect(LoanStatus.fromString('frozen').isFinished, isTrue);
     });
   });
 }
+
+

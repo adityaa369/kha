@@ -143,7 +143,7 @@ class LoanModel extends Equatable {
   final int emiAmountPaise;
   final int totalPayablePaise;
   final int paidAmountPaise;
-  final int principalOutstandingPaise;
+  final int? principalOutstandingPaise;
   final int interestOutstandingPaise;
   final int feesOutstandingPaise;
   final String? financialStatus;
@@ -177,7 +177,7 @@ class LoanModel extends Equatable {
     this.emiAmountPaise = 0,
     this.totalPayablePaise = 0,
     this.paidAmountPaise = 0,
-    this.principalOutstandingPaise = 0,
+    this.principalOutstandingPaise,
     this.interestOutstandingPaise = 0,
     this.feesOutstandingPaise = 0,
     this.financialStatus,
@@ -272,7 +272,7 @@ class LoanModel extends Equatable {
       emiAmountPaise: parsePaiseOptional('emiAmountPaise'),
       totalPayablePaise: parsePaiseOptional('totalPayablePaise'),
       paidAmountPaise: parsePaiseOptional('paidAmountPaise'),
-      principalOutstandingPaise: parsePaiseStrict('principalOutstandingPaise'),
+      principalOutstandingPaise: json['principalOutstandingPaise'] != null ? parsePaiseStrict('principalOutstandingPaise') : null,
       interestOutstandingPaise: parsePaiseOptional('interestOutstandingPaise'),
       feesOutstandingPaise: parsePaiseOptional('feesOutstandingPaise'),
       financialStatus: json['financialStatus']?.toString(),
@@ -324,11 +324,14 @@ class LoanModel extends Equatable {
   double get emiAmount => emiAmountPaise / 100;
   double get totalPayableAmount => totalPayablePaise / 100;
 
-  // 4F-4 Presentation-derived total
-  int get totalOutstandingPaise =>
-      principalOutstandingPaise +
-      interestOutstandingPaise +
-      feesOutstandingPaise;
+  int get totalOutstandingPaise {
+    if (principalOutstandingPaise != null) {
+      return principalOutstandingPaise! + interestOutstandingPaise + feesOutstandingPaise;
+    }
+    // Fallback for legacy V1 loans where only totalPayable and paidAmount exist
+    int outstanding = totalPayablePaise - paidAmountPaise;
+    return outstanding > 0 ? outstanding : 0;
+  }
   double get totalOutstandingAmount => totalOutstandingPaise / 100;
   double get paidAmount => paidAmountPaise / 100;
 

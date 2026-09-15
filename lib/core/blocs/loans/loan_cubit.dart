@@ -95,10 +95,10 @@ class LoanCubit extends Cubit<LoanState> {
   }
 
   // Verify/Approve loan agreement with intent and OTP
-  Future<bool> verifyLoan(String loanId, String intentId, String otp) async {
+  Future<bool> verifyLoan(String loanId, String intentId) async {
     emit(LoanLoading());
     try {
-      final success = await _repository.verifyLoan(loanId, intentId, otp);
+      final success = await _repository.verifyLoan(loanId, intentId);
       if (success) {
         emit(const LoanVerificationSuccess());
         await fetchLoans();

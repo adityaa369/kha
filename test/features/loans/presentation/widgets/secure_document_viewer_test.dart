@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'dart:typed_data';
 
 import 'package:khatha/data/repositories/loan_repository.dart';
 import 'package:khatha/features/loans/presentation/widgets/secure_document_viewer.dart';
@@ -33,7 +34,7 @@ void main() {
       (WidgetTester tester) async {
         when(() => mockRepo.getSignedDocumentUrl('doc_123')).thenAnswer(
           (_) async => DocumentResponse(
-            url: 'https://storage.googleapis.com/signed-url-123',
+            bytes: Uint8List.fromList([1, 2, 3]),
             contentType: 'image/jpeg',
           ),
         );
@@ -50,16 +51,13 @@ void main() {
 
         verify(() => mockRepo.getSignedDocumentUrl('doc_123')).called(1);
 
-        // Should show Image.network
+        // Should show Image.memory
         final imageFinder = find.byType(Image);
         expect(imageFinder, findsOneWidget);
 
         final image = tester.widget<Image>(imageFinder);
-        final networkImage = image.image as NetworkImage;
-        expect(
-          networkImage.url,
-          'https://storage.googleapis.com/signed-url-123',
-        );
+        final memoryImage = image.image as MemoryImage;
+        expect(memoryImage.bytes.length, 3);
       },
     );
 
@@ -116,7 +114,7 @@ void main() {
       // Setup successful response for retry
       when(() => mockRepo.getSignedDocumentUrl('doc_123')).thenAnswer(
         (_) async => DocumentResponse(
-          url: 'https://storage.googleapis.com/new-signed-url-123',
+          bytes: Uint8List.fromList([1, 2, 3]),
           contentType: 'image/jpeg',
         ),
       );
@@ -124,15 +122,12 @@ void main() {
       await tester.tap(retryButton);
       await tester.pumpAndSettle();
 
-      // Should show Image.network
+      // Should show Image.memory
       final imageFinder = find.byType(Image);
       expect(imageFinder, findsOneWidget);
       final image = tester.widget<Image>(imageFinder);
-      final networkImage = image.image as NetworkImage;
-      expect(
-        networkImage.url,
-        'https://storage.googleapis.com/new-signed-url-123',
-      );
+      final memoryImage = image.image as MemoryImage;
+      expect(memoryImage.bytes.length, 3);
     });
 
     testWidgets(
@@ -140,7 +135,7 @@ void main() {
       (WidgetTester tester) async {
         when(() => mockRepo.getSignedDocumentUrl('doc_pdf_123')).thenAnswer(
           (_) async => DocumentResponse(
-            url: 'https://storage.googleapis.com/signed-url-pdf',
+            bytes: Uint8List.fromList([1, 2, 3]),
             contentType: 'application/pdf',
           ),
         );

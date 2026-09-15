@@ -1,145 +1,130 @@
-import '../../../../core/utils/error_handler.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../config/theme.dart';
+import 'package:pin_code_fields/pin_code_fields.dart';
+
 import '../../../../config/constants.dart';
+import '../../../../config/theme.dart';
+import '../../../../core/blocs/loans/loan_cubit.dart';
 
-class LoanConfirmationPage extends StatelessWidget {
+/// Lender signature step. The agreement is persisted as pending_otp and is
+/// released to the borrower only after a Firebase SMS challenge succeeds.
+class LoanConfirmationPage extends StatefulWidget {
   final Map<String, dynamic> loanData;
-
   const LoanConfirmationPage({super.key, required this.loanData});
 
   @override
-  Widget build(BuildContext context) {
-    if (loanData['amountPaise'] == null || loanData['amountPaise'] is! int) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ErrorHandler.showError(context, 'Contract Error: Missing or invalid amountPaise');
-        context.pop();
-      });
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+  State<LoanConfirmationPage> createState() => _LoanConfirmationPageState();
+}
+
+class _LoanConfirmationPageState extends State<LoanConfirmationPage> {
+  String? _verificationId;
+  String _code = '';
+  bool _sending = false;
+  bool _verifying = false;
+
+  String get _loanId => widget.loanData['loan_id']?.toString() ?? '';
+
+  Future<void> _sendOtp() async {
+    final phone = FirebaseAuth.instance.currentUser?.phoneNumber;
+    if (_loanId.isEmpty || phone == null) {
+      _show('Your phone session is unavailable. Please sign in again.');
+      return;
     }
+    setState(() => _sending = true);
+    await FirebaseAuth.instance.verifyPhoneNumber(
+      phoneNumber: phone,
+      verificationCompleted: (_) {},
+      verificationFailed: (error) {
+        if (!mounted) return;
+        setState(() => _sending = false);
+        _show(error.message ?? 'Unable to send OTP. Please try again.');
+      },
+      codeSent: (verificationId, _) {
+        if (!mounted) return;
+        setState(() {
+          _verificationId = verificationId;
+          _sending = false;
+        });
+      },
+      codeAutoRetrievalTimeout: (verificationId) => _verificationId = verificationId,
+    );
+  }
+
+  Future<void> _confirm() async {
+    if (_verificationId == null || _code.length != 6) return;
+    setState(() => _verifying = true);
+    try {
+      final credential = PhoneAuthProvider.credential(
+        verificationId: _verificationId!,
+        smsCode: _code,
+      );
+      await FirebaseAuth.instance.signInWithCredential(credential);
+      final ok = await context.read<LoanCubit>().verifyLenderOtp(_loanId);
+      if (!mounted) return;
+      if (ok) {
+        context.go(AppConstants.loansGiven);
+      } else {
+        _show('Could not confirm the agreement. Please request a new OTP.');
+      }
+    } on FirebaseAuthException catch (error) {
+      _show(error.message ?? 'Invalid OTP. Please try again.');
+    } finally {
+      if (mounted) setState(() => _verifying = false);
+    }
+  }
+
+  void _show(String message) {
+    if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final amount = (widget.loanData['amountPaise'] as num? ?? 0) / 100;
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: KhaataTheme.textDark),
-          onPressed: () => context.pop(),
-        ),
-        title: Text(
-          'Confirm Agreement',
-          style: TextStyle(
-            color: KhaataTheme.textDark,
-            fontSize: 18.sp,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ),
+      appBar: AppBar(title: const Text('Confirm Agreement')),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(24.w),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Agreement Summary Card
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(20.w),
-                decoration: BoxDecoration(
-                  color: KhaataTheme.primaryBlue.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(16.r),
-                  border: Border.all(
-                    color: KhaataTheme.primaryBlue.withValues(alpha: 0.2),
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      'Loan Agreement Summary',
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w600,
-                        color: KhaataTheme.textGrey,
-                      ),
-                    ),
-                    SizedBox(height: 12.h),
-                    Text(
-                      '₹ ${loanData['amountPaise'] / 100}',
-                      style: TextStyle(
-                        fontSize: 32.sp,
-                        fontWeight: FontWeight.bold,
-                        color: KhaataTheme.primaryBlue,
-                      ),
-                    ),
-                    SizedBox(height: 4.h),
-                    Text(
-                      'to ${loanData['borrower_name']}',
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    SizedBox(height: 16.h),
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 12.w,
-                        vertical: 6.h,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20.r),
-                      ),
-                      child: Text(
-                        'Pending Approval',
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          color: KhaataTheme.warningYellow,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              SizedBox(height: 40.h),
-
-              // Pending Status Section
-              Icon(
-                Icons.mark_email_unread_outlined,
-                size: 64.sp,
-                color: KhaataTheme.primaryBlue,
-              ),
-              SizedBox(height: 16.h),
+              const Icon(Icons.description_outlined, size: 64, color: KhaataTheme.primaryBlue),
+              const SizedBox(height: 20),
+              Text('Sign before sending', textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineSmall),
+              const SizedBox(height: 12),
               Text(
-                'Approval Request Sent',
-                style: TextStyle(
-                  fontSize: 20.sp,
-                  fontWeight: FontWeight.bold,
-                  color: KhaataTheme.textDark,
-                ),
-              ),
-              SizedBox(height: 8.h),
-              Text(
-                'The borrower has been notified. The agreement will remain in pending state until they review and approve it on their device.',
+                '₹${amount.toStringAsFixed(0)} to ${widget.loanData['borrower_name'] ?? 'the borrower'}',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  color: KhaataTheme.textGrey,
-                  height: 1.5,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'We will send an OTP to your registered phone. Verifying it is your digital signature; the borrower receives the agreement only afterwards.',
+                textAlign: TextAlign.center,
+              ),
+              const Spacer(),
+              if (_verificationId == null)
+                ElevatedButton(
+                  onPressed: _sending ? null : _sendOtp,
+                  child: _sending ? const CircularProgressIndicator() : const Text('Send OTP to Sign'),
+                )
+              else ...[
+                PinCodeTextField(
+                  appContext: context,
+                  length: 6,
+                  keyboardType: TextInputType.number,
+                  onChanged: (value) => setState(() => _code = value),
+                  onCompleted: (value) => setState(() => _code = value),
                 ),
-              ),
-
-              SizedBox(height: 48.h),
-
-              ElevatedButton(
-                child: Text('Go to Given Loans'),
-                onPressed: () {
-                  context.go(AppConstants.loansGiven);
-                },
-              ),
+                const SizedBox(height: 12),
+                ElevatedButton(
+                  onPressed: _verifying || _code.length != 6 ? null : _confirm,
+                  child: _verifying ? const CircularProgressIndicator() : const Text('Verify OTP & Send Agreement'),
+                ),
+                TextButton(onPressed: _sending ? null : _sendOtp, child: const Text('Resend OTP')),
+              ],
             ],
           ),
         ),

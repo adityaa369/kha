@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/blocs/loans/loan_cubit.dart';
 import '../../../../core/blocs/loans/loan_state.dart';
 import '../../../../data/models/loan_model.dart';
@@ -29,6 +30,7 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
   bool _isLoading = true;
   int _resendTimer = 30;
   bool _canResend = false;
+  String? _verificationId;
   late StreamController<ErrorAnimationType> _errorController;
   final TextEditingController _otpController = TextEditingController();
 
@@ -85,43 +87,40 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
   void _requestOtp() async {
     if (_loan == null) return;
     setState(() => _isApproving = true);
-
-    final success = await context.read<LoanCubit>().requestConsentOtp(
-      _loan!.id,
-    );
-
-    if (!mounted) return;
-    setState(() => _isApproving = false);
-
-    if (success) {
-      setState(() {
-        _isOtpSent = true;
-      });
-      _startResendTimer();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'OTP requested successfully',
-            style: TextStyle(color: Colors.white),
-          ),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Failed to request OTP',
-            style: TextStyle(color: Colors.white),
-          ),
-          backgroundColor: Colors.red,
-        ),
-      );
+    final phone = FirebaseAuth.instance.currentUser?.phoneNumber;
+    if (phone == null) {
+      if (mounted) setState(() => _isApproving = false);
+      return;
     }
+    await FirebaseAuth.instance.verifyPhoneNumber(
+      phoneNumber: phone,
+      verificationCompleted: (credential) async {
+        // Android may complete verification without showing the SMS field.
+        // Use that credential directly instead of leaving the UI loading.
+        await FirebaseAuth.instance.signInWithCredential(credential);
+        final intentId = _loan?.pendingIntentId;
+        if (intentId == null) return;
+        final success = await context.read<LoanCubit>().verifyLoan(_loan!.id, intentId);
+        if (!mounted) return;
+        setState(() => _isApproving = false);
+        if (!success) _errorController.add(ErrorAnimationType.shake);
+      },
+      verificationFailed: (error) {
+        if (!mounted) return;
+        setState(() => _isApproving = false);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.message ?? 'Unable to send OTP')));
+      },
+      codeSent: (verificationId, _) {
+        if (!mounted) return;
+        setState(() { _verificationId = verificationId; _isOtpSent = true; _isApproving = false; });
+        _startResendTimer();
+      },
+      codeAutoRetrievalTimeout: (verificationId) => _verificationId = verificationId,
+    );
   }
 
   void _approveLoan() async {
-    if (_loan == null) return;
+    if (_loan == null || _verificationId == null || _currentOtp.length != 6) return;
 
     final authenticated = await BiometricAuthService.authenticate();
     if (!authenticated) {
@@ -138,26 +137,27 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
 
     if (!mounted) return;
 
-    if (_loan!.pendingIntentId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Missing consent intent. Please refresh.',
-            style: TextStyle(color: Colors.white),
-          ),
-          backgroundColor: Colors.red,
-        ),
+    setState(() => _isApproving = true);
+    try {
+      final credential = PhoneAuthProvider.credential(
+        verificationId: _verificationId!, smsCode: _currentOtp,
       );
+      await FirebaseAuth.instance.signInWithCredential(credential);
+    } on FirebaseAuthException catch (error) {
+      if (mounted) {
+        setState(() => _isApproving = false);
+        _errorController.add(ErrorAnimationType.shake);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.message ?? 'Invalid OTP')));
+      }
       return;
     }
 
-    setState(() => _isApproving = true);
-
-    final success = await context.read<LoanCubit>().verifyLoan(
-      _loan!.id,
-      _loan!.pendingIntentId!,
-      _currentOtp,
-    );
+    final intentId = _loan!.pendingIntentId;
+    if (intentId == null || intentId.isEmpty) {
+      if (mounted) setState(() => _isApproving = false);
+      return;
+    }
+    final success = await context.read<LoanCubit>().verifyLoan(_loan!.id, intentId);
 
     if (mounted) {
       setState(() => _isApproving = false);
@@ -353,84 +353,29 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
                             width: 20,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : Text('Request OTP to Sign'),
+                        : const Text('Send OTP to Sign'),
                   ),
                 ),
 
               if (loan.status == 'pending_approval' && _isOtpSent) ...[
-                Text(
-                  'Enter 6-digit OTP sent to your phone',
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    color: KhaataTheme.textGrey,
-                  ),
-                ),
-                SizedBox(height: 16.h),
+                const SizedBox(height: 16),
                 PinCodeTextField(
                   appContext: context,
                   length: 6,
                   controller: _otpController,
                   keyboardType: TextInputType.number,
-                  autoFocus: true,
                   errorAnimationController: _errorController,
-                  pinTheme: PinTheme(
-                    shape: PinCodeFieldShape.box,
-                    borderRadius: BorderRadius.circular(12.r),
-                    fieldHeight: 50.h,
-                    fieldWidth: 45.w,
-                    activeFillColor: Colors.grey[100],
-                    inactiveFillColor: Colors.grey[100],
-                    selectedFillColor: Colors.blue[50],
-                    activeColor: KhaataTheme.primaryBlue,
-                    inactiveColor: Colors.grey[300],
-                    selectedColor: KhaataTheme.primaryBlue,
-                  ),
-                  cursorColor: KhaataTheme.primaryBlue,
-                  enableActiveFill: true,
-                  onChanged: (value) {
-                    setState(() => _currentOtp = value);
-                  },
+                  onChanged: (value) => setState(() => _currentOtp = value),
+                  onCompleted: (value) => setState(() => _currentOtp = value),
                 ),
-                SizedBox(height: 16.h),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Didn\'t receive code? ',
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        color: KhaataTheme.textGrey,
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: _canResend ? _requestOtp : null,
-                      child: Text(
-                        _canResend ? 'Resend' : 'Resend in ${_resendTimer}s',
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w600,
-                          color: _canResend
-                              ? KhaataTheme.primaryBlue
-                              : Colors.grey[400],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 24.h),
+                const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: _currentOtp.length == 6
-                        ? (_isApproving ? null : _approveLoan)
-                        : null,
+                    onPressed: _isApproving || _currentOtp.length != 6 ? null : _approveLoan,
                     child: _isApproving
-                        ? SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Text('Sign & Accept Terms'),
+                        ? const CircularProgressIndicator()
+                        : const Text('Verify OTP & Accept Agreement'),
                   ),
                 ),
               ],

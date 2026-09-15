@@ -246,6 +246,20 @@ exports.getGivenLoans = async (req, res) => {
 // @desc    Get loans taken by current user
 // @route   GET /api/loans/taken
 // @access  Private
+exports.getLoanById = async (req, res) => {
+    try {
+        const loan = await Loan.findById(req.params.id)
+            .populate('lender', 'firstName lastName phone')
+            .populate('borrower', 'firstName lastName phone');
+        if (!loan) return res.status(404).json({ success: false, message: 'Loan not found' });
+        if (loan.lender.id !== req.user.id && loan.borrower.id !== req.user.id) return res.status(403).json({ success: false, message: 'Not authorized' });
+        res.status(200).json({ success: true, loan });
+    } catch (err) {
+        console.error('[Loans] getLoanById Error:', err.message);
+        res.status(500).json({ success: false, message: 'Server Error' });
+    }
+};
+
 exports.getTakenLoans = async (req, res) => {
     try {
         const cacheKey = `loans:taken:${req.user.id}`;

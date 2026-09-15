@@ -1,4 +1,4 @@
-import 'package:khatha/core/utils/error_handler.dart';
+﻿import 'package:khatha/core/utils/error_handler.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -42,7 +42,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
           if (!mounted) return;
           if (state is AuthError) {
             ErrorHandler.showError(context, state.message);
-          } else if (state is AuthenticatedKycComplete) {
+          } else if (state is Authenticated) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('Password reset successfully!'),
@@ -196,3 +196,4 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
     );
   }
 }
+

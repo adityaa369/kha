@@ -304,15 +304,14 @@ class LenderLoanDetailsPage extends StatelessWidget {
     final monthly = rate > 0
         ? loan.amount * rate / 100
         : (loan.emiAmount ?? 0.0);
-    // originalTotal = what was owed at activation
-    final originalTotal = loan.paidAmount > 0
-        ? loan.totalPayableAmount + loan.paidAmount
-        : (loan.totalPayableAmount > 0
-              ? loan.totalPayableAmount
-              : loan.amount + (monthly * duration));
-    // remaining = what the backend says is still owed (totalPayableAmount is updated on each payment)
-    final remaining = loan.totalPayableAmount;
-    final collected = originalTotal - remaining;
+    final originalTotalPaise = loan.amountPaise;
+    final remainingPaise = loan.totalOutstandingPaise;
+    final collectedPaise = loan.paidAmountPaise;
+
+    final originalTotal = originalTotalPaise / 100.0;
+    final remaining = remainingPaise / 100.0;
+    final collected = collectedPaise / 100.0;
+
     final isInterest =
         loan.type.toLowerCase().contains('interest') ||
         loan.type.toLowerCase().contains('home');

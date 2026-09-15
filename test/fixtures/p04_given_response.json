@@ -1,0 +1,35 @@
+{
+  "success": true,
+  "loans": [
+    {
+      "_id": "6aa7fd319646c1dbab1e8d00",
+      "lender": "lender_p04_1789394226166",
+      "borrower": "borrower_p04_1789394226166",
+      "borrowerName": "Test Borrower",
+      "borrowerPhone": "8817893942",
+      "amount": 5000,
+      "interestRate": 0,
+      "durationMonths": 12,
+      "durationType": "Months",
+      "status": "active",
+      "progress": 0,
+      "emiAmount": 0,
+      "totalPayable": 5000,
+      "loanType": "personal",
+      "isOtpVerified": false,
+      "paidAmount": 0,
+      "transactions": [],
+      "createdAt": "2026-09-14T13:57:05.395Z",
+      "updatedAt": "2026-09-14T13:57:05.395Z",
+      "__v": 0,
+      "amountPaise": 500000,
+      "emiAmountPaise": 0,
+      "totalPayablePaise": 500000,
+      "paidAmountPaise": 0,
+      "principalOutstandingPaise": null,
+      "interestOutstandingPaise": null,
+      "feesOutstandingPaise": null,
+      "financialStatus": "active"
+    }
+  ]
+}

@@ -47,8 +47,7 @@ class _PanDetailsPageState extends State<PanDetailsPage> {
         body: BlocListener<AuthCubit, AuthState>(
           listener: (context, state) {
             if (!mounted) return;
-            if (state is AuthenticatedKycComplete ||
-                state is AuthenticatedEmailUnverified) {
+            if (state is Authenticated) {
               context.push(AppConstants.processing);
             } else if (state is AuthError) {
               ScaffoldMessenger.of(context);

@@ -13,6 +13,7 @@ import '../../../../core/blocs/loans/loan_state.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/services/biometric_auth_service.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import '../../../../core/utils/money.dart';
 
 class CreateLoanPage extends StatefulWidget {
   final String loanType;
@@ -123,7 +124,13 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
   }
 
   void _showPreviewDialog() {
-    final amount = double.tryParse(_amountController.text) ?? 0.0;
+    double amount = 0.0;
+    try {
+      amount = MoneyUtils.parseRupeesToPaise(_amountController.text) / 100.0;
+    } catch (_) {
+      amount = 0.0;
+    }
+
     final rate = widget.loanType == 'interest_credit'
         ? (double.tryParse(_interestController.text) ?? 0.0)
         : 0.0;
@@ -150,18 +157,18 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
           children: [
             Text('Borrower: ${_borrowerNameController.text}'),
             SizedBox(height: 8.h),
-            Text('Principal: ₹${amount.toStringAsFixed(2)}'),
+            Text('Principal: Ã¢â€šÂ¹${amount.toStringAsFixed(2)}'),
             if (widget.loanType == 'interest_credit') ...[
               SizedBox(height: 8.h),
               Text('Interest Rate: $rate% (Annual)'),
               SizedBox(height: 8.h),
-              Text('Total Interest: ₹${totalInterest.toStringAsFixed(2)}'),
+              Text('Total Interest: Ã¢â€šÂ¹${totalInterest.toStringAsFixed(2)}'),
             ],
             SizedBox(height: 8.h),
             Text('Duration: $months Months'),
             Divider(height: 24.h),
             Text(
-              'Total Repayment: ₹${totalAmount.toStringAsFixed(2)}',
+              'Total Repayment: Ã¢â€šÂ¹${totalAmount.toStringAsFixed(2)}',
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ],
@@ -190,9 +197,11 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
   }
 
   void _processLoanCreation() async {
+    setState(() => _isLoading = true);
     final authenticated = await BiometricAuthService.authenticate();
     if (!authenticated) {
       if (mounted) {
+        setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
@@ -207,7 +216,6 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
     }
 
     if (!mounted) return;
-    setState(() => _isLoading = true);
 
     final phone = _mobileController.text;
     final cubit = context.read<LoanCubit>();
@@ -300,7 +308,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
       'borrower_name': _borrowerNameController.text,
       'borrower_aadhar': _aadharController.text,
       'borrower_address': _addressController.text,
-      'amountPaise': (int.tryParse(_amountController.text) ?? 0) * 100,
+      'amountPaise': MoneyUtils.parseRupeesToPaise(_amountController.text),
       'interest_rate': widget.loanType == 'interest_credit'
           ? (double.tryParse(_interestController.text) ?? 0.0)
           : 0.0,
@@ -325,7 +333,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
           'loan_id': result['id'],
           'borrower_name': _borrowerNameController.text,
           'borrower_phone': phone,
-          'amountPaise': (int.tryParse(_amountController.text) ?? 0) * 100,
+          'amountPaise': MoneyUtils.parseRupeesToPaise(_amountController.text),
         },
       );
     } else if (mounted) {

@@ -26,12 +26,12 @@ void main() {
       when(
         () => mockRepo.recordPayment(
           'loan1',
-          amountRupees: 5000.0,
+          amountPaise: 500000,
           idempotencyKey: any(named: 'idempotencyKey'),
         ),
       ).thenAnswer((_) async => true);
 
-      await cubit.submitPayment(5000.0);
+      await cubit.submitPayment(500000);
       expect(cubit.state, isA<PaymentSuccess>());
     });
 
@@ -39,12 +39,12 @@ void main() {
       when(
         () => mockRepo.recordPayment(
           'loan1',
-          amountRupees: 5000.0,
+          amountPaise: 500000,
           idempotencyKey: any(named: 'idempotencyKey'),
         ),
       ).thenThrow(const BusinessLogicFailure('OVERPAYMENT_REJECTED'));
 
-      await cubit.submitPayment(5000.0);
+      await cubit.submitPayment(500000);
       expect(cubit.state, isA<PaymentRejected>());
       expect(
         (cubit.state as PaymentRejected).failure,
@@ -57,13 +57,13 @@ void main() {
       when(
         () => mockRepo.recordPayment(
           'loan1',
-          amountRupees: 5000.0,
+          amountPaise: 500000,
           idempotencyKey: any(named: 'idempotencyKey'),
         ),
       ).thenAnswer((_) => completer.future);
 
-      cubit.submitPayment(5000.0); // first tap
-      cubit.submitPayment(5000.0); // duplicate tap
+      cubit.submitPayment(500000); // first tap
+      cubit.submitPayment(500000); // duplicate tap
 
       completer.complete(true);
       await Future.delayed(Duration.zero);
@@ -72,7 +72,7 @@ void main() {
       verify(
         () => mockRepo.recordPayment(
           'loan1',
-          amountRupees: 5000.0,
+          amountPaise: 500000,
           idempotencyKey: any(named: 'idempotencyKey'),
         ),
       ).called(1);
@@ -82,12 +82,12 @@ void main() {
       when(
         () => mockRepo.recordPayment(
           'loan1',
-          amountRupees: 5000.0,
+          amountPaise: 500000,
           idempotencyKey: any(named: 'idempotencyKey'),
         ),
       ).thenThrow(TimeoutException('timeout'));
 
-      await cubit.submitPayment(5000.0);
+      await cubit.submitPayment(500000);
       expect(cubit.state, isA<PaymentUnknown>());
     });
 
@@ -95,12 +95,12 @@ void main() {
       when(
         () => mockRepo.recordPayment(
           'loan1',
-          amountRupees: 5000.0,
+          amountPaise: 500000,
           idempotencyKey: any(named: 'idempotencyKey'),
         ),
       ).thenThrow(TimeoutException('timeout'));
 
-      await cubit.submitPayment(5000.0);
+      await cubit.submitPayment(500000);
       final unknownState = cubit.state as PaymentUnknown;
 
       when(
@@ -119,12 +119,12 @@ void main() {
         when(
           () => mockRepo.recordPayment(
             'loan1',
-            amountRupees: 5000.0,
+            amountPaise: 500000,
             idempotencyKey: any(named: 'idempotencyKey'),
           ),
         ).thenThrow(TimeoutException('timeout'));
 
-        await cubit.submitPayment(5000.0);
+        await cubit.submitPayment(500000);
         final unknownState = cubit.state as PaymentUnknown;
         final originalKey = unknownState.attempt.idempotencyKey;
 
@@ -141,19 +141,19 @@ void main() {
         when(
           () => mockRepo.recordPayment(
             'loan1',
-            amountRupees: 5000.0,
+            amountPaise: 500000,
             idempotencyKey: originalKey,
           ),
         ).thenAnswer((_) async => true);
 
         // Retry
-        await cubit.submitPayment(5000.0);
+        await cubit.submitPayment(500000);
 
         // Verify the SAME key was used
         verify(
           () => mockRepo.recordPayment(
             'loan1',
-            amountRupees: 5000.0,
+            amountPaise: 500000,
             idempotencyKey: originalKey,
           ),
         ).called(2);
@@ -167,13 +167,13 @@ void main() {
       when(
         () => mockRepo.recordPayment(
           'loan1',
-          amountRupees: 5000.0,
+          amountPaise: 500000,
           idempotencyKey: key,
         ),
       ).thenAnswer((_) async => true);
 
       // Simulating the repository using the provided key successfully
-      final attempt = PaymentAttempt(amountRupees: 5000.0, key: key);
+      final attempt = PaymentAttempt(amountPaise: 500000, key: key);
       expect(attempt.idempotencyKey, key);
     });
 
@@ -190,12 +190,12 @@ void main() {
         when(
           () => mockRepo.recordPayment(
             'loan1',
-            amountRupees: 5000.0,
+            amountPaise: 500000,
             idempotencyKey: any(named: 'idempotencyKey'),
           ),
         ).thenThrow(dioRateLimit);
 
-        await cubit.submitPayment(5000.0);
+        await cubit.submitPayment(500000);
         expect(cubit.state, isA<PaymentRejected>());
         expect(
           (cubit.state as PaymentRejected).failure,

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
@@ -54,7 +54,7 @@ class _HomeViewState extends State<_HomeView> {
     });
 
     _authSub = context.read<AuthCubit>().stream.listen((authState) {
-      if (authState is AuthenticatedKycComplete) {
+      if (authState is Authenticated) {
         if (mounted) {
           if (context.read<LoanCubit>().state is LoanInitial) {
             context.read<LoanCubit>().fetchLoans();
@@ -484,7 +484,7 @@ class _TopBarState extends State<_TopBar> {
                 child: BlocBuilder<AuthCubit, AuthState>(
                   builder: (context, state) {
                     String? gender;
-                    if (state is AuthenticatedKycComplete) {
+                    if (state is Authenticated) {
                       gender = state.user.gender;
                     }
                     return Container(
@@ -529,9 +529,9 @@ class _GreetingSection extends StatelessWidget {
           BlocBuilder<AuthCubit, AuthState>(
             builder: (context, state) {
               String name = 'User';
-              if (state is AuthenticatedKycComplete) {
+              if (state is Authenticated) {
                 name = state.user.firstName;
-              } else if (state is AuthenticatedEmailUnverified) {
+              } else if (state is Authenticated) {
                 name = state.user.firstName;
               }
               return Row(
@@ -867,11 +867,11 @@ class _PaymentsSection extends StatelessWidget {
             Duration(days: (completedMonths + 1) * 30),
           );
 
-          double installment = 0;
+          int installmentPaise = 0;
           if (type == 'interestcredit' || type == 'home') {
-            installment = loan.amount * (loan.interestRate ?? 0) / 100;
+            installmentPaise = loan.amountPaise * (loan.interestRate?.toInt() ?? 0) ~/ 100;
           } else {
-            installment = loan.amount / duration;
+            installmentPaise = duration > 0 ? loan.amountPaise ~/ duration : 0;
           }
 
           final daysDifference = nextDueDate.difference(now).inDays;
@@ -879,7 +879,7 @@ class _PaymentsSection extends StatelessWidget {
           dueList.add({
             'loan': loan,
             'dueDate': nextDueDate,
-            'amount': installment,
+            'amount': installmentPaise / 100,
             'daysDifference': daysDifference,
           });
         }
@@ -938,12 +938,12 @@ class _PaymentsSection extends StatelessWidget {
                   icon: icon,
                   iconBg: iconBg,
                   title: 'Pay to ${loan.lenderName}',
-                  amount: '₹${_formatCurrency(amount)}',
+                  amount: 'â‚¹${_formatCurrency(amount)}',
                   subtitle: subtitle,
                   showProgress: isOverdue,
                   progressValue: loan.progress.clamp(0.0, 1.0),
                   onTap: () {
-                    context.push(AppConstants.loanDetails, extra: loan);
+                    context.push('${AppConstants.loanDetails}/${loan.id}');
                   },
                 ),
               );
@@ -1270,3 +1270,4 @@ class _ExploreCard extends StatelessWidget {
     );
   }
 }
+

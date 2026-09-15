@@ -1,4 +1,4 @@
-import 'package:flutter_test/flutter_test.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:khatha/data/repositories/loan_repository.dart';
 import 'package:khatha/core/blocs/auth/auth_cubit.dart';
@@ -39,7 +39,7 @@ void main() {
 
     when(() => mockAuthCubit.stream).thenAnswer((_) => const Stream.empty());
     when(() => mockAuthCubit.state).thenReturn(
-      const AuthenticatedKycComplete(
+      const Authenticated(
         user: UserModel(
           id: 'user_123',
           firstName: 'Current',
@@ -137,3 +137,5 @@ void main() {
     );
   });
 }
+
+

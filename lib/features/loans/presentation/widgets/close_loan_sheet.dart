@@ -41,7 +41,7 @@ class _CloseLoanSheetView extends StatelessWidget {
   Widget build(BuildContext context) {
     final currencyFmt = NumberFormat('#,##0', 'en_IN');
     final outstanding =
-        (loan.principalOutstandingPaise +
+        ((loan.principalOutstandingPaise ?? (loan.totalPayablePaise - loan.paidAmountPaise)) +
             loan.interestOutstandingPaise +
             loan.feesOutstandingPaise) /
         100.0;

@@ -93,13 +93,10 @@ class _SplashPageState extends State<SplashPage>
   void _handleNavigation(AuthState state) async {
     if (!mounted) return;
 
-    if (state is AuthenticatedKycComplete || state is AuthOffline) {
+    if (state is Authenticated || state is AuthOffline) {
       // Token valid, but require Biometric Unlock
       setState(() => _isLocked = true);
       _attemptBiometricUnlock(showFailureMessage: false);
-    } else if (state is AuthenticatedEmailVerifiedKycIncomplete ||
-        state is AuthenticatedEmailUnverified) {
-      context.go(AppConstants.home);
     } else if (state is Unauthenticated || state is AuthError) {
       context.go(AppConstants.login);
     }
@@ -230,3 +227,4 @@ class TextUntil extends StatelessWidget {
     return Text(text, style: style);
   }
 }
+

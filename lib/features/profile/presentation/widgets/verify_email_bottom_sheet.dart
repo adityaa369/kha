@@ -1,4 +1,4 @@
-import 'package:khatha/core/utils/error_handler.dart';
+﻿import 'package:khatha/core/utils/error_handler.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -92,9 +92,9 @@ class _VerifyEmailBottomSheetState extends State<VerifyEmailBottomSheet> {
 
       final state = context.read<AuthCubit>().state;
       bool isVerified = false;
-      if (state is AuthenticatedKycComplete && state.user.isEmailVerified)
+      if (state is Authenticated && state.user.isEmailVerified)
         isVerified = true;
-      if (state is AuthenticatedEmailUnverified && state.user.isEmailVerified)
+      if (state is Authenticated && state.user.isEmailVerified)
         isVerified = true;
 
       if (isVerified) {
@@ -247,3 +247,4 @@ class _VerifyEmailBottomSheetState extends State<VerifyEmailBottomSheet> {
     );
   }
 }
+

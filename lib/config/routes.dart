@@ -82,25 +82,8 @@ final router = GoRouter(
       return null;
     }
 
-    // KYC Progress
-    if (authState is AuthenticatedEmailVerifiedKycIncomplete ||
-        authState is AuthenticatedEmailUnverified) {
-      final user = authState is AuthenticatedEmailVerifiedKycIncomplete
-          ? authState.user
-          : (authState as AuthenticatedEmailUnverified).user;
-
-      if (user.firstName.isEmpty) {
-        if (state.uri.path != AppConstants.personalDetails)
-          return AppConstants.personalDetails;
-      } else if (!user.isKycComplete) {
-        if (state.uri.path != AppConstants.panDetails)
-          return AppConstants.panDetails;
-      }
-      return null;
-    }
-
     // Full Authorized State
-    if (authState is AuthenticatedKycComplete) {
+    if (authState is Authenticated) {
       // If they were originally trying to go somewhere and hit splash, let them through
       if (state.uri.path == AppConstants.splash) {
         final redirect = state.uri.queryParameters['redirect_to'];

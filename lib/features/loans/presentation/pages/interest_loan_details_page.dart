@@ -312,7 +312,7 @@ class _InterestLoanDetailsView extends StatelessWidget {
                   Expanded(
                     child: _statBox(
                       'Principal Outstanding',
-                      '₹${_fmt(loan.principalOutstandingPaise / 100.0)}',
+                      '₹${_fmt((loan.principalOutstandingPaise ?? (loan.totalPayablePaise - loan.paidAmountPaise)) / 100.0)}',
                       Colors.white,
                     ),
                   ),

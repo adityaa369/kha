@@ -1,4 +1,4 @@
-import 'package:flutter_test/flutter_test.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/services.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -43,7 +43,7 @@ void main() {
     const String lastName = 'Doe';
 
     blocTest<AuthCubit, AuthState>(
-      'emits [AuthLoading, AuthenticatedEmailUnverified] when API call is successful',
+      'emits [AuthLoading, Authenticated] when API call is successful',
       build: () {
         when(
           () => mockApiClient.put(any(), data: any(named: 'data')),
@@ -78,7 +78,7 @@ void main() {
         email: testEmail,
         phone: testPhone,
       ),
-      expect: () => [isA<AuthLoading>(), isA<AuthenticatedEmailUnverified>()],
+      expect: () => [isA<AuthLoading>(), isA<Authenticated>()],
     );
 
     blocTest<AuthCubit, AuthState>(
@@ -113,3 +113,4 @@ void main() {
     );
   });
 }
+

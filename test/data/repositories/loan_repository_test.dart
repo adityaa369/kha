@@ -46,7 +46,7 @@ void main() {
           ),
         );
 
-        await loanRepository.recordPayment('loan_1', amountRupees: 10000);
+        await loanRepository.recordPayment('loan_1', amountPaise: 1000000);
 
         final captured = verify(
           () => mockApi.post(
@@ -61,7 +61,7 @@ void main() {
         expect(payload.containsKey('otp'), isFalse);
         expect(payload.containsKey('verificationId'), isFalse);
 
-        expect(payload['amount'], 10000.0);
+        expect(payload['amountPaise'], 1000000);
       },
     );
 
@@ -84,7 +84,7 @@ void main() {
           DioException(
             requestOptions: RequestOptions(
               path: '/loans/loan_1/record-payment',
-              data: {'amount': 5000.0, 'idToken': 'expired_token'},
+              data: {'amountPaise': 500000, 'idToken': 'expired_token'},
             ),
             response: Response(
               requestOptions: RequestOptions(path: ''),
@@ -104,7 +104,7 @@ void main() {
 
         final result = await loanRepository.recordPayment(
           'loan_1',
-          amountRupees: 5000,
+          amountPaise: 500000,
         );
         expect(result, isTrue);
 

@@ -127,25 +127,23 @@ class _SecureDocumentViewerState extends State<SecureDocumentViewer> {
       );
     }
 
-    // 4F-4F: We use standard Image.network to avoid flutter_cache_manager storing the secure KYC doc
+    // 4F-4F: We use standard Image.memory to avoid flutter_cache_manager storing the secure KYC doc
     // permanently in SQLite/disk cache. Memory cache will be cleared on logout.
-    return Image.network(
-      _response!.url,
+    return Image.memory(
+      _response!.bytes,
       fit: BoxFit.contain,
-      loadingBuilder: (ctx, child, p) =>
-          p == null ? child : const Center(child: CircularProgressIndicator()),
       errorBuilder: (_, __, ___) => Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(Icons.broken_image, color: Colors.grey, size: 48),
             const SizedBox(height: 16),
-            const Text('The secure link may have expired.'),
+            const Text('The secure document could not be loaded.'),
             const SizedBox(height: 16),
             ElevatedButton.icon(
               onPressed: _fetchSignedUrl,
               icon: const Icon(Icons.refresh),
-              label: const Text('Refresh Link'),
+              label: const Text('Refresh'),
             ),
           ],
         ),

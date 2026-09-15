@@ -13,10 +13,12 @@ import '../../core/error/failures.dart';
 import '../../core/utils/secure_storage.dart';
 import 'base_repository.dart';
 
+import 'dart:typed_data';
+
 class DocumentResponse {
-  final String url;
+  final Uint8List bytes;
   final String contentType;
-  DocumentResponse({required this.url, required this.contentType});
+  DocumentResponse({required this.bytes, required this.contentType});
 }
 
 class LoanRepository extends BaseRepository {
@@ -126,11 +128,14 @@ class LoanRepository extends BaseRepository {
     });
   }
 
-  Future<bool> verifyLoan(String loanId, String intentId, String otp) async {
+  Future<bool> verifyLoan(String loanId, String intentId) async {
     return await handleApiCall(() async {
+      final idToken = await getValidIdToken(forceRefresh: true);
       final response = await _api.post(
         '/loans/$loanId/verify',
-        data: {'intentId': intentId, 'otp': otp},
+        // SMS codes are consumed only by Firebase. The server receives the
+        // signed Firebase ID token, never an OTP or verification session.
+        data: {'intentId': intentId, 'idToken': idToken},
       );
       final data = response.data;
       if (data is Map && data['success'] == true) return true;
@@ -334,16 +339,17 @@ class LoanRepository extends BaseRepository {
 
   Future<DocumentResponse> getSignedDocumentUrl(String documentId) async {
     return await handleApiCall(() async {
-      final response = await _api.get('/documents/$documentId');
+      final response = await _api.get(
+        '/documents/$documentId/download',
+        options: Options(responseType: ResponseType.bytes),
+      );
       if (response.statusCode == 200) {
         return DocumentResponse(
-          url: response.data['url'] as String,
-          contentType:
-              response.data['contentType'] as String? ??
-              'application/octet-stream',
+          bytes: Uint8List.fromList(response.data as List<int>),
+          contentType: response.headers.value('content-type') ?? 'application/octet-stream',
         );
       }
-      throw const ServerFailure('Failed to get document URL');
+      throw const ServerFailure('Failed to get document bytes');
     });
   }
 

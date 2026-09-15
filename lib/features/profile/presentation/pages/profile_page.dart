@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
@@ -17,9 +17,9 @@ class ProfilePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final authState = context.watch<AuthCubit>().state;
     bool isAdmin = false;
-    if (authState is AuthenticatedKycComplete) {
+    if (authState is Authenticated) {
       isAdmin = authState.user.isAdmin;
-    } else if (authState is AuthenticatedEmailUnverified) {
+    } else if (authState is Authenticated) {
       isAdmin = authState.user.isAdmin;
     }
 
@@ -89,12 +89,12 @@ class ProfilePage extends StatelessWidget {
                           String? email;
                           bool isEmailVerified = false;
 
-                          if (state is AuthenticatedKycComplete) {
+                          if (state is Authenticated) {
                             fullName = state.user.displayName;
                             gender = state.user.gender;
                             email = state.user.email;
                             isEmailVerified = state.user.isEmailVerified;
-                          } else if (state is AuthenticatedEmailUnverified) {
+                          } else if (state is Authenticated) {
                             fullName = 'Verified User';
                             gender = state.user.gender;
                             email = state.user.email;
@@ -153,7 +153,7 @@ class ProfilePage extends StatelessWidget {
                                           ),
                                         ),
                                         child: Text(
-                                          '✓ Verified',
+                                          'âœ“ Verified',
                                           style: TextStyle(
                                             fontSize: 11.sp,
                                             fontWeight: FontWeight.w600,
@@ -190,7 +190,7 @@ class ProfilePage extends StatelessWidget {
                                             ),
                                           ),
                                           child: Text(
-                                            '⚠ Unverified',
+                                            'âš  Unverified',
                                             style: TextStyle(
                                               fontSize: 11.sp,
                                               fontWeight: FontWeight.w600,
@@ -484,3 +484,4 @@ class _MenuTile extends StatelessWidget {
     );
   }
 }
+

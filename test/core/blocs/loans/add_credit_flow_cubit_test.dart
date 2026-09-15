@@ -24,14 +24,14 @@ void main() {
         when(
           () => mockRepo.createAddCreditIntent(
             loanId: 'loan1',
-            amountRupees: 5000.0,
+            amountPaise: 500000,
           ),
         ).thenAnswer((_) async => 'intent123');
 
-        await cubit.createIntent(5000.0);
+        await cubit.createIntent(500000);
         expect(cubit.state, isA<AddCreditAwaitingConsent>());
         expect((cubit.state as AddCreditAwaitingConsent).intentId, 'intent123');
-        expect((cubit.state as AddCreditAwaitingConsent).amountRupees, 5000.0);
+        expect((cubit.state as AddCreditAwaitingConsent).amountPaise, 500000);
       },
     );
 
@@ -43,7 +43,7 @@ void main() {
           repository: mockRepo,
           loanId: 'loan1',
           initialIntentId: 'intent123',
-          initialAmountRupees: 5000.0,
+          initialAmountPaise: 500000,
         );
 
         expect(cubit.state, isA<AddCreditAwaitingConsent>());
@@ -52,7 +52,7 @@ void main() {
           () => mockRepo.commitAddCredit(
             loanId: 'loan1',
             intentId: 'intent123',
-            amountRupees: 5000.0,
+            amountPaise: 500000,
           ),
         ).thenAnswer((_) async => true);
 
@@ -66,16 +66,16 @@ void main() {
         repository: mockRepo,
         loanId: 'loan1',
         initialIntentId: 'intent123',
-        initialAmountRupees: 5000.0,
+        initialAmountPaise: 500000,
       );
 
-      // Try to approve, the Cubit extracts amountRupees purely from the intent state,
+      // Try to approve, the Cubit extracts amountPaise purely from the intent state,
       // not from an external parameter, so the UI cannot inject 50,000.0 during approval.
       when(
         () => mockRepo.commitAddCredit(
           loanId: 'loan1',
           intentId: 'intent123',
-          amountRupees: 5000.0,
+          amountPaise: 500000,
         ),
       ).thenAnswer((_) async => true);
 
@@ -84,7 +84,7 @@ void main() {
         () => mockRepo.commitAddCredit(
           loanId: 'loan1',
           intentId: 'intent123',
-          amountRupees: 5000.0,
+          amountPaise: 500000,
         ),
       ).called(1);
     });
@@ -94,7 +94,7 @@ void main() {
         repository: mockRepo,
         loanId: 'loan1',
         initialIntentId: 'intent123',
-        initialAmountRupees: 5000.0,
+        initialAmountPaise: 500000,
       );
 
       final dioException = DioException(
@@ -109,7 +109,7 @@ void main() {
         () => mockRepo.commitAddCredit(
           loanId: 'loan1',
           intentId: 'intent123',
-          amountRupees: 5000.0,
+          amountPaise: 500000,
         ),
       ).thenThrow(dioException);
 
@@ -132,7 +132,7 @@ void main() {
         repository: mockRepo,
         loanId: 'loan1',
         initialIntentId: 'intent123',
-        initialAmountRupees: 5000.0,
+        initialAmountPaise: 500000,
       );
 
       final dioException = DioException(
@@ -147,7 +147,7 @@ void main() {
         () => mockRepo.commitAddCredit(
           loanId: 'loan1',
           intentId: 'intent123',
-          amountRupees: 5000.0,
+          amountPaise: 500000,
         ),
       ).thenThrow(dioException);
 
@@ -164,7 +164,7 @@ void main() {
         repository: mockRepo,
         loanId: 'loan1',
         initialIntentId: 'intent123',
-        initialAmountRupees: 5000.0,
+        initialAmountPaise: 500000,
       );
 
       final completer = Completer<bool>();
@@ -172,7 +172,7 @@ void main() {
         () => mockRepo.commitAddCredit(
           loanId: 'loan1',
           intentId: 'intent123',
-          amountRupees: 5000.0,
+          amountPaise: 500000,
         ),
       ).thenAnswer((_) => completer.future);
 
@@ -186,7 +186,7 @@ void main() {
         () => mockRepo.commitAddCredit(
           loanId: 'loan1',
           intentId: 'intent123',
-          amountRupees: 5000.0,
+          amountPaise: 500000,
         ),
       ).called(1);
     });
@@ -196,14 +196,14 @@ void main() {
         repository: mockRepo,
         loanId: 'loan1',
         initialIntentId: 'intent123',
-        initialAmountRupees: 5000.0,
+        initialAmountPaise: 500000,
       );
 
       when(
         () => mockRepo.commitAddCredit(
           loanId: 'loan1',
           intentId: 'intent123',
-          amountRupees: 5000.0,
+          amountPaise: 500000,
         ),
       ).thenThrow(TimeoutException('timeout'));
 
@@ -224,14 +224,14 @@ void main() {
         repository: mockRepo,
         loanId: 'loan1',
         initialIntentId: 'intent123',
-        initialAmountRupees: 5000.0,
+        initialAmountPaise: 500000,
       );
 
       when(
         () => mockRepo.commitAddCredit(
           loanId: 'loan1',
           intentId: 'intent123',
-          amountRupees: 5000.0,
+          amountPaise: 500000,
         ),
       ).thenThrow(TimeoutException('timeout'));
 
@@ -248,7 +248,7 @@ void main() {
         repository: mockRepo,
         loanId: 'loan1',
         initialIntentId: 'intent123',
-        initialAmountRupees: 5000.0,
+        initialAmountPaise: 500000,
       );
 
       when(() => mockRepo.rejectIntent('intent123')).thenAnswer((_) async {});
@@ -261,7 +261,7 @@ void main() {
         () => mockRepo.commitAddCredit(
           loanId: any(named: 'loanId'),
           intentId: any(named: 'intentId'),
-          amountRupees: any(named: 'amountRupees'),
+          amountPaise: any(named: 'amountPaise'),
         ),
       );
     });
@@ -280,11 +280,11 @@ void main() {
       when(
         () => mockRepo.createAddCreditIntent(
           loanId: 'loan1',
-          amountRupees: 5000.0,
+          amountPaise: 500000,
         ),
       ).thenThrow(dioException);
 
-      await cubit.createIntent(5000.0);
+      await cubit.createIntent(500000);
       expect(cubit.state, isA<AddCreditRejectedState>());
       expect(
         ((cubit.state as AddCreditRejectedState).failure

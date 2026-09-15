@@ -101,11 +101,13 @@ class _FlexiblePaymentSheetViewState extends State<_FlexiblePaymentSheetView> {
   int get _enteredAmountPaise => (int.tryParse(_amountCtrl.text) ?? 0) * 100;
 
   int get _newBalancePaise {
-    final currentBalancePaise = widget.loan.principalOutstandingPaise;
+    final currentBalancePaise = widget.loan.principalOutstandingPaise ?? 
+        (widget.loan.totalPayablePaise - widget.loan.paidAmountPaise);
     if (widget.actionType == 'add_credit') {
       return currentBalancePaise + _enteredAmountPaise;
     }
-    return (currentBalancePaise - _enteredAmountPaise).clamp(0, 9999999999);
+    final int balance = currentBalancePaise - _enteredAmountPaise;
+    return balance < 0 ? 0 : balance;
   }
 
   void _processPayment() {

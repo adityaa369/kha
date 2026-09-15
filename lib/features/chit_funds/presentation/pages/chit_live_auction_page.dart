@@ -1,4 +1,4 @@
-import 'package:khatha/core/utils/error_handler.dart';
+﻿import 'package:khatha/core/utils/error_handler.dart';
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
@@ -58,7 +58,7 @@ class _ChitLiveAuctionPageState extends State<ChitLiveAuctionPage> {
       setState(() => _isConnected = true);
       final authState = context.read<AuthCubit>().state;
       String userId = 'unknown';
-      if (authState is AuthenticatedKycComplete) userId = authState.user.id;
+      if (authState is Authenticated) userId = authState.user.id;
       _socket.emit('join_auction', {
         'ledgerId': widget.ledgerId,
         'userId': userId,
@@ -169,7 +169,7 @@ class _ChitLiveAuctionPageState extends State<ChitLiveAuctionPage> {
     if (_currentLowestBid > 0 && bidAmount >= _currentLowestBid) {
       ErrorHandler.showError(
         context,
-        'Bid must be LOWER than current lowest bid of ₹${_currentLowestBid.toStringAsFixed(0)}',
+        'Bid must be LOWER than current lowest bid of â‚¹${_currentLowestBid.toStringAsFixed(0)}',
       );
       return;
     }
@@ -177,7 +177,7 @@ class _ChitLiveAuctionPageState extends State<ChitLiveAuctionPage> {
     setState(() => _isPlacingBid = true);
     final authState = context.read<AuthCubit>().state;
     String userId = 'unknown';
-    if (authState is AuthenticatedKycComplete) userId = authState.user.id;
+    if (authState is Authenticated) userId = authState.user.id;
 
     _socket.emit('place_bid', {
       'ledgerId': widget.ledgerId,
@@ -229,7 +229,7 @@ class _ChitLiveAuctionPageState extends State<ChitLiveAuctionPage> {
         title: Column(
           children: [
             Text(
-              '🔴 LIVE AUCTION • Month $monthLabel',
+              'ðŸ”´ LIVE AUCTION â€¢ Month $monthLabel',
               style: GoogleFonts.inter(
                 color: Colors.white,
                 fontSize: 16.sp,
@@ -382,7 +382,7 @@ class _ChitLiveAuctionPageState extends State<ChitLiveAuctionPage> {
           SizedBox(height: 8.h),
           if (_currentLowestBid > 0) ...[
             Text(
-              '₹${_currentLowestBid.toStringAsFixed(0)}',
+              'â‚¹${_currentLowestBid.toStringAsFixed(0)}',
               style: GoogleFonts.inter(
                 color: KhaataTheme.textDark,
                 fontSize: 36.sp,
@@ -411,7 +411,7 @@ class _ChitLiveAuctionPageState extends State<ChitLiveAuctionPage> {
             ),
           ] else ...[
             Text(
-              'No bids yet — be the first!',
+              'No bids yet â€” be the first!',
               style: GoogleFonts.inter(
                 color: KhaataTheme.textGrey,
                 fontSize: 18.sp,
@@ -525,7 +525,7 @@ class _ChitLiveAuctionPageState extends State<ChitLiveAuctionPage> {
                           borderRadius: BorderRadius.circular(8.r),
                         ),
                         child: Text(
-                          '₹${(bid['amount'] as double).toStringAsFixed(0)}',
+                          'â‚¹${(bid['amount'] as double).toStringAsFixed(0)}',
                           style: GoogleFonts.inter(
                             color: isWinning
                                 ? KhaataTheme.primaryBlue
@@ -579,7 +579,7 @@ class _ChitLiveAuctionPageState extends State<ChitLiveAuctionPage> {
               ),
               if (_currentLowestBid > 0)
                 Text(
-                  'Must be less than ₹${_currentLowestBid.toStringAsFixed(0)}',
+                  'Must be less than â‚¹${_currentLowestBid.toStringAsFixed(0)}',
                   style: GoogleFonts.inter(
                     color: KhaataTheme.warningYellow,
                     fontSize: 12.sp,
@@ -597,7 +597,7 @@ class _ChitLiveAuctionPageState extends State<ChitLiveAuctionPage> {
               color: KhaataTheme.textDark,
             ),
             decoration: InputDecoration(
-              prefixText: '₹ ',
+              prefixText: 'â‚¹ ',
               prefixStyle: GoogleFonts.inter(
                 fontSize: 24.sp,
                 fontWeight: FontWeight.bold,
@@ -660,7 +660,7 @@ class _ChitLiveAuctionPageState extends State<ChitLiveAuctionPage> {
       child: Column(
         children: [
           Text(
-            '🏆 Auction Complete!',
+            'ðŸ† Auction Complete!',
             style: GoogleFonts.inter(
               color: Colors.white,
               fontSize: 20.sp,
@@ -674,7 +674,7 @@ class _ChitLiveAuctionPageState extends State<ChitLiveAuctionPage> {
           ),
           SizedBox(height: 8.h),
           Text(
-            'Winning Bid: ₹${_currentLowestBid.toStringAsFixed(0)}',
+            'Winning Bid: â‚¹${_currentLowestBid.toStringAsFixed(0)}',
             style: GoogleFonts.inter(
               color: Colors.white,
               fontSize: 18.sp,
@@ -713,3 +713,4 @@ class _ChitLiveAuctionPageState extends State<ChitLiveAuctionPage> {
     );
   }
 }
+
