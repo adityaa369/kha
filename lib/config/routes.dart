@@ -54,6 +54,8 @@ final router = GoRouter(
 
     final isAuthRoute = [
       AppConstants.login,
+      AppConstants.mpinLogin,
+      AppConstants.mpinSetup,
       '/signup',
       AppConstants.otp,
       AppConstants.welcome,

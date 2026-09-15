@@ -436,15 +436,13 @@ class AuthCubit extends Cubit<AuthState> {
       });
 
       if (response.data['success'] == true && response.data['customToken'] != null) {
-        final customToken = response.data['customToken'];
-        await FirebaseAuth.instance.signInWithCustomToken(customToken);
-        final user = FirebaseAuth.instance.currentUser;
-        if (user != null) {
-            final idToken = await user.getIdToken();
-            if (idToken != null) {
-                await SecureStorage.saveToken(idToken);
-            }
-        }
+          final customToken = response.data['customToken'];
+          await FirebaseAuth.instance.signInWithCustomToken(customToken);
+          
+          final token = response.data['token'];
+          if (token != null) {
+              await SecureStorage.saveToken(token);
+          }
         
         final userResult = await _api.get('/auth/me');
         if (userResult.data['success']) {
