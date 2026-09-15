@@ -51,4 +51,13 @@ class SecurityRepository {
       );
     }
   }
+
+  Future<bool> getMpinStatus() async {
+    try {
+      final response = await _apiClient.get('/auth/mpin/status');
+      return response.data['hasMpin'] == true;
+    } catch (_) {
+      return false;
+    }
+  }
 }

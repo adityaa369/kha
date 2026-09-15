@@ -74,4 +74,12 @@ class SecurityCubit extends Cubit<SecurityState> {
       emit(state.copyWith(isLoading: false, error: e.toString()));
     }
   }
+
+  Future<bool> getMpinStatus() async {
+    try {
+      return await _repository.getMpinStatus();
+    } catch (_) {
+      return false;
+    }
+  }
 }

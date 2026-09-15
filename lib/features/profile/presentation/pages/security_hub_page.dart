@@ -19,10 +19,23 @@ class SecurityHubPage extends StatefulWidget {
 }
 
 class _SecurityHubPageState extends State<SecurityHubPage> {
+  bool? _hasMpin;
+
   @override
   void initState() {
     super.initState();
     context.read<SecurityCubit>().loadSecurityData();
+    _loadMpinStatus();
+  }
+
+  Future<void> _loadMpinStatus() async {
+    try {
+      final cubit = context.read<SecurityCubit>();
+      final status = await cubit.getMpinStatus();
+      if (mounted) setState(() => _hasMpin = status);
+    } catch (_) {
+      if (mounted) setState(() => _hasMpin = false);
+    }
   }
 
   @override
@@ -72,18 +85,18 @@ class _SecurityHubPageState extends State<SecurityHubPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Setup MPIN Button
+                  // MPIN Button — changes label based on whether MPIN is already set
                   Container(
                     margin: EdgeInsets.only(bottom: 24.h),
                     width: double.infinity,
                     child: ElevatedButton.icon(
                       icon: const Icon(Icons.pin, color: Colors.white),
                       label: Text(
-                        'Setup MPIN for Login',
+                        _hasMpin == true ? 'Change MPIN' : 'Setup MPIN for Login',
                         style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: KhaataTheme.primaryBlue,
+                        backgroundColor: _hasMpin == true ? Colors.green.shade700 : KhaataTheme.primaryBlue,
                         padding: EdgeInsets.symmetric(vertical: 16.h),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12.r),
