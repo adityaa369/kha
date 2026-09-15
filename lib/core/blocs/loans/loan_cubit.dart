@@ -94,6 +94,21 @@ class LoanCubit extends Cubit<LoanState> {
     }
   }
 
+  Future<String?> createAcceptIntent(String loanId) async {
+    emit(LoanLoading());
+    try {
+      final intentId = await _repository.createAcceptIntent(loanId: loanId);
+      emit(LoanLoaded(_repository.cachedGiven, _repository.cachedTaken));
+      return intentId;
+    } on Failure catch (f) {
+      emit(LoanError(f.message));
+      return null;
+    } catch (e) {
+      emit(LoanError('Failed to create intent: $e'));
+      return null;
+    }
+  }
+
   // Verify/Approve loan agreement with intent and OTP
   Future<bool> verifyLoan(String loanId, String intentId) async {
     emit(LoanLoading());

@@ -329,7 +329,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
 
     if (result != null && mounted) {
       context.pushReplacement(
-        '/loan-confirmation',
+        '/loan-success',
         extra: {
           'loan_id': result['id'],
           'borrower_name': _borrowerNameController.text,

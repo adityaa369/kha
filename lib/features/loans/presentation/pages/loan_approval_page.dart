@@ -5,18 +5,23 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+
+import '../../../../config/theme.dart';
+import '../../../../core/constants/app_constants.dart';
 import '../../../../core/blocs/loans/loan_cubit.dart';
 import '../../../../core/blocs/loans/loan_state.dart';
 import '../../../../data/models/loan_model.dart';
 import '../../../../core/services/biometric_auth_service.dart';
-import '../../../../config/theme.dart';
-import '../../../../config/constants.dart';
-import 'dart:async';
 
 class LoanApprovalPage extends StatefulWidget {
-  final String loanId;
+  final Map<String, dynamic> extraData;
 
-  const LoanApprovalPage({super.key, required this.loanId});
+  const LoanApprovalPage({super.key, required this.extraData});
 
   @override
   State<LoanApprovalPage> createState() => _LoanApprovalPageState();
@@ -24,104 +29,31 @@ class LoanApprovalPage extends StatefulWidget {
 
 class _LoanApprovalPageState extends State<LoanApprovalPage> {
   bool _isApproving = false;
-  bool _isOtpSent = false;
-  String _currentOtp = '';
   LoanModel? _loan;
-  bool _isLoading = true;
-  int _resendTimer = 30;
-  bool _canResend = false;
-  String? _verificationId;
-  late StreamController<ErrorAnimationType> _errorController;
-  final TextEditingController _otpController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _errorController = StreamController<ErrorAnimationType>();
-    _fetchLoan();
+    _loadLoan();
   }
 
-  @override
-  void dispose() {
-    _otpController.dispose();
-    _errorController.close();
-    super.dispose();
-  }
-
-  Future<void> _fetchLoan() async {
-    final loan = await context.read<LoanCubit>().getLoanById(widget.loanId);
-    if (mounted) {
-      setState(() {
-        _loan = loan;
-        _isLoading = false;
-      });
+  void _loadLoan() {
+    final loanId = widget.extraData['loan_id'];
+    if (loanId != null) {
+      final cubit = context.read<LoanCubit>();
+      final state = cubit.state;
+      if (state is LoanLoaded) {
+        try {
+          _loan = state.takenLoans.firstWhere((l) => l.id == loanId);
+        } catch (e) {
+          _loan = null;
+        }
+      }
     }
-  }
-
-  void _startResendTimer() {
-    if (!mounted) return;
-    setState(() {
-      _canResend = false;
-      _resendTimer = 30;
-    });
-    _tickTimer();
-  }
-
-  void _tickTimer() {
-    if (!mounted) return;
-    if (_resendTimer > 0) {
-      Future.delayed(const Duration(seconds: 1), () {
-        if (!mounted) return;
-        setState(() {
-          _resendTimer--;
-        });
-        _tickTimer();
-      });
-    } else {
-      setState(() {
-        _canResend = true;
-      });
-    }
-  }
-
-  void _requestOtp() async {
-    if (_loan == null) return;
-    setState(() => _isApproving = true);
-    final phone = FirebaseAuth.instance.currentUser?.phoneNumber;
-    if (phone == null) {
-      if (mounted) setState(() => _isApproving = false);
-      return;
-    }
-    await FirebaseAuth.instance.verifyPhoneNumber(
-      phoneNumber: phone,
-      verificationCompleted: (credential) async {
-        // Android may complete verification without showing the SMS field.
-        // Use that credential directly instead of leaving the UI loading.
-        await FirebaseAuth.instance.signInWithCredential(credential);
-        final intentId = _loan?.pendingIntentId;
-        if (intentId == null) return;
-        final success = await context.read<LoanCubit>().verifyLoan(_loan!.id, intentId);
-        if (!mounted) return;
-        setState(() => _isApproving = false);
-        if (!success) _errorController.add(ErrorAnimationType.shake);
-      },
-      verificationFailed: (error) {
-        if (!mounted) return;
-        setState(() => _isApproving = false);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.message ?? 'Unable to send OTP')));
-      },
-      codeSent: (verificationId, _) {
-        if (!mounted) return;
-        setState(() { _verificationId = verificationId; _isOtpSent = true; _isApproving = false; });
-        _startResendTimer();
-      },
-      codeAutoRetrievalTimeout: (verificationId) => _verificationId = verificationId,
-    );
   }
 
   void _approveLoan() async {
-    if (_loan == null || _verificationId == null || _currentOtp.length != 6) return;
-    if (_isApproving) return;
+    if (_loan == null || _isApproving) return;
 
     setState(() => _isApproving = true);
 
@@ -131,7 +63,7 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
         setState(() => _isApproving = false);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Authentication required to accept agreement'),
+            content: Text('Biometric signature required to accept agreement.', style: TextStyle(color: Colors.white)),
             backgroundColor: Colors.red,
           ),
         );
@@ -139,73 +71,44 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
       return;
     }
 
-    if (!mounted) return;
-    try {
-      final credential = PhoneAuthProvider.credential(
-        verificationId: _verificationId!, smsCode: _currentOtp,
-      );
-      await FirebaseAuth.instance.signInWithCredential(credential);
-    } on FirebaseAuthException catch (error) {
+    final cubit = context.read<LoanCubit>();
+    
+    // 1. Create ACCEPT_LOAN Intent
+    final intentId = await cubit.createAcceptIntent(_loan!.id);
+    if (intentId == null) {
       if (mounted) {
         setState(() => _isApproving = false);
-        _errorController.add(ErrorAnimationType.shake);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.message ?? 'Invalid OTP')));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to initialize acceptance process')));
       }
       return;
     }
 
-    final intentId = _loan!.pendingIntentId;
-    if (intentId == null || intentId.isEmpty) {
-      if (mounted) setState(() => _isApproving = false);
-      return;
-    }
-    final success = await context.read<LoanCubit>().verifyLoan(_loan!.id, intentId);
+    // 2. Verify and Activate
+    final success = await cubit.verifyLoan(_loan!.id, intentId);
 
     if (mounted) {
       setState(() => _isApproving = false);
-    }
-
-    if (success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Agreement accepted successfully!',
-            style: TextStyle(color: Colors.white),
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Agreement accepted successfully!', style: TextStyle(color: Colors.white)),
+            backgroundColor: Colors.green,
           ),
-          backgroundColor: Colors.green,
-        ),
-      );
-      context.pop();
-    } else if (!success && mounted) {
-      _errorController.add(ErrorAnimationType.shake);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Failed to accept agreement. Check OTP and try again.',
-            style: TextStyle(color: Colors.white),
-          ),
-          backgroundColor: Colors.red,
-        ),
-      );
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to accept agreement.')),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Scaffold(
-        backgroundColor: Colors.white,
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
-
     if (_loan == null) {
       return Scaffold(
-        backgroundColor: Colors.white,
         appBar: AppBar(
           title: const Text('Review Agreement'),
-          centerTitle: true,
-          elevation: 0,
           backgroundColor: Colors.white,
           foregroundColor: KhaataTheme.textDark,
         ),
@@ -344,43 +247,20 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
               ),
               SizedBox(height: 32.h),
 
-              if (loan.status == 'pending_approval' && !_isOtpSent)
+              if (loan.status == 'pending_approval')
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: _isApproving ? null : _requestOtp,
+                    onPressed: _isApproving ? null : _approveLoan,
                     child: _isApproving
                         ? SizedBox(
                             height: 20,
                             width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                           )
-                        : const Text('Send OTP to Sign'),
+                        : const Text('Sign and Accept Agreement'),
                   ),
                 ),
-
-              if (loan.status == 'pending_approval' && _isOtpSent) ...[
-                const SizedBox(height: 16),
-                PinCodeTextField(
-                  appContext: context,
-                  length: 6,
-                  controller: _otpController,
-                  keyboardType: TextInputType.number,
-                  errorAnimationController: _errorController,
-                  onChanged: (value) => setState(() => _currentOtp = value),
-                  onCompleted: (value) => setState(() => _currentOtp = value),
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _isApproving || _currentOtp.length != 6 ? null : _approveLoan,
-                    child: _isApproving
-                        ? const CircularProgressIndicator()
-                        : const Text('Verify OTP & Accept Agreement'),
-                  ),
-                ),
-              ],
 
               SizedBox(height: 16.h),
               if (loan.status == 'pending_approval')

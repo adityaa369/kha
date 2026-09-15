@@ -387,6 +387,24 @@ class LoanRepository extends BaseRepository {
     });
   }
 
+  Future<String> createAcceptIntent({required String loanId}) async {
+    return await handleApiCall(() async {
+      final idToken = await getValidIdToken();
+      final response = await _api.post(
+        '/intents',
+        data: {
+          'loanId': loanId,
+          'action': 'ACCEPT_LOAN',
+          'idToken': idToken,
+        },
+      );
+      if (response.statusCode == 201) {
+        return response.data['intentId'] as String;
+      }
+      throw const ServerFailure('Failed to create accept intent');
+    });
+  }
+
   Future<String> createAddCreditIntent({
     required String loanId,
     required int amountPaise,
