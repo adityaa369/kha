@@ -111,6 +111,14 @@ final router = GoRouter(
       path: AppConstants.login,
       builder: (context, state) => const LoginPage(),
     ),
+    GoRoute(
+      path: AppConstants.mpinLogin,
+      builder: (context, state) => MpinLoginPage(phone: state.extra as String),
+    ),
+    GoRoute(
+      path: AppConstants.mpinSetup,
+      builder: (context, state) => const MpinSetupPage(),
+    ),
     GoRoute(path: '/signup', builder: (context, state) => const SignupPage()),
     GoRoute(
       path: AppConstants.otp,

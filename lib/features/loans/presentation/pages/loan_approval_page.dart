@@ -121,10 +121,14 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
 
   void _approveLoan() async {
     if (_loan == null || _verificationId == null || _currentOtp.length != 6) return;
+    if (_isApproving) return;
+
+    setState(() => _isApproving = true);
 
     final authenticated = await BiometricAuthService.authenticate();
     if (!authenticated) {
       if (mounted) {
+        setState(() => _isApproving = false);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Authentication required to accept agreement'),
@@ -136,8 +140,6 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
     }
 
     if (!mounted) return;
-
-    setState(() => _isApproving = true);
     try {
       final credential = PhoneAuthProvider.credential(
         verificationId: _verificationId!, smsCode: _currentOtp,
