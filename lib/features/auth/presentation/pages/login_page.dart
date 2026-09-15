@@ -249,7 +249,7 @@ class _LoginPageState extends State<LoginPage> {
                           // Register link
                           Center(
                             child: GestureDetector(
-                              onTap: () => context.go(AppConstants.signup),
+                              onTap: () => context.go('/signup'),
                               child: RichText(
                                 text: TextSpan(
                                   style: TextStyle(
