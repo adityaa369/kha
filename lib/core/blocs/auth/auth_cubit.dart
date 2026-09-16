@@ -370,16 +370,40 @@ class AuthCubit extends Cubit<AuthState> {
 
   Future<void> sendVerificationEmail() async {
     try {
-      final response = await _api.post('/auth/send-verification-email');
-      if (response.data == null || response.data['success'] != true) {
-        throw Exception(response.data?['message'] ?? 'Failed to send email');
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) throw Exception("User not authenticated");
+      
+      if (_currentUser?.email != null) {
+        if (user.email != _currentUser!.email) {
+          await user.verifyBeforeUpdateEmail(_currentUser!.email!);
+          return;
+        }
+      }
+      await user.sendEmailVerification();
+    } catch (e) {
+      throw Exception("Failed to send verification email: ${e.toString()}");
+    }
+  }
+
+  Future<void> syncFirebaseState() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+      
+      await user.reload();
+      final idToken = await user.getIdToken(true); // force refresh
+      
+      final response = await _api.post('/auth/sync-firebase', data: {
+        'idToken': idToken
+      });
+      
+      if (response.data['success'] == true && response.data['user'] != null) {
+        _currentUser = UserModel.fromJson(response.data['user']);
+        await SecureStorage.saveUserData(jsonEncode(_currentUser!.toFullJson()));
+        _emitAuthoritativeState();
       }
     } catch (e) {
-      throw Exception(
-        e is DioException && e.error is Failure
-            ? (e.error as Failure).message
-            : 'Failed to send email',
-      );
+      print("Firebase sync error: $e");
     }
   }
 

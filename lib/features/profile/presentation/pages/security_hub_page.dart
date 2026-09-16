@@ -18,12 +18,13 @@ class SecurityHubPage extends StatefulWidget {
   State<SecurityHubPage> createState() => _SecurityHubPageState();
 }
 
-class _SecurityHubPageState extends State<SecurityHubPage> {
+class _SecurityHubPageState extends State<SecurityHubPage> with WidgetsBindingObserver {
   bool? _hasMpin;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     context.read<SecurityCubit>().loadSecurityData();
     _loadMpinStatus();
   }
@@ -38,6 +39,22 @@ class _SecurityHubPageState extends State<SecurityHubPage> {
     }
   }
 
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      final authState = context.read<AuthCubit>().state;
+      if (authState is Authenticated && !(authState.user.isEmailVerified)) {
+        context.read<AuthCubit>().syncFirebaseState();
+      }
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -85,6 +102,76 @@ class _SecurityHubPageState extends State<SecurityHubPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+
+                  // Email Verification UI
+                  BlocBuilder<AuthCubit, AuthState>(
+                    builder: (context, authState) {
+                      if (authState is Authenticated && !(authState.user.isEmailVerified)) {
+                        return Container(
+                          margin: EdgeInsets.only(bottom: 24.h),
+                          padding: EdgeInsets.all(16.w),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.shade50,
+                            borderRadius: BorderRadius.circular(12.r),
+                            border: Border.all(color: Colors.orange.shade200),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(Icons.warning_amber_rounded, color: Colors.orange.shade700),
+                                  SizedBox(width: 8.w),
+                                  Text(
+                                    "Email not verified",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.orange.shade900,
+                                      fontSize: 16.sp
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 8.h),
+                              Text(
+                                "Verify your email to accept loans and unlock all features.",
+                                style: TextStyle(color: Colors.orange.shade900, fontSize: 13.sp),
+                              ),
+                              SizedBox(height: 12.h),
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.orange.shade600,
+                                    foregroundColor: Colors.white,
+                                  ),
+                                  onPressed: () async {
+                                    try {
+                                      await context.read<AuthCubit>().sendVerificationEmail();
+                                      if (mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(content: Text("Verification email sent! Check your inbox.")),
+                                        );
+                                      }
+                                    } catch (e) {
+                                      if (mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text(e.toString())),
+                                        );
+                                      }
+                                    }
+                                  },
+                                  child: const Text("Verify Email"),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    }
+                  ),
+
                   // MPIN Button — changes label based on whether MPIN is already set
                   Container(
                     margin: EdgeInsets.only(bottom: 24.h),

@@ -63,7 +63,33 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
     if (intentId == null) {
       if (mounted) {
         setState(() => _isApproving = false);
-        DialogUtils.showErrorDialog(context, 'Failed to initialize acceptance process.');
+        final state = context.read<LoanCubit>().state;
+        if (state is LoanError && state.message.contains('Email verification is required')) {
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (ctx) => AlertDialog(
+              title: const Text('Email verification required'),
+              content: const Text('Please verify your email address before accepting this agreement.'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    context.push('/security-hub');
+                  },
+                  child: const Text('Verify Email'),
+                ),
+              ],
+            )
+          );
+        } else {
+          final errorMsg = state is LoanError ? state.message : 'Failed to initialize acceptance process.';
+          DialogUtils.showErrorDialog(context, errorMsg);
+        }
       }
       return;
     }
