@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/utils/dialog_utils.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -50,12 +51,7 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
     if (!authenticated) {
       if (mounted) {
         setState(() => _isApproving = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Biometric signature required to accept agreement.', style: TextStyle(color: Colors.white)),
-            backgroundColor: Colors.red,
-          ),
-        );
+        DialogUtils.showErrorDialog(context, 'Biometric signature required to accept agreement.');
       }
       return;
     }
@@ -67,7 +63,7 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
     if (intentId == null) {
       if (mounted) {
         setState(() => _isApproving = false);
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to initialize acceptance process')));
+        DialogUtils.showErrorDialog(context, 'Failed to initialize acceptance process.');
       }
       return;
     }
@@ -78,16 +74,9 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
     if (mounted) {
       setState(() => _isApproving = false);
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Agreement accepted successfully!', style: TextStyle(color: Colors.white)),
-            backgroundColor: Colors.green,
-          ),
-        );
+        DialogUtils.showSuccessDialog(context, 'Agreement accepted successfully!', onOk: () => context.pop(true));
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to accept agreement.')),
-        );
+        DialogUtils.showErrorDialog(context, 'Failed to accept agreement. Please try again.');
       }
     }
   }

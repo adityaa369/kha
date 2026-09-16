@@ -420,7 +420,8 @@ class AuthCubit extends Cubit<AuthState> {
         emit(Authenticated(user: _currentUser!));
       }
     } catch (e) {
-      emit(AuthError(e.toString()));
+        String msg = e is Failure ? e.message : e.toString();
+        emit(AuthError(msg));
       emit(Authenticated(user: _currentUser!));
     }
   }
@@ -436,7 +437,8 @@ class AuthCubit extends Cubit<AuthState> {
         emit(Authenticated(user: _currentUser!));
       }
     } catch (e) {
-      emit(AuthError(e.toString()));
+        String msg = e is Failure ? e.message : e.toString();
+        emit(AuthError(msg));
       emit(Authenticated(user: _currentUser!));
     }
   }
@@ -477,7 +479,8 @@ class AuthCubit extends Cubit<AuthState> {
       }
       emit(AuthError(msg));
     } catch (e) {
-      emit(AuthError(e.toString()));
+        String msg = e is Failure ? e.message : e.toString();
+        emit(AuthError(msg));
     } finally {
       _isSubmitting = false;
     }
