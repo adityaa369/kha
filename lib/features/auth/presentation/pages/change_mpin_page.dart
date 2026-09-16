@@ -99,9 +99,8 @@ class _ChangeMpinPageState extends State<ChangeMpinPage> {
               BlocConsumer<AuthCubit, AuthState>(
                 listener: (context, state) {
                   if (state is Authenticated) {
-                    DialogUtils.showSuccessDialog(context, 'MPIN changed successfully.');
                     SecurityUtils.unsecureScreen(); 
-                    context.pop(true);
+                    DialogUtils.showSuccessDialog(context, 'MPIN changed successfully.', onOk: () => context.pop(true));
                   } else if (state is AuthError) {
                     DialogUtils.showErrorDialog(context, state.message);
                     setState(() {

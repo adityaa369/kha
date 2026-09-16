@@ -99,10 +99,8 @@ class _MpinSetupPageState extends State<MpinSetupPage> {
               BlocConsumer<AuthCubit, AuthState>(
                 listener: (context, state) {
                   if (state is Authenticated) {
-                    DialogUtils.showSuccessDialog(context, 'MPIN set successfully.');
                     SecurityUtils.unsecureScreen(); 
-                    // Pop true so the caller knows setup succeeded
-                    context.pop(true);
+                    DialogUtils.showSuccessDialog(context, 'MPIN set successfully.', onOk: () => context.pop(true));
                   } else if (state is AuthError) {
                     DialogUtils.showErrorDialog(context, state.message);
                     setState(() {

@@ -416,16 +416,15 @@ class AuthCubit extends Cubit<AuthState> {
       if (response.data['success'] == true) {
         emit(Authenticated(user: _currentUser!)); 
       } else {
-        emit(const AuthError('Failed to setup MPIN'));
-        emit(Authenticated(user: _currentUser!));
+        emit(AuthError(response.data['message'] ?? 'Failed to setup MPIN'));
       }
     } catch (e) {
-        String msg = "Authentication failed";
-        if (e is Failure) msg = e.message;
-        else if (e is DioException && e.error is Failure) msg = (e.error as Failure).message;
-        else msg = e.toString();
-        emit(AuthError(msg));
-      emit(Authenticated(user: _currentUser!));
+      String msg = "Authentication failed";
+      if (e is Failure) msg = e.message;
+      else if (e is DioException && e.error is Failure) msg = (e.error as Failure).message;
+      else if (e is DioException && e.response?.data != null && e.response?.data is Map && e.response?.data['message'] != null) msg = e.response!.data['message'];
+      else msg = e.toString();
+      emit(AuthError(msg));
     }
   }
 
@@ -436,16 +435,15 @@ class AuthCubit extends Cubit<AuthState> {
       if (response.data['success'] == true) {
         emit(Authenticated(user: _currentUser!)); 
       } else {
-        emit(const AuthError('Failed to change MPIN'));
-        emit(Authenticated(user: _currentUser!));
+        emit(AuthError(response.data['message'] ?? 'Failed to change MPIN'));
       }
     } catch (e) {
-        String msg = "Authentication failed";
-        if (e is Failure) msg = e.message;
-        else if (e is DioException && e.error is Failure) msg = (e.error as Failure).message;
-        else msg = e.toString();
-        emit(AuthError(msg));
-      emit(Authenticated(user: _currentUser!));
+      String msg = "Authentication failed";
+      if (e is Failure) msg = e.message;
+      else if (e is DioException && e.error is Failure) msg = (e.error as Failure).message;
+      else if (e is DioException && e.response?.data != null && e.response?.data is Map && e.response?.data['message'] != null) msg = e.response!.data['message'];
+      else msg = e.toString();
+      emit(AuthError(msg));
     }
   }
 
