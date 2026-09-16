@@ -17,7 +17,7 @@ class MyLoansPage extends StatefulWidget {
 }
 
 class _MyLoansPageState extends State<MyLoansPage>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late TabController _tabController;
   final List<String> _tabs = [
     'All',
@@ -30,14 +30,27 @@ class _MyLoansPageState extends State<MyLoansPage>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _tabController = TabController(length: _tabs.length, vsync: this);
     _tabController.addListener(() {
       setState(() {});
     });
+    // Ensure we fetch when initialized
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<LoanCubit>().fetchLoans();
+    });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      if (mounted) context.read<LoanCubit>().fetchLoans();
+    }
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _tabController.dispose();
     super.dispose();
   }

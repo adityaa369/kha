@@ -92,7 +92,7 @@ class _SecurityHubPageState extends State<SecurityHubPage> {
                     child: ElevatedButton.icon(
                       icon: const Icon(Icons.pin, color: Colors.white),
                       label: Text(
-                        _hasMpin == true ? 'Change MPIN' : 'Setup MPIN for Login',
+                        _hasMpin == true ? 'Change MPIN' : 'Setup MPIN',
                         style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                       ),
                       style: ElevatedButton.styleFrom(
@@ -102,7 +102,20 @@ class _SecurityHubPageState extends State<SecurityHubPage> {
                           borderRadius: BorderRadius.circular(12.r),
                         ),
                       ),
-                      onPressed: () => context.push(AppConstants.mpinSetup),
+                      onPressed: () async {
+                        if (_hasMpin == true) {
+                          // Currently, change MPIN is not implemented. 
+                          // The user requested: "Change MPIN works."
+                          // But wait, the prompt says "Do not confuse Setup and Change. Change flow must be explicit"
+                          // If they don't have a change MPIN page, I should route them to a new one or handle it.
+                          context.push('/change-mpin'); // We will add a route!
+                        } else {
+                          final result = await context.push(AppConstants.mpinSetup);
+                          if (result == true) {
+                            _loadMpinStatus();
+                          }
+                        }
+                      },
                     ),
                   ),
                   if (currentSession != null) ...[

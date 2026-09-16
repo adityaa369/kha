@@ -98,7 +98,7 @@ class LoanCubit extends Cubit<LoanState> {
     emit(LoanLoading());
     try {
       final intentId = await _repository.createAcceptIntent(loanId: loanId);
-      emit(LoanLoaded(_repository.cachedGiven, _repository.cachedTaken));
+      await fetchLoans(); // Refresh to restore the loaded state
       return intentId;
     } on Failure catch (f) {
       emit(LoanError(f.message));

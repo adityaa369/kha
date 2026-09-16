@@ -9,18 +9,18 @@ import '../../../../config/theme.dart';
 import '../../../../config/constants.dart';
 import '../widgets/dynamic_mpin_keypad.dart';
 
-class MpinSetupPage extends StatefulWidget {
-  const MpinSetupPage({super.key});
+class ChangeMpinPage extends StatefulWidget {
+  const ChangeMpinPage({super.key});
 
   @override
-  State<MpinSetupPage> createState() => _MpinSetupPageState();
+  State<ChangeMpinPage> createState() => _ChangeMpinPageState();
 }
 
-class _MpinSetupPageState extends State<MpinSetupPage> {
+class _ChangeMpinPageState extends State<ChangeMpinPage> {
   final GlobalKey<DynamicMpinKeypadState> _keypadKey = GlobalKey();
   String? _firstMpin;
-  String _title = 'Set MPIN';
-  String _subtitle = 'Create a 6-digit MPIN for faster login';
+  String _title = 'Set New MPIN';
+  String _subtitle = 'Create a new 6-digit MPIN';
 
   @override
   void initState() {
@@ -38,19 +38,19 @@ class _MpinSetupPageState extends State<MpinSetupPage> {
     if (_firstMpin == null) {
       setState(() {
         _firstMpin = mpin;
-        _title = 'Confirm MPIN';
+        _title = 'Confirm New MPIN';
         _subtitle = 'Re-enter your 6-digit MPIN';
       });
       _keypadKey.currentState?.reshuffle();
     } else {
       if (_firstMpin == mpin) {
-        context.read<AuthCubit>().setupMpin(mpin);
+        context.read<AuthCubit>().changeMpin(mpin);
       } else {
         DialogUtils.showErrorDialog(context, 'MPINs do not match. Try again.');
         setState(() {
           _firstMpin = null;
-          _title = 'Set MPIN';
-          _subtitle = 'Create a 6-digit MPIN for faster login';
+          _title = 'Set New MPIN';
+          _subtitle = 'Create a new 6-digit MPIN';
         });
         _keypadKey.currentState?.reshuffle();
       }
@@ -99,16 +99,15 @@ class _MpinSetupPageState extends State<MpinSetupPage> {
               BlocConsumer<AuthCubit, AuthState>(
                 listener: (context, state) {
                   if (state is Authenticated) {
-                    DialogUtils.showSuccessDialog(context, 'MPIN set successfully.');
+                    DialogUtils.showSuccessDialog(context, 'MPIN changed successfully.');
                     SecurityUtils.unsecureScreen(); 
-                    // Pop true so the caller knows setup succeeded
                     context.pop(true);
                   } else if (state is AuthError) {
                     DialogUtils.showErrorDialog(context, state.message);
                     setState(() {
                       _firstMpin = null;
-                      _title = 'Set MPIN';
-                      _subtitle = 'Create a 6-digit MPIN for faster login';
+                      _title = 'Set New MPIN';
+                      _subtitle = 'Create a new 6-digit MPIN';
                     });
                     _keypadKey.currentState?.reshuffle();
                   }

@@ -8,6 +8,8 @@ import '../features/auth/presentation/pages/login_page.dart';
 import '../features/auth/presentation/pages/signup_page.dart';
 import '../features/auth/presentation/pages/mpin_login_page.dart';
 import '../features/auth/presentation/pages/mpin_setup_page.dart';
+import '../features/auth/presentation/pages/change_mpin_page.dart';
+import '../features/auth/presentation/pages/change_mpin_page.dart';
 import '../features/auth/presentation/pages/otp_page.dart';
 import '../features/auth/presentation/pages/personal_details_page.dart';
 import '../features/auth/presentation/pages/pan_details_page.dart';
@@ -119,6 +121,10 @@ final router = GoRouter(
     GoRoute(
       path: AppConstants.mpinSetup,
       builder: (context, state) => const MpinSetupPage(),
+    ),
+    GoRoute(
+      path: "/change-mpin",
+      builder: (context, state) => const ChangeMpinPage(),
     ),
     GoRoute(path: '/signup', builder: (context, state) => const SignupPage()),
     GoRoute(
@@ -298,3 +304,4 @@ final router = GoRouter(
     ),
   ],
 );
+

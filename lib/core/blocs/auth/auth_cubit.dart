@@ -425,6 +425,22 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
+  Future<void> changeMpin(String mpin) async {
+    emit(AuthLoading());
+    try {
+      final response = await _api.post('/auth/mpin/change', data: {'mpin': mpin});
+      if (response.data['success'] == true) {
+        emit(Authenticated(user: _currentUser!)); 
+      } else {
+        emit(const AuthError('Failed to change MPIN'));
+        emit(Authenticated(user: _currentUser!));
+      }
+    } catch (e) {
+      emit(AuthError(e.toString()));
+      emit(Authenticated(user: _currentUser!));
+    }
+  }
+
   Future<void> loginWithMpin(String phone, String mpin) async {
     if (_isSubmitting) return;
     _isSubmitting = true;
