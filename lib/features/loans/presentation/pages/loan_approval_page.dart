@@ -11,6 +11,7 @@ import '../../../../core/blocs/loans/loan_cubit.dart';
 import '../../../../core/blocs/loans/loan_state.dart';
 import '../../../../data/models/loan_model.dart';
 import '../../../../core/services/biometric_auth_service.dart';
+import '../../../../core/blocs/auth/auth_cubit.dart';
 
 class LoanApprovalPage extends StatefulWidget {
   final String loanId;
@@ -21,15 +22,47 @@ class LoanApprovalPage extends StatefulWidget {
   State<LoanApprovalPage> createState() => _LoanApprovalPageState();
 }
 
-class _LoanApprovalPageState extends State<LoanApprovalPage> {
+class _LoanApprovalPageState extends State<LoanApprovalPage> with WidgetsBindingObserver {
   bool _isApproving = false;
+  bool _waitingForVerification = false;
   LoanModel? _loan;
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _fetchLoan();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _waitingForVerification) {
+      _checkVerificationStatus();
+    }
+  }
+
+  Future<void> _checkVerificationStatus() async {
+    setState(() => _isApproving = true);
+    await context.read<AuthCubit>().syncFirebaseState();
+    final authState = context.read<AuthCubit>().state;
+    if (authState is Authenticated && authState.user.isEmailVerified) {
+      setState(() {
+        _waitingForVerification = false;
+        _isApproving = false;
+      });
+      if (mounted) {
+         DialogUtils.showSuccessDialog(context, 'Email verified successfully!');
+      }
+    } else {
+      setState(() => _isApproving = false);
+    }
   }
 
   Future<void> _fetchLoan() async {
@@ -77,9 +110,23 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
                   child: const Text('Cancel'),
                 ),
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     Navigator.pop(ctx);
-                    context.push('/security-hub');
+                    setState(() => _waitingForVerification = true);
+                    try {
+                      await context.read<AuthCubit>().sendVerificationEmail();
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Verification email sent! Check your inbox.")),
+                        );
+                      }
+                    } catch (e) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(e.toString())),
+                        );
+                      }
+                    }
                   },
                   child: const Text('Verify Email'),
                 ),
