@@ -12,16 +12,16 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../config/theme.dart';
-import '../../../../core/constants/app_constants.dart';
+import '../../../../config/constants.dart';
 import '../../../../core/blocs/loans/loan_cubit.dart';
 import '../../../../core/blocs/loans/loan_state.dart';
 import '../../../../data/models/loan_model.dart';
 import '../../../../core/services/biometric_auth_service.dart';
 
 class LoanApprovalPage extends StatefulWidget {
-  final Map<String, dynamic> extraData;
+  final String loanId;
 
-  const LoanApprovalPage({super.key, required this.extraData});
+  const LoanApprovalPage({super.key, required this.loanId});
 
   @override
   State<LoanApprovalPage> createState() => _LoanApprovalPageState();
@@ -30,25 +30,21 @@ class LoanApprovalPage extends StatefulWidget {
 class _LoanApprovalPageState extends State<LoanApprovalPage> {
   bool _isApproving = false;
   LoanModel? _loan;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadLoan();
+    _fetchLoan();
   }
 
-  void _loadLoan() {
-    final loanId = widget.extraData['loan_id'];
-    if (loanId != null) {
-      final cubit = context.read<LoanCubit>();
-      final state = cubit.state;
-      if (state is LoanLoaded) {
-        try {
-          _loan = state.takenLoans.firstWhere((l) => l.id == loanId);
-        } catch (e) {
-          _loan = null;
-        }
-      }
+  Future<void> _fetchLoan() async {
+    final loan = await context.read<LoanCubit>().getLoanById(widget.loanId);
+    if (mounted) {
+      setState(() {
+        _loan = loan;
+        _isLoading = false;
+      });
     }
   }
 
@@ -105,6 +101,13 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     if (_loan == null) {
       return Scaffold(
         appBar: AppBar(
