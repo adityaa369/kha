@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../data/models/loan_model.dart';
@@ -51,20 +51,11 @@ class _LoanDetailsPageState extends State<LoanDetailsPage> {
           }
 
           final loan = snapshot.data!;
-          final authState = context.read<AuthCubit>().state;
-          String? currentUserId;
-          // Note: In actual code, AuthState doesn't have Authenticated directly if it's the old one, but let's check
-          // Wait, auth_cubit uses Authenticated! Let me just get it from SecureStorage or check authState
-          if (authState is Authenticated) {
-            currentUserId = authState.user.id;
-          } else if (authState is AuthOffline) {
-            currentUserId = authState.user.id;
-          } else if (authState is Authenticated) {
-            currentUserId = authState.user.id;
-          }
-
+          final currentUserId = context.read<AuthCubit>().state.user?.id;
           final isLender =
               currentUserId != null && loan.lenderId == currentUserId;
+          final isBorrower =
+              currentUserId != null && loan.userId == currentUserId;
 
           if (isLender) {
             return LenderLoanDetailsPage(
@@ -81,7 +72,7 @@ class _LoanDetailsPageState extends State<LoanDetailsPage> {
               detailPage = HandLoanDetailsPage(loan: loan);
             }
 
-            if (loan.status == 'pending_approval') {
+            if (loan.status == 'pending_approval' && isBorrower) {
               return Scaffold(
                 body: Column(
                   children: [

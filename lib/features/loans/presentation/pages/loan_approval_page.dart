@@ -176,8 +176,7 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> with WidgetsBinding
 
     final loan = _loan!;
 
-    final authState = context.read<AuthCubit>().state;
-    final currentUserId = authState is Authenticated ? authState.user.id : null;
+    final currentUserId = context.read<AuthCubit>().state.user?.id;
     final isBorrower = loan.userId != null && currentUserId != null && loan.userId == currentUserId;
 
     return BlocListener<LoanCubit, LoanState>(
