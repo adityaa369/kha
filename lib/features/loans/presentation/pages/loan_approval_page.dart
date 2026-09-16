@@ -176,6 +176,10 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> with WidgetsBinding
 
     final loan = _loan!;
 
+    final authState = context.read<AuthCubit>().state;
+    final currentUserId = authState is Authenticated ? authState.user.id : null;
+    final isBorrower = loan.userId != null && currentUserId != null && loan.userId == currentUserId;
+
     return BlocListener<LoanCubit, LoanState>(
       listener: (context, state) {
         if (state is LoanVerificationSuccess) {
@@ -305,7 +309,7 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> with WidgetsBinding
               ),
               SizedBox(height: 32.h),
 
-              if (loan.status == 'pending_approval')
+              if (loan.status == 'pending_approval' && isBorrower)
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -321,7 +325,7 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> with WidgetsBinding
                 ),
 
               SizedBox(height: 16.h),
-              if (loan.status == 'pending_approval')
+              if (loan.status == 'pending_approval' && isBorrower)
                 SizedBox(
                   width: double.infinity,
                   child: TextButton(
