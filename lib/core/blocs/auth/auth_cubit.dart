@@ -420,7 +420,10 @@ class AuthCubit extends Cubit<AuthState> {
         emit(Authenticated(user: _currentUser!));
       }
     } catch (e) {
-        String msg = e is Failure ? e.message : e.toString();
+        String msg = "Authentication failed";
+        if (e is Failure) msg = e.message;
+        else if (e is DioException && e.error is Failure) msg = (e.error as Failure).message;
+        else msg = e.toString();
         emit(AuthError(msg));
       emit(Authenticated(user: _currentUser!));
     }
@@ -437,7 +440,10 @@ class AuthCubit extends Cubit<AuthState> {
         emit(Authenticated(user: _currentUser!));
       }
     } catch (e) {
-        String msg = e is Failure ? e.message : e.toString();
+        String msg = "Authentication failed";
+        if (e is Failure) msg = e.message;
+        else if (e is DioException && e.error is Failure) msg = (e.error as Failure).message;
+        else msg = e.toString();
         emit(AuthError(msg));
       emit(Authenticated(user: _currentUser!));
     }
@@ -479,7 +485,10 @@ class AuthCubit extends Cubit<AuthState> {
       }
       emit(AuthError(msg));
     } catch (e) {
-        String msg = e is Failure ? e.message : e.toString();
+        String msg = "Authentication failed";
+        if (e is Failure) msg = e.message;
+        else if (e is DioException && e.error is Failure) msg = (e.error as Failure).message;
+        else msg = e.toString();
         emit(AuthError(msg));
     } finally {
       _isSubmitting = false;
