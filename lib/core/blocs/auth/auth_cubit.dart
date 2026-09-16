@@ -9,13 +9,117 @@ import '../../utils/secure_storage.dart';
 import '../../error/failures.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/notification_service.dart';
+import 'package:app_links/app_links.dart';
+import 'dart:async';
 
 part 'auth_state.dart';
 
 class AuthCubit extends Cubit<AuthState> {
   final ApiClient _api;
+  final _appLinks = AppLinks();
+  StreamSubscription<Uri>? _linkSubscription;
 
-  AuthCubit({ApiClient? api}) : _api = api ?? ApiClient(), super(AuthInitial());
+  AuthCubit({ApiClient? api}) : _api = api ?? ApiClient(), super(AuthInitial()) {
+    _initDeepLinkListener();
+  }
+
+  String? _lastProcessedLink;
+
+  void _initDeepLinkListener() async {
+    // 1. Handle cold-start links
+    try {
+      final initialUri = await _appLinks.getInitialLink();
+      if (initialUri != null) {
+        _handleDeepLink(initialUri);
+      }
+    } catch (e) {
+      // Ignore
+    }
+
+    // 2. Handle warm-start links
+    _linkSubscription = _appLinks.uriLinkStream.listen((uri) {
+      _handleDeepLink(uri);
+    });
+  }
+
+  Future<void> _handleDeepLink(Uri uri) async {
+    if (uri.toString() == _lastProcessedLink) return; // Prevent duplicate processing
+    _lastProcessedLink = uri.toString();
+
+    // Forensic logging (safe)
+    print('[FORENSIC] Deep Link Received: full=$uri');
+
+    if (uri.host != 'khaata-42b18.firebaseapp.com') {
+      return; // Ignore unrelated domains
+    }
+
+    String? mode = uri.queryParameters['mode'];
+    String? oobCode = uri.queryParameters['oobCode'];
+    
+    // Strict unwrapping for Firebase Hosting App Links
+    if (mode == null || oobCode == null) {
+      final nestedStr = uri.queryParameters['link'] ?? uri.queryParameters['continueUrl'];
+      if (nestedStr != null) {
+        final nestedUri = Uri.tryParse(nestedStr);
+        if (nestedUri != null && nestedUri.host == 'khaata-42b18.firebaseapp.com') {
+          mode = nestedUri.queryParameters['mode'];
+          oobCode = nestedUri.queryParameters['oobCode'];
+          print('[FORENSIC] Unwrapped nested link. mode=$mode hasOobCode=${oobCode != null}');
+        }
+      }
+    }
+
+    print('[FORENSIC] Final Parsed Payload: mode=$mode hasOobCode=${oobCode != null}');
+
+    if ((mode == 'verifyAndChangeEmail' || mode == 'verifyEmail') && oobCode != null) {
+        print('[FORENSIC] Starting action code application...');
+        bool codeAppliedSuccessfully = false;
+
+        try {
+          print('[FORENSIC] Calling checkActionCode...');
+          await FirebaseAuth.instance.checkActionCode(oobCode);
+          print('[FORENSIC] checkActionCode success.');
+          
+          print('[FORENSIC] Calling applyActionCode...');
+          await FirebaseAuth.instance.applyActionCode(oobCode);
+          print('[FORENSIC] applyActionCode success.');
+          codeAppliedSuccessfully = true;
+        } catch (e) {
+          print('[FORENSIC] Action code failed/already consumed: $e');
+        }
+        
+        // SECURITY REQUIREMENT: Independently verify state rather than inferring from success/failure
+        final user = FirebaseAuth.instance.currentUser;
+        if (user != null) {
+          await user.reload();
+          
+          if (user.emailVerified) {
+            print('[FORENSIC] Firebase confirms email is verified. Syncing with backend...');
+            try {
+              await syncFirebaseState(); // Forces refresh, syncs to backend, updates AuthCubit state
+              print('[FORENSIC] syncFirebaseState completed.');
+            } catch (e) {
+              print('[FORENSIC] syncFirebaseState failed: $e');
+              emit(AuthError('Failed to synchronize verification state: $e'));
+              _emitAuthoritativeState();
+            }
+          } else {
+            print('[FORENSIC] Firebase confirms email is NOT verified.');
+            if (!codeAppliedSuccessfully) {
+              emit(AuthError('Verification link is invalid or expired. Please request a new one.'));
+              _emitAuthoritativeState();
+            }
+          }
+        }
+      }
+  }
+
+  @override
+  Future<void> close() {
+    _linkSubscription?.cancel();
+    return super.close();
+  }
+
   UserModel? _currentUser;
   bool isPasswordResetFlow = false;
   String? _verificationId;
@@ -31,7 +135,15 @@ class AuthCubit extends Cubit<AuthState> {
         return;
       }
 
-      // DO NOT emit authenticated state optimistically here anymore!
+      // Auto-sync if Firebase thinks we are verified but Khatha doesn't know yet
+      final fbUser = FirebaseAuth.instance.currentUser;
+      if (fbUser != null) {
+        await fbUser.reload();
+        if (fbUser.emailVerified) {
+          await syncFirebaseState();
+        }
+      }
+
       // Wait for authoritative backend validation.
       try {
         final response = await _api.get('/auth/me');
@@ -370,12 +482,27 @@ class AuthCubit extends Cubit<AuthState> {
 
   Future<void> sendVerificationEmail() async {
     try {
+      final customTokenResponse = await _api.get('/auth/firebase-custom-token');
+      if (customTokenResponse.data['success'] == true) {
+        final customToken = customTokenResponse.data['customToken'];
+        await FirebaseAuth.instance.signInWithCustomToken(customToken);
+      }
+
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) throw Exception("User not authenticated");
       
       if (_currentUser?.email != null) {
         if (user.email != _currentUser!.email) {
-          await user.verifyBeforeUpdateEmail(_currentUser!.email!);
+          await user.verifyBeforeUpdateEmail(
+            _currentUser!.email!,
+            ActionCodeSettings(
+              url: 'https://khaata-42b18.firebaseapp.com/verified',
+              handleCodeInApp: true,
+              androidPackageName: 'com.vest.khataa',
+              androidInstallApp: true,
+              androidMinimumVersion: '1',
+            ),
+          );
           return;
         }
       }

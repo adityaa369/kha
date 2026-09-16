@@ -102,37 +102,30 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> with WidgetsBinding
             context: context,
             barrierDismissible: false,
             builder: (ctx) => AlertDialog(
-              title: const Text('Email verification required'),
-              content: const Text('Please verify your email address before accepting this agreement.'),
+              title: const Text('Account Verification Required'),
+              content: const Text('Please secure your account by verifying your email address before accepting financial agreements.'),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(ctx),
                   child: const Text('Cancel'),
                 ),
                 ElevatedButton(
-                  onPressed: () async {
+                  onPressed: () {
                     Navigator.pop(ctx);
-                    setState(() => _waitingForVerification = true);
-                    try {
-                      await context.read<AuthCubit>().sendVerificationEmail();
+                    context.push('/profile/security').then((_) {
+                      // Optionally refresh state or check eligibility again
+                      // when returning from Security Hub
                       if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Verification email sent! Check your inbox.")),
-                        );
+                        setState(() {});
                       }
-                    } catch (e) {
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(e.toString())),
-                        );
-                      }
-                    }
+                    });
                   },
-                  child: const Text('Verify Email'),
+                  child: const Text('Verify Account'),
                 ),
               ],
-            )
+            ),
           );
+          return;
         } else {
           final errorMsg = state is LoanError ? state.message : 'Failed to initialize acceptance process.';
           DialogUtils.showErrorDialog(context, errorMsg);
