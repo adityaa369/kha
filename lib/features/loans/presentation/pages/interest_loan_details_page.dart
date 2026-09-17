@@ -330,56 +330,23 @@ class InterestLoanDetailsPage extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 12.w,
-                    vertical: 6.h,
-                  ),
-                  decoration: BoxDecoration(
-                    color: theme.bg,
-                    borderRadius: BorderRadius.circular(20.r),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (isInterest) ...[
-                        Text(
-                          '% Interest Credit',
-                          style: TextStyle(
-                            color: theme.primary,
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ] else ...[
-                        Text(
-                          '💰 Hand Credit',
-                          style: TextStyle(
-                            color: theme.primary,
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 12.w,
-                    vertical: 6.h,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.green.shade50,
-                    borderRadius: BorderRadius.circular(20.r),
-                  ),
-                  child: Text(
-                    'Active Loan',
-                    style: TextStyle(
-                      color: Colors.green.shade700,
-                      fontSize: 12.sp,
-                      fontWeight: FontWeight.bold,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 12.w,
+                      vertical: 6.h,
                     ),
-                  ),
+                    decoration: BoxDecoration(
+                      color: activeLoan.loanStatus.isFinished ? Colors.blue.shade50 : Colors.green.shade50,
+                      borderRadius: BorderRadius.circular(20.r),
+                    ),
+                    child: Text(
+                      activeLoan.status.toUpperCase(),
+                      style: TextStyle(
+                        color: activeLoan.loanStatus.isFinished ? Colors.blue.shade700 : Colors.green.shade700,
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),,
                 ),
               ],
             ),
@@ -512,20 +479,20 @@ class InterestLoanDetailsPage extends StatelessWidget {
                   TextSpan(
                     children: [
                       TextSpan(
-                        text: 'Next Payment Due Date: ',
-                        style: TextStyle(
-                          fontSize: 11.sp,
-                          color: Colors.grey.shade600,
+                          text: activeLoan.loanStatus.isFinished ? 'Loan Status: ' : 'Next Payment Due Date: ',
+                          style: TextStyle(
+                            fontSize: 11.sp,
+                            color: Colors.grey.shade600,
+                          ),
                         ),
-                      ),
-                      TextSpan(
-                        text: _dateStr(nextDue),
-                        style: TextStyle(
-                          fontSize: 11.sp,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.black87,
-                        ),
-                      ),
+                        TextSpan(
+                          text: activeLoan.loanStatus.isFinished ? 'Fully Settled' : _dateStr(nextDue),
+                          style: TextStyle(
+                            fontSize: 11.sp,
+                            fontWeight: FontWeight.w700,
+                            color: activeLoan.loanStatus.isFinished ? Colors.blue.shade700 : Colors.black87,
+                          ),
+                        ),,
                     ],
                   ),
                 ),
