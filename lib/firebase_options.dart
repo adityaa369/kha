@@ -50,8 +50,8 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDWwG-t0JdGQ98rmkIsWQSZsCRRJhzMoAw',
-    appId: '1:119567932403:android:0825bf2ed995c992a91086',
+    apiKey: 'AIzaSyBKxIa04MRXrOqvdW41djDwSSsxoDCTe8c',
+    appId: '1:119567932403:android:2cd11541818d97b2a91086',
     messagingSenderId: '119567932403',
     projectId: 'khaata-42b18',
     storageBucket: 'khaata-42b18.firebasestorage.app',

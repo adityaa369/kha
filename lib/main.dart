@@ -34,11 +34,9 @@ void main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
 
-    if (Firebase.apps.isEmpty) {
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
-    }
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
       try {
         await FirebaseAppCheck.instance.activate(
           providerAndroid: kDebugMode
