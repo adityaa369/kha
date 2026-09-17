@@ -9,6 +9,7 @@ import '../../../../data/repositories/loan_repository.dart';
 import '../../../../core/blocs/loans/interest_schedule_cubit.dart';
 import '../../../../core/blocs/loans/loan_cubit.dart';
 import '../../../../core/blocs/loans/loan_state.dart';
+import '../../../../core/blocs/auth/auth_cubit.dart';
 import '../widgets/flexible_payment_sheet.dart';
 import '../widgets/close_loan_sheet.dart';
 
@@ -110,7 +111,9 @@ class _InterestLoanDetailsViewState extends State<_InterestLoanDetailsView> with
               SizedBox(height: 16.h),
               _buildInterestTimeline(themePrimary),
               SizedBox(height: 24.h),
-              if (!isTerminal && widget.loan.financialStatus != 'FROZEN')
+              if (!isTerminal &&
+                  widget.loan.financialStatus != 'FROZEN' &&
+                  widget.loan.lenderId == context.read<AuthCubit>().state.user?.id)
                 _buildActionButtons(context, themePrimary),
               if (widget.loan.financialStatus == 'FROZEN') _buildFrozenWarning(),
             ],
