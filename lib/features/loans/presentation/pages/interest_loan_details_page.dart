@@ -7,6 +7,8 @@ import '../../../../data/models/loan_model.dart';
 import '../../../../data/models/interest_schedule_model.dart';
 import '../../../../data/repositories/loan_repository.dart';
 import '../../../../core/blocs/loans/interest_schedule_cubit.dart';
+import '../../../../core/blocs/loans/loan_cubit.dart';
+import '../../../../core/blocs/loans/loan_state.dart';
 import '../widgets/flexible_payment_sheet.dart';
 import '../widgets/close_loan_sheet.dart';
 
@@ -17,34 +19,70 @@ class InterestLoanDetailsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) =>
-          InterestScheduleCubit(repository: context.read<LoanRepository>())
-            ..fetchSchedule(loan.id),
-      child: _InterestLoanDetailsView(loan: loan),
+    return BlocBuilder<LoanCubit, LoanState>(
+      builder: (context, state) {
+        final activeLoan = state is LoansLoaded
+            ? (state.myLoans + state.givenLoans).firstWhere(
+                (l) => l.id == loan.id,
+                orElse: () => loan,
+              )
+            : loan;
+
+        return BlocProvider(
+          create: (context) =>
+              InterestScheduleCubit(repository: context.read<LoanRepository>())
+                ..fetchSchedule(activeLoan.id),
+          child: _InterestLoanDetailsView(loan: activeLoan),
+        );
+      },
     );
   }
 }
 
-class _InterestLoanDetailsView extends StatelessWidget {
+class _InterestLoanDetailsView extends StatefulWidget {
   final LoanModel loan;
 
   const _InterestLoanDetailsView({required this.loan});
 
+  @override
+  State<_InterestLoanDetailsView> createState() => _InterestLoanDetailsViewState();
+}
+
+class _InterestLoanDetailsViewState extends State<_InterestLoanDetailsView> with WidgetsBindingObserver {
   String _fmt(num amount) {
     return NumberFormat('#,##0', 'en_IN').format(amount);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      context.read<LoanCubit>().fetchLoans();
+      context.read<InterestScheduleCubit>().fetchSchedule(widget.loan.id);
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final themePrimary = Colors.teal.shade700;
     final themeBg = Colors.teal.shade50;
-    final isClosed = loan.status == 'closed' || loan.status == 'completed';
+    final isClosed = widget.loan.status == 'closed' || widget.loan.status == 'completed';
     final isTerminal =
         isClosed ||
-        loan.status == 'rejected' ||
-        loan.status == 'cancelled' ||
-        loan.status == 'expired';
+        widget.loan.status == 'rejected' ||
+        widget.loan.status == 'cancelled' ||
+        widget.loan.status == 'expired';
 
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
@@ -55,7 +93,8 @@ class _InterestLoanDetailsView extends StatelessWidget {
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          await context.read<InterestScheduleCubit>().fetchSchedule(loan.id);
+          await context.read<LoanCubit>().fetchLoans();
+          await context.read<InterestScheduleCubit>().fetchSchedule(widget.loan.id);
         },
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -71,9 +110,9 @@ class _InterestLoanDetailsView extends StatelessWidget {
               SizedBox(height: 16.h),
               _buildInterestTimeline(themePrimary),
               SizedBox(height: 24.h),
-              if (!isTerminal && loan.financialStatus != 'FROZEN')
+              if (!isTerminal && widget.loan.financialStatus != 'FROZEN')
                 _buildActionButtons(context, themePrimary),
-              if (loan.financialStatus == 'FROZEN') _buildFrozenWarning(),
+              if (widget.loan.financialStatus == 'FROZEN') _buildFrozenWarning(),
             ],
           ),
         ),
@@ -82,7 +121,7 @@ class _InterestLoanDetailsView extends StatelessWidget {
   }
 
   Widget _buildHeader(Color primary) {
-    final isClosed = loan.status == 'closed' || loan.status == 'completed';
+    final isClosed = widget.loan.status == 'closed' || widget.loan.status == 'completed';
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
@@ -97,9 +136,9 @@ class _InterestLoanDetailsView extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                loan.borrowerName.isEmpty
-                    ? loan.userId ?? 'Unknown'
-                    : loan.borrowerName,
+                widget.loan.borrowerName.isEmpty
+                    ? widget.loan.userId ?? 'Unknown'
+                    : widget.loan.borrowerName,
                 style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 4.h),
@@ -110,7 +149,7 @@ class _InterestLoanDetailsView extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8.r),
                 ),
                 child: Text(
-                  loan.status.toUpperCase(),
+                  widget.loan.status.toUpperCase(),
                   style: TextStyle(
                     fontSize: 10.sp,
                     fontWeight: FontWeight.bold,
@@ -131,8 +170,8 @@ class _InterestLoanDetailsView extends StatelessWidget {
             ),
             alignment: Alignment.center,
             child: Text(
-              loan.borrowerName.isNotEmpty
-                  ? loan.borrowerName[0].toUpperCase()
+              widget.loan.borrowerName.isNotEmpty
+                  ? widget.loan.borrowerName[0].toUpperCase()
                   : 'B',
               style: TextStyle(
                 fontSize: 20.sp,
@@ -190,7 +229,7 @@ class _InterestLoanDetailsView extends StatelessWidget {
                 style: TextStyle(color: Colors.grey.shade600, fontSize: 12.sp),
               ),
               Text(
-                loan.displayInterestRate,
+                widget.loan.displayInterestRate,
                 style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w600),
               ),
             ],
@@ -204,7 +243,7 @@ class _InterestLoanDetailsView extends StatelessWidget {
                 style: TextStyle(color: Colors.grey.shade600, fontSize: 12.sp),
               ),
               Text(
-                '₹${_fmt(loan.amount)}',
+                '₹${_fmt(widget.loan.amount)}',
                 style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w600),
               ),
             ],
@@ -229,109 +268,75 @@ class _InterestLoanDetailsView extends StatelessWidget {
   }
 
   Widget _buildAuthoritativeBalances(Color primary, Color bg) {
-    return BlocBuilder<InterestScheduleCubit, InterestScheduleState>(
-      builder: (context, state) {
-        InterestScheduleModel? schedule;
-        if (state is InterestScheduleLoaded) {
-          schedule = state.schedule;
-        } else if (state is InterestScheduleLoading)
-          schedule = state.lastKnownData;
-        else if (state is InterestScheduleError)
-          schedule = state.lastKnownData;
-
-        return Container(
-          padding: EdgeInsets.all(16.w),
-          decoration: BoxDecoration(
-            color: primary,
-            borderRadius: BorderRadius.circular(16.r),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        color: primary,
+        borderRadius: BorderRadius.circular(16.r),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.account_balance_wallet,
-                    color: Colors.white70,
-                    size: 20.sp,
-                  ),
-                  SizedBox(width: 8.w),
-                  Text(
-                    'Authoritative Ledger Balances',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const Spacer(),
-                  if (state is InterestScheduleLoading)
-                    SizedBox(
-                      width: 16.w,
-                      height: 16.w,
-                      child: const CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
-                    ),
-                  if (state is InterestScheduleError)
-                    Icon(
-                      Icons.error_outline,
-                      color: Colors.red.shade200,
-                      size: 20.sp,
-                    ),
-                ],
+              Icon(
+                Icons.account_balance_wallet,
+                color: Colors.white70,
+                size: 20.sp,
               ),
-              Divider(height: 24.h, color: Colors.white24),
-              Row(
-                children: [
-                  Expanded(
-                    child: _statBox(
-                      'Accrued Interest',
-                      schedule != null
-                          ? '₹${_fmt(schedule.totalAccruedPaise / 100.0)}'
-                          : '-',
-                      Colors.white,
-                    ),
-                  ),
-                  SizedBox(width: 12.w),
-                  Expanded(
-                    child: _statBox(
-                      'Interest Paid',
-                      schedule != null
-                          ? '₹${_fmt(schedule.totalPaidPaise / 100.0)}'
-                          : '-',
-                      Colors.white,
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 16.h),
-              Row(
-                children: [
-                  Expanded(
-                    child: _statBox(
-                      'Principal Outstanding',
-                      '₹${_fmt((loan.principalOutstandingPaise ?? (loan.totalPayablePaise - loan.paidAmountPaise)) / 100.0)}',
-                      Colors.white,
-                    ),
-                  ),
-                  SizedBox(width: 12.w),
-                  Expanded(
-                    child: _statBox(
-                      'Interest Outstanding',
-                      schedule != null
-                          ? '₹${_fmt(schedule.outstandingInterestPaise / 100.0)}'
-                          : '-',
-                      Colors.orange.shade200,
-                    ),
-                  ),
-                ],
+              SizedBox(width: 8.w),
+              Text(
+                'Authoritative Ledger Balances',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),
-        );
-      },
+          Divider(height: 24.h, color: Colors.white24),
+          Row(
+            children: [
+              Expanded(
+                child: _statBox(
+                  'Total Payable',
+                  '₹${_fmt(widget.loan.totalPayablePaise / 100.0)}',
+                  Colors.white,
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: _statBox(
+                  'Amount Paid',
+                  '₹${_fmt(widget.loan.paidAmountPaise / 100.0)}',
+                  Colors.white,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 16.h),
+          Row(
+            children: [
+              Expanded(
+                child: _statBox(
+                  'Principal Outstanding',
+                  '₹${_fmt((widget.loan.principalOutstandingPaise ?? (widget.loan.totalPayablePaise - widget.loan.paidAmountPaise)) / 100.0)}',
+                  Colors.white,
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: _statBox(
+                  'Interest Outstanding',
+                  '₹${_fmt(widget.loan.interestOutstandingPaise / 100.0)}',
+                  Colors.orange.shade200,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -528,7 +533,7 @@ class _InterestLoanDetailsView extends StatelessWidget {
               child: ElevatedButton.icon(
                 onPressed: () => FlexiblePaymentSheet.show(
                   context,
-                  loan,
+                  widget.loan,
                   'Record Payment',
                   'payment',
                 ),
@@ -546,7 +551,7 @@ class _InterestLoanDetailsView extends StatelessWidget {
               child: OutlinedButton.icon(
                 onPressed: () => FlexiblePaymentSheet.show(
                   context,
-                  loan,
+                  widget.loan,
                   'Add Credit',
                   'add_credit',
                 ),
@@ -565,7 +570,7 @@ class _InterestLoanDetailsView extends StatelessWidget {
         SizedBox(
           width: double.infinity,
           child: OutlinedButton.icon(
-            onPressed: () => CloseLoanSheet.show(context, loan),
+            onPressed: () => CloseLoanSheet.show(context, widget.loan),
             icon: const Icon(Icons.close, size: 18),
             label: const Text('Close Loan'),
             style: OutlinedButton.styleFrom(
