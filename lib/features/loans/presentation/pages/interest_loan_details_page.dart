@@ -335,18 +335,18 @@ class InterestLoanDetailsPage extends StatelessWidget {
                       vertical: 6.h,
                     ),
                     decoration: BoxDecoration(
-                      color: activeLoan.loanStatus.isFinished ? Colors.blue.shade50 : Colors.green.shade50,
+                      color: loan.loanStatus.isFinished ? Colors.blue.shade50 : Colors.green.shade50,
                       borderRadius: BorderRadius.circular(20.r),
                     ),
                     child: Text(
-                      activeLoan.status.toUpperCase(),
+                      loan.status.toUpperCase(),
                       style: TextStyle(
-                        color: activeLoan.loanStatus.isFinished ? Colors.blue.shade700 : Colors.green.shade700,
+                        color: loan.loanStatus.isFinished ? Colors.blue.shade700 : Colors.green.shade700,
                         fontSize: 12.sp,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ),,
+                  ),
                 ),
               ],
             ),
@@ -479,20 +479,20 @@ class InterestLoanDetailsPage extends StatelessWidget {
                   TextSpan(
                     children: [
                       TextSpan(
-                          text: activeLoan.loanStatus.isFinished ? 'Loan Status: ' : 'Next Payment Due Date: ',
+                          text: loan.loanStatus.isFinished ? 'Loan Status: ' : 'Next Payment Due Date: ',
                           style: TextStyle(
                             fontSize: 11.sp,
                             color: Colors.grey.shade600,
                           ),
                         ),
                         TextSpan(
-                          text: activeLoan.loanStatus.isFinished ? 'Fully Settled' : _dateStr(nextDue),
+                          text: loan.loanStatus.isFinished ? 'Fully Settled' : _dateStr(nextDue),
                           style: TextStyle(
                             fontSize: 11.sp,
                             fontWeight: FontWeight.w700,
-                            color: activeLoan.loanStatus.isFinished ? Colors.blue.shade700 : Colors.black87,
+                            color: loan.loanStatus.isFinished ? Colors.blue.shade700 : Colors.black87,
                           ),
-                        ),,
+                        ),
                     ],
                   ),
                 ),

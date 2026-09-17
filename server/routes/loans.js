@@ -26,6 +26,7 @@ router.use(protect); // All loan routes are protected
 router.post('/', validateCreateLoan, createLoan);
 router.get('/given', cacheMiddleware('given_loans', 300), getGivenLoans);
 router.get('/taken', cacheMiddleware('taken_loans', 300), getTakenLoans);
+router.get('/portfolio-summary', getPortfolioSummary);
 router.get('/:id', getLoanById);
 router.post('/upload-document', uploadDocument);
 router.post('/:id/verify', verifyLoan);
