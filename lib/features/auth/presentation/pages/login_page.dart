@@ -55,8 +55,8 @@ class _LoginPageState extends State<LoginPage> {
                 children: [
                   SizedBox(height: 52.h),
 
-                  SvgPicture.asset(
-                    'assets/images/logo_offwhite.svg',
+                  Image.asset(
+                    'assets/images/splash_logo.png',
                     height: 80.h,
                   ),
                   Text(

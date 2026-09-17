@@ -19,8 +19,8 @@ class WelcomePage extends StatelessWidget {
           child: Column(
             children: [
               SizedBox(height: 100.h),
-              SvgPicture.asset(
-                'assets/images/logo_offwhite.svg',
+              Image.asset(
+                'assets/images/splash_logo.png',
                 height: 100.h,
               ),
               SizedBox(height: 60.h),
