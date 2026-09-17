@@ -33,9 +33,12 @@ final systemStateCubit = SystemStateCubit();
 void main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    ).then((_) async {
+
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+    }
       try {
         await FirebaseAppCheck.instance.activate(
           providerAndroid: kDebugMode
@@ -49,7 +52,6 @@ void main() async {
       try {
         NotificationService.initialize();
       } catch (e) {}
-    });
 
     await dotenv.load(fileName: ".env");
 
