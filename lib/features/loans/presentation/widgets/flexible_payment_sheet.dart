@@ -143,7 +143,7 @@ class _FlexiblePaymentSheetViewState extends State<_FlexiblePaymentSheetView> {
               state is AddCreditCreatingIntent || state is AddCreditCommitting,
           isSuccess:
               state
-                  is AddCreditAwaitingConsent, // For lender, intent creation success
+                  is AddCreditAwaitingConsent, // For lender intent creation success
           isUnknown: false,
           successMessage: 'Add Credit intent sent to borrower for approval.',
           onAction: _processPayment,

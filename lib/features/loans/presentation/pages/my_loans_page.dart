@@ -347,7 +347,7 @@ class _LoanCard extends StatelessWidget {
         ),
         child: Column(
           children: [
-            // Bank Header - Colored background
+            // Bank Header  Colored background
             Container(
               padding: EdgeInsets.all(12.w),
               decoration: BoxDecoration(
@@ -391,7 +391,7 @@ class _LoanCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            loan.displayCounterpartyName, // Uses Lender's name if available, else borrower Name
+                            loan.displayCounterpartyName, // Uses Lenders name if available, else borrower Name
                             style: TextStyle(
                               fontWeight: FontWeight.w700,
                               fontSize: 14.sp,

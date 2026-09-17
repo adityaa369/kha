@@ -233,7 +233,7 @@ class KhaataApp extends StatelessWidget {
                                             final response = await ApiClient()
                                                 .dio
                                                 .get(
-                                                  'https://khataa-backend.onrender.com/health/live',
+                                                  'https:// khataabackend.onrender.com/health/live',
                                                 );
                                             if (response.statusCode == 200) {
                                               if (context.mounted) {
@@ -314,8 +314,8 @@ class _NotificationListenerWidgetState
         type == 'LOAN_OTP' ||
         type == 'LOAN_INIT_OTP') {
       if (loanId != null) {
-        // We can go to approval directly, or loan details.
-        // We'll map to approval to be explicit.
+        // We can go to approval directly or loan details.
+        // Well map to approval to be explicit.
         router.go('${AppConstants.loanApproval}/$loanId');
       } else {
         router.go(AppConstants.notifications);
@@ -332,7 +332,7 @@ class _NotificationListenerWidgetState
       final ledgerId = message.data['ledgerId'] ?? '';
       router.push('/chit-live-auction?ledgerId=$ledgerId');
     } else {
-      // Unknown type -> Generic Notifications Inbox
+      // Unknown type  Generic Notifications Inbox
       router.go(AppConstants.notifications);
     }
   }
@@ -357,7 +357,7 @@ class _NotificationListenerWidgetState
       RemoteMessage? message,
     ) {
       if (message != null) {
-        // 4F-4G: Execute immediately. Router will preserve intent if AuthCubit is still Initial.
+        // 4F4G: Execute immediately. Router will preserve intent if AuthCubit is still Initial.
         if (mounted) {
           _handleNotificationRouting(message);
         }

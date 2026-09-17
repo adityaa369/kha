@@ -32,7 +32,7 @@ class LoanCubit extends Cubit<LoanState> {
   Future<void> fetchLoans() async {
     resetError();
 
-    // 1. Load from local cache instantly if state is not already loaded
+    // 1 Load from local cache instantly if state is not already loaded
     if (state is! LoansLoaded) {
       try {
         final cachedLoans = await _repository.getCachedLoans();
@@ -53,7 +53,7 @@ class LoanCubit extends Cubit<LoanState> {
       }
     }
 
-    // 2. Fetch from server in the background
+    // 2 Fetch from server in the background
     try {
       final loans = await _repository.fetchLoans();
       emit(
@@ -63,7 +63,7 @@ class LoanCubit extends Cubit<LoanState> {
         ),
       );
     } on Failure catch (f) {
-      // Only emit error if we don't have loaded data to show
+      // Only emit error if we dont have loaded data to show
       if (state is! LoansLoaded) {
         emit(LoanError(f.message));
       }
@@ -109,7 +109,7 @@ class LoanCubit extends Cubit<LoanState> {
     }
   }
 
-  // Verify/Approve loan agreement with intent and OTP
+  // VerifyApprove loan agreement with intent and OTP
   Future<bool> verifyLoan(String loanId, String intentId) async {
     emit(LoanLoading());
     try {
@@ -208,7 +208,7 @@ class LoanCubit extends Cubit<LoanState> {
 
   Future<void> sendPaymentNudge(String loanId) async {
     try {
-      // Don't emit loading state to avoid rebuilding the whole page
+      // Dont emit loading state to avoid rebuilding the whole page
       await _repository.sendPaymentNudge(loanId);
     } catch (e) {
       rethrow;

@@ -57,7 +57,7 @@ class _SecureDocumentViewerState extends State<SecureDocumentViewer> {
 
   @override
   void dispose() {
-    // 4F-4F: Discard URL from active UI state
+    // 4F4F: Discard URL from active UI state
     _response = null;
     super.dispose();
   }
@@ -110,7 +110,7 @@ class _SecureDocumentViewerState extends State<SecureDocumentViewer> {
             const SizedBox(height: 8),
             ElevatedButton.icon(
               onPressed: () {
-                // In a real app, open flutter_pdfview or similar here.
+                // In a real app open flutter_pdfview or similar here.
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text(
@@ -127,8 +127,8 @@ class _SecureDocumentViewerState extends State<SecureDocumentViewer> {
       );
     }
 
-    // 4F-4F: We use standard Image.memory to avoid flutter_cache_manager storing the secure KYC doc
-    // permanently in SQLite/disk cache. Memory cache will be cleared on logout.
+    // 4F4F: We use standard Image.memory to avoid flutter_cache_manager storing the secure KYC doc
+    // permanently in SQLitedisk cache. Memory cache will be cleared on logout.
     return Image.memory(
       _response!.bytes,
       fit: BoxFit.contain,

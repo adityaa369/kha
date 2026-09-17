@@ -130,7 +130,7 @@ class SecureStorage {
     return value != null ? DateTime.parse(value) : null;
   }
 
-  // Clear auth credentials and sensitive caches to prevent cross-user leakage
+  // Clear auth credentials and sensitive caches to prevent crossuser leakage
   static Future<void> clearAuthData() async {
     await _storage.delete(key: _tokenKey);
     await _storage.delete(key: _refreshTokenKey);

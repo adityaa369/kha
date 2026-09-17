@@ -453,7 +453,7 @@ class _ChitGroupAdminPageState extends State<ChitGroupAdminPage> {
     final TextEditingController bidController = TextEditingController();
     final formKey = GlobalKey<FormState>();
 
-    // Filter members who haven't won and ensure unique users for the dropdown
+    // Filter members who havent won and ensure unique users for the dropdown
     final Set<String> uniqueIds = {};
     final List eligibleMembers = members.where((m) {
       if (m['hasWonAuction'] == true) return false;
@@ -463,7 +463,7 @@ class _ChitGroupAdminPageState extends State<ChitGroupAdminPage> {
       return true;
     }).toList();
 
-    // Pre-fetch future to avoid reloading UI on keyboard popup
+    // Prefetch future to avoid reloading UI on keyboard popup
     final Future<List<Map<String, dynamic>>> bidsFuture = context
         .read<ChitFundCubit>()
         .getAuctionBids(chitDetails['id'], auction['monthNumber']);
@@ -509,7 +509,7 @@ class _ChitGroupAdminPageState extends State<ChitGroupAdminPage> {
                     ),
                     SizedBox(height: 16.h),
 
-                    // If we have live bids, show them in Dropdown
+                    // If we have live bids show them in Dropdown
                     if (bids.isNotEmpty)
                       DropdownButtonFormField<String>(
                         decoration: InputDecoration(
@@ -746,7 +746,7 @@ class _ChitGroupAdminPageState extends State<ChitGroupAdminPage> {
                                     Icons.workspace_premium,
                                     color: Colors.amber,
                                     size: 16,
-                                  ), // Crown 👑
+                                  ), // Crown 
                                 ],
                               )
                             else if (isActive && isOwner && !isAuctionOpened)

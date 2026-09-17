@@ -8,7 +8,7 @@ import '../models/chit_invite_model.dart';
 class ChitFundRepository {
   final ApiClient _apiClient = ApiClient();
 
-  // ─── Create ─────────────────────────────────────────────────────────────────
+  //  Create 
 
   Future<ChitFundModel> createChitFund({
     required String name,
@@ -35,7 +35,7 @@ class ChitFundRepository {
     throw Exception('Failed to create chit: Invalid response');
   }
 
-  // ─── Fetch Managed / Owned ───────────────────────────────────────────────────
+  //  Fetch Managed  Owned ───────────────────────────────────────────────────
 
   Future<List<ChitFundModel>> getVacantChits() async {
     final response = await _apiClient.get('/chitfunds/managed');
@@ -63,7 +63,7 @@ class ChitFundRepository {
     }
   }
 
-  // ─── Invite ──────────────────────────────────────────────────────────────────
+  //  Invite 
 
   Future<bool> sendInvite(String chitId, String receiverPhone) async {
     await _apiClient.post(
@@ -98,7 +98,7 @@ class ChitFundRepository {
     }
   }
 
-  // ─── Joined Chits ────────────────────────────────────────────────────────────
+  //  Joined Chits 
 
   Future<List<Map<String, dynamic>>> getMyChits() async {
     final response = await _apiClient.get('/chitfunds/joined');
@@ -125,7 +125,7 @@ class ChitFundRepository {
     }
   }
 
-  // ─── Invite Response ─────────────────────────────────────────────────────────
+  //  Invite Response 
 
   Future<bool> respondToInvite(String inviteId, String status) async {
     if (status == 'accepted') {
@@ -136,7 +136,7 @@ class ChitFundRepository {
     return true;
   }
 
-  // ─── Admin Dashboard ─────────────────────────────────────────────────────────
+  //  Admin Dashboard 
 
   Future<Map<String, dynamic>> getAdminDashboard(String chitId) async {
     final response = await _apiClient.get('/chitfunds/$chitId');
@@ -144,7 +144,7 @@ class ChitFundRepository {
     return (data is Map) ? Map<String, dynamic>.from(data) : {};
   }
 
-  // ─── Member Detail (member's own view) ───────────────────────────────────────
+  //  Member Detail (member's own view) ───────────────────────────────────────
 
   Future<Map<String, dynamic>> getMemberDetail(String chitId) async {
     final response = await _apiClient.get('/chitfunds/$chitId/member-detail');
@@ -152,7 +152,7 @@ class ChitFundRepository {
     return (data is Map) ? Map<String, dynamic>.from(data) : {};
   }
 
-  // ─── Chit Lifecycle ──────────────────────────────────────────────────────────
+  //  Chit Lifecycle 
 
   Future<bool> startChitFund(String chitId) async {
     await _apiClient.post('/chitfunds/$chitId/start', data: {});
@@ -164,9 +164,9 @@ class ChitFundRepository {
     return true;
   }
 
-  // ─── Auction ─────────────────────────────────────────────────────────────────
+  //  Auction 
 
-  /// Opens the auction for a specific month — sends FCM to all members
+  //  Opens the auction for a specific month  sends FCM to all members
   Future<bool> openAuctionMonth(
     String chitId,
     int monthNumber,
@@ -226,7 +226,7 @@ class ChitFundRepository {
     );
   }
 
-  // ─── Payment Verification (Owner marks payment) ───────────────────────────────
+  //  Payment Verification (Owner marks payment) ───────────────────────────────
 
   Future<bool> verifyMonthPayment(
     String chitId,

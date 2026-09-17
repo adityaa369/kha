@@ -3,8 +3,8 @@ import 'package:equatable/equatable.dart';
 class IntentModel extends Equatable {
   final String intentId;
   final String loanId;
-  final String action; // e.g. ADD_CREDIT, CLOSE_LOAN, ACCEPT_LOAN
-  final String status; // PENDING, CONSUMED, EXPIRED, CANCELLED
+  final String action; // eg. ADD_CREDIT, CLOSE_LOAN, ACCEPT_LOAN
+  final String status; // PENDING CONSUMED, EXPIRED, CANCELLED
   final Map<String, dynamic> payload;
 
   const IntentModel({

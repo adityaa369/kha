@@ -20,7 +20,7 @@ class ChitInvitesPage extends StatefulWidget {
 }
 
 class _ChitInvitesPageState extends State<ChitInvitesPage> {
-  int _selectedIndex = 0; // 0 = Invites, 1 = Joined, 2 = My Created Groups
+  int _selectedIndex = 0; // 0  Invites, 1 = Joined, 2 = My Created Groups
 
   @override
   void initState() {

@@ -3,7 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class KhaataTheme {
-  // Primary Colors - Rebranded to Green
+  // Primary Colors  Rebranded to Green
   static const Color primaryBlue = Color(0xFF059669); // Emerald 600
   static const Color secondaryBlue = Color(0xFF10B981); // Emerald 500
   static const Color lightBlue = Color(0xFF34D399); // Emerald 400

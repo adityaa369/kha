@@ -41,7 +41,7 @@ class _AuthPageState extends State<AuthPage>
   @override
   void dispose() {
     _animationController.dispose();
-    // Dispose all controllers...
+    // Dispose all controllers
     super.dispose();
   }
 
@@ -296,7 +296,7 @@ class _LoginFormState extends State<_LoginForm> {
             ),
             SizedBox(height: 30.h),
 
-            // Toggle: Phone or Aadhar
+            // Toggle Phone or Aadhar
             Row(
               children: [
                 _LoginMethodChip(

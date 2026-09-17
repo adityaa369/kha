@@ -117,7 +117,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
     );
   }
 
-  // ── OVERVIEW TAB ─────────────────────────────────────────────────────────
+  //  OVERVIEW TAB 
   Widget _buildOverview(AdminState state) {
     if (state is AdminLoading)
       return const Center(
@@ -376,7 +376,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
     );
   }
 
-  // ── USERS TAB ──────────────────────────────────────────────────────────────
+  //  USERS TAB 
   Widget _buildUsers(AdminState state) {
     return Column(
       children: [
@@ -580,7 +580,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
     );
   }
 
-  // ── LOANS TAB ─────────────────────────────────────────────────────────────
+  //  LOANS TAB 
   Widget _buildLoans(AdminState state) {
     return Column(
       children: [
@@ -750,7 +750,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
     );
   }
 
-  // ── CHIT FUNDS TAB ────────────────────────────────────────────────────────
+  //  CHIT FUNDS TAB 
   Widget _buildChitFunds(AdminState state) {
     if (state is AdminLoading)
       return const Center(

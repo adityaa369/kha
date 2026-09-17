@@ -326,16 +326,16 @@ class _SignupPageState extends State<SignupPage> {
                             controller: _pageController,
                             physics: const NeverScrollableScrollPhysics(),
                             children: [
-                              // Step 1: Personal Details & Address
+                              // Step 1 Personal Details & Address
                               _buildStep1(),
 
-                              // Step 2: KYC Details (PAN, Aadhar, DOB)
+                              // Step 2 KYC Details (PAN, Aadhar, DOB)
                               _buildStep2KYC(),
 
-                              // Step 3: Set Password
+                              // Step 3 Set Password
                               _buildStep2Password(strength),
 
-                              // Step 4: Verify Number (OTP)
+                              // Step 4 Verify Number (OTP)
                               _buildStep3OTP(state),
                             ],
                           ),
@@ -378,7 +378,7 @@ class _SignupPageState extends State<SignupPage> {
             ),
             SizedBox(height: 20.h),
 
-            // First & Last Name side-by-side
+            // First  Last Name side-by-side
             Row(
               children: [
                 Expanded(
@@ -1435,7 +1435,7 @@ class _SignupPageState extends State<SignupPage> {
           SizedBox(height: 24.h),
 
           // 6 OTP Digit code cells (styled as premium boxes matching Screen 4)
-          // Firebase OTP requires 6 digits. We show 6 cells for correct operation.
+          // Firebase OTP requires 6 digits We show 6 cells for correct operation.
           Text(
             'Enter Verification Code',
             style: TextStyle(

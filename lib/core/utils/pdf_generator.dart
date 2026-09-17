@@ -99,7 +99,7 @@ class PdfGenerator {
           );
         },
         build: (context) => [
-          // Section 1: Loan Summary
+          // Section 1 Loan Summary
           pw.Text(
             '1. Loan Summary',
             style: pw.TextStyle(
@@ -159,7 +159,7 @@ class PdfGenerator {
           ),
           pw.SizedBox(height: 24),
 
-          // Section 2: Financial Summary
+          // Section 2 Financial Summary
           pw.Text(
             '2. Financial Summary',
             style: pw.TextStyle(
@@ -192,7 +192,7 @@ class PdfGenerator {
           ),
           pw.SizedBox(height: 24),
 
-          // Section 3: Repayment Timeline
+          // Section 3 Repayment Timeline
           pw.Text(
             '3. Flexible Repayment Timeline',
             style: pw.TextStyle(
@@ -291,7 +291,7 @@ class PdfGenerator {
             );
           }),
 
-          // Post-term
+          // Postterm
           if (timelineModel.postTermTransactions.isNotEmpty) ...[
             pw.SizedBox(height: 12),
             pw.Text(

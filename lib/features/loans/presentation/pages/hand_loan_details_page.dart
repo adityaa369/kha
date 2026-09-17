@@ -90,7 +90,7 @@ class HandLoanDetailsPage extends StatelessWidget {
     );
   }
 
-  // ─── Bottom Bar ────────────────────────────────────────────────────────────
+  //  Bottom Bar 
 
   Widget _bottomBar(
     BuildContext context,
@@ -145,7 +145,7 @@ class HandLoanDetailsPage extends StatelessWidget {
                   ),
                 ),
                 child: Text(
-                  '💳 Record Payment',
+                  'Record Payment',
                   style: TextStyle(
                     fontSize: 12.sp,
                     fontWeight: FontWeight.bold,
@@ -182,7 +182,7 @@ class HandLoanDetailsPage extends StatelessWidget {
     );
   }
 
-  // ──────────────────────────────────────────────────────────────────────────———————————————————————————————————————————————————————————————————————————
+  //  
 
   void _toggleMonth(
     BuildContext context,
@@ -350,7 +350,7 @@ class HandLoanDetailsPage extends StatelessWidget {
                   icon: Icons.chat_bubble_outline,
                   color: Colors.green.shade600,
                   onTap: () async {
-                    final uri = Uri.parse('https://wa.me/91$phone');
+                    final uri = Uri.parse('https:// wame/91$phone');
                     if (await canLaunchUrl(uri)) {
                       await launchUrl(
                         uri,
@@ -398,7 +398,7 @@ class HandLoanDetailsPage extends StatelessWidget {
     );
   }
 
-  // â”€â”€â”€ Stats Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  //  â”€â”€â”€ Stats Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Widget _statsCard(LoanModel loan) {
     final actualStart =
@@ -560,7 +560,7 @@ class HandLoanDetailsPage extends StatelessWidget {
     );
   }
 
-  // â”€â”€â”€ Credit Overview Card (gradient) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  //  â”€â”€â”€ Credit Overview Card (gradient) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Widget _creditOverviewCard(LoanModel loan) {
     final duration = loan.durationMonths ?? 0;
@@ -676,7 +676,7 @@ class HandLoanDetailsPage extends StatelessWidget {
     );
   }
 
-  // â”€â”€â”€ Payment Checklist â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  //  â”€â”€â”€ Payment Checklist â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Widget _proofDocumentSection(BuildContext context, LoanModel loan) {
     if (loan.documentId == null || loan.documentId!.trim().isEmpty) {
@@ -988,7 +988,7 @@ class HandLoanDetailsPage extends StatelessWidget {
     );
   }
 
-  // â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  //  â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   String _fmt(double v) {
     if (v.isNaN || v.isInfinite) return '0';

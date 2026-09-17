@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/services/biometric_auth_service.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../core/blocs/auth/auth_cubit.dart';
 import '../../../../config/constants.dart';
 import '../../../../config/theme.dart';
@@ -62,13 +63,13 @@ class _SplashPageState extends State<SplashPage>
   }
 
   Future<void> _startNavigationSequence() async {
-    // 1. Kick off auth check
+    // 1 Kick off auth check
     await context.read<AuthCubit>().checkAuthStatus();
 
-    // 2. Wait for animation to finish (at least 2 seconds)
+    // 2 Wait for animation to finish (at least 2 seconds)
     await Future.delayed(const Duration(milliseconds: 2000));
 
-    // 3. Keep checking for 3 seconds if auth is still loading
+    // 3 Keep checking for 3 seconds if auth is still loading
     bool navigated = false;
     for (int i = 0; i < 30; i++) {
       if (!mounted) return;
@@ -82,7 +83,7 @@ class _SplashPageState extends State<SplashPage>
       await Future.delayed(const Duration(milliseconds: 100));
     }
 
-    // 4. Fallback if still stuck (likely unauthenticated or error)
+    // 4 Fallback if still stuck (likely unauthenticated or error)
     if (!navigated && mounted) {
       _handleNavigation(context.read<AuthCubit>().state);
     }
@@ -94,7 +95,7 @@ class _SplashPageState extends State<SplashPage>
     if (!mounted) return;
 
     if (state is Authenticated || state is AuthOffline) {
-      // Token valid, but require Biometric Unlock
+      // Token valid but require Biometric Unlock
       setState(() => _isLocked = true);
       _attemptBiometricUnlock(showFailureMessage: false);
     } else if (state is Unauthenticated || state is AuthError) {
@@ -131,26 +132,26 @@ class _SplashPageState extends State<SplashPage>
         }
       },
       child: Scaffold(
-        backgroundColor: KhaataTheme.primaryBlue,
+        backgroundColor: const Color(0xFFFEFDF8),
         body: Center(
           child: _isLocked
               ? Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.lock_outline, color: Colors.white, size: 60.sp),
+                    Icon(Icons.lock_outline, color: KhaataTheme.primaryBlue, size: 60.sp),
                     SizedBox(height: 20.h),
                     Text(
                       'App Locked',
                       style: TextStyle(
                         fontSize: 24.sp,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: KhaataTheme.primaryBlue,
                       ),
                     ),
                     SizedBox(height: 10.h),
                     Text(
                       'Please authenticate to continue',
-                      style: TextStyle(color: Colors.white70, fontSize: 14.sp),
+                      style: TextStyle(color: Colors.black54, fontSize: 14.sp),
                     ),
                     SizedBox(height: 30.h),
                     ElevatedButton.icon(
@@ -159,8 +160,8 @@ class _SplashPageState extends State<SplashPage>
                       icon: const Icon(Icons.fingerprint),
                       label: const Text('Unlock'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: KhaataTheme.primaryBlue,
+                        backgroundColor: KhaataTheme.primaryBlue,
+                        foregroundColor: Colors.white,
                         padding: EdgeInsets.symmetric(
                           horizontal: 32.w,
                           vertical: 12.h,
@@ -181,27 +182,29 @@ class _SplashPageState extends State<SplashPage>
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Text(
-                                'Hand Credit',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 32.sp, // Smaller than 48.sp
-                                  fontWeight: FontWeight.w900, // Thicker
-                                  color: Colors.white,
-                                  letterSpacing: 1.w,
+                              Image.asset(
+                                'assets/images/splash_logo.png',
+                                height: 120.h,
+                                fit: BoxFit.contain,
+                              ),
+                              SizedBox(height: 24.h),
+                              AnimatedOpacity(
+                                opacity: _controller.value > 0.4 ? 1.0 : 0.0,
+                                duration: const Duration(milliseconds: 500),
+                                child: Image.asset(
+                                  'assets/images/splash_title.png',
+                                  height: 28.h,
+                                  fit: BoxFit.contain,
                                 ),
                               ),
-                              SizedBox(height: 12.h),
+                              SizedBox(height: 11.h),
                               AnimatedOpacity(
-                                opacity: _controller.value > 0.5 ? 1.0 : 0.0,
+                                opacity: _controller.value > 0.6 ? 1.0 : 0.0,
                                 duration: const Duration(milliseconds: 500),
-                                child: Text(
-                                  'Digital Loan Agreements',
-                                  style: TextStyle(
-                                    fontSize: 14.sp,
-                                    color: Colors.white70,
-                                    fontWeight: FontWeight.w400,
-                                  ),
+                                child: Image.asset(
+                                  'assets/images/splash_subtitle.png',
+                                  height: 10.h,
+                                  fit: BoxFit.contain,
                                 ),
                               ),
                             ],

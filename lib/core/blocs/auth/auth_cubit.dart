@@ -26,7 +26,7 @@ class AuthCubit extends Cubit<AuthState> {
   String? _lastProcessedLink;
 
   void _initDeepLinkListener() async {
-    // 1. Handle cold-start links
+    // 1 Handle cold-start links
     try {
       final initialUri = await _appLinks.getInitialLink();
       if (initialUri != null) {
@@ -36,7 +36,7 @@ class AuthCubit extends Cubit<AuthState> {
       // Ignore
     }
 
-    // 2. Handle warm-start links
+    // 2 Handle warm-start links
     _linkSubscription = _appLinks.uriLinkStream.listen((uri) {
       _handleDeepLink(uri);
     });
@@ -88,7 +88,7 @@ class AuthCubit extends Cubit<AuthState> {
           print('[FORENSIC] Action code failed/already consumed: $e');
         }
         
-        // SECURITY REQUIREMENT: Independently verify state rather than inferring from success/failure
+        // SECURITY REQUIREMENT Independently verify state rather than inferring from success/failure
         final user = FirebaseAuth.instance.currentUser;
         if (user != null) {
           await user.reload();
@@ -96,7 +96,7 @@ class AuthCubit extends Cubit<AuthState> {
           if (user.emailVerified) {
             print('[FORENSIC] Firebase confirms email is verified. Syncing with backend...');
             try {
-              await syncFirebaseState(); // Forces refresh, syncs to backend, updates AuthCubit state
+              await syncFirebaseState(); // Forces refresh syncs to backend, updates AuthCubit state
               print('[FORENSIC] syncFirebaseState completed.');
             } catch (e) {
               print('[FORENSIC] syncFirebaseState failed: $e');
@@ -135,7 +135,7 @@ class AuthCubit extends Cubit<AuthState> {
         return;
       }
 
-      // Auto-sync if Firebase thinks we are verified but Khatha doesn't know yet
+      // Autosync if Firebase thinks we are verified but Khatha doesn't know yet
       final fbUser = FirebaseAuth.instance.currentUser;
       if (fbUser != null) {
         await fbUser.reload();
@@ -144,7 +144,7 @@ class AuthCubit extends Cubit<AuthState> {
         }
       }
 
-      // Wait for authoritative backend validation.
+      // Wait for authoritative backend validation
       try {
         final response = await _api.get('/auth/me');
         final data = response.data;
@@ -162,8 +162,8 @@ class AuthCubit extends Cubit<AuthState> {
           // Token revoked or user banned
           await _forceLogout();
         } else {
-          // Network timeout or 5xx: App is offline but has a cached token.
-          // Fall back to local data so app isn't bricked offline, but mark explicitly as AuthOffline.
+          // Network timeout or 5xx App is offline but has a cached token.
+          // Fall back to local data so app isnt bricked offline, but mark explicitly as AuthOffline.
           final userDataJson = await SecureStorage.getUserData();
           if (userDataJson != null) {
             _currentUser = UserModel.fromJson(jsonDecode(userDataJson));
@@ -182,7 +182,7 @@ class AuthCubit extends Cubit<AuthState> {
 
   Future<void> _forceLogout() async {
     await SecureStorage.clearAuthData();
-    // 4F-4F: Wipe document-related temporary state / memory cache
+    // 4F4F: Wipe document-related temporary state / memory cache
     PaintingBinding.instance.imageCache.clear();
     PaintingBinding.instance.imageCache.clearLiveImages();
     _currentUser = null;
@@ -203,7 +203,7 @@ class AuthCubit extends Cubit<AuthState> {
     // Sync FCM Token quietly in the background without blocking route
     try {
       final fcmToken = await NotificationService.getToken();
-      // Phase 4E: Backend expects token in body, maps to req.user.id implicitly
+      // Phase 4E Backend expects token in body, maps to req.user.id implicitly
       if (fcmToken != null) {
         await _api.post('/users/fcm-token', data: {'fcmToken': fcmToken});
       }
@@ -213,10 +213,10 @@ class AuthCubit extends Cubit<AuthState> {
     emit(Authenticated(user: user));
   }
 
-  // -------------------------------------------------------------
+  //  
   // Workflow Methods (Note: They now trigger transient UI states
-  // but eventually re-converge to _emitAuthoritativeState)
-  // -------------------------------------------------------------
+  // but eventually reconverge to _emitAuthoritativeState)
+  //  
   
   bool _isSubmitting = false;
 
@@ -276,7 +276,7 @@ class AuthCubit extends Cubit<AuthState> {
       if (idToken == null)
         throw Exception('Failed to retrieve Firebase ID Token');
         
-      _verificationId = null; // Single-use! Clear it to prevent accidental reuse on resend.
+      _verificationId = null; // Singleuse! Clear it to prevent accidental reuse on resend.
 
       // Send ID Token to backend (Phase 4E Contract)
       final response = await _api.post(
@@ -496,7 +496,7 @@ class AuthCubit extends Cubit<AuthState> {
           await user.verifyBeforeUpdateEmail(
             _currentUser!.email!,
             ActionCodeSettings(
-              url: 'https://khaata-42b18.firebaseapp.com/verified',
+              url: 'https:// khaata42b18.firebaseapp.com/verified',
               handleCodeInApp: true,
               androidPackageName: 'com.vest.khataa',
               androidInstallApp: true,

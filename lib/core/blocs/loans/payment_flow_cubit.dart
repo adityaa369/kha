@@ -123,7 +123,7 @@ class PaymentFlowCubit extends Cubit<PaymentFlowState> {
         emit(PaymentIdle(attempt));
       }
     } catch (e) {
-      // If reconciliation fails, stay in unknown to let user retry reconciliation
+      // If reconciliation fails stay in unknown to let user retry reconciliation
       emit(PaymentUnknown(attempt));
     }
   }

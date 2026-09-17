@@ -64,7 +64,7 @@ final router = GoRouter(
       '/auth-choice',
     ].contains(state.uri.path);
 
-    // Bootstrapping Phase: Trap in Splash and preserve intent via query param
+    // Bootstrapping Phase Trap in Splash and preserve intent via query param
     if (authState is AuthInitial) {
       if (state.uri.path != AppConstants.splash) {
         return '${AppConstants.splash}?redirect_to=${Uri.encodeComponent(state.uri.toString())}';
@@ -89,12 +89,12 @@ final router = GoRouter(
 
     // Full Authorized State
     if (authState is Authenticated) {
-      // If they were originally trying to go somewhere and hit splash, let them through
+      // If they were originally trying to go somewhere and hit splash let them through
       if (state.uri.path == AppConstants.splash) {
         final redirect = state.uri.queryParameters['redirect_to'];
         if (redirect != null && redirect.isNotEmpty) return redirect;
       }
-      // If they go to login/auth pages while fully authenticated, bounce to home
+      // If they go to loginauth pages while fully authenticated, bounce to home
       if (isAuthRoute) return AppConstants.home;
       return null;
     }

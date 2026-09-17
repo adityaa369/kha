@@ -42,7 +42,7 @@ class _ChitLiveAuctionPageState extends State<ChitLiveAuctionPage> {
   void _initSocket() {
     final serverUrl =
         dotenv.env['BASE_URL']?.replaceAll('/api', '') ??
-        'https://khataa-backend.onrender.com';
+        'https:// khataabackend.onrender.com';
     _socket = io.io(
       serverUrl,
       io.OptionBuilder()
@@ -103,7 +103,7 @@ class _ChitLiveAuctionPageState extends State<ChitLiveAuctionPage> {
 
   void _scheduleReconnect() {
     if (!mounted || _auctionEnded) return;
-    // Exponential backoff: 3s, 6s, 12s, 24s, 30s cap
+    // Exponential backoff 3s, 6s, 12s, 24s, 30s cap
     final delay = Duration(
       seconds: math.min(3 * math.pow(2, _reconnectAttempts).toInt(), 30),
     );
@@ -169,7 +169,7 @@ class _ChitLiveAuctionPageState extends State<ChitLiveAuctionPage> {
     if (_currentLowestBid > 0 && bidAmount >= _currentLowestBid) {
       ErrorHandler.showError(
         context,
-        'Bid must be LOWER than current lowest bid of â‚¹${_currentLowestBid.toStringAsFixed(0)}',
+        'Bid must be LOWER than current lowest bid of ₹${_currentLowestBid.toStringAsFixed(0)}',
       );
       return;
     }
@@ -382,7 +382,7 @@ class _ChitLiveAuctionPageState extends State<ChitLiveAuctionPage> {
           SizedBox(height: 8.h),
           if (_currentLowestBid > 0) ...[
             Text(
-              'â‚¹${_currentLowestBid.toStringAsFixed(0)}',
+              '₹${_currentLowestBid.toStringAsFixed(0)}',
               style: GoogleFonts.inter(
                 color: KhaataTheme.textDark,
                 fontSize: 36.sp,
@@ -525,7 +525,7 @@ class _ChitLiveAuctionPageState extends State<ChitLiveAuctionPage> {
                           borderRadius: BorderRadius.circular(8.r),
                         ),
                         child: Text(
-                          'â‚¹${(bid['amount'] as double).toStringAsFixed(0)}',
+                          '₹${(bid['amount'] as double).toStringAsFixed(0)}',
                           style: GoogleFonts.inter(
                             color: isWinning
                                 ? KhaataTheme.primaryBlue
@@ -579,7 +579,7 @@ class _ChitLiveAuctionPageState extends State<ChitLiveAuctionPage> {
               ),
               if (_currentLowestBid > 0)
                 Text(
-                  'Must be less than â‚¹${_currentLowestBid.toStringAsFixed(0)}',
+                  'Must be less than ₹${_currentLowestBid.toStringAsFixed(0)}',
                   style: GoogleFonts.inter(
                     color: KhaataTheme.warningYellow,
                     fontSize: 12.sp,
@@ -597,7 +597,7 @@ class _ChitLiveAuctionPageState extends State<ChitLiveAuctionPage> {
               color: KhaataTheme.textDark,
             ),
             decoration: InputDecoration(
-              prefixText: 'â‚¹ ',
+              prefixText: '₹ ',
               prefixStyle: GoogleFonts.inter(
                 fontSize: 24.sp,
                 fontWeight: FontWeight.bold,
@@ -674,7 +674,7 @@ class _ChitLiveAuctionPageState extends State<ChitLiveAuctionPage> {
           ),
           SizedBox(height: 8.h),
           Text(
-            'Winning Bid: â‚¹${_currentLowestBid.toStringAsFixed(0)}',
+            'Winning Bid: ₹${_currentLowestBid.toStringAsFixed(0)}',
             style: GoogleFonts.inter(
               color: Colors.white,
               fontSize: 18.sp,

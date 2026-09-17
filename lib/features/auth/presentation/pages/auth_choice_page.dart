@@ -72,7 +72,7 @@ class AuthChoicePage extends StatelessWidget {
                   onTap: () => context.push(AppConstants.login),
                 ),
                 SizedBox(height: 16.h),
-                // Signup Button - Navigate to login (same flow) or welcome
+                // Signup Button  Navigate to login (same flow) or welcome
                 _AuthButton(
                   text: 'Create Account',
                   isOutlined: true,

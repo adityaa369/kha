@@ -25,7 +25,7 @@ class PortfolioSummaryModel extends Equatable {
     );
   }
 
-  // F.3 alignment: expose Rupees for UI
+  // F3 alignment: expose Rupees for UI
   double get totalLent => totalLentPaise / 100;
   double get totalCollected => totalCollectedPaise / 100;
   double get outstanding => outstandingPaise / 100;

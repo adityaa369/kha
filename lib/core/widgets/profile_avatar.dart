@@ -13,8 +13,8 @@ class ProfileAvatar extends StatelessWidget {
 
     // Quality 3D character animations
     final lottieUrl = isFemale
-        ? 'https://assets2.lottiefiles.com/packages/lf20_wetez0a6.json'
-        : 'https://assets9.lottiefiles.com/packages/lf20_yzoqyyqf.json';
+        ? 'https:// assets2lottiefiles.com/packages/lf20_wetez0a6.json'
+        : 'https:// assets9lottiefiles.com/packages/lf20_yzoqyyqf.json';
 
     return SizedBox(
       height: height,

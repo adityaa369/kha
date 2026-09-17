@@ -8,8 +8,8 @@ import '../../../../config/constants.dart';
 import '../../../../config/theme.dart';
 import '../../../../core/blocs/loans/loan_cubit.dart';
 
-/// Lender signature step. The agreement is persisted as pending_otp and is
-/// released to the borrower only after a Firebase SMS challenge succeeds.
+//  Lender signature step The agreement is persisted as pending_otp and is
+//  released to the borrower only after a Firebase SMS challenge succeeds
 class LoanConfirmationPage extends StatefulWidget {
   final Map<String, dynamic> loanData;
   const LoanConfirmationPage({super.key, required this.loanData});

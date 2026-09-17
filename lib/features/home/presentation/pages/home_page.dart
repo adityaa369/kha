@@ -307,7 +307,7 @@ class _TopBarState extends State<_TopBar> {
       if (placemarks.isNotEmpty) {
         Placemark place = placemarks[0];
 
-        // Select the most precise city/town/village name
+        // Select the most precise citytown/village name
         String city = 'Unknown';
         if (place.subLocality != null && place.subLocality!.isNotEmpty) {
           if (place.locality != null &&
@@ -613,7 +613,7 @@ class _HeroBanner extends StatelessWidget {
                 SizedBox(
                   width:
                       MediaQuery.of(context).size.width *
-                      0.50, // Reduced from 0.55 to prevent overlap
+                      0.50, // Reduced from 055 to prevent overlap
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -729,7 +729,7 @@ class _HeroBanner extends StatelessWidget {
             child: IgnorePointer(
               child: SizedBox(
                 height: 180
-                    .h, // Drastically reduced from 250.h to stop physical overlap
+                    .h, // Drastically reduced from 250h to stop physical overlap
                 child: Image.asset(
                   'assets/images/hero_3d_man.png',
                   fit: BoxFit.contain,
@@ -840,7 +840,7 @@ class _PaymentsSection extends StatelessWidget {
         final loans = state.myLoans;
         final now = DateTime.now();
 
-        // 1. Gather all active taken loans with their upcoming/due details
+        // 1 Gather all active taken loans with their upcoming/due details
         List<Map<String, dynamic>> dueList = [];
 
         for (final loan in loans) {
@@ -849,7 +849,7 @@ class _PaymentsSection extends StatelessWidget {
           }
 
           final type = loan.type.toLowerCase().replaceAll('_', '');
-          // Usually business credit / chitfund are handled differently or don't have standard EMIs
+          // Usually business credit  chitfund are handled differently or don't have standard EMIs
           if (type == 'businesscredit' ||
               type == 'business' ||
               type == 'chitfund') {
@@ -884,7 +884,7 @@ class _PaymentsSection extends StatelessWidget {
           });
         }
 
-        // 2. Sort by most urgent first
+        // 2 Sort by most urgent first
         dueList.sort(
           (a, b) =>
               (a['dueDate'] as DateTime).compareTo(b['dueDate'] as DateTime),
@@ -902,7 +902,7 @@ class _PaymentsSection extends StatelessWidget {
           );
         }
 
-        // 3. Render the list of cards
+        // 3 Render the list of cards
         return Padding(
           padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
           child: Column(
@@ -938,7 +938,7 @@ class _PaymentsSection extends StatelessWidget {
                   icon: icon,
                   iconBg: iconBg,
                   title: 'Pay to ${loan.lenderName}',
-                  amount: 'â‚¹${_formatCurrency(amount)}',
+                  amount: '₹${_formatCurrency(amount)}',
                   subtitle: subtitle,
                   showProgress: isOverdue,
                   progressValue: loan.progress.clamp(0.0, 1.0),

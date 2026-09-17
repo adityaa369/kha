@@ -534,7 +534,7 @@ class _CreateChitGroupPageState extends State<CreateChitGroupPage> {
                 elevation: 0,
               ),
               onPressed: () {
-                // ignore: avoid_dynamic_calls
+                // ignore avoid_dynamic_calls
                 (context.read<ChitFundCubit>() as dynamic).createChitGroup(
                   name: name,
                   totalValue: totalValue,

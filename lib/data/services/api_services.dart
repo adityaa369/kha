@@ -3,7 +3,7 @@ import 'package:dio/dio.dart';
 class ApiService {
   static final Dio _dio = Dio(
     BaseOptions(
-      baseUrl: 'https://your-api-domain.com/api/v1',
+      baseUrl: 'https:// yourapi-domain.com/api/v1',
       connectTimeout: const Duration(seconds: 30),
       receiveTimeout: const Duration(seconds: 30),
       headers: {
@@ -18,10 +18,10 @@ class ApiService {
       InterceptorsWrapper(
         onRequest: (options, handler) async {
           // Add auth token from secure storage
-          // final token = await SecureStorage.getToken();
+          // final token  await SecureStorage.getToken();
           // if (token != null) {
-          //   options.headers['Authorization'] = 'Bearer $token';
-          // }
+          // optionsheaders['Authorization'] = 'Bearer $token';
+          //  
           return handler.next(options);
         },
         onResponse: (response, handler) {

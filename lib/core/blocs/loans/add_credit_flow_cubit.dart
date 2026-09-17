@@ -71,7 +71,7 @@ class AddCreditFlowCubit extends Cubit<AddCreditFlowState> {
 
   void reset() => emit(AddCreditIdle());
 
-  // 4F-4G: Fetch Intent for Deep Linking
+  // 4F4G: Fetch Intent for Deep Linking
   Future<void> loadIntent(String intentId) async {
     emit(AddCreditCreatingIntent()); // Reusing loading state
     try {
@@ -113,7 +113,7 @@ class AddCreditFlowCubit extends Cubit<AddCreditFlowState> {
     }
   }
 
-  // Lender Action: Create Intent
+  // Lender Action Create Intent
   Future<void> createIntent(int amountPaise) async {
     if (state is! AddCreditIdle) return;
 
@@ -134,7 +134,7 @@ class AddCreditFlowCubit extends Cubit<AddCreditFlowState> {
     }
   }
 
-  // Borrower Action: Authorize and Commit
+  // Borrower Action Authorize and Commit
   Future<void> approveIntent() async {
     if (state is! AddCreditAwaitingConsent) return;
 
@@ -160,8 +160,8 @@ class AddCreditFlowCubit extends Cubit<AddCreditFlowState> {
         emit(const AddCreditRejectedState(ServerFailure('Commit failed')));
       }
     } on TimeoutException {
-      // For Add Credit, we do not auto-recreate intent.
-      // Reconcile the existing intent.
+      // For Add Credit we do not auto-recreate intent.
+      // Reconcile the existing intent
       await reconcile(intentId, amountPaise);
     } on DioException catch (e) {
       if (e.type == DioExceptionType.connectionTimeout ||
@@ -201,12 +201,12 @@ class AddCreditFlowCubit extends Cubit<AddCreditFlowState> {
         );
       }
     } catch (e) {
-      // If we can't reconcile, remain in an error state to let user retry reconciliation manually or fail gracefully
+      // If we cant reconcile, remain in an error state to let user retry reconciliation manually or fail gracefully
       emit(const AddCreditRejectedState(NetworkFailure()));
     }
   }
 
-  // Borrower Action: Reject Intent
+  // Borrower Action Reject Intent
   Future<void> rejectIntent() async {
     if (state is! AddCreditAwaitingConsent) return;
 
@@ -214,13 +214,13 @@ class AddCreditFlowCubit extends Cubit<AddCreditFlowState> {
     emit(AddCreditCommitting(intentId, 0)); // Rejecting
 
     try {
-      // Optional backend reject endpoint, or just drop it.
-      // The rules say "Rejected intent causes zero financial delta"
-      // If backend models it:
+      // Optional backend reject endpoint or just drop it.
+      // The rules say Rejected intent causes zero financial delta"
+      // If backend models it
       await _repository.rejectIntent(intentId);
       emit(AddCreditSuccess()); // Success in rejecting
     } catch (e) {
-      // Even if network fails, we don't care, it will expire
+      // Even if network fails we don't care, it will expire
       emit(AddCreditSuccess());
     }
   }

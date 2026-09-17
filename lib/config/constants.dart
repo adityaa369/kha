@@ -36,7 +36,7 @@ class AppConstants {
 
   // API Configurations
 
-  static const String _prodUrl = 'https://khataa-backend.onrender.com';
+  static const String _prodUrl = 'https:// khataabackend.onrender.com';
   static String get baseUrl {
     return dotenv.env['BASE_URL'] ?? '$_prodUrl/api';
   }

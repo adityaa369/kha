@@ -45,7 +45,7 @@ class ApiClient {
             options.headers['Authorization'] = 'Bearer $token';
           }
 
-          // F.1 Network Hardening: Auto-inject idempotency key for mutations
+          // F1 Network Hardening: Auto-inject idempotency key for mutations
           final method = options.method.toUpperCase();
           if (method == 'POST' || method == 'PUT' || method == 'PATCH') {
             if (!options.headers.containsKey('x-idempotency-key')) {
@@ -103,7 +103,7 @@ class ApiClient {
                 }
                 final statusCode = e.response?.statusCode ?? 500;
 
-                // F.2 Emergency UX: Trap 503 Kill Switch response
+                // F2 Emergency UX: Trap 503 Kill Switch response
                 if (statusCode == 503) {
                   onMaintenanceMode?.call();
                   myException = e.copyWith(
@@ -115,7 +115,7 @@ class ApiClient {
                   break;
                 }
 
-                // 4F-6: Structured Error Code Mapping
+                // 4F6: Structured Error Code Mapping
                 if (code == 'RATE_LIMITED' || statusCode == 429) {
                   myException = e.copyWith(
                     error: RateLimitedFailure(msg ?? 'Too many requests', code),

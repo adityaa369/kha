@@ -72,7 +72,7 @@ class LoansGivenPage extends StatelessWidget {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Top Card: Balance to Collect
+              // Top Card Balance to Collect
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
                 child: Container(
@@ -106,7 +106,7 @@ class LoansGivenPage extends StatelessWidget {
                 ),
               ),
 
-              // "All Loans" section header
+              // All Loans section header
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
                 child: Text(
@@ -205,7 +205,7 @@ class LoansGivenPage extends StatelessWidget {
               const _ColorPair(
                 bg: Color(0xFFFFEBEE),
                 text: Color(0xFFC62828),
-              ), // Red/Pinkish
+              ), // RedPinkish
               const _ColorPair(
                 bg: Color(0xFFF3E5F5),
                 text: Color(0xFF6A1B9A),

@@ -133,8 +133,8 @@ class LoanRepository extends BaseRepository {
       final idToken = await getValidIdToken(forceRefresh: true);
       final response = await _api.post(
         '/loans/$loanId/verify',
-        // SMS codes are consumed only by Firebase. The server receives the
-        // signed Firebase ID token, never an OTP or verification session.
+        // SMS codes are consumed only by Firebase The server receives the
+        // signed Firebase ID token never an OTP or verification session.
         data: {'intentId': intentId, 'idToken': idToken},
       );
       final data = response.data;
@@ -197,7 +197,7 @@ class LoanRepository extends BaseRepository {
     });
   }
 
-  // Deprecated direct closeLoan, now uses intent flow via CloseLoanFlowCubit
+  // Deprecated direct closeLoan now uses intent flow via CloseLoanFlowCubit
   Future<bool> closeLoan(String loanId) async {
     throw UnimplementedError(
       "closeLoan must now use the Two-Stage intent flow.",
@@ -293,7 +293,7 @@ class LoanRepository extends BaseRepository {
     });
   }
 
-  // Deprecated direct addCredit, now uses intent flow
+  // Deprecated direct addCredit now uses intent flow
   Future<bool> addCredit(String loanId, {required int amountPaise}) async {
     throw UnimplementedError(
       "addCredit must now use the Two-Stage intent flow.",
@@ -331,7 +331,7 @@ class LoanRepository extends BaseRepository {
     return await handleApiCall(() async {
       final response = await _api.get('/loans/$loanId/interest-schedule');
       if (response.statusCode == 200) {
-        return InterestScheduleModel.fromJson(response.data);
+        print('[FORENSIC] Schedule JSON: ' + jsonEncode(response.data)); return InterestScheduleModel.fromJson(response.data);
       }
       throw const ServerFailure('Failed to fetch interest schedule');
     });

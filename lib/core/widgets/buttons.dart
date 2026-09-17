@@ -7,6 +7,7 @@ class PrimaryButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final bool isLoading;
   final Color? backgroundColor;
+  final Color? textColor;
 
   const PrimaryButton({
     super.key,
@@ -14,6 +15,7 @@ class PrimaryButton extends StatelessWidget {
     this.onPressed,
     this.isLoading = false,
     this.backgroundColor,
+    this.textColor,
   });
 
   @override
@@ -33,7 +35,10 @@ class PrimaryButton extends StatelessWidget {
                 valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
               ),
             )
-          : Text(text),
+          : Text(
+              text,
+              style: TextStyle(color: textColor ?? Colors.white),
+            ),
     );
   }
 }

@@ -8,7 +8,7 @@ class ChitFundCubit extends Cubit<ChitFundState> {
   ChitFundCubit(this._repository) : super(ChitFundInitial());
 
   Future<void> loadInvitesAndOwned() async {
-    // 1. Load from local cache instantly if state is not already loaded
+    // 1 Load from local cache instantly if state is not already loaded
     if (state is! ChitFundInvitesLoaded) {
       try {
         final cachedVacant = await _repository.getCachedVacantChits();
@@ -33,7 +33,7 @@ class ChitFundCubit extends Cubit<ChitFundState> {
       }
     }
 
-    // 2. Fetch from server in the background
+    // 2 Fetch from server in the background
     try {
       final ownedChits = await _repository.getVacantChits();
       final pendingInvites = await _repository.getMyInvites();
@@ -47,7 +47,7 @@ class ChitFundCubit extends Cubit<ChitFundState> {
         ),
       );
     } catch (e) {
-      // Only emit error if we don't have loaded data to show
+      // Only emit error if we dont have loaded data to show
       if (state is! ChitFundInvitesLoaded) {
         emit(ChitFundError(e.toString()));
       }
@@ -241,7 +241,7 @@ class ChitFundCubit extends Cubit<ChitFundState> {
     }
   }
 
-  // Mark payment paid/unpaid (owner action)
+  // Mark payment paidunpaid (owner action)
   Future<void> markPaymentPaid({
     required String chitId,
     required int monthNumber,

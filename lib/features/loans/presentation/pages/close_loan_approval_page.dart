@@ -115,7 +115,7 @@ class _CloseLoanApprovalView extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
                   const Text(
-                    'Lender Requested to Close Loan',
+                    'Close Loan',
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                   ),

@@ -91,7 +91,7 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> with WidgetsBinding
 
     final cubit = context.read<LoanCubit>();
     
-    // 1. Create ACCEPT_LOAN Intent
+    // 1 Create ACCEPT_LOAN Intent
     final intentId = await cubit.createAcceptIntent(_loan!.id);
     if (intentId == null) {
       if (mounted) {
@@ -134,7 +134,7 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> with WidgetsBinding
       return;
     }
 
-    // 2. Verify and Activate
+    // 2 Verify and Activate
     final success = await cubit.verifyLoan(_loan!.id, intentId);
 
     if (mounted) {

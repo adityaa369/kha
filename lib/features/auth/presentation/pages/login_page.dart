@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../core/blocs/auth/auth_cubit.dart';
 import '../../../../core/utils/dialog_utils.dart';
 import '../../../../config/theme.dart';
@@ -54,14 +55,9 @@ class _LoginPageState extends State<LoginPage> {
                 children: [
                   SizedBox(height: 52.h),
 
-                  Text(
-                    'Hand Credit',
-                    style: TextStyle(
-                      fontSize: 26.sp,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                      letterSpacing: 0.5,
-                    ),
+                  SvgPicture.asset(
+                    'assets/images/logo_offwhite.svg',
+                    height: 80.h,
                   ),
                   Text(
                     'Digital Loan Agreements',

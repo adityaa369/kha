@@ -174,7 +174,7 @@ class _SecurityHubPageState extends State<SecurityHubPage> with WidgetsBindingOb
                     }
                   ),
 
-                  // MPIN Button — changes label based on whether MPIN is already set
+                  // MPIN Button  changes label based on whether MPIN is already set
                   Container(
                     margin: EdgeInsets.only(bottom: 24.h),
                     width: double.infinity,
@@ -193,11 +193,11 @@ class _SecurityHubPageState extends State<SecurityHubPage> with WidgetsBindingOb
                       ),
                       onPressed: () async {
                         if (_hasMpin == true) {
-                          // Currently, change MPIN is not implemented. 
-                          // The user requested: "Change MPIN works."
-                          // But wait, the prompt says "Do not confuse Setup and Change. Change flow must be explicit"
-                          // If they don't have a change MPIN page, I should route them to a new one or handle it.
-                          context.push('/change-mpin'); // We will add a route!
+                          // Currently change MPIN is not implemented. 
+                          // The user requested "Change MPIN works."
+                          // But wait the prompt says "Do not confuse Setup and Change. Change flow must be explicit"
+                          // If they dont have a change MPIN page, I should route them to a new one or handle it.
+                          context.push('/change-mpin'); // We will add a route
                         } else {
                           final result = await context.push(AppConstants.mpinSetup);
                           if (result == true) {

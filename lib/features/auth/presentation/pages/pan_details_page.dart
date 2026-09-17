@@ -104,7 +104,7 @@ class _PanDetailsPageState extends State<PanDetailsPage> {
                     label: 'PAN',
                     hint: 'Enter PAN number',
                     controller: _panController,
-                    // inputFormatters: [PanInputFormatter()], // Assuming PanInputFormatter is defined elsewhere
+                    // inputFormatters [PanInputFormatter()], // Assuming PanInputFormatter is defined elsewhere
                     textCapitalization: TextCapitalization.characters,
                     validator: (value) {
                       if (value!.isEmpty) return 'PAN is required';

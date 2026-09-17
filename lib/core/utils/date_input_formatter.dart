@@ -22,7 +22,7 @@ class DateInputFormatter extends TextInputFormatter {
     }
     text = newText;
 
-    // Remove existing slashes to re-format
+    // Remove existing slashes to reformat
     text = text.replaceAll('/', '');
 
     if (text.length > 8) {
@@ -37,7 +37,7 @@ class DateInputFormatter extends TextInputFormatter {
       }
     }
 
-    // If the user typed 2 characters and hasn't typed the slash, append it.
+    // If the user typed 2 characters and hasnt typed the slash, append it.
     if (text.length == 2 &&
         oldValue.text.length < newValue.text.length &&
         !newValue.text.endsWith('/')) {

@@ -134,7 +134,7 @@ class LoanModel extends Equatable {
   final DateTime? startDate;
   final DateTime? endDate;
   final DateTime? activatedAt;
-  final String type; // e.g. personal, home, business
+  final String type; // eg. personal, home, business
   final String? mobile;
   final String? aadhar;
   final DateTime? createdAt;
@@ -310,7 +310,7 @@ class LoanModel extends Equatable {
       'borrower_name': borrowerName,
       'borrower_phone': mobile,
       'borrower_aadhar': aadhar,
-      'amount': amount, // Fixed: Sends explicit rupees to backend
+      'amount': amount, // Fixed Sends explicit rupees to backend
       'interest_rate': interestRate,
       'duration_months': durationMonths,
       'type': type,
@@ -318,7 +318,7 @@ class LoanModel extends Equatable {
     };
   }
 
-  // --- Presentation Helpers ---
+  //  Presentation Helpers 
 
   double get amount => amountPaise / 100;
   double get emiAmount => emiAmountPaise / 100;

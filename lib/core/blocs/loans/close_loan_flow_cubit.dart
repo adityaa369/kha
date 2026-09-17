@@ -68,7 +68,7 @@ class CloseLoanFlowCubit extends Cubit<CloseLoanFlowState> {
 
   void reset() => emit(CloseLoanIdle());
 
-  // 4F-4G: Fetch Intent for Deep Linking
+  // 4F4G: Fetch Intent for Deep Linking
   Future<void> loadIntent(String intentId) async {
     emit(CloseLoanCreatingIntent()); // Reusing loading state
     try {
@@ -109,7 +109,7 @@ class CloseLoanFlowCubit extends Cubit<CloseLoanFlowState> {
     }
   }
 
-  // Lender Action: Close Loan Directly (Bypass OTP)
+  // Lender Action Close Loan Directly (Bypass OTP)
   Future<void> createIntent() async {
     if (state is! CloseLoanIdle) return;
 
@@ -136,7 +136,7 @@ class CloseLoanFlowCubit extends Cubit<CloseLoanFlowState> {
     }
   }
 
-  // Borrower Action: Authorize and Commit
+  // Borrower Action Authorize and Commit
   Future<void> approveIntent() async {
     if (state is! CloseLoanAwaitingConsent) return;
 
@@ -200,11 +200,11 @@ class CloseLoanFlowCubit extends Cubit<CloseLoanFlowState> {
     }
   }
 
-  // Borrower Action: Reject Intent
+  // Borrower Action Reject Intent
   Future<void> rejectIntent() async {
     if (state is! CloseLoanAwaitingConsent) return;
     final intentId = (state as CloseLoanAwaitingConsent).intentId;
-    emit(CloseLoanCommitting(intentId)); // Re-using for processing state
+    emit(CloseLoanCommitting(intentId)); // Reusing for processing state
 
     try {
       await _repository.rejectIntent(intentId);

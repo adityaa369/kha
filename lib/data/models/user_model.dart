@@ -57,7 +57,7 @@ class UserModel extends Equatable {
     );
   }
 
-  // For API insert/update
+  // For API insertupdate
   Map<String, dynamic> toJson() {
     return {
       'firstName': firstName,

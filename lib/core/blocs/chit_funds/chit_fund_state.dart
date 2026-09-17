@@ -57,7 +57,7 @@ class ChitMemberDetailLoaded extends ChitFundState {
   final Map<String, dynamic> memberData; // subscription info
   final List<Map<String, dynamic>> auctionHistory;
   final List<Map<String, dynamic>> paymentHistory;
-  final Map<String, dynamic> chitInfo; // group name, totalValue, etc.
+  final Map<String, dynamic> chitInfo; // group name totalValue, etc.
 
   const ChitMemberDetailLoaded({
     required this.memberData,

@@ -22,7 +22,7 @@ class NotificationCubit extends Cubit<NotificationState> {
       }
     } catch (e) {
       // Gracefully handle errors like DioException (e.g., API not deployed yet)
-      // We don't throw an aggressive popup for background fetches
+      // We dont throw an aggressive popup for background fetches
       emit(const NotificationLoaded([]));
     }
   }

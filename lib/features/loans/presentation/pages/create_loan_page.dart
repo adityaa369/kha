@@ -162,13 +162,13 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
               SizedBox(height: 8.h),
               Text('Interest Rate: $rate% (Annual)'),
               SizedBox(height: 8.h),
-              Text('Total Interest: â‚¹${totalInterest.toStringAsFixed(2)}'),
+              Text('Total Interest: ₹${totalInterest.toStringAsFixed(2)}'),
             ],
             SizedBox(height: 8.h),
             Text('Duration: $months Months'),
             Divider(height: 24.h),
             Text(
-              'Total Repayment: â‚¹${totalAmount.toStringAsFixed(2)}',
+              'Total Repayment: ₹${totalAmount.toStringAsFixed(2)}',
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ],
@@ -505,7 +505,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Card 1: Borrower Details
+        // Card 1 Borrower Details
         _FormCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -550,7 +550,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
         ),
         SizedBox(height: 16.h),
 
-        // Card 2: Interest Details
+        // Card 2 Interest Details
         _FormCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -645,7 +645,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
         ),
         SizedBox(height: 16.h),
 
-        // Card 3: Upload
+        // Card 3 Upload
         _FormCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -675,7 +675,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Card 1: Borrower Details
+        // Card 1 Borrower Details
         _FormCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -712,7 +712,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
         ),
         SizedBox(height: 16.h),
 
-        // Card 2: Loan Details
+        // Card 2 Loan Details
         _FormCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -759,7 +759,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
         ),
         SizedBox(height: 16.h),
 
-        // Card 3: Additional
+        // Card 3 Additional
         _FormCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -841,7 +841,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
         ),
         SizedBox(height: 16.h),
 
-        // Card 1: Customer Details
+        // Card 1 Customer Details
         _FormCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -896,7 +896,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
         ),
         SizedBox(height: 16.h),
 
-        // Card 2: Credit Details
+        // Card 2 Credit Details
         _FormCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -948,7 +948,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
         ),
         SizedBox(height: 16.h),
 
-        // Card 3: Attachments
+        // Card 3 Attachments
         _FormCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1043,9 +1043,9 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
   }
 }
 
-// ----------------------
+//  
 // Reusable UI Components
-// ----------------------
+//  
 
 class _FormCard extends StatelessWidget {
   final Widget child;
@@ -1154,7 +1154,7 @@ class _DateSelector extends StatelessWidget {
             ), // Matched TextField height
             decoration: BoxDecoration(
               color: Colors
-                  .white, // In designs, it looks outlined, wait... textfields are outlined?
+                  .white, // In designs it looks outlined, wait... textfields are outlined?
               borderRadius: BorderRadius.circular(8.r),
               border: Border.all(color: Colors.grey.shade400),
             ),
@@ -1223,8 +1223,8 @@ class _DashedUploadBox extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12.r),
-          // Custom dashed border can be complex without extra package. We'll use a normal light grey border.
-          // Wait, the design has a dashed border. We can use a package if available, or just use a soft border.
+          // Custom dashed border can be complex without extra package We'll use a normal light grey border.
+          // Wait the design has a dashed border. We can use a package if available, or just use a soft border.
           border: Border.all(
             color: Colors.grey.shade300,
             style: BorderStyle.solid,

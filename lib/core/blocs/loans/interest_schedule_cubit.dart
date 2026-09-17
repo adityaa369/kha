@@ -59,9 +59,12 @@ class InterestScheduleCubit extends Cubit<InterestScheduleState> {
     emit(InterestScheduleLoading(lastKnownData: lastData));
 
     try {
+      print('[FORENSIC] Fetching schedule for $loanId...');
       final schedule = await _repository.getInterestSchedule(loanId);
+      print('[FORENSIC] Schedule fetched successfully. Length: ${schedule.schedule.length}');
       emit(InterestScheduleLoaded(schedule));
     } catch (e) {
+      print('[FORENSIC] Schedule fetch failed: $e');
       Failure failure;
       if (e is Failure) {
         failure = e;

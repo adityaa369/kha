@@ -1,22 +1,22 @@
 class Validators {
-  // Phone: Indian format, starts with 6-9, exactly 10 digits
+  // Phone Indian format, starts with 6-9, exactly 10 digits
   static final RegExp phoneRegex = RegExp(r'^[6-9]\d{9}$');
 
-  // Email: Standard format
+  // Email Standard format
   static final RegExp emailRegex = RegExp(
     r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
     caseSensitive: false,
   );
 
-  // PAN: 5 letters + 4 digits + 1 letter
+  // PAN 5 letters + 4 digits + 1 letter
   static final RegExp panRegex = RegExp(r'^[A-Z]{5}[0-9]{4}[A-Z]$');
 
-  // Aadhar: 12 digits, starts with 2-9
+  // Aadhar 12 digits, starts with 2-9
   static final RegExp aadharRegex = RegExp(
     r'^[2-9]{1}[0-9]{3}\s?[0-9]{4}\s?[0-9]{4}$',
   );
 
-  // Password: Min 8, 1 upper, 1 lower, 1 digit, 1 special
+  // Password Min 8, 1 upper, 1 lower, 1 digit, 1 special
   static final RegExp passwordRegex = RegExp(
     r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$',
   );
