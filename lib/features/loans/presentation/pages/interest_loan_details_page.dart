@@ -330,6 +330,40 @@ class InterestLoanDetailsPage extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 12.w,
+                    vertical: 6.h,
+                  ),
+                  decoration: BoxDecoration(
+                    color: theme.bg,
+                    borderRadius: BorderRadius.circular(20.r),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (isInterest) ...[
+                        Text(
+                          '% Interest Credit',
+                          style: TextStyle(
+                            color: theme.primary,
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ] else ...[
+                        Text(
+                          '💰 Hand Credit',
+                          style: TextStyle(
+                            color: theme.primary,
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                Container(
                     padding: EdgeInsets.symmetric(
                       horizontal: 12.w,
                       vertical: 6.h,
@@ -347,7 +381,6 @@ class InterestLoanDetailsPage extends StatelessWidget {
                       ),
                     ),
                   ),
-                ),
               ],
             ),
           ),
