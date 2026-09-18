@@ -1,5 +1,3 @@
-import 'package:khatha/core/utils/error_handler.dart';
-import 'package:dio/dio.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -30,13 +28,18 @@ class VerifyEmailBottomSheet extends StatefulWidget {
 class _VerifyEmailBottomSheetState extends State<VerifyEmailBottomSheet> {
   bool _isLoading = false;
   bool _isRefreshing = false;
-  int _cooldownSeconds = 60;
+  bool _initialSendDone = false;
+  String? _errorMessage;
+  int _cooldownSeconds = 0;
   Timer? _timer;
 
   @override
   void initState() {
     super.initState();
-    _startCooldown();
+    // Fire the initial send immediately when the sheet opens
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _sendEmail(isInitial: true);
+    });
   }
 
   @override
@@ -60,13 +63,18 @@ class _VerifyEmailBottomSheetState extends State<VerifyEmailBottomSheet> {
     });
   }
 
-  Future<void> _handleResend() async {
-    if (_cooldownSeconds > 0 || _isLoading) return;
+  Future<void> _sendEmail({bool isInitial = false}) async {
+    if (_isLoading) return;
+    if (!isInitial && _cooldownSeconds > 0) return;
 
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
     try {
       await context.read<AuthCubit>().sendVerificationEmail();
       if (mounted) {
+        setState(() => _initialSendDone = true);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Verification email sent!'),
@@ -78,23 +86,22 @@ class _VerifyEmailBottomSheetState extends State<VerifyEmailBottomSheet> {
       }
     } catch (e) {
       if (mounted) {
-        String msg = 'An error occurred';
-        if (e is DioException) {
-          if (e.error != null && e.error.toString().contains('AuthFailure')) {
-            msg = 'Session expired. Please login again.';
-          } else if (e.response?.data != null && e.response?.data is Map && e.response!.data['message'] != null) {
-            msg = e.response!.data['message'];
-          } else {
-            msg = e.message ?? 'Network error';
-          }
-        } else {
-          msg = e.toString();
+        String msg = 'Failed to send verification email. Please try again.';
+        final errStr = e.toString();
+        if (errStr.contains('too-many-requests')) {
+          msg = 'Too many requests. Please wait a few minutes and try again.';
+        } else if (errStr.contains('No email address is attached')) {
+          msg = 'No email address is attached to your account. Please re-login with OTP.';
         }
-        ErrorHandler.showError(context, msg);
+        setState(() => _errorMessage = msg);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  Future<void> _handleResend() async {
+    await _sendEmail();
   }
 
   Future<void> _handleCheckVerification() async {
@@ -191,15 +198,45 @@ class _VerifyEmailBottomSheetState extends State<VerifyEmailBottomSheet> {
             ),
           ),
           SizedBox(height: 8.h),
-          Text(
-            'We sent a verification link to:\n${_maskEmail(widget.email)}',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 15.sp,
-              color: KhaataTheme.textGrey,
-              height: 1.4,
+          if (_isLoading && !_initialSendDone)
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: 16.h),
+              child: Column(
+                children: [
+                  const CircularProgressIndicator(),
+                  SizedBox(height: 12.h),
+                  Text(
+                    'Sending verification email...',
+                    style: TextStyle(fontSize: 15.sp, color: KhaataTheme.textGrey),
+                  ),
+                ],
+              ),
+            )
+          else if (_errorMessage != null)
+            Container(
+              padding: EdgeInsets.all(12.w),
+              margin: EdgeInsets.only(bottom: 8.h),
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(10.r),
+                border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+              ),
+              child: Text(
+                _errorMessage!,
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14.sp, color: Colors.red[800]),
+              ),
+            )
+          else
+            Text(
+              'We sent a verification link to:\n${_maskEmail(widget.email)}',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 15.sp,
+                color: KhaataTheme.textGrey,
+                height: 1.4,
+              ),
             ),
-          ),
           SizedBox(height: 32.h),
           PrimaryButton(
             text: 'I\'ve Verified My Email',
