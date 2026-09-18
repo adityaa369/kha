@@ -268,6 +268,11 @@ class AuthCubit extends Cubit<AuthState> {
     // 4F4F: Wipe document-related temporary state / memory cache
     PaintingBinding.instance.imageCache.clear();
     PaintingBinding.instance.imageCache.clearLiveImages();
+    try {
+      await FirebaseAuth.instance.signOut();
+    } catch (e) {
+      print("Firebase signout error: $e");
+    }
     _currentUser = null;
     emit(Unauthenticated());
   }
@@ -572,7 +577,23 @@ class AuthCubit extends Cubit<AuthState> {
 
   Future<void> sendVerificationEmail() async {
     try {
-      final user = FirebaseAuth.instance.currentUser;
+      var user = FirebaseAuth.instance.currentUser;
+      
+      // Bulletproof self-healing: if Firebase session was somehow lost, re-authenticate using Khatha session
+      if (user == null) {
+        print('VERIFY_EMAIL_FLOW: Firebase user is null. Attempting to self-heal via custom token...');
+        try {
+          final tokenResponse = await _api.get('/auth/firebase-custom-token');
+          if (tokenResponse.data['success'] == true && tokenResponse.data['customToken'] != null) {
+            await FirebaseAuth.instance.signInWithCustomToken(tokenResponse.data['customToken']);
+            user = FirebaseAuth.instance.currentUser;
+            print('VERIFY_EMAIL_FLOW: Self-heal successful. Firebase user restored.');
+          }
+        } catch (e) {
+          print('VERIFY_EMAIL_FLOW: Self-heal failed: $e');
+        }
+      }
+      
       if (user == null) throw Exception("User not authenticated");
       
       print('FIREBASE_PROFILE_SYNC: reload attempted = true');
