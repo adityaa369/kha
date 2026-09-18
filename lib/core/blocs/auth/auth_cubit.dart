@@ -98,12 +98,19 @@ class AuthCubit extends Cubit<AuthState> {
       // SECURITY REQUIREMENT Independently verify state rather than inferring from success/failure
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        // Wait briefly for Firebase backend to propagate the action code before reloading
-        await Future.delayed(const Duration(seconds: 1));
-        await user.reload();
+        // Firebase backend can take several seconds to propagate the verification state to the reload endpoint.
+        // We poll up to 6 times (6 seconds) to guarantee we catch the updated state before failing.
+        bool isVerified = false;
+        for (int i = 0; i < 6; i++) {
+          await user.reload();
+          if (FirebaseAuth.instance.currentUser?.emailVerified == true) {
+            isVerified = true;
+            break;
+          }
+          if (i < 5) await Future.delayed(const Duration(seconds: 1));
+        }
         
-        final freshUser = FirebaseAuth.instance.currentUser;
-        if (freshUser?.emailVerified == true) {
+        if (isVerified) {
           if (wasAlreadyVerified && !codeAppliedSuccessfully) {
             print('[FORENSIC] Firebase confirms email is ALREADY verified. (Silent to prevent hot-restart spam)');
             _emitAuthoritativeState();
@@ -676,12 +683,15 @@ class AuthCubit extends Cubit<AuthState> {
       if (user == null) return;
       
       await user.reload();
-      final idToken = await user.getIdToken(true); // force refresh
+      final freshUser = FirebaseAuth.instance.currentUser;
+      if (freshUser == null) return;
+      
+      final idToken = await freshUser.getIdToken(true); // force refresh
       
       final response = await _api.post('/auth/sync-firebase', data: {
         'idToken': idToken,
-        'emailVerified': user.emailVerified,
-        'email': user.email,
+        'emailVerified': freshUser.emailVerified,
+        'email': freshUser.email,
       });
       
       if (response.data['success'] == true) {
