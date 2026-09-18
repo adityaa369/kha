@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:dio/dio.dart';
 import '../../../data/models/session_model.dart';
 import '../../../data/models/security_event_model.dart';
 import '../../../data/repositories/security_repository.dart';

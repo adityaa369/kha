@@ -24,10 +24,8 @@ class AuthCubit extends Cubit<AuthState> {
   StreamSubscription<Uri>? _linkSubscription;
 
   AuthCubit({ApiClient? api}) : _api = api ?? ApiClient(), super(AuthInitial()) {
-    _api.setAuthCallbacks(
-      onUnauthorized: _forceLogout,
-      onTokenExpired: _forceLogout,
-    );
+    ApiClient.onUnauthorized = _forceLogout;
+    ApiClient.onTokenExpired = _forceLogout;
     _initDeepLinkListener();
   }
 
