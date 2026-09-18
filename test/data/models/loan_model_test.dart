@@ -47,8 +47,8 @@ void main() {
       final loan = LoanModel.fromJson(json);
 
       expect(loan.id, 'loan-456');
-      expect(loan.lenderId, 'mongo_id_1'); // because extractId prefers _id
-      expect(loan.userId, 'mongo_id_2');
+      expect(loan.lenderId, 'lender-id-xyz'); // because extractId now prefers Firebase UID (id)
+      expect(loan.userId, 'borrower-id-abc');
       expect(loan.lenderName, 'John Doe');
       expect(loan.borrowerName, 'Jane Smith');
       expect(loan.lenderPhone, '9876543210');

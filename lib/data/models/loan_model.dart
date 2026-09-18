@@ -230,7 +230,8 @@ class LoanModel extends Equatable {
     String? extractId(dynamic field) {
       if (field == null) return null;
       if (field is String) return field;
-      if (field is Map) return field['_id']?.toString() ?? field['id']?.toString();
+      // Users use a custom string 'id' (Firebase UID), so prefer 'id' over MongoDB '_id'
+      if (field is Map) return field['id']?.toString() ?? field['_id']?.toString();
       return field.toString();
     }
 
