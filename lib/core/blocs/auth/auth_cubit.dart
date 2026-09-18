@@ -547,13 +547,19 @@ class AuthCubit extends Cubit<AuthState> {
       final idToken = await user.getIdToken(true); // force refresh
       
       final response = await _api.post('/auth/sync-firebase', data: {
-        'idToken': idToken
+        'idToken': idToken,
+        'emailVerified': user.emailVerified,
+        'email': user.email,
       });
       
-      if (response.data['success'] == true && response.data['user'] != null) {
-        _currentUser = UserModel.fromJson(response.data['user']);
-        await SecureStorage.saveUserData(jsonEncode(_currentUser!.toFullJson()));
-        _emitAuthoritativeState();
+      if (response.data['success'] == true) {
+        // Backend doesn't return the user object in sync-firebase, so fetch it
+        final meResponse = await _api.get('/auth/me');
+        if (meResponse.data['success'] == true && meResponse.data['user'] != null) {
+          _currentUser = UserModel.fromJson(meResponse.data['user']);
+          await SecureStorage.saveUserData(jsonEncode(_currentUser!.toFullJson()));
+          _emitAuthoritativeState();
+        }
       }
     } catch (e) {
       print("Firebase sync error: $e");
