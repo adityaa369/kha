@@ -227,21 +227,49 @@ class LoanModel extends Equatable {
       return [];
     }
 
+    String? extractId(dynamic field) {
+      if (field == null) return null;
+      if (field is String) return field;
+      if (field is Map) return field['_id']?.toString() ?? field['id']?.toString();
+      return field.toString();
+    }
+
+    String? extractName(dynamic field) {
+      if (field is Map) {
+        final first = field['firstName'] ?? '';
+        final last = field['lastName'] ?? '';
+        final fullName = '$first $last'.trim();
+        return fullName.isEmpty ? null : fullName;
+      }
+      return null;
+    }
+
+    String? extractPhone(dynamic field) {
+      if (field is Map) return field['phone']?.toString();
+      return null;
+    }
+
+    final populatedLenderName = extractName(json['lender']);
+    final populatedBorrowerName = extractName(json['borrower']);
+    final populatedLenderPhone = extractPhone(json['lender']);
+
     return LoanModel(
       id: json['_id'] ?? json['id']?.toString() ?? '',
-      lenderId: json['lender_id']?.toString() ?? json['lender']?.toString(),
-      userId: json['user_id']?.toString() ?? json['borrower']?.toString(),
-      borrowerName: json['borrowerName'] ?? json['borrower_name'] ?? '',
-      lenderName: json['lenderName'] ?? json['lender_name'],
+      lenderId: extractId(json['lender']) ?? json['lender_id']?.toString(),
+      userId: extractId(json['borrower']) ?? json['user_id']?.toString(),
+      borrowerName: populatedBorrowerName ?? json['borrowerName'] ?? json['borrower_name'] ?? '',
+      lenderName: populatedLenderName ?? json['lenderName'] ?? json['lender_name'],
       lenderPhone:
-          json['lenderPhone']?.toString() ?? json['lender_phone']?.toString(),
+          populatedLenderPhone ?? json['lenderPhone']?.toString() ?? json['lender_phone']?.toString(),
       initials:
           json['initials'] ??
           _generateInitials(
+            populatedLenderName ??
             json['lenderName'] ??
-                json['borrowerName'] ??
-                json['borrower_name'] ??
-                '',
+            populatedBorrowerName ??
+            json['borrowerName'] ??
+            json['borrower_name'] ??
+            '',
           ),
       amountPaise: parsePaiseStrict('amountPaise'),
       interestRate:

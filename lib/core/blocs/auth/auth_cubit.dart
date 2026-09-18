@@ -8,12 +8,12 @@ import '../../network/api_client.dart';
 import '../../utils/secure_storage.dart';
 import '../../error/failures.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../services/notification_service.dart';
 import 'package:app_links/app_links.dart';
 import 'dart:async';
 import '../../../firebase_options.dart';
 import 'package:flutter/material.dart';
 import '../../../main.dart';
+import '../../../config/routes.dart';
 
 part 'auth_state.dart';
 
@@ -75,54 +75,115 @@ class AuthCubit extends Cubit<AuthState> {
     print('[FORENSIC] Final Parsed Payload: mode=$mode hasOobCode=${oobCode != null}');
 
     if ((mode == 'verifyAndChangeEmail' || mode == 'verifyEmail') && oobCode != null) {
-        print('[FORENSIC] Starting action code application...');
-        bool codeAppliedSuccessfully = false;
+      print('[FORENSIC] Starting action code application...');
+      bool codeAppliedSuccessfully = false;
+      bool wasAlreadyVerified = FirebaseAuth.instance.currentUser?.emailVerified ?? false;
 
-        try {
-          print('[FORENSIC] Calling checkActionCode...');
-          await FirebaseAuth.instance.checkActionCode(oobCode);
-          print('[FORENSIC] checkActionCode success.');
-          
-          print('[FORENSIC] Calling applyActionCode...');
-          await FirebaseAuth.instance.applyActionCode(oobCode);
-          print('[FORENSIC] applyActionCode success.');
-          codeAppliedSuccessfully = true;
-        } catch (e) {
-          print('[FORENSIC] Action code failed/already consumed: $e');
-        }
+      try {
+        print('[FORENSIC] Calling checkActionCode...');
+        await FirebaseAuth.instance.checkActionCode(oobCode);
+        print('[FORENSIC] checkActionCode success.');
         
-        // SECURITY REQUIREMENT Independently verify state rather than inferring from success/failure
-        final user = FirebaseAuth.instance.currentUser;
-        if (user != null) {
-          await user.reload();
-          
-          if (user.emailVerified) {
+        print('[FORENSIC] Calling applyActionCode...');
+        await FirebaseAuth.instance.applyActionCode(oobCode);
+        print('[FORENSIC] applyActionCode success.');
+        codeAppliedSuccessfully = true;
+      } catch (e) {
+        print('[FORENSIC] Action code failed/already consumed: $e');
+      }
+      
+      // SECURITY REQUIREMENT Independently verify state rather than inferring from success/failure
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        await user.reload();
+        
+        if (user.emailVerified) {
+          if (wasAlreadyVerified && !codeAppliedSuccessfully) {
+            print('[FORENSIC] Firebase confirms email is ALREADY verified.');
+            _showVerificationDialog(
+              title: 'Email Verified',
+              message: 'Your email is already verified.',
+              isSuccess: true,
+            );
+          } else {
             print('[FORENSIC] Firebase confirms email is verified. Syncing with backend...');
             try {
               await syncFirebaseState(); // Forces refresh syncs to backend, updates AuthCubit state
               print('[FORENSIC] syncFirebaseState completed.');
               
-              scaffoldMessengerKey.currentState?.showSnackBar(
-                const SnackBar(
-                  content: Text('Email verified successfully!'),
-                  backgroundColor: Colors.green,
-                  duration: Duration(seconds: 4),
-                ),
+              _showVerificationDialog(
+                title: 'Email Verified',
+                message: 'Your email has been successfully verified.\nYour account is now verified and ready to use.',
+                isSuccess: true,
               );
             } catch (e) {
               print('[FORENSIC] syncFirebaseState failed: $e');
-              emit(AuthError('Failed to synchronize verification state: $e'));
               _emitAuthoritativeState();
+              _showVerificationDialog(
+                title: 'Verification Failed',
+                message: 'We couldn\'t complete email verification backend sync. Please try again.',
+                isSuccess: false,
+              );
             }
+          }
+        } else {
+          print('[FORENSIC] Firebase confirms email is NOT verified.');
+          _emitAuthoritativeState();
+          if (!codeAppliedSuccessfully) {
+            _showVerificationDialog(
+              title: 'Verification Failed',
+              message: 'This verification link is expired or invalid.\nPlease request a new verification email.',
+              isSuccess: false,
+            );
           } else {
-            print('[FORENSIC] Firebase confirms email is NOT verified.');
-            if (!codeAppliedSuccessfully) {
-              emit(AuthError('Verification link is invalid or expired. Please request a new one.'));
-              _emitAuthoritativeState();
-            }
+             _showVerificationDialog(
+              title: 'Verification Failed',
+              message: 'We couldn\'t complete email verification. Please try again.',
+              isSuccess: false,
+            );
           }
         }
       }
+    }
+  }
+
+  void _showVerificationDialog({required String title, required String message, required bool isSuccess}) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final context = rootNavigatorKey.currentContext;
+      if (context == null) return;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext ctx) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: Row(
+              children: [
+                Icon(
+                  isSuccess ? Icons.check_circle : Icons.error,
+                  color: isSuccess ? Colors.green : Colors.red,
+                  size: 28,
+                ),
+                const SizedBox(width: 8),
+                Expanded(child: Text(title)),
+              ],
+            ),
+            content: Text(message, style: const TextStyle(fontSize: 16)),
+            actions: [
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isSuccess ? Colors.green : Colors.orange,
+                ),
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                },
+                child: Text(isSuccess ? "Continue" : "Close", style: const TextStyle(color: Colors.white)),
+              ),
+            ],
+          );
+        }
+      );
+    });
   }
 
   @override

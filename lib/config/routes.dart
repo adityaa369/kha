@@ -46,10 +46,14 @@ import '../features/profile/presentation/pages/security_hub_page.dart';
 import '../core/blocs/security/security_cubit.dart';
 import '../data/repositories/security_repository.dart';
 import '../core/network/api_client.dart';
+import 'package:flutter/material.dart';
 
 import 'constants.dart';
 
+final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
+
 final router = GoRouter(
+  navigatorKey: rootNavigatorKey,
   initialLocation: AppConstants.splash,
   redirect: (context, state) {
     final authState = context.read<AuthCubit>().state;
