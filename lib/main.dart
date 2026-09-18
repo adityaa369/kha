@@ -29,6 +29,7 @@ import 'package:flutter/foundation.dart';
 import 'firebase_options.dart';
 
 final systemStateCubit = SystemStateCubit();
+final scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
 void main() async {
   try {
@@ -172,6 +173,7 @@ class KhaataApp extends StatelessWidget {
             splitScreenMode: true,
             builder: (context, child) {
               return MaterialApp.router(
+                scaffoldMessengerKey: scaffoldMessengerKey,
                 debugShowCheckedModeBanner: false,
                 title: 'Khaata',
                 theme: KhaataTheme.lightTheme,

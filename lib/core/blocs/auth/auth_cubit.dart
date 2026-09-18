@@ -12,6 +12,8 @@ import '../../services/notification_service.dart';
 import 'package:app_links/app_links.dart';
 import 'dart:async';
 import '../../../firebase_options.dart';
+import 'package:flutter/material.dart';
+import '../../../main.dart';
 
 part 'auth_state.dart';
 
@@ -99,6 +101,14 @@ class AuthCubit extends Cubit<AuthState> {
             try {
               await syncFirebaseState(); // Forces refresh syncs to backend, updates AuthCubit state
               print('[FORENSIC] syncFirebaseState completed.');
+              
+              scaffoldMessengerKey.currentState?.showSnackBar(
+                const SnackBar(
+                  content: Text('Email verified successfully!'),
+                  backgroundColor: Colors.green,
+                  duration: Duration(seconds: 4),
+                ),
+              );
             } catch (e) {
               print('[FORENSIC] syncFirebaseState failed: $e');
               emit(AuthError('Failed to synchronize verification state: $e'));
