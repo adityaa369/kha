@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
@@ -36,10 +37,13 @@ class _OtpPageState extends State<OtpPage> {
 
   @override
   void dispose() {
+    _timer?.cancel();
     _otpController.dispose();
     _errorController?.close();
     super.dispose();
   }
+
+  Timer? _timer;
 
   void _startResendTimer() {
     if (!mounted) return;
@@ -49,24 +53,29 @@ class _OtpPageState extends State<OtpPage> {
       _hasError = false;
     });
 
-    Future.delayed(const Duration(seconds: 1), _tickTimer);
-  }
-
-  void _tickTimer() {
-    if (!mounted) return;
-    if (_resendTimer > 0) {
-      setState(() {
-        _resendTimer--;
-      });
-      Future.delayed(const Duration(seconds: 1), _tickTimer);
-    } else {
-      setState(() {
-        _canResend = true;
-      });
-    }
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      if (_resendTimer > 0) {
+        setState(() {
+          _resendTimer--;
+        });
+      } else {
+        setState(() {
+          _canResend = true;
+        });
+        timer.cancel();
+      }
+    });
   }
 
   void _verifyOtp() {
+    if (!mounted) return;
+    final state = context.read<AuthCubit>().state;
+    if (state is AuthLoading || state is OtpVerifying) return; // prevent single-flight mutation
     if (_currentOtp.length == 6) {
       context.read<AuthCubit>().verifyOtp(widget.phone, _currentOtp);
     }
