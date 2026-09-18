@@ -1,4 +1,4 @@
-﻿import 'package:khatha/core/utils/error_handler.dart';
+import 'package:khatha/core/utils/error_handler.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -77,7 +77,19 @@ class _VerifyEmailBottomSheetState extends State<VerifyEmailBottomSheet> {
       }
     } catch (e) {
       if (mounted) {
-        ErrorHandler.showError(context, e.toString());
+        String msg = 'An error occurred';
+        if (e is DioException) {
+          if (e.error != null && e.error.toString().contains('AuthFailure')) {
+            msg = 'Session expired. Please login again.';
+          } else if (e.response?.data != null && e.response?.data is Map && e.response!.data['message'] != null) {
+            msg = e.response!.data['message'];
+          } else {
+            msg = e.message ?? 'Network error';
+          }
+        } else {
+          msg = e.toString();
+        }
+        ErrorHandler.showError(context, msg);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

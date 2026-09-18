@@ -48,7 +48,7 @@ class SecurityCubit extends Cubit<SecurityState> {
         state.copyWith(isLoading: false, sessions: sessions, events: events),
       );
     } catch (e) {
-      emit(state.copyWith(isLoading: false, error: e.toString()));
+      emit(state.copyWith(isLoading: false, error: _extractError(e)));
     }
   }
 
@@ -58,7 +58,7 @@ class SecurityCubit extends Cubit<SecurityState> {
       await _repository.revokeSession(sessionId);
       await loadSecurityData(); // Refresh list
     } catch (e) {
-      emit(state.copyWith(isLoading: false, error: e.toString()));
+      emit(state.copyWith(isLoading: false, error: _extractError(e)));
     }
   }
 
@@ -71,7 +71,7 @@ class SecurityCubit extends Cubit<SecurityState> {
       await _repository.revokeOtherSessions(rt);
       await loadSecurityData(); // Refresh list
     } catch (e) {
-      emit(state.copyWith(isLoading: false, error: e.toString()));
+      emit(state.copyWith(isLoading: false, error: _extractError(e)));
     }
   }
 
@@ -80,6 +80,24 @@ class SecurityCubit extends Cubit<SecurityState> {
       return await _repository.getMpinStatus();
     } catch (_) {
       return false;
+    }
+  }
+
+  String _extractError(dynamic e) {
+    if (e is String) return e;
+    try {
+      if (e is DioException) {
+        if (e.error != null && e.error.toString().contains('AuthFailure')) {
+          return 'Session expired. Please login again.';
+        }
+        if (e.response?.data != null && e.response?.data is Map && e.response!.data['message'] != null) {
+          return e.response!.data['message'];
+        }
+        return e.message ?? 'Network error';
+      }
+      return e.toString();
+    } catch (_) {
+      return 'An unexpected error occurred';
     }
   }
 }
