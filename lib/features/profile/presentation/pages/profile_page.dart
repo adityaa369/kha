@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
@@ -89,16 +89,13 @@ class ProfilePage extends StatelessWidget {
                           String? email;
                           bool isEmailVerified = false;
 
-                          if (state is Authenticated) {
-                            fullName = state.user.displayName;
-                            gender = state.user.gender;
-                            email = state.user.email;
-                            isEmailVerified = state.user.isEmailVerified;
-                          } else if (state is Authenticated) {
-                            fullName = 'Verified User';
-                            gender = state.user.gender;
-                            email = state.user.email;
-                            isEmailVerified = state.user.isEmailVerified;
+                          final user = context.read<AuthCubit>().currentUser;
+                          
+                          if (user != null) {
+                            fullName = user.displayName;
+                            gender = user.gender;
+                            email = user.email;
+                            isEmailVerified = user.isEmailVerified;
                           }
 
                           return Column(

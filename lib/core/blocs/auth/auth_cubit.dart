@@ -210,9 +210,13 @@ class AuthCubit extends Cubit<AuthState> {
       // Autosync if Firebase thinks we are verified but Khatha doesn't know yet
       final fbUser = FirebaseAuth.instance.currentUser;
       if (fbUser != null) {
-        await fbUser.reload();
-        if (fbUser.emailVerified) {
-          await syncFirebaseState();
+        try {
+          await fbUser.reload();
+          if (fbUser.emailVerified) {
+            await syncFirebaseState();
+          }
+        } catch (e) {
+          print('Firebase reload/sync failed during boot: $e');
         }
       }
 
@@ -245,7 +249,14 @@ class AuthCubit extends Cubit<AuthState> {
           }
         }
       } catch (e) {
-        await _forceLogout();
+        print("Unknown error in checkAuthStatus: $e");
+        final userDataJson = await SecureStorage.getUserData();
+        if (userDataJson != null) {
+          _currentUser = UserModel.fromJson(jsonDecode(userDataJson));
+          emit(AuthOffline(user: _currentUser!));
+        } else {
+          emit(Unauthenticated());
+        }
       }
     } catch (e) {
       emit(Unauthenticated());
