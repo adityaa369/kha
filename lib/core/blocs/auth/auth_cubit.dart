@@ -606,8 +606,29 @@ class AuthCubit extends Cubit<AuthState> {
       }
 
       if (refreshedUser.email == null) {
-        print('VERIFY_EMAIL_FLOW: error = missing_firebase_email');
-        throw Exception("No email address is attached to your account. Please update your profile.");
+        print('VERIFY_EMAIL_FLOW: firebase email missing, requesting backend sync...');
+        try {
+          final syncResponse = await _api.post('/auth/sync-email-to-firebase');
+          print('VERIFY_EMAIL_FLOW: backend sync response = ${syncResponse.data}');
+          
+          // Reload Firebase user after backend attached the email
+          await FirebaseAuth.instance.currentUser?.reload();
+          final repairedUser = FirebaseAuth.instance.currentUser;
+          
+          if (repairedUser?.email == null) {
+            print('VERIFY_EMAIL_FLOW: error = email still missing after sync');
+            throw Exception("Could not attach email to your account. Please contact support.");
+          }
+          
+          print('VERIFY_EMAIL_FLOW: email repaired, proceeding to send verification');
+          // Send verification with the repaired user
+          await repairedUser!.sendEmailVerification(actionSettings);
+          print('VERIFY_EMAIL_FLOW: sendEmailVerification completed successfully');
+          return;
+        } catch (syncErr) {
+          print('VERIFY_EMAIL_FLOW: backend sync failed: $syncErr');
+          throw Exception("Failed to sync email. Please log out, log in with OTP, and try again.");
+        }
       }
 
       print('VERIFY_EMAIL_FLOW: selectedOperation = sendEmailVerification');
