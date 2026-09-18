@@ -98,9 +98,12 @@ class AuthCubit extends Cubit<AuthState> {
       // SECURITY REQUIREMENT Independently verify state rather than inferring from success/failure
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
+        // Wait briefly for Firebase backend to propagate the action code before reloading
+        await Future.delayed(const Duration(seconds: 1));
         await user.reload();
         
-        if (user.emailVerified) {
+        final freshUser = FirebaseAuth.instance.currentUser;
+        if (freshUser?.emailVerified == true) {
           if (wasAlreadyVerified && !codeAppliedSuccessfully) {
             print('[FORENSIC] Firebase confirms email is ALREADY verified. (Silent to prevent hot-restart spam)');
             _emitAuthoritativeState();
