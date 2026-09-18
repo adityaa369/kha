@@ -11,6 +11,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/notification_service.dart';
 import 'package:app_links/app_links.dart';
 import 'dart:async';
+import '../../../firebase_options.dart';
 
 part 'auth_state.dart';
 
@@ -502,11 +503,27 @@ class AuthCubit extends Cubit<AuthState> {
       print('VERIFY_EMAIL_FLOW: hasCurrentUserEmail = ${_currentUser?.email != null}');
 
       if (_currentUser?.email != null && user.email != _currentUser!.email) {
-        print('VERIFY_EMAIL_FLOW: selectedOperation = updateEmail + sendEmailVerification');
+        print('VERIFY_EMAIL_FLOW: selectedOperation = REST accounts:update + sendEmailVerification');
         print('VERIFY_EMAIL_FLOW: actionCodeSettings.url = khaata-42b18.firebaseapp.com/verified');
         print('VERIFY_EMAIL_FLOW: handleCodeInApp = true');
         
-        await user.updateEmail(_currentUser!.email!);
+        // securely establish the user's email using REST API because updateEmail is removed in v6
+        // and verifyBeforeUpdateEmail crashes natively for users with no previous email.
+        final idToken = await user.getIdToken();
+        final apiKey = DefaultFirebaseOptions.currentPlatform.apiKey;
+        final url = 'https://identitytoolkit.googleapis.com/v1/accounts:update?key=$apiKey';
+        
+        final response = await _api.dio.post(url, data: {
+          'idToken': idToken,
+          'email': _currentUser!.email!,
+          'returnSecureToken': true
+        });
+        
+        if (response.statusCode != 200) {
+          throw Exception('Failed to establish email securely.');
+        }
+        
+        await user.reload();
         await user.sendEmailVerification(actionSettings);
         return;
       }
