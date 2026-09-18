@@ -376,6 +376,13 @@ class AuthCubit extends Cubit<AuthState> {
         final token = data['token'];
         await SecureStorage.saveToken(token);
 
+        try {
+          final firebaseUser = FirebaseAuth.instance.currentUser;
+          await firebaseUser?.reload();
+        } catch (e) {
+          print('FIREBASE_PROFILE_SYNC: reload failed: $e');
+        }
+
         _currentUser = UserModel.fromJson(data['user']);
         await SecureStorage.saveUserData(
           jsonEncode(_currentUser!.toFullJson()),
@@ -568,6 +575,17 @@ class AuthCubit extends Cubit<AuthState> {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) throw Exception("User not authenticated");
       
+      print('FIREBASE_PROFILE_SYNC: reload attempted = true');
+      try {
+        await user.reload();
+        print('FIREBASE_PROFILE_SYNC: reload succeeded = true');
+      } catch (e) {
+        print('FIREBASE_PROFILE_SYNC: reload succeeded = false (error: $e)');
+      }
+
+      final refreshedUser = FirebaseAuth.instance.currentUser;
+      if (refreshedUser == null) throw Exception("User not authenticated after reload");
+
       final actionSettings = ActionCodeSettings(
         url: 'https://khaata-42b18.firebaseapp.com/verified',
         handleCodeInApp: true,
@@ -576,15 +594,18 @@ class AuthCubit extends Cubit<AuthState> {
         androidMinimumVersion: '1',
       );
 
-      print('VERIFY_EMAIL_FLOW: hasCurrentUserEmail = ${user.email != null}');
-      print('VERIFY_EMAIL_FLOW: emailVerified = ${user.emailVerified}');
+      print('FIREBASE_PROFILE_SYNC: firebase email present = ${refreshedUser.email != null}');
+      print('FIREBASE_PROFILE_SYNC: firebase emailVerified = ${refreshedUser.emailVerified}');
+      
+      print('VERIFY_EMAIL_FLOW: hasCurrentUserEmail = ${refreshedUser.email != null}');
+      print('VERIFY_EMAIL_FLOW: emailVerified = ${refreshedUser.emailVerified}');
 
-      if (user.emailVerified) {
+      if (refreshedUser.emailVerified) {
         print('VERIFY_EMAIL_FLOW: selectedOperation = already_verified');
         return; // Nothing to do
       }
 
-      if (user.email == null) {
+      if (refreshedUser.email == null) {
         print('VERIFY_EMAIL_FLOW: error = missing_firebase_email');
         throw Exception("No email address is attached to your account. Please update your profile.");
       }
@@ -592,7 +613,7 @@ class AuthCubit extends Cubit<AuthState> {
       print('VERIFY_EMAIL_FLOW: selectedOperation = sendEmailVerification');
       
       try {
-        await user.sendEmailVerification(actionSettings);
+        await refreshedUser.sendEmailVerification(actionSettings);
         print('VERIFY_EMAIL_FLOW: sendEmailVerification completed successfully');
       } catch (fbErr) {
         print('VERIFY_EMAIL_FLOW: sendEmailVerification Firebase error: $fbErr');
@@ -709,6 +730,13 @@ class AuthCubit extends Cubit<AuthState> {
       if (response.data['success'] == true && response.data['customToken'] != null) {
           final customToken = response.data['customToken'];
           await FirebaseAuth.instance.signInWithCustomToken(customToken);
+          
+          try {
+            final firebaseUser = FirebaseAuth.instance.currentUser;
+            await firebaseUser?.reload();
+          } catch (e) {
+            print('FIREBASE_PROFILE_SYNC: reload failed: $e');
+          }
           
           final token = response.data['token'];
           if (token != null) {
