@@ -8,6 +8,7 @@ import '../../network/api_client.dart';
 import '../../utils/secure_storage.dart';
 import '../../error/failures.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../services/notification_service.dart';
 import 'package:app_links/app_links.dart';
 import 'dart:async';
 import '../../../firebase_options.dart';
