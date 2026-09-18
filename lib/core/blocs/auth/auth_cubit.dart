@@ -584,22 +584,12 @@ class AuthCubit extends Cubit<AuthState> {
         return; // Nothing to do
       }
 
-      if (user.email == null || (_currentUser?.email != null && user.email != _currentUser!.email)) {
-        if (_currentUser?.email == null) {
-          throw Exception("No email address provided for this account.");
-        }
-        print('VERIFY_EMAIL_FLOW: selectedOperation = updateEmail + sendEmailVerification');
-        try {
-          await user.updateEmail(_currentUser!.email!);
-          await user.reload();
-          print('VERIFY_EMAIL_FLOW: updateEmail completed successfully');
-        } catch (e) {
-          print('VERIFY_EMAIL_FLOW: updateEmail Firebase error: $e');
-          throw Exception("Failed to attach email address: $e");
-        }
-      } else {
-        print('VERIFY_EMAIL_FLOW: selectedOperation = sendEmailVerification');
+      if (user.email == null) {
+        print('VERIFY_EMAIL_FLOW: error = missing_firebase_email');
+        throw Exception("No email address is attached to your account. Please update your profile.");
       }
+
+      print('VERIFY_EMAIL_FLOW: selectedOperation = sendEmailVerification');
       
       try {
         await user.sendEmailVerification(actionSettings);
