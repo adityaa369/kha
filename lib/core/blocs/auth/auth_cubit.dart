@@ -565,12 +565,6 @@ class AuthCubit extends Cubit<AuthState> {
 
   Future<void> sendVerificationEmail() async {
     try {
-      final customTokenResponse = await _api.get('/auth/firebase-custom-token');
-      if (customTokenResponse.data['success'] == true) {
-        final customToken = customTokenResponse.data['customToken'];
-        await FirebaseAuth.instance.signInWithCustomToken(customToken);
-      }
-
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) throw Exception("User not authenticated");
       
@@ -582,46 +576,30 @@ class AuthCubit extends Cubit<AuthState> {
         androidMinimumVersion: '1',
       );
 
-      print('VERIFY_EMAIL_FLOW: hasCurrentUserEmail = ${_currentUser?.email != null}');
+      print('VERIFY_EMAIL_FLOW: hasCurrentUserEmail = ${user.email != null}');
+      print('VERIFY_EMAIL_FLOW: emailVerified = ${user.emailVerified}');
 
-      if (_currentUser?.email != null && user.email != _currentUser!.email) {
-        print('VERIFY_EMAIL_FLOW: selectedOperation = REST accounts:update + sendEmailVerification');
-        print('VERIFY_EMAIL_FLOW: actionCodeSettings.url = khaata-42b18.firebaseapp.com/verified');
-        print('VERIFY_EMAIL_FLOW: handleCodeInApp = true');
-        
-        // securely establish the user's email using REST API
-        final idToken = await user.getIdToken();
-        final apiKey = DefaultFirebaseOptions.currentPlatform.apiKey;
-        final url = 'https://identitytoolkit.googleapis.com/v1/accounts:update?key=$apiKey';
-        
-        try {
-          final response = await _api.dio.post(url, data: {
-            'idToken': idToken,
-            'email': _currentUser!.email!,
-            'returnSecureToken': true
-          });
-          print('VERIFY_EMAIL_FLOW: accounts:update HTTP: ${response.statusCode}');
-        } on DioException catch (dioE) {
-          print('VERIFY_EMAIL_FLOW: accounts:update HTTP: ${dioE.response?.statusCode}');
-          print('VERIFY_EMAIL_FLOW: accounts:update Firebase error: ${dioE.response?.data}');
-          throw Exception("Failed to attach email: ${dioE.message}");
-        }
-        
-        await user.reload();
-        
-        try {
-          await user.sendEmailVerification(actionSettings);
-          print('VERIFY_EMAIL_FLOW: sendEmailVerification completed successfully');
-        } catch (fbErr) {
-          print('VERIFY_EMAIL_FLOW: sendEmailVerification Firebase error: $fbErr');
-          throw Exception("Failed to send verification email: $fbErr");
-        }
-        return;
+      if (user.emailVerified) {
+        print('VERIFY_EMAIL_FLOW: selectedOperation = already_verified');
+        return; // Nothing to do
       }
-      
-      print('VERIFY_EMAIL_FLOW: selectedOperation = sendEmailVerification');
-      print('VERIFY_EMAIL_FLOW: actionCodeSettings.url = khaata-42b18.firebaseapp.com/verified');
-      print('VERIFY_EMAIL_FLOW: handleCodeInApp = true');
+
+      if (user.email == null || (_currentUser?.email != null && user.email != _currentUser!.email)) {
+        if (_currentUser?.email == null) {
+          throw Exception("No email address provided for this account.");
+        }
+        print('VERIFY_EMAIL_FLOW: selectedOperation = updateEmail + sendEmailVerification');
+        try {
+          await user.updateEmail(_currentUser!.email!);
+          await user.reload();
+          print('VERIFY_EMAIL_FLOW: updateEmail completed successfully');
+        } catch (e) {
+          print('VERIFY_EMAIL_FLOW: updateEmail Firebase error: $e');
+          throw Exception("Failed to attach email address: $e");
+        }
+      } else {
+        print('VERIFY_EMAIL_FLOW: selectedOperation = sendEmailVerification');
+      }
       
       try {
         await user.sendEmailVerification(actionSettings);
