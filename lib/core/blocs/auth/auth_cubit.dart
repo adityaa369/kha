@@ -100,12 +100,9 @@ class AuthCubit extends Cubit<AuthState> {
         
         if (user.emailVerified) {
           if (wasAlreadyVerified && !codeAppliedSuccessfully) {
-            print('[FORENSIC] Firebase confirms email is ALREADY verified.');
-            _showVerificationDialog(
-              title: 'Email Verified',
-              message: 'Your email is already verified.',
-              isSuccess: true,
-            );
+            print('[FORENSIC] Firebase confirms email is ALREADY verified. (Silent to prevent hot-restart spam)');
+            _emitAuthoritativeState();
+            return;
           } else {
             print('[FORENSIC] Firebase confirms email is verified. Syncing with backend...');
             try {
