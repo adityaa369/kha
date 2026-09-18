@@ -589,24 +589,33 @@ class AuthCubit extends Cubit<AuthState> {
         print('VERIFY_EMAIL_FLOW: actionCodeSettings.url = khaata-42b18.firebaseapp.com/verified');
         print('VERIFY_EMAIL_FLOW: handleCodeInApp = true');
         
-        // securely establish the user's email using REST API because updateEmail is removed in v6
-        // and verifyBeforeUpdateEmail crashes natively for users with no previous email.
+        // securely establish the user's email using REST API
         final idToken = await user.getIdToken();
         final apiKey = DefaultFirebaseOptions.currentPlatform.apiKey;
         final url = 'https://identitytoolkit.googleapis.com/v1/accounts:update?key=$apiKey';
         
-        final response = await _api.dio.post(url, data: {
-          'idToken': idToken,
-          'email': _currentUser!.email!,
-          'returnSecureToken': true
-        });
-        
-        if (response.statusCode != 200) {
-          throw Exception('Failed to establish email securely.');
+        try {
+          final response = await _api.dio.post(url, data: {
+            'idToken': idToken,
+            'email': _currentUser!.email!,
+            'returnSecureToken': true
+          });
+          print('VERIFY_EMAIL_FLOW: accounts:update HTTP: ${response.statusCode}');
+        } on DioException catch (dioE) {
+          print('VERIFY_EMAIL_FLOW: accounts:update HTTP: ${dioE.response?.statusCode}');
+          print('VERIFY_EMAIL_FLOW: accounts:update Firebase error: ${dioE.response?.data}');
+          throw Exception("Failed to attach email: ${dioE.message}");
         }
         
         await user.reload();
-        await user.sendEmailVerification(actionSettings);
+        
+        try {
+          await user.sendEmailVerification(actionSettings);
+          print('VERIFY_EMAIL_FLOW: sendEmailVerification completed successfully');
+        } catch (fbErr) {
+          print('VERIFY_EMAIL_FLOW: sendEmailVerification Firebase error: $fbErr');
+          throw Exception("Failed to send verification email: $fbErr");
+        }
         return;
       }
       
@@ -614,8 +623,15 @@ class AuthCubit extends Cubit<AuthState> {
       print('VERIFY_EMAIL_FLOW: actionCodeSettings.url = khaata-42b18.firebaseapp.com/verified');
       print('VERIFY_EMAIL_FLOW: handleCodeInApp = true');
       
-      await user.sendEmailVerification(actionSettings);
+      try {
+        await user.sendEmailVerification(actionSettings);
+        print('VERIFY_EMAIL_FLOW: sendEmailVerification completed successfully');
+      } catch (fbErr) {
+        print('VERIFY_EMAIL_FLOW: sendEmailVerification Firebase error: $fbErr');
+        throw Exception("Failed to send verification email: $fbErr");
+      }
     } catch (e) {
+      print('VERIFY_EMAIL_FLOW: Generic error: $e');
       throw Exception("Failed to send verification email: ${e.toString()}");
     }
   }
