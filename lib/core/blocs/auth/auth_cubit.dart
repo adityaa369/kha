@@ -491,22 +491,31 @@ class AuthCubit extends Cubit<AuthState> {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) throw Exception("User not authenticated");
       
-      if (_currentUser?.email != null) {
-        if (user.email != _currentUser!.email) {
-          await user.verifyBeforeUpdateEmail(
-            _currentUser!.email!,
-            ActionCodeSettings(
-              url: 'https:// khaata42b18.firebaseapp.com/verified',
-              handleCodeInApp: true,
-              androidPackageName: 'com.vest.khataa',
-              androidInstallApp: true,
-              androidMinimumVersion: '1',
-            ),
-          );
-          return;
-        }
+      final actionSettings = ActionCodeSettings(
+        url: 'https://khaata-42b18.firebaseapp.com/verified',
+        handleCodeInApp: true,
+        androidPackageName: 'com.vest.khataa',
+        androidInstallApp: true,
+        androidMinimumVersion: '1',
+      );
+
+      print('VERIFY_EMAIL_FLOW: hasCurrentUserEmail = ${_currentUser?.email != null}');
+
+      if (_currentUser?.email != null && user.email != _currentUser!.email) {
+        print('VERIFY_EMAIL_FLOW: selectedOperation = updateEmail + sendEmailVerification');
+        print('VERIFY_EMAIL_FLOW: actionCodeSettings.url = khaata-42b18.firebaseapp.com/verified');
+        print('VERIFY_EMAIL_FLOW: handleCodeInApp = true');
+        
+        await user.updateEmail(_currentUser!.email!);
+        await user.sendEmailVerification(actionSettings);
+        return;
       }
-      await user.sendEmailVerification();
+      
+      print('VERIFY_EMAIL_FLOW: selectedOperation = sendEmailVerification');
+      print('VERIFY_EMAIL_FLOW: actionCodeSettings.url = khaata-42b18.firebaseapp.com/verified');
+      print('VERIFY_EMAIL_FLOW: handleCodeInApp = true');
+      
+      await user.sendEmailVerification(actionSettings);
     } catch (e) {
       throw Exception("Failed to send verification email: ${e.toString()}");
     }
