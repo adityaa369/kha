@@ -1,0 +1,26 @@
+365: ],
+366: ),
+367: ),
+368: Container(
+369: padding: EdgeInsets.symmetric(
+370: horizontal: 12.w,
+371: vertical: 6.h,
+372: ),
+373: decoration: BoxDecoration(
+374: color: Colors.green.shade50,
+375: borderRadius: BorderRadius.circular(20.r),
+376: ),
+377: child: Text(
+378: 'Active Loan',
+379: style: TextStyle(
+380: color: Colors.green.shade700,
+381: fontSize: 12.sp,
+382: fontWeight: FontWeight.bold,
+383: ),
+384: ),
+385: ),
+386: ],
+387: ),
+388: ),
+389: Divider(height: 1, color: Colors.grey.shade100),
+390: // Amounts Row

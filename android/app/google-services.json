@@ -1,0 +1,62 @@
+{
+  "project_info": {
+    "project_number": "119567932403",
+    "project_id": "khaata-42b18",
+    "storage_bucket": "khaata-42b18.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:119567932403:android:2cd11541818d97b2a91086",
+        "android_client_info": {
+          "package_name": "com.vest.khataa"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "119567932403-mg8ct039k42a974q4n79u71qgel53al7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.vest.khataa",
+            "certificate_hash": "f521f2e5da402bb4a36d710e915e700c6ca45aad"
+          }
+        },
+        {
+          "client_id": "119567932403-q6u0k8q6rfeopg7skpfeg323fsdsfahk.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.vest.khataa",
+            "certificate_hash": "beab32de115fb1d5b335d57fd04863f8a76ecff0"
+          }
+        },
+        {
+          "client_id": "119567932403-otd0kagngbrv33lmgob853duh76nv31g.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBKxIa04MRXrOqvdW41djDwSSsxoDCTe8c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "119567932403-otd0kagngbrv33lmgob853duh76nv31g.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "119567932403-2vcl856kveb35k0bb5ip0rq66d99j3tt.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.khatha"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

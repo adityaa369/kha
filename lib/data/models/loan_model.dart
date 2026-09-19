@@ -386,11 +386,7 @@ class LoanModel extends Equatable {
     }
   }
 
-  double get remainingAmount {
-    if (totalPayablePaise > 0)
-      return (totalPayablePaise - paidAmountPaise) / 100;
-    return (amountPaise - paidAmountPaise) / 100;
-  }
+  double get remainingAmount => totalOutstandingAmount;
 
   String get displayCounterpartyName {
     if (lenderName != null && lenderName!.isNotEmpty) return lenderName!;
