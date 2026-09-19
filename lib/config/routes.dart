@@ -9,7 +9,7 @@ import '../features/auth/presentation/pages/signup_page.dart';
 import '../features/auth/presentation/pages/mpin_login_page.dart';
 import '../features/auth/presentation/pages/mpin_setup_page.dart';
 import '../features/auth/presentation/pages/change_mpin_page.dart';
-import '../features/auth/presentation/pages/change_mpin_page.dart';
+
 import '../features/auth/presentation/pages/otp_page.dart';
 import '../features/auth/presentation/pages/personal_details_page.dart';
 import '../features/auth/presentation/pages/pan_details_page.dart';
@@ -35,6 +35,8 @@ import '../features/chit_funds/presentation/pages/bid_authorization_page.dart';
 import '../features/chit_funds/presentation/pages/chit_success_page.dart';
 import '../features/chit_funds/presentation/pages/chit_group_admin_page.dart';
 import '../features/home/presentation/pages/notifications_page.dart';
+import '../features/home/presentation/pages/notification_prefs_page.dart';
+import '../features/home/presentation/cubit/notification_prefs_cubit.dart';
 import '../features/loans/presentation/pages/loan_approval_page.dart';
 import '../features/loans/presentation/pages/add_credit_approval_page.dart';
 import '../features/loans/presentation/pages/close_loan_approval_page.dart';
@@ -198,6 +200,13 @@ final router = GoRouter(
     GoRoute(
       path: AppConstants.notifications,
       builder: (context, state) => const NotificationsPage(),
+    ),
+    GoRoute(
+      path: '/notification-preferences',
+      builder: (context, state) => BlocProvider(
+        create: (_) => NotificationPrefsCubit(ApiClient())..load(),
+        child: const NotificationPrefsPage(),
+      ),
     ),
     GoRoute(
       path: '/close-loan-approval/:intentId',

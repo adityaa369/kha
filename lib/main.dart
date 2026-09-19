@@ -297,80 +297,132 @@ class NotificationListenerWidget extends StatefulWidget {
 
 class _NotificationListenerWidgetState
     extends State<NotificationListenerWidget> {
-  StreamSubscription? _sub;
-  StreamSubscription? _openSub;
+  StreamSubscription? _foregroundSub;
+  StreamSubscription? _tapSub;
+  StreamSubscription? _tokenRefreshSub;
 
-  Future<void> _handleNotificationRouting(RemoteMessage message) async {
-    final type = message.data['type'] as String?;
-    final loanId = message.data['loanId'] as String?;
-    final intentId = message.data['intentId'] as String?;
-    final eventId = message.data['eventId'] as String?; // UI dedup if necessary
+  /// Dedup guard: track the last navigated notification ID to prevent double-push
+  String? _lastHandledMessageId;
 
-    if (type == 'PAYMENT_COMMITTED' ||
-        type == 'CREDIT_ADDED' ||
-        type == 'LOAN_ACCEPTED' ||
-        type == 'LOAN_CLOSED' ||
-        type == 'LOAN_FROZEN') {
-      if (loanId != null) router.go('${AppConstants.loanDetails}/$loanId');
-    } else if (type == 'LOAN_CREATED' ||
-        type == 'LOAN_OTP' ||
-        type == 'LOAN_INIT_OTP') {
-      if (loanId != null) {
-        // We can go to approval directly or loan details.
-        // Well map to approval to be explicit.
-        router.go('${AppConstants.loanApproval}/$loanId');
-      } else {
-        router.go(AppConstants.notifications);
-      }
-    } else if (type == 'ADD_CREDIT_INTENT') {
-      if (intentId != null) {
-        router.go('/add-credit-approval/$intentId?loanId=${loanId ?? ''}');
-      }
-    } else if (type == 'CLOSE_INTENT') {
-      if (intentId != null) {
-        router.go('/close-loan-approval/$intentId?loanId=${loanId ?? ''}');
-      }
-    } else if (type == 'CHIT_AUCTION_START') {
-      final ledgerId = message.data['ledgerId'] ?? '';
-      router.push('/chit-live-auction?ledgerId=$ledgerId');
-    } else {
-      // Unknown type  Generic Notifications Inbox
-      router.go(AppConstants.notifications);
+  // ============================================================
+  // DEEP LINK ROUTER — Phase 8
+  // All routing is done by canonical eventType + referenceId.
+  // Authorization is handled by the destination page itself (LoanDetailsPage
+  // checks lender/borrower ownership). We NEVER bypass route guards.
+  // ============================================================
+  Future<void> _routeToNotification(RemoteMessage message) async {
+    if (!mounted) return;
+
+    // Dedup: same message received twice (e.g., cold-start + onMessageOpenedApp)
+    final msgId = message.messageId;
+    if (msgId != null && msgId == _lastHandledMessageId) return;
+    _lastHandledMessageId = msgId;
+
+    final data = message.data;
+    final eventType = data['eventType'] as String?;
+    // Backend now sends referenceId; fall back to legacy loanId for compatibility
+
+    final referenceId = (data['referenceId'] ?? data['loanId']) as String?;
+    final intentId = data['intentId'] as String?;
+
+    // Ensure router is available (splash may still be showing during cold start)
+    // The router redirect guard handles auth — we just push the destination.
+    switch (eventType) {
+      // --- Loan / Agreement events → Loan Details (auth check inside page) ---
+      case 'LOAN_CREATED':
+      case 'LOAN_RECEIVED':
+      case 'LOAN_ACTIVATED':
+      case 'AGREEMENT_ACCEPTED':
+      case 'PAYMENT_RECEIVED':
+      case 'PAYMENT_FAILED':
+      case 'LOAN_COMPLETED':
+      case 'LOAN_CLOSED':
+        if (referenceId != null && referenceId.isNotEmpty) {
+          router.go('${AppConstants.loanDetails}/$referenceId');
+        } else {
+          router.go(AppConstants.notifications);
+        }
+        break;
+
+      // --- Agreement Ready → Loan Approval page ---
+      case 'AGREEMENT_READY':
+        if (referenceId != null && referenceId.isNotEmpty) {
+          router.go('${AppConstants.loanApproval}/$referenceId');
+        } else {
+          router.go(AppConstants.notifications);
+        }
+        break;
+
+      // --- Legacy type-based routing (backwards compat) ---
+      // These fire from old-style data payloads that haven't yet migrated
+      default:
+        final legacyType = data['type'] as String?;
+        final loanId = data['loanId'] as String?;
+        if (legacyType == 'ADD_CREDIT_INTENT' && intentId != null) {
+          router.go('/add-credit-approval/$intentId?loanId=${loanId ?? ''}');
+        } else if (legacyType == 'CLOSE_INTENT' && intentId != null) {
+          router.go('/close-loan-approval/$intentId?loanId=${loanId ?? ''}');
+        } else if (legacyType == 'CHIT_AUCTION_START') {
+          final ledgerId = data['ledgerId'] ?? '';
+          router.push('/chit-live-auction?ledgerId=$ledgerId');
+        } else if (loanId != null && loanId.isNotEmpty) {
+          // Generic loan reference — open loan details (page handles auth)
+          router.go('${AppConstants.loanDetails}/$loanId');
+        } else {
+          router.go(AppConstants.notifications);
+        }
     }
+  }
+
+  void _refreshDataOnMessage() {
+    if (!mounted) return;
+    context.read<LoanCubit>().fetchLoans();
+    context.read<ChitFundCubit>().loadInvitesAndOwned();
+    context.read<NotificationCubit>().fetchNotifications();
+  }
+
+  Future<void> _registerFcmToken(String token) async {
+    try {
+      await ApiClient().put(
+        '/users/fcm-token',
+        data: {'fcmToken': token},
+      );
+    } catch (_) {}
   }
 
   @override
   void initState() {
     super.initState();
-    _sub = NotificationService.onMessageStream.stream.listen((_) {
-      if (!mounted) return;
-      context.read<LoanCubit>().fetchLoans();
-      context.read<ChitFundCubit>().loadInvitesAndOwned();
-      context.read<NotificationCubit>().fetchNotifications();
+
+    // 1. FOREGROUND messages — refresh data and show heads-up (handled by NotificationService)
+    _foregroundSub = NotificationService.onForegroundMessage.stream.listen((_) {
+      _refreshDataOnMessage();
     });
 
-    _openSub = FirebaseMessaging.onMessageOpenedApp.listen((
-      RemoteMessage message,
-    ) {
-      _handleNotificationRouting(message);
+    // 2. BACKGROUND → FOREGROUND tap (onMessageOpenedApp)
+    //    and FOREGROUND tap via NotificationService.onNotificationTap
+    _tapSub = NotificationService.onNotificationTap.stream.listen((message) {
+      _routeToNotification(message);
     });
 
-    FirebaseMessaging.instance.getInitialMessage().then((
-      RemoteMessage? message,
-    ) {
-      if (message != null) {
-        // 4F4G: Execute immediately. Router will preserve intent if AuthCubit is still Initial.
-        if (mounted) {
-          _handleNotificationRouting(message);
-        }
+    // 3. COLD START — app was completely terminated, opened via notification
+    FirebaseMessaging.instance.getInitialMessage().then((RemoteMessage? message) {
+      if (message != null && mounted) {
+        _routeToNotification(message);
       }
+    });
+
+    // 4. FCM token refresh — re-register on rotation
+    _tokenRefreshSub = NotificationService.onTokenRefresh.listen((newToken) {
+      _registerFcmToken(newToken);
     });
   }
 
   @override
   void dispose() {
-    _sub?.cancel();
-    _openSub?.cancel();
+    _foregroundSub?.cancel();
+    _tapSub?.cancel();
+    _tokenRefreshSub?.cancel();
     super.dispose();
   }
 

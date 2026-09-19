@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
@@ -66,6 +67,10 @@ class _NotificationsPageState extends State<NotificationsPage> {
       backgroundColor: Colors.white,
       foregroundColor: KhaataTheme.textDark,
       actions: [
+        IconButton(
+          icon: Icon(Icons.settings_outlined, color: KhaataTheme.textGrey),
+          onPressed: () => context.push('/notification-preferences'),
+        ),
         BlocBuilder<NotificationCubit, NotificationState>(
           builder: (context, state) {
             if (state is NotificationLoaded && state.unreadCount > 0) {
