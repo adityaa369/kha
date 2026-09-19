@@ -274,6 +274,16 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   Future<void> _forceLogout() async {
+    // Revoke FCM token first before we lose the session
+    try {
+      final token = await NotificationService.getToken();
+      if (token != null) {
+        await _api.delete('/users/fcm-token', data: {'fcmToken': token});
+      }
+    } catch (e) {
+      print("FCM revocation error: $e");
+    }
+
     await SecureStorage.clearAuthData();
     // 4F4F: Wipe document-related temporary state / memory cache
     PaintingBinding.instance.imageCache.clear();
