@@ -8,51 +8,138 @@ class NotificationCubit extends Cubit<NotificationState> {
 
   NotificationCubit(this._api) : super(NotificationInitial());
 
-  Future<void> fetchNotifications() async {
+  /// Fetch first page of notifications, optionally filtered by category
+  Future<void> fetchNotifications({
+    NotificationCategory category = NotificationCategory.all,
+  }) async {
     try {
       emit(NotificationLoading());
-      final res = await _api.get('/notifications');
-      if (res.data != null && res.data is List) {
-        final notifications = (res.data as List)
+      final categoryParam = _categoryToParam(category);
+      final query = categoryParam != null ? '?eventCategory=$categoryParam' : '';
+      final res = await _api.get('/notifications$query');
+
+      final data = res.data;
+      if (data != null && data is Map) {
+        final list = (data['notifications'] as List? ?? [])
             .map((e) => NotificationModel.fromJson(e))
             .toList();
-        emit(NotificationLoaded(notifications));
+        emit(NotificationLoaded(
+          notifications: list,
+          unreadCount: (data['unreadCount'] as num?)?.toInt() ?? 0,
+          selectedCategory: category,
+          hasMore: data['pagination']?['hasMore'] == true,
+          currentPage: 1,
+        ));
       } else {
-        emit(const NotificationLoaded([]));
+        emit(const NotificationLoaded(notifications: []));
       }
-    } catch (e) {
-      // Gracefully handle errors like DioException (e.g., API not deployed yet)
-      // We dont throw an aggressive popup for background fetches
-      emit(const NotificationLoaded([]));
+    } catch (_) {
+      emit(const NotificationLoaded(notifications: []));
     }
   }
 
-  Future<void> markAsRead(NotificationModel notif, int index) async {
-    if (state is NotificationLoaded) {
-      final currentNotifs = List<NotificationModel>.from(
-        (state as NotificationLoaded).notifications,
-      );
-      if (notif.isRead) return;
+  /// Load the next page and append
+  Future<void> loadMoreNotifications() async {
+    final current = state;
+    if (current is! NotificationLoaded || !current.hasMore) return;
 
-      try {
-        // Optimistic UI update
-        currentNotifs[index] = NotificationModel(
-          id: notif.id,
-          title: notif.title,
-          body: notif.body,
-          type: notif.type,
-          isRead: true,
-          createdAt: notif.createdAt,
-          data: notif.data,
-        );
-        emit(NotificationLoaded(currentNotifs));
+    final nextPage = current.currentPage + 1;
+    final categoryParam = _categoryToParam(current.selectedCategory);
+    final query = StringBuffer('?page=$nextPage&limit=20');
+    if (categoryParam != null) query.write('&eventCategory=$categoryParam');
 
-        await _api.put('/notifications/${notif.id}/read', data: {});
-      } catch (e) {
-        // Revert on failure
-        currentNotifs[index] = notif;
-        emit(NotificationLoaded(currentNotifs));
+    try {
+      final res = await _api.get('/notifications$query');
+      final data = res.data;
+      if (data != null && data is Map) {
+        final more = (data['notifications'] as List? ?? [])
+            .map((e) => NotificationModel.fromJson(e))
+            .toList();
+        emit(current.copyWith(
+          notifications: [...current.notifications, ...more],
+          hasMore: data['pagination']?['hasMore'] == true,
+          currentPage: nextPage,
+        ));
       }
+    } catch (_) {
+      // Silently ignore load-more failures
+    }
+  }
+
+  /// Change category tab
+  Future<void> selectCategory(NotificationCategory category) async {
+    if (state is NotificationLoaded &&
+        (state as NotificationLoaded).selectedCategory == category) {
+      return;
+    }
+    await fetchNotifications(category: category);
+  }
+
+  /// Mark a single notification as read (optimistic)
+  Future<void> markAsRead(NotificationModel notif) async {
+    if (notif.isRead) return;
+    final current = state;
+    if (current is! NotificationLoaded) return;
+
+    final updated = current.notifications
+        .map((n) => n.id == notif.id ? n.copyWith(isRead: true, readAt: DateTime.now()) : n)
+        .toList();
+    final newUnread = (current.unreadCount - 1).clamp(0, 99999);
+    emit(current.copyWith(notifications: updated, unreadCount: newUnread));
+
+    try {
+      await _api.put('/notifications/${notif.id}/read', data: {});
+    } catch (_) {
+      // Revert on failure
+      emit(current);
+    }
+  }
+
+  /// Mark all notifications as read
+  Future<void> markAllAsRead() async {
+    final current = state;
+    if (current is! NotificationLoaded) return;
+
+    final updated = current.notifications
+        .map((n) => n.copyWith(isRead: true, readAt: DateTime.now()))
+        .toList();
+    emit(current.copyWith(notifications: updated, unreadCount: 0));
+
+    try {
+      await _api.put('/notifications/read-all', data: {});
+    } catch (_) {
+      emit(current);
+    }
+  }
+
+  /// Poll unread count only (for badge in nav bar)
+  Future<int> fetchUnreadCount() async {
+    try {
+      final res = await _api.get('/notifications/unread-count');
+      final count = (res.data?['count'] as num?)?.toInt() ?? 0;
+      if (state is NotificationLoaded) {
+        emit((state as NotificationLoaded).copyWith(unreadCount: count));
+      }
+      return count;
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  String? _categoryToParam(NotificationCategory cat) {
+    switch (cat) {
+      case NotificationCategory.loans:
+        return 'LOANS';
+      case NotificationCategory.payments:
+        return 'PAYMENTS';
+      case NotificationCategory.security:
+        return 'SECURITY';
+      case NotificationCategory.kyc:
+        return 'KYC';
+      case NotificationCategory.chitFunds:
+        return 'CHIT_FUNDS';
+      case NotificationCategory.all:
+        return null;
     }
   }
 }
