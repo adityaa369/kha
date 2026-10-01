@@ -404,7 +404,7 @@ class LoanRepository extends BaseRepository {
     });
   }
 
-  Future<String> createPaymentIntent({
+  Future<Map<String, String>> createPaymentIntent({
     required String loanId,
     required int amountPaise,
   }) async {
@@ -417,7 +417,10 @@ class LoanRepository extends BaseRepository {
         },
       );
       if (response.statusCode == 201) {
-        return response.data['intentId'] as String;
+        return {
+          'intentId': response.data['intentId'] as String,
+          'borrowerPhone': response.data['borrowerPhone'] as String,
+        };
       }
       throw const ServerFailure('Failed to create payment intent');
     });
@@ -426,30 +429,16 @@ class LoanRepository extends BaseRepository {
   Future<bool> commitPayment({
     required String loanId,
     required String intentId,
-    required String otp,
+    required String firebaseIdToken,
   }) async {
     return await handleApiCall(() async {
       try {
-        final idToken = await getValidIdToken();
         final response = await _api.post(
-          '/loans/$loanId/commit-payment',
-          data: {'intentId': intentId, 'otp': otp, 'idToken': idToken},
+          '/loans/$loanId/payments/intents/$intentId/authorize-firebase-phone',
+          data: {'firebaseIdToken': firebaseIdToken},
         );
         return response.statusCode == 200;
       } on DioException catch (e) {
-        if (e.response?.statusCode == 401 &&
-            e.response?.data['code'] == 'INVALID_TOKEN') {
-          // Token refresh retry
-          final newToken = await getValidIdToken(forceRefresh: true);
-          final retryOpts = e.requestOptions;
-          retryOpts.data = {
-            'intentId': intentId,
-            'otp': otp,
-            'idToken': newToken,
-          };
-          final retryResponse = await _api.dio.fetch(retryOpts);
-          if (retryResponse.data['success'] == true) return true;
-        }
         rethrow;
       }
     });

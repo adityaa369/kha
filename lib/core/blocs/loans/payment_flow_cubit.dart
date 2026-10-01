@@ -2,6 +2,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'dart:async';
 import 'package:dio/dio.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../data/repositories/loan_repository.dart';
 import '../../error/failures.dart';
 
@@ -18,10 +20,12 @@ class PaymentCreatingIntent extends PaymentFlowState {}
 class PaymentAwaitingOTP extends PaymentFlowState {
   final String intentId;
   final int amountPaise;
-  const PaymentAwaitingOTP(this.intentId, this.amountPaise);
+  final String verificationId;
+  final int? resendToken;
+  const PaymentAwaitingOTP(this.intentId, this.amountPaise, this.verificationId, [this.resendToken]);
 
   @override
-  List<Object?> get props => [intentId, amountPaise];
+  List<Object?> get props => [intentId, amountPaise, verificationId, resendToken];
 }
 
 class PaymentCommitting extends PaymentFlowState {
@@ -50,64 +54,68 @@ class PaymentFlowCubit extends Cubit<PaymentFlowState> {
   PaymentFlowCubit({
     required LoanRepository repository,
     required String loanId,
-    String? initialIntentId,
-    int? initialAmountPaise,
   }) : _repository = repository,
        _loanId = loanId,
-       super(
-         initialIntentId != null && initialAmountPaise != null
-             ? PaymentAwaitingOTP(initialIntentId, initialAmountPaise)
-             : PaymentIdle(),
-       );
+       super(PaymentIdle());
 
   void reset() => emit(PaymentIdle());
 
-  // 4F4G: Fetch Intent for Deep Linking (if implemented later)
-  Future<void> loadIntent(String intentId) async {
-    emit(PaymentCreatingIntent());
-    try {
-      final intent = await _repository.getIntent(intentId);
-
-      if (intent.action != 'PAYMENT') {
-        emit(
-          const PaymentRejected(BusinessLogicFailure('INVALID_INTENT_TYPE')),
-        );
-        return;
-      }
-
-      if (intent.status == 'CONSUMED' || intent.status == 'COMMITTED') {
-        emit(const PaymentRejected(IntentConsumedFailure()));
-      } else if (intent.status == 'EXPIRED') {
-        emit(const PaymentRejected(BusinessLogicFailure('INTENT_EXPIRED')));
-      } else if (intent.status == 'REJECTED') {
-        emit(const PaymentRejected(BusinessLogicFailure('INTENT_REJECTED')));
-      } else if (intent.status == 'PENDING') {
-        final amountPaise = intent.payload['amountPaise'] ?? 0;
-        emit(PaymentAwaitingOTP(intentId, amountPaise));
-      } else {
-        emit(const PaymentRejected(ServerFailure('Unknown intent status')));
-      }
-    } on DioException catch (e) {
-      emit(PaymentRejected(_mapDioErrorToFailure(e)));
-    } on Failure catch (f) {
-      emit(PaymentRejected(f));
-    } catch (e) {
-      emit(PaymentRejected(ServerFailure(e.toString())));
-    }
-  }
-
-  // Phase 1: Lender initiates payment request, server generates OTP and notifies borrower
   Future<void> createIntent(int amountPaise) async {
     if (state is! PaymentIdle) return;
 
     emit(PaymentCreatingIntent());
 
     try {
-      final intentId = await _repository.createPaymentIntent(
+      final res = await _repository.createPaymentIntent(
         loanId: _loanId,
         amountPaise: amountPaise,
       );
-      emit(PaymentAwaitingOTP(intentId, amountPaise));
+      final intentId = res['intentId']!;
+      String borrowerPhone = res['borrowerPhone']!;
+      
+      // Ensure +91 prefix for Indian numbers if missing
+      if (!borrowerPhone.startsWith('+')) {
+        borrowerPhone = '+91$borrowerPhone';
+      }
+
+      // Initialize secondary Firebase App
+      FirebaseApp paymentApp;
+      try {
+        paymentApp = Firebase.app('paymentAuthApp');
+      } catch (e) {
+        paymentApp = await Firebase.initializeApp(
+          name: 'paymentAuthApp',
+          options: Firebase.app().options,
+        );
+      }
+      final paymentAuth = FirebaseAuth.instanceFor(app: paymentApp);
+
+      final completer = Completer<Map<String, dynamic>>();
+
+      await paymentAuth.verifyPhoneNumber(
+        phoneNumber: borrowerPhone,
+        verificationCompleted: (PhoneAuthCredential credential) async {
+          // If auto-retrieval completes it without prompt
+        },
+        verificationFailed: (FirebaseAuthException e) {
+          if (!completer.isCompleted) {
+            completer.completeError(ServerFailure(e.message ?? 'Phone verification failed'));
+          }
+        },
+        codeSent: (String verificationId, int? resendToken) {
+          if (!completer.isCompleted) {
+            completer.complete({'verId': verificationId, 'token': resendToken});
+          }
+        },
+        codeAutoRetrievalTimeout: (String verificationId) {
+          if (!completer.isCompleted) {
+            completer.complete({'verId': verificationId, 'token': null});
+          }
+        },
+      );
+
+      final result = await completer.future;
+      emit(PaymentAwaitingOTP(intentId, amountPaise, result['verId'], result['token']));
     } on DioException catch (e) {
       emit(PaymentRejected(_mapDioErrorToFailure(e)));
     } on Failure catch (f) {
@@ -117,21 +125,35 @@ class PaymentFlowCubit extends Cubit<PaymentFlowState> {
     }
   }
 
-  // Phase 2: Borrower provides OTP to authorize and commit the payment
   Future<void> commitPayment(String otp) async {
     if (state is! PaymentAwaitingOTP) return;
 
     final currentState = state as PaymentAwaitingOTP;
     final intentId = currentState.intentId;
     final amountPaise = currentState.amountPaise;
+    final verificationId = currentState.verificationId;
 
     emit(PaymentCommitting(intentId, amountPaise));
 
     try {
+      FirebaseApp paymentApp = Firebase.app('paymentAuthApp');
+      FirebaseAuth paymentAuth = FirebaseAuth.instanceFor(app: paymentApp);
+
+      final credential = PhoneAuthProvider.credential(
+        verificationId: verificationId,
+        smsCode: otp,
+      );
+
+      final credentialResult = await paymentAuth.signInWithCredential(credential);
+      final firebaseIdToken = await credentialResult.user!.getIdToken(true);
+
+      // Clean up temporary session
+      await paymentAuth.signOut();
+
       final success = await _repository.commitPayment(
         loanId: _loanId,
         intentId: intentId,
-        otp: otp,
+        firebaseIdToken: firebaseIdToken!,
       );
 
       if (success) {
@@ -139,34 +161,11 @@ class PaymentFlowCubit extends Cubit<PaymentFlowState> {
       } else {
         emit(const PaymentRejected(ServerFailure('Commit failed')));
       }
+    } on FirebaseAuthException catch (e) {
+      emit(PaymentRejected(BusinessLogicFailure(e.message ?? 'Invalid OTP')));
+      emit(PaymentAwaitingOTP(intentId, amountPaise, verificationId, currentState.resendToken));
     } on DioException catch (e) {
-      // Revert to AwaitingOTP so user can try again on validation errors or wrong OTP
-      if ((e.response?.statusCode == 400 || e.response?.statusCode == 401) &&
-          e.response?.data['code'] == 'OTP_INVALID') {
-        final msg = e.response?.data['message'] ?? 'Invalid OTP';
-        emit(PaymentRejected(BusinessLogicFailure(msg)));
-        emit(PaymentAwaitingOTP(intentId, amountPaise));
-        return;
-      }
-      if (e.response?.statusCode == 429 &&
-          e.response?.data['code'] == 'OTP_LOCKED') {
-        emit(
-          const PaymentRejected(
-            BusinessLogicFailure(
-              'Too many incorrect attempts. Payment has been cancelled.',
-            ),
-          ),
-        );
-        return;
-      }
-
-      if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout ||
-          e.type == DioExceptionType.sendTimeout) {
-        await reconcile(intentId, amountPaise);
-      } else {
-        emit(PaymentRejected(_mapDioErrorToFailure(e)));
-      }
+      emit(PaymentRejected(_mapDioErrorToFailure(e)));
     } on Failure catch (f) {
       emit(PaymentRejected(f));
     } catch (e) {
@@ -174,27 +173,6 @@ class PaymentFlowCubit extends Cubit<PaymentFlowState> {
     }
   }
 
-  // Reconcile network unknowns
-  Future<void> reconcile(String intentId, int amountPaise) async {
-    try {
-      final status = await _repository.checkIntentStatus(intentId);
-      if (status == 'CONSUMED' || status == 'COMMITTED') {
-        emit(PaymentSuccess());
-      } else if (status == 'PENDING') {
-        emit(PaymentAwaitingOTP(intentId, amountPaise));
-      } else if (status == 'EXPIRED') {
-        emit(const PaymentRejected(BusinessLogicFailure('INTENT_EXPIRED')));
-      } else if (status == 'REJECTED') {
-        emit(const PaymentRejected(BusinessLogicFailure('INTENT_REJECTED')));
-      } else {
-        emit(const PaymentRejected(ServerFailure('Unknown intent status')));
-      }
-    } catch (e) {
-      emit(const PaymentRejected(NetworkFailure()));
-    }
-  }
-
-  // Cancel Intent
   Future<void> rejectIntent() async {
     if (state is! PaymentAwaitingOTP) return;
     final intentId = (state as PaymentAwaitingOTP).intentId;
