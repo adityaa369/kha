@@ -301,28 +301,37 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  Future<void> _forceLogout() async {
-    // Revoke FCM token first before we lose the session
-    try {
-      final token = await NotificationService.getToken();
-      if (token != null) {
-        await _api.delete('/users/fcm-token', data: {'fcmToken': token});
-      }
-    } catch (e) {
-      print("FCM revocation error: $e");
-    }
+  bool _isLoggingOut = false;
 
-    await SecureStorage.clearAuthData();
-    // 4F4F: Wipe document-related temporary state / memory cache
-    PaintingBinding.instance.imageCache.clear();
-    PaintingBinding.instance.imageCache.clearLiveImages();
+  Future<void> _forceLogout() async {
+    if (_isLoggingOut) return;
+    _isLoggingOut = true;
+
     try {
-      await FirebaseAuth.instance.signOut();
-    } catch (e) {
-      print("Firebase signout error: $e");
+      // Revoke FCM token first before we lose the session
+      try {
+        final token = await NotificationService.getToken();
+        if (token != null) {
+          await _api.delete('/users/fcm-token', data: {'fcmToken': token});
+        }
+      } catch (e) {
+        print("FCM revocation error: $e");
+      }
+
+      await SecureStorage.clearAuthData();
+      // 4F4F: Wipe document-related temporary state / memory cache
+      PaintingBinding.instance.imageCache.clear();
+      PaintingBinding.instance.imageCache.clearLiveImages();
+      try {
+        await FirebaseAuth.instance.signOut();
+      } catch (e) {
+        print("Firebase signout error: $e");
+      }
+      _currentUser = null;
+      emit(Unauthenticated());
+    } finally {
+      _isLoggingOut = false;
     }
-    _currentUser = null;
-    emit(Unauthenticated());
   }
 
   void _emitAuthoritativeState() async {

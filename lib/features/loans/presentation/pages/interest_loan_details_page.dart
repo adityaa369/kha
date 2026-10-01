@@ -121,14 +121,6 @@ class InterestLoanDetailsPage extends StatelessWidget {
                     if (!isPending) ...[
                       RepaymentTimelineWidget(loan: activeLoan),
                       SizedBox(height: 14.h),
-                      _loanProgressCard(
-                        activeLoan,
-                        theme,
-                        duration,
-                        paidMonths,
-                        progress,
-                      ),
-                      SizedBox(height: 14.h),
                       _recentTransactions(activeLoan, theme),
                       SizedBox(height: 14.h),
                       if (activeLoan.documentId != null &&

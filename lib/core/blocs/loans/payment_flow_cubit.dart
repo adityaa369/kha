@@ -141,7 +141,7 @@ class PaymentFlowCubit extends Cubit<PaymentFlowState> {
       }
     } on DioException catch (e) {
       // Revert to AwaitingOTP so user can try again on validation errors or wrong OTP
-      if (e.response?.statusCode == 401 &&
+      if ((e.response?.statusCode == 400 || e.response?.statusCode == 401) &&
           e.response?.data['code'] == 'OTP_INVALID') {
         final msg = e.response?.data['message'] ?? 'Invalid OTP';
         emit(PaymentRejected(BusinessLogicFailure(msg)));

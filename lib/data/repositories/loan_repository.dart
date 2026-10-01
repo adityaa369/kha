@@ -409,13 +409,11 @@ class LoanRepository extends BaseRepository {
     required int amountPaise,
   }) async {
     return await handleApiCall(() async {
-      final idToken = await getValidIdToken();
       final response = await _api.post(
         '/loans/$loanId/payments/initiate',
         data: {
           'amountPaise': amountPaise,
           'note': 'Payment authorization',
-          'idToken': idToken,
         },
       );
       if (response.statusCode == 201) {

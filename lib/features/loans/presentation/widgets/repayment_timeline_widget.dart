@@ -76,6 +76,7 @@ class RepaymentTimelineWidget extends StatelessWidget {
                     ],
                   ),
                 ),
+                _buildProgressCard(model),
                 ...model.timeline.map((period) => _buildPeriodCard(period)),
                 if (model.postTermTransactions.isNotEmpty) ...[
                   Padding(
@@ -101,6 +102,82 @@ class RepaymentTimelineWidget extends StatelessWidget {
           }
           return const SizedBox.shrink();
         },
+      ),
+    );
+  }
+
+  Widget _buildProgressCard(dynamic model) {
+    if (model.timeline.isEmpty) return const SizedBox.shrink();
+    
+    final paidPeriods = model.timeline.where((p) => p.status == 'paid').length;
+    final totalPeriods = model.durationMonths ?? model.timeline.length;
+    final progress = totalPeriods > 0 ? (paidPeriods / totalPeriods).clamp(0.0, 1.0) : 0.0;
+    
+    final nextUnpaid = model.timeline.firstWhere((p) => p.status != 'paid', orElse: () => model.timeline.last);
+    final isFinished = paidPeriods >= totalPeriods && model.timeline.every((p) => p.status == 'paid');
+    
+    final dateFormat = DateFormat('MMM dd, yyyy');
+    
+    return Container(
+      padding: EdgeInsets.all(16.w),
+      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Loan Progress',
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black87,
+                ),
+              ),
+              Text(
+                '$paidPeriods of $totalPeriods months completed',
+                style: TextStyle(fontSize: 11.sp, color: Colors.grey.shade600),
+              ),
+            ],
+          ),
+          SizedBox(height: 12.h),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8.r),
+            child: LinearProgressIndicator(
+              value: progress,
+              backgroundColor: Colors.grey.shade100,
+              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF22C55E)),
+              minHeight: 8.h,
+            ),
+          ),
+          SizedBox(height: 16.h),
+          Divider(height: 1, color: Colors.grey.shade100),
+          SizedBox(height: 16.h),
+          Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(
+                  text: isFinished ? 'Loan Status: ' : 'Next Payment Due Date: ',
+                  style: TextStyle(fontSize: 11.sp, color: Colors.grey.shade600),
+                ),
+                TextSpan(
+                  text: isFinished ? 'Fully Settled' : dateFormat.format(nextUnpaid.periodEnd),
+                  style: TextStyle(
+                    fontSize: 11.sp,
+                    fontWeight: FontWeight.w700,
+                    color: isFinished ? Colors.blue.shade700 : Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

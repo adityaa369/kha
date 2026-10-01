@@ -56,7 +56,7 @@ class RepaymentPeriodModel extends Equatable {
       periodEnd: DateTime.parse(json['periodEnd']),
       status: json['status'] as String,
       hasPayments: json['hasPayments'] as bool,
-      totalPaidPaise: json['totalPaidPaise'] as int,
+      totalPaidPaise: json['transactionsPeriodTotalPaise'] as int,
       transactions: (json['transactions'] as List)
           .map((e) => RepaymentTransactionModel.fromJson(e))
           .toList(),
