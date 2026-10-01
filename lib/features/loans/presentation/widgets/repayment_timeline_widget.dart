@@ -106,7 +106,7 @@ class RepaymentTimelineWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildProgressCard(dynamic model) {
+  Widget _buildProgressCard(RepaymentTimelineModel model) {
     if (model.timeline.isEmpty) return const SizedBox.shrink();
     
     final paidPeriods = model.timeline.where((p) => p.status == 'paid').length;
