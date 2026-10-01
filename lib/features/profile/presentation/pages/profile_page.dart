@@ -90,7 +90,7 @@ class ProfilePage extends StatelessWidget {
                           bool isEmailVerified = false;
 
                           final user = context.read<AuthCubit>().currentUser;
-                          
+
                           if (user != null) {
                             fullName = user.displayName;
                             gender = user.gender;
@@ -481,4 +481,3 @@ class _MenuTile extends StatelessWidget {
     );
   }
 }
-

@@ -17,7 +17,10 @@ void main() {
 
   group('NotificationPrefsCubit', () {
     test('initial state is NotificationPrefsInitial', () {
-      expect(NotificationPrefsCubit(mockApi).state, isA<NotificationPrefsInitial>());
+      expect(
+        NotificationPrefsCubit(mockApi).state,
+        isA<NotificationPrefsInitial>(),
+      );
     });
 
     blocTest<NotificationPrefsCubit, NotificationPrefsState>(
@@ -28,10 +31,7 @@ void main() {
             requestOptions: RequestOptions(path: ''),
             data: {
               'success': true,
-              'preferences': {
-                'loanUpdates': false,
-                'paymentUpdates': true,
-              }
+              'preferences': {'loanUpdates': false, 'paymentUpdates': true},
             },
           ),
         );
@@ -40,24 +40,35 @@ void main() {
       act: (cubit) => cubit.load(),
       expect: () => [
         isA<NotificationPrefsLoading>(),
-        isA<NotificationPrefsLoaded>().having((s) => s.prefs.loanUpdates, 'loanUpdates', false),
+        isA<NotificationPrefsLoaded>().having(
+          (s) => s.prefs.loanUpdates,
+          'loanUpdates',
+          false,
+        ),
       ],
     );
 
     blocTest<NotificationPrefsCubit, NotificationPrefsState>(
       'update() emits optimistic update, then succeeds',
       build: () {
-        when(() => mockApi.put('/users/notification-preferences', data: any(named: 'data')))
-            .thenAnswer((_) async => Response(
-                  requestOptions: RequestOptions(path: ''),
-                  data: {'success': true},
-                ));
+        when(
+          () => mockApi.put(
+            '/users/notification-preferences',
+            data: any(named: 'data'),
+          ),
+        ).thenAnswer(
+          (_) async => Response(
+            requestOptions: RequestOptions(path: ''),
+            data: {'success': true},
+          ),
+        );
         return NotificationPrefsCubit(mockApi);
       },
       seed: () => const NotificationPrefsLoaded(
         prefs: NotificationPreferences(loanUpdates: true),
       ),
-      act: (cubit) => cubit.update(const NotificationPreferences(loanUpdates: false)),
+      act: (cubit) =>
+          cubit.update(const NotificationPreferences(loanUpdates: false)),
       expect: () => [
         isA<NotificationPrefsLoaded>()
             .having((s) => s.prefs.loanUpdates, 'loanUpdates', false)
@@ -67,18 +78,23 @@ void main() {
             .having((s) => s.isSaving, 'isSaving', false),
       ],
     );
-    
+
     blocTest<NotificationPrefsCubit, NotificationPrefsState>(
       'update() reverts state on error',
       build: () {
-        when(() => mockApi.put('/users/notification-preferences', data: any(named: 'data')))
-            .thenThrow(DioException(requestOptions: RequestOptions(path: '')));
+        when(
+          () => mockApi.put(
+            '/users/notification-preferences',
+            data: any(named: 'data'),
+          ),
+        ).thenThrow(DioException(requestOptions: RequestOptions(path: '')));
         return NotificationPrefsCubit(mockApi);
       },
       seed: () => const NotificationPrefsLoaded(
         prefs: NotificationPreferences(loanUpdates: true),
       ),
-      act: (cubit) => cubit.update(const NotificationPreferences(loanUpdates: false)),
+      act: (cubit) =>
+          cubit.update(const NotificationPreferences(loanUpdates: false)),
       expect: () => [
         isA<NotificationPrefsLoaded>()
             .having((s) => s.prefs.loanUpdates, 'loanUpdates', false)

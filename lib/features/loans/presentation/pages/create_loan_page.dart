@@ -1043,9 +1043,9 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
   }
 }
 
-//  
+//
 // Reusable UI Components
-//  
+//
 
 class _FormCard extends StatelessWidget {
   final Widget child;

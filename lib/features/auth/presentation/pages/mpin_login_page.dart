@@ -55,7 +55,11 @@ class _MpinLoginPageState extends State<MpinLoginPage> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               SizedBox(height: 20.h),
-              Icon(Icons.lock_outline, size: 48.sp, color: KhaataTheme.primaryBlue),
+              Icon(
+                Icons.lock_outline,
+                size: 48.sp,
+                color: KhaataTheme.primaryBlue,
+              ),
               SizedBox(height: 16.h),
               Text(
                 'Enter MPIN',
@@ -68,13 +72,10 @@ class _MpinLoginPageState extends State<MpinLoginPage> {
               Text(
                 'Please enter your 6-digit MPIN to login.',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  color: KhaataTheme.textGrey,
-                ),
+                style: TextStyle(fontSize: 14.sp, color: KhaataTheme.textGrey),
               ),
               SizedBox(height: 40.h),
-              
+
               SizedBox(height: 16.h),
               TextButton(
                 onPressed: () {
@@ -93,7 +94,8 @@ class _MpinLoginPageState extends State<MpinLoginPage> {
               BlocConsumer<AuthCubit, AuthState>(
                 listener: (context, state) {
                   if (state is Authenticated) {
-                    SecurityUtils.unsecureScreen(); context.go(AppConstants.home);
+                    SecurityUtils.unsecureScreen();
+                    context.go(AppConstants.home);
                   } else if (state is AuthError) {
                     DialogUtils.showErrorDialog(context, state.message);
                     _keypadKey.currentState?.reshuffle();
@@ -102,12 +104,10 @@ class _MpinLoginPageState extends State<MpinLoginPage> {
                 builder: (context, state) {
                   if (state is AuthLoading) {
                     return const Expanded(
-                      child: Center(
-                        child: CircularProgressIndicator(),
-                      ),
+                      child: Center(child: CircularProgressIndicator()),
                     );
                   }
-                  
+
                   return Expanded(
                     child: DynamicMpinKeypad(
                       key: _keypadKey,

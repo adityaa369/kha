@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -13,6 +13,7 @@ class MockApiClient extends Mock implements ApiClient {}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  
   late AuthCubit authCubit;
   late MockApiClient mockApiClient;
 
@@ -158,10 +159,7 @@ void main() {
       },
       build: () => authCubit,
       act: (cubit) => cubit.checkAuthStatus(),
-      expect: () => [
-        isA<AuthInitial>(),
-        isA<Authenticated>(),
-      ],
+      expect: () => [isA<AuthInitial>(), isA<Authenticated>()],
     );
 
     // 9. Logout
@@ -180,4 +178,3 @@ void main() {
     );
   });
 }
-

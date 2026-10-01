@@ -2,7 +2,9 @@ import 'package:flutter/services.dart';
 import 'dart:io';
 
 class SecurityUtils {
-  static const MethodChannel _channel = MethodChannel('com.vest.khataa/security');
+  static const MethodChannel _channel = MethodChannel(
+    'com.vest.khataa/security',
+  );
 
   static Future<void> secureScreen() async {
     if (Platform.isAndroid) {

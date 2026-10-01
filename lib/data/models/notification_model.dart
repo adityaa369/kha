@@ -64,15 +64,24 @@ class NotificationModel {
   /// Map eventType to a display category
   NotificationCategory get category {
     const loans = {
-      'LOAN_CREATED', 'LOAN_RECEIVED', 'AGREEMENT_READY', 'AGREEMENT_ACCEPTED',
-      'LOAN_ACTIVATED', 'LOAN_COMPLETED', 'LOAN_CLOSED',
+      'LOAN_CREATED',
+      'LOAN_RECEIVED',
+      'AGREEMENT_READY',
+      'AGREEMENT_ACCEPTED',
+      'LOAN_ACTIVATED',
+      'LOAN_COMPLETED',
+      'LOAN_CLOSED',
     };
     const payments = {'PAYMENT_RECEIVED', 'PAYMENT_FAILED'};
     const security = {'MPIN_CREATED', 'EMAIL_VERIFIED', 'ACCOUNT_CREATED'};
     const kyc = {'KYC_UPDATE'};
     const chit = {
-      'CHIT_INVITE', 'CHIT_JOINED', 'CHIT_CONTRIBUTION_DUE',
-      'AUCTION_OPENED', 'AUCTION_CLOSED', 'CHIT_PAYOUT',
+      'CHIT_INVITE',
+      'CHIT_JOINED',
+      'CHIT_CONTRIBUTION_DUE',
+      'AUCTION_OPENED',
+      'AUCTION_CLOSED',
+      'CHIT_PAYOUT',
     };
     if (loans.contains(eventType)) return NotificationCategory.loans;
     if (payments.contains(eventType)) return NotificationCategory.payments;

@@ -12,6 +12,8 @@ import 'hand_loan_details_page.dart';
 import 'interest_loan_details_page.dart';
 import 'lender_loan_details_page.dart';
 
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
 class LoanDetailsPage extends StatefulWidget {
   final String loanId;
 
@@ -23,6 +25,8 @@ class LoanDetailsPage extends StatefulWidget {
 
 class _LoanDetailsPageState extends State<LoanDetailsPage> {
   late Future<LoanModel> _loanFuture;
+  bool _completionChecked = false;
+  final _storage = const FlutterSecureStorage();
 
   @override
   void initState() {
@@ -32,6 +36,22 @@ class _LoanDetailsPageState extends State<LoanDetailsPage> {
 
   void _fetchLoan() {
     _loanFuture = context.read<LoanRepository>().getLoanById(widget.loanId);
+  }
+
+  Future<void> _checkCompletion(LoanModel loan) async {
+    if (_completionChecked) return;
+    _completionChecked = true;
+
+    if (loan.status == 'completed') {
+      final key = 'completion_seen_${loan.id}';
+      final hasSeen = await _storage.read(key: key);
+      if (hasSeen != 'true') {
+        await _storage.write(key: key, value: 'true');
+        if (mounted) {
+          context.push(AppConstants.loanCloseSuccess);
+        }
+      }
+    }
   }
 
   @override
@@ -51,6 +71,8 @@ class _LoanDetailsPageState extends State<LoanDetailsPage> {
           }
 
           final loan = snapshot.data!;
+          _checkCompletion(loan);
+
           final currentUserId = context.read<AuthCubit>().state.user?.id;
           final isLender =
               currentUserId != null && loan.lenderId == currentUserId;
@@ -94,7 +116,9 @@ class _LoanDetailsPageState extends State<LoanDetailsPage> {
                         height: 50,
                         child: ElevatedButton(
                           onPressed: () {
-                            context.push('${AppConstants.loanApproval}/${loan.id}');
+                            context.push(
+                              '${AppConstants.loanApproval}/${loan.id}',
+                            );
                           },
                           child: const Text('Review & Approve Agreement'),
                         ),
@@ -154,4 +178,3 @@ class _LoanDetailsPageState extends State<LoanDetailsPage> {
     );
   }
 }
-

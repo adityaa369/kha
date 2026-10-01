@@ -89,18 +89,19 @@ class _ChangeMpinPageState extends State<ChangeMpinPage> {
               Text(
                 _subtitle,
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  color: KhaataTheme.textGrey,
-                ),
+                style: TextStyle(fontSize: 14.sp, color: KhaataTheme.textGrey),
               ),
               SizedBox(height: 40.h),
-              
+
               BlocConsumer<AuthCubit, AuthState>(
                 listener: (context, state) {
                   if (state is Authenticated) {
-                    SecurityUtils.unsecureScreen(); 
-                    DialogUtils.showSuccessDialog(context, 'MPIN changed successfully.', onOk: () => context.pop(true));
+                    SecurityUtils.unsecureScreen();
+                    DialogUtils.showSuccessDialog(
+                      context,
+                      'MPIN changed successfully.',
+                      onOk: () => context.pop(true),
+                    );
                   } else if (state is AuthError) {
                     DialogUtils.showErrorDialog(context, state.message);
                     setState(() {
@@ -114,12 +115,10 @@ class _ChangeMpinPageState extends State<ChangeMpinPage> {
                 builder: (context, state) {
                   if (state is AuthLoading) {
                     return const Expanded(
-                      child: Center(
-                        child: CircularProgressIndicator(),
-                      ),
+                      child: Center(child: CircularProgressIndicator()),
                     );
                   }
-                  
+
                   return Expanded(
                     child: DynamicMpinKeypad(
                       key: _keypadKey,

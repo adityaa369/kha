@@ -29,13 +29,13 @@ class NotificationPreferences extends Equatable {
   }
 
   Map<String, dynamic> toJson() => {
-        'loanUpdates': loanUpdates,
-        'paymentUpdates': paymentUpdates,
-        // securityAlerts is not sent — backend ignores it anyway
-        'kycUpdates': kycUpdates,
-        'chitFundUpdates': chitFundUpdates,
-        'promotional': promotional,
-      };
+    'loanUpdates': loanUpdates,
+    'paymentUpdates': paymentUpdates,
+    // securityAlerts is not sent — backend ignores it anyway
+    'kycUpdates': kycUpdates,
+    'chitFundUpdates': chitFundUpdates,
+    'promotional': promotional,
+  };
 
   NotificationPreferences copyWith({
     bool? loanUpdates,
@@ -56,11 +56,11 @@ class NotificationPreferences extends Equatable {
 
   @override
   List<Object?> get props => [
-        loanUpdates,
-        paymentUpdates,
-        securityAlerts,
-        kycUpdates,
-        chitFundUpdates,
-        promotional,
-      ];
+    loanUpdates,
+    paymentUpdates,
+    securityAlerts,
+    kycUpdates,
+    chitFundUpdates,
+    promotional,
+  ];
 }

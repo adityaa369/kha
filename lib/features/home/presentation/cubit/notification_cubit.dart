@@ -15,7 +15,9 @@ class NotificationCubit extends Cubit<NotificationState> {
     try {
       emit(NotificationLoading());
       final categoryParam = _categoryToParam(category);
-      final query = categoryParam != null ? '?eventCategory=$categoryParam' : '';
+      final query = categoryParam != null
+          ? '?eventCategory=$categoryParam'
+          : '';
       final res = await _api.get('/notifications$query');
 
       final data = res.data;
@@ -23,13 +25,15 @@ class NotificationCubit extends Cubit<NotificationState> {
         final list = (data['notifications'] as List? ?? [])
             .map((e) => NotificationModel.fromJson(e))
             .toList();
-        emit(NotificationLoaded(
-          notifications: list,
-          unreadCount: (data['unreadCount'] as num?)?.toInt() ?? 0,
-          selectedCategory: category,
-          hasMore: data['pagination']?['hasMore'] == true,
-          currentPage: 1,
-        ));
+        emit(
+          NotificationLoaded(
+            notifications: list,
+            unreadCount: (data['unreadCount'] as num?)?.toInt() ?? 0,
+            selectedCategory: category,
+            hasMore: data['pagination']?['hasMore'] == true,
+            currentPage: 1,
+          ),
+        );
       } else {
         emit(const NotificationLoaded(notifications: []));
       }
@@ -55,11 +59,13 @@ class NotificationCubit extends Cubit<NotificationState> {
         final more = (data['notifications'] as List? ?? [])
             .map((e) => NotificationModel.fromJson(e))
             .toList();
-        emit(current.copyWith(
-          notifications: [...current.notifications, ...more],
-          hasMore: data['pagination']?['hasMore'] == true,
-          currentPage: nextPage,
-        ));
+        emit(
+          current.copyWith(
+            notifications: [...current.notifications, ...more],
+            hasMore: data['pagination']?['hasMore'] == true,
+            currentPage: nextPage,
+          ),
+        );
       }
     } catch (_) {
       // Silently ignore load-more failures
@@ -82,7 +88,11 @@ class NotificationCubit extends Cubit<NotificationState> {
     if (current is! NotificationLoaded) return;
 
     final updated = current.notifications
-        .map((n) => n.id == notif.id ? n.copyWith(isRead: true, readAt: DateTime.now()) : n)
+        .map(
+          (n) => n.id == notif.id
+              ? n.copyWith(isRead: true, readAt: DateTime.now())
+              : n,
+        )
         .toList();
     final newUnread = (current.unreadCount - 1).clamp(0, 99999);
     emit(current.copyWith(notifications: updated, unreadCount: newUnread));

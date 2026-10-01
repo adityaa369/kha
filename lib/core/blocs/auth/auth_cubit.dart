@@ -23,7 +23,9 @@ class AuthCubit extends Cubit<AuthState> {
   final _appLinks = AppLinks();
   StreamSubscription<Uri>? _linkSubscription;
 
-  AuthCubit({ApiClient? api}) : _api = api ?? ApiClient(), super(AuthInitial()) {
+  AuthCubit({ApiClient? api})
+    : _api = api ?? ApiClient(),
+      super(AuthInitial()) {
     ApiClient.onUnauthorized = _forceLogout;
     ApiClient.onTokenExpired = _forceLogout;
     _initDeepLinkListener();
@@ -49,7 +51,8 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   Future<void> _handleDeepLink(Uri uri) async {
-    if (uri.toString() == _lastProcessedLink) return; // Prevent duplicate processing
+    if (uri.toString() == _lastProcessedLink)
+      return; // Prevent duplicate processing
     _lastProcessedLink = uri.toString();
 
     // Forensic logging (safe)
@@ -61,32 +64,40 @@ class AuthCubit extends Cubit<AuthState> {
 
     String? mode = uri.queryParameters['mode'];
     String? oobCode = uri.queryParameters['oobCode'];
-    
+
     // Strict unwrapping for Firebase Hosting App Links
     if (mode == null || oobCode == null) {
-      final nestedStr = uri.queryParameters['link'] ?? uri.queryParameters['continueUrl'];
+      final nestedStr =
+          uri.queryParameters['link'] ?? uri.queryParameters['continueUrl'];
       if (nestedStr != null) {
         final nestedUri = Uri.tryParse(nestedStr);
-        if (nestedUri != null && nestedUri.host == 'khaata-42b18.firebaseapp.com') {
+        if (nestedUri != null &&
+            nestedUri.host == 'khaata-42b18.firebaseapp.com') {
           mode = nestedUri.queryParameters['mode'];
           oobCode = nestedUri.queryParameters['oobCode'];
-          print('[FORENSIC] Unwrapped nested link. mode=$mode hasOobCode=${oobCode != null}');
+          print(
+            '[FORENSIC] Unwrapped nested link. mode=$mode hasOobCode=${oobCode != null}',
+          );
         }
       }
     }
 
-    print('[FORENSIC] Final Parsed Payload: mode=$mode hasOobCode=${oobCode != null}');
+    print(
+      '[FORENSIC] Final Parsed Payload: mode=$mode hasOobCode=${oobCode != null}',
+    );
 
-    if ((mode == 'verifyAndChangeEmail' || mode == 'verifyEmail') && oobCode != null) {
+    if ((mode == 'verifyAndChangeEmail' || mode == 'verifyEmail') &&
+        oobCode != null) {
       print('[FORENSIC] Starting action code application...');
       bool codeAppliedSuccessfully = false;
-      bool wasAlreadyVerified = FirebaseAuth.instance.currentUser?.emailVerified ?? false;
+      bool wasAlreadyVerified =
+          FirebaseAuth.instance.currentUser?.emailVerified ?? false;
 
       try {
         print('[FORENSIC] Calling checkActionCode...');
         await FirebaseAuth.instance.checkActionCode(oobCode);
         print('[FORENSIC] checkActionCode success.');
-        
+
         print('[FORENSIC] Calling applyActionCode...');
         await FirebaseAuth.instance.applyActionCode(oobCode);
         print('[FORENSIC] applyActionCode success.');
@@ -94,7 +105,7 @@ class AuthCubit extends Cubit<AuthState> {
       } catch (e) {
         print('[FORENSIC] Action code failed/already consumed: $e');
       }
-      
+
       // SECURITY REQUIREMENT Independently verify state rather than inferring from success/failure
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
@@ -109,21 +120,26 @@ class AuthCubit extends Cubit<AuthState> {
           }
           if (i < 5) await Future.delayed(const Duration(seconds: 1));
         }
-        
+
         if (isVerified) {
           if (wasAlreadyVerified && !codeAppliedSuccessfully) {
-            print('[FORENSIC] Firebase confirms email is ALREADY verified. (Silent to prevent hot-restart spam)');
+            print(
+              '[FORENSIC] Firebase confirms email is ALREADY verified. (Silent to prevent hot-restart spam)',
+            );
             _emitAuthoritativeState();
             return;
           } else {
-            print('[FORENSIC] Firebase confirms email is verified. Syncing with backend...');
+            print(
+              '[FORENSIC] Firebase confirms email is verified. Syncing with backend...',
+            );
             try {
               await syncFirebaseState(); // Forces refresh syncs to backend, updates AuthCubit state
               print('[FORENSIC] syncFirebaseState completed.');
-              
+
               _showVerificationDialog(
                 title: 'Email Verified',
-                message: 'Your email has been successfully verified.\nYour account is now verified and ready to use.',
+                message:
+                    'Your email has been successfully verified.\nYour account is now verified and ready to use.',
                 isSuccess: true,
               );
             } catch (e) {
@@ -131,7 +147,8 @@ class AuthCubit extends Cubit<AuthState> {
               _emitAuthoritativeState();
               _showVerificationDialog(
                 title: 'Verification Failed',
-                message: 'We couldn\'t complete email verification backend sync. Please try again.',
+                message:
+                    'We couldn\'t complete email verification backend sync. Please try again.',
                 isSuccess: false,
               );
             }
@@ -142,13 +159,15 @@ class AuthCubit extends Cubit<AuthState> {
           if (!codeAppliedSuccessfully) {
             _showVerificationDialog(
               title: 'Verification Failed',
-              message: 'This verification link is expired or invalid.\nPlease request a new verification email.',
+              message:
+                  'This verification link is expired or invalid.\nPlease request a new verification email.',
               isSuccess: false,
             );
           } else {
-             _showVerificationDialog(
+            _showVerificationDialog(
               title: 'Verification Failed',
-              message: 'We couldn\'t complete email verification. Please try again.',
+              message:
+                  'We couldn\'t complete email verification. Please try again.',
               isSuccess: false,
             );
           }
@@ -157,7 +176,11 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  void _showVerificationDialog({required String title, required String message, required bool isSuccess}) {
+  void _showVerificationDialog({
+    required String title,
+    required String message,
+    required bool isSuccess,
+  }) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final context = rootNavigatorKey.currentContext;
       if (context == null) return;
@@ -166,7 +189,9 @@ class AuthCubit extends Cubit<AuthState> {
         barrierDismissible: false,
         builder: (BuildContext ctx) {
           return AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
             title: Row(
               children: [
                 Icon(
@@ -187,11 +212,14 @@ class AuthCubit extends Cubit<AuthState> {
                 onPressed: () {
                   Navigator.of(ctx).pop();
                 },
-                child: Text(isSuccess ? "Continue" : "Close", style: const TextStyle(color: Colors.white)),
+                child: Text(
+                  isSuccess ? "Continue" : "Close",
+                  style: const TextStyle(color: Colors.white),
+                ),
               ),
             ],
           );
-        }
+        },
       );
     });
   }
@@ -218,16 +246,16 @@ class AuthCubit extends Cubit<AuthState> {
       }
 
       // Autosync if Firebase thinks we are verified but Khatha doesn't know yet
-      final fbUser = FirebaseAuth.instance.currentUser;
-      if (fbUser != null) {
-        try {
+      try {
+        final fbUser = FirebaseAuth.instance.currentUser;
+        if (fbUser != null) {
           await fbUser.reload();
           if (fbUser.emailVerified) {
             await syncFirebaseState();
           }
-        } catch (e) {
-          print('Firebase reload/sync failed during boot: $e');
         }
+      } catch (e) {
+        print('Firebase reload/sync failed during boot: $e');
       }
 
       // Wait for authoritative backend validation
@@ -321,11 +349,11 @@ class AuthCubit extends Cubit<AuthState> {
     emit(Authenticated(user: user));
   }
 
-  //  
+  //
   // Workflow Methods (Note: They now trigger transient UI states
   // but eventually reconverge to _emitAuthoritativeState)
-  //  
-  
+  //
+
   bool _isSubmitting = false;
 
   Future<void> sendOtp(String phone) async {
@@ -364,7 +392,11 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  Future<void> verifyOtp(String phone, String otp, {Map<String, dynamic>? registrationDetails}) async {
+  Future<void> verifyOtp(
+    String phone,
+    String otp, {
+    Map<String, dynamic>? registrationDetails,
+  }) async {
     if (_isSubmitting) return;
     _isSubmitting = true;
     emit(OtpVerifying());
@@ -383,16 +415,17 @@ class AuthCubit extends Cubit<AuthState> {
 
       if (idToken == null)
         throw Exception('Failed to retrieve Firebase ID Token');
-        
-      _verificationId = null; // Singleuse! Clear it to prevent accidental reuse on resend.
+
+      _verificationId =
+          null; // Singleuse! Clear it to prevent accidental reuse on resend.
 
       // Send ID Token to backend (Phase 4E Contract)
       final response = await _api.post(
         '/auth/verify-otp',
         data: {
-          'idToken': idToken, 
+          'idToken': idToken,
           'phone': phone,
-          'registrationDetails': registrationDetails
+          'registrationDetails': registrationDetails,
         },
       );
 
@@ -416,6 +449,9 @@ class AuthCubit extends Cubit<AuthState> {
         if (isPasswordResetFlow) {
           isPasswordResetFlow = false;
           emit(PasswordResetRequired(user: _currentUser));
+        } else if (data['isNewUser'] == true && registrationDetails != null) {
+          // New registration — route through email verification
+          emit(RegistrationComplete(user: _currentUser!));
         } else {
           _emitAuthoritativeState();
         }
@@ -598,24 +634,31 @@ class AuthCubit extends Cubit<AuthState> {
   Future<void> sendVerificationEmail() async {
     try {
       var user = FirebaseAuth.instance.currentUser;
-      
+
       // Bulletproof self-healing: if Firebase session was somehow lost, re-authenticate using Khatha session
       if (user == null) {
-        print('VERIFY_EMAIL_FLOW: Firebase user is null. Attempting to self-heal via custom token...');
+        print(
+          'VERIFY_EMAIL_FLOW: Firebase user is null. Attempting to self-heal via custom token...',
+        );
         try {
           final tokenResponse = await _api.get('/auth/firebase-custom-token');
-          if (tokenResponse.data['success'] == true && tokenResponse.data['customToken'] != null) {
-            await FirebaseAuth.instance.signInWithCustomToken(tokenResponse.data['customToken']);
+          if (tokenResponse.data['success'] == true &&
+              tokenResponse.data['customToken'] != null) {
+            await FirebaseAuth.instance.signInWithCustomToken(
+              tokenResponse.data['customToken'],
+            );
             user = FirebaseAuth.instance.currentUser;
-            print('VERIFY_EMAIL_FLOW: Self-heal successful. Firebase user restored.');
+            print(
+              'VERIFY_EMAIL_FLOW: Self-heal successful. Firebase user restored.',
+            );
           }
         } catch (e) {
           print('VERIFY_EMAIL_FLOW: Self-heal failed: $e');
         }
       }
-      
+
       if (user == null) throw Exception("User not authenticated");
-      
+
       print('FIREBASE_PROFILE_SYNC: reload attempted = true');
       try {
         await user.reload();
@@ -625,7 +668,8 @@ class AuthCubit extends Cubit<AuthState> {
       }
 
       final refreshedUser = FirebaseAuth.instance.currentUser;
-      if (refreshedUser == null) throw Exception("User not authenticated after reload");
+      if (refreshedUser == null)
+        throw Exception("User not authenticated after reload");
 
       final actionSettings = ActionCodeSettings(
         url: 'https://khaata-42b18.firebaseapp.com/verified',
@@ -635,11 +679,19 @@ class AuthCubit extends Cubit<AuthState> {
         androidMinimumVersion: '1',
       );
 
-      print('FIREBASE_PROFILE_SYNC: firebase email present = ${refreshedUser.email != null}');
-      print('FIREBASE_PROFILE_SYNC: firebase emailVerified = ${refreshedUser.emailVerified}');
-      
-      print('VERIFY_EMAIL_FLOW: hasCurrentUserEmail = ${refreshedUser.email != null}');
-      print('VERIFY_EMAIL_FLOW: emailVerified = ${refreshedUser.emailVerified}');
+      print(
+        'FIREBASE_PROFILE_SYNC: firebase email present = ${refreshedUser.email != null}',
+      );
+      print(
+        'FIREBASE_PROFILE_SYNC: firebase emailVerified = ${refreshedUser.emailVerified}',
+      );
+
+      print(
+        'VERIFY_EMAIL_FLOW: hasCurrentUserEmail = ${refreshedUser.email != null}',
+      );
+      print(
+        'VERIFY_EMAIL_FLOW: emailVerified = ${refreshedUser.emailVerified}',
+      );
 
       if (refreshedUser.emailVerified) {
         print('VERIFY_EMAIL_FLOW: selectedOperation = already_verified');
@@ -647,38 +699,54 @@ class AuthCubit extends Cubit<AuthState> {
       }
 
       if (refreshedUser.email == null) {
-        print('VERIFY_EMAIL_FLOW: firebase email missing, requesting backend sync...');
+        print(
+          'VERIFY_EMAIL_FLOW: firebase email missing, requesting backend sync...',
+        );
         try {
           final syncResponse = await _api.post('/auth/sync-email-to-firebase');
-          print('VERIFY_EMAIL_FLOW: backend sync response = ${syncResponse.data}');
-          
+          print(
+            'VERIFY_EMAIL_FLOW: backend sync response = ${syncResponse.data}',
+          );
+
           // Reload Firebase user after backend attached the email
           await FirebaseAuth.instance.currentUser?.reload();
           final repairedUser = FirebaseAuth.instance.currentUser;
-          
+
           if (repairedUser?.email == null) {
             print('VERIFY_EMAIL_FLOW: error = email still missing after sync');
-            throw Exception("Could not attach email to your account. Please contact support.");
+            throw Exception(
+              "Could not attach email to your account. Please contact support.",
+            );
           }
-          
-          print('VERIFY_EMAIL_FLOW: email repaired, proceeding to send verification');
+
+          print(
+            'VERIFY_EMAIL_FLOW: email repaired, proceeding to send verification',
+          );
           // Send verification with the repaired user
           await repairedUser!.sendEmailVerification(actionSettings);
-          print('VERIFY_EMAIL_FLOW: sendEmailVerification completed successfully');
+          print(
+            'VERIFY_EMAIL_FLOW: sendEmailVerification completed successfully',
+          );
           return;
         } catch (syncErr) {
           print('VERIFY_EMAIL_FLOW: backend sync failed: $syncErr');
-          throw Exception("Failed to sync email. Please log out, log in with OTP, and try again.");
+          throw Exception(
+            "Failed to sync email. Please log out, log in with OTP, and try again.",
+          );
         }
       }
 
       print('VERIFY_EMAIL_FLOW: selectedOperation = sendEmailVerification');
-      
+
       try {
         await refreshedUser.sendEmailVerification(actionSettings);
-        print('VERIFY_EMAIL_FLOW: sendEmailVerification completed successfully');
+        print(
+          'VERIFY_EMAIL_FLOW: sendEmailVerification completed successfully',
+        );
       } catch (fbErr) {
-        print('VERIFY_EMAIL_FLOW: sendEmailVerification Firebase error: $fbErr');
+        print(
+          'VERIFY_EMAIL_FLOW: sendEmailVerification Firebase error: $fbErr',
+        );
         throw Exception("Failed to send verification email: $fbErr");
       }
     } catch (e) {
@@ -691,25 +759,31 @@ class AuthCubit extends Cubit<AuthState> {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) return;
-      
+
       await user.reload();
       final freshUser = FirebaseAuth.instance.currentUser;
       if (freshUser == null) return;
-      
+
       final idToken = await freshUser.getIdToken(true); // force refresh
-      
-      final response = await _api.post('/auth/sync-firebase', data: {
-        'idToken': idToken,
-        'emailVerified': freshUser.emailVerified,
-        'email': freshUser.email,
-      });
-      
+
+      final response = await _api.post(
+        '/auth/sync-firebase',
+        data: {
+          'idToken': idToken,
+          'emailVerified': freshUser.emailVerified,
+          'email': freshUser.email,
+        },
+      );
+
       if (response.data['success'] == true) {
         // Backend doesn't return the user object in sync-firebase, so fetch it
         final meResponse = await _api.get('/auth/me');
-        if (meResponse.data['success'] == true && meResponse.data['user'] != null) {
+        if (meResponse.data['success'] == true &&
+            meResponse.data['user'] != null) {
           _currentUser = UserModel.fromJson(meResponse.data['user']);
-          await SecureStorage.saveUserData(jsonEncode(_currentUser!.toFullJson()));
+          await SecureStorage.saveUserData(
+            jsonEncode(_currentUser!.toFullJson()),
+          );
           _emitAuthoritativeState();
         }
       }
@@ -747,18 +821,28 @@ class AuthCubit extends Cubit<AuthState> {
   Future<void> setupMpin(String mpin) async {
     emit(AuthLoading());
     try {
-      final response = await _api.post('/auth/mpin/setup', data: {'mpin': mpin});
+      final response = await _api.post(
+        '/auth/mpin/setup',
+        data: {'mpin': mpin},
+      );
       if (response.data['success'] == true) {
-        emit(Authenticated(user: _currentUser!)); 
+        emit(Authenticated(user: _currentUser!));
       } else {
         emit(AuthError(response.data['message'] ?? 'Failed to setup MPIN'));
       }
     } catch (e) {
       String msg = "Authentication failed";
-      if (e is Failure) msg = e.message;
-      else if (e is DioException && e.error is Failure) msg = (e.error as Failure).message;
-      else if (e is DioException && e.response?.data != null && e.response?.data is Map && e.response?.data['message'] != null) msg = e.response!.data['message'];
-      else msg = e.toString();
+      if (e is Failure)
+        msg = e.message;
+      else if (e is DioException && e.error is Failure)
+        msg = (e.error as Failure).message;
+      else if (e is DioException &&
+          e.response?.data != null &&
+          e.response?.data is Map &&
+          e.response?.data['message'] != null)
+        msg = e.response!.data['message'];
+      else
+        msg = e.toString();
       emit(AuthError(msg));
     }
   }
@@ -766,18 +850,28 @@ class AuthCubit extends Cubit<AuthState> {
   Future<void> changeMpin(String mpin) async {
     emit(AuthLoading());
     try {
-      final response = await _api.post('/auth/mpin/change', data: {'mpin': mpin});
+      final response = await _api.post(
+        '/auth/mpin/change',
+        data: {'mpin': mpin},
+      );
       if (response.data['success'] == true) {
-        emit(Authenticated(user: _currentUser!)); 
+        emit(Authenticated(user: _currentUser!));
       } else {
         emit(AuthError(response.data['message'] ?? 'Failed to change MPIN'));
       }
     } catch (e) {
       String msg = "Authentication failed";
-      if (e is Failure) msg = e.message;
-      else if (e is DioException && e.error is Failure) msg = (e.error as Failure).message;
-      else if (e is DioException && e.response?.data != null && e.response?.data is Map && e.response?.data['message'] != null) msg = e.response!.data['message'];
-      else msg = e.toString();
+      if (e is Failure)
+        msg = e.message;
+      else if (e is DioException && e.error is Failure)
+        msg = (e.error as Failure).message;
+      else if (e is DioException &&
+          e.response?.data != null &&
+          e.response?.data is Map &&
+          e.response?.data['message'] != null)
+        msg = e.response!.data['message'];
+      else
+        msg = e.toString();
       emit(AuthError(msg));
     }
   }
@@ -787,27 +881,28 @@ class AuthCubit extends Cubit<AuthState> {
     _isSubmitting = true;
     emit(AuthLoading());
     try {
-      final response = await _api.post('/auth/mpin/verify', data: {
-        'phone': phone,
-        'mpin': mpin,
-      });
+      final response = await _api.post(
+        '/auth/mpin/verify',
+        data: {'phone': phone, 'mpin': mpin},
+      );
 
-      if (response.data['success'] == true && response.data['customToken'] != null) {
-          final customToken = response.data['customToken'];
-          await FirebaseAuth.instance.signInWithCustomToken(customToken);
-          
-          try {
-            final firebaseUser = FirebaseAuth.instance.currentUser;
-            await firebaseUser?.reload();
-          } catch (e) {
-            print('FIREBASE_PROFILE_SYNC: reload failed: $e');
-          }
-          
-          final token = response.data['token'];
-          if (token != null) {
-              await SecureStorage.saveToken(token);
-          }
-        
+      if (response.data['success'] == true &&
+          response.data['customToken'] != null) {
+        final customToken = response.data['customToken'];
+        await FirebaseAuth.instance.signInWithCustomToken(customToken);
+
+        try {
+          final firebaseUser = FirebaseAuth.instance.currentUser;
+          await firebaseUser?.reload();
+        } catch (e) {
+          print('FIREBASE_PROFILE_SYNC: reload failed: $e');
+        }
+
+        final token = response.data['token'];
+        if (token != null) {
+          await SecureStorage.saveToken(token);
+        }
+
         final userResult = await _api.get('/auth/me');
         if (userResult.data['success']) {
           _currentUser = UserModel.fromJson(userResult.data['user']);
@@ -819,17 +914,21 @@ class AuthCubit extends Cubit<AuthState> {
     } on DioException catch (e) {
       String msg = 'Failed to login with MPIN';
       if (e.response?.statusCode == 429) {
-          msg = e.response?.data['message'] ?? 'Too many attempts. Account locked.';
+        msg =
+            e.response?.data['message'] ?? 'Too many attempts. Account locked.';
       } else if (e.response?.statusCode == 401) {
-          msg = e.response?.data['message'] ?? 'Invalid MPIN.';
+        msg = e.response?.data['message'] ?? 'Invalid MPIN.';
       }
       emit(AuthError(msg));
     } catch (e) {
-        String msg = "Authentication failed";
-        if (e is Failure) msg = e.message;
-        else if (e is DioException && e.error is Failure) msg = (e.error as Failure).message;
-        else msg = e.toString();
-        emit(AuthError(msg));
+      String msg = "Authentication failed";
+      if (e is Failure)
+        msg = e.message;
+      else if (e is DioException && e.error is Failure)
+        msg = (e.error as Failure).message;
+      else
+        msg = e.toString();
+      emit(AuthError(msg));
     } finally {
       _isSubmitting = false;
     }

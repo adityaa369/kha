@@ -3,7 +3,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/services/biometric_auth_service.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../core/blocs/auth/auth_cubit.dart';
 import '../../../../config/constants.dart';
 import '../../../../config/theme.dart';
@@ -66,10 +65,7 @@ class _SplashPageState extends State<SplashPage>
     // 1 Kick off auth check
     await context.read<AuthCubit>().checkAuthStatus();
 
-    // 2 Wait for animation to finish (at least 2 seconds)
-    await Future.delayed(const Duration(milliseconds: 2000));
-
-    // 3 Keep checking for 3 seconds if auth is still loading
+    // 2 Keep checking for 3 seconds if auth is still loading
     bool navigated = false;
     for (int i = 0; i < 30; i++) {
       if (!mounted) return;
@@ -83,7 +79,7 @@ class _SplashPageState extends State<SplashPage>
       await Future.delayed(const Duration(milliseconds: 100));
     }
 
-    // 4 Fallback if still stuck (likely unauthenticated or error)
+    // 3 Fallback if still stuck (likely unauthenticated or error)
     if (!navigated && mounted) {
       _handleNavigation(context.read<AuthCubit>().state);
     }
@@ -138,7 +134,11 @@ class _SplashPageState extends State<SplashPage>
               ? Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.lock_outline, color: KhaataTheme.primaryBlue, size: 60.sp),
+                    Icon(
+                      Icons.lock_outline,
+                      color: KhaataTheme.primaryBlue,
+                      size: 60.sp,
+                    ),
                     SizedBox(height: 20.h),
                     Text(
                       'App Locked',

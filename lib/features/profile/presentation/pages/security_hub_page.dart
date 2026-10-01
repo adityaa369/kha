@@ -20,7 +20,8 @@ class SecurityHubPage extends StatefulWidget {
   State<SecurityHubPage> createState() => _SecurityHubPageState();
 }
 
-class _SecurityHubPageState extends State<SecurityHubPage> with WidgetsBindingObserver {
+class _SecurityHubPageState extends State<SecurityHubPage>
+    with WidgetsBindingObserver {
   bool? _hasMpin;
 
   @override
@@ -41,7 +42,6 @@ class _SecurityHubPageState extends State<SecurityHubPage> with WidgetsBindingOb
     }
   }
 
-
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
@@ -57,6 +57,7 @@ class _SecurityHubPageState extends State<SecurityHubPage> with WidgetsBindingOb
       }
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -104,11 +105,11 @@ class _SecurityHubPageState extends State<SecurityHubPage> with WidgetsBindingOb
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
                   // Email Verification UI
                   BlocBuilder<AuthCubit, AuthState>(
                     builder: (context, authState) {
-                      if (authState is Authenticated && !(authState.user.isEmailVerified)) {
+                      if (authState is Authenticated &&
+                          !(authState.user.isEmailVerified)) {
                         return Container(
                           margin: EdgeInsets.only(bottom: 24.h),
                           padding: EdgeInsets.all(16.w),
@@ -122,14 +123,17 @@ class _SecurityHubPageState extends State<SecurityHubPage> with WidgetsBindingOb
                             children: [
                               Row(
                                 children: [
-                                  Icon(Icons.warning_amber_rounded, color: Colors.orange.shade700),
+                                  Icon(
+                                    Icons.warning_amber_rounded,
+                                    color: Colors.orange.shade700,
+                                  ),
                                   SizedBox(width: 8.w),
                                   Text(
                                     "Email not verified",
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       color: Colors.orange.shade900,
-                                      fontSize: 16.sp
+                                      fontSize: 16.sp,
                                     ),
                                   ),
                                 ],
@@ -137,7 +141,10 @@ class _SecurityHubPageState extends State<SecurityHubPage> with WidgetsBindingOb
                               SizedBox(height: 8.h),
                               Text(
                                 "Verify your email to accept loans and unlock all features.",
-                                style: TextStyle(color: Colors.orange.shade900, fontSize: 13.sp),
+                                style: TextStyle(
+                                  color: Colors.orange.shade900,
+                                  fontSize: 13.sp,
+                                ),
                               ),
                               SizedBox(height: 12.h),
                               SizedBox(
@@ -149,15 +156,25 @@ class _SecurityHubPageState extends State<SecurityHubPage> with WidgetsBindingOb
                                   ),
                                   onPressed: () async {
                                     try {
-                                      await context.read<AuthCubit>().sendVerificationEmail();
+                                      await context
+                                          .read<AuthCubit>()
+                                          .sendVerificationEmail();
                                       if (mounted) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(content: Text("Verification email sent! Check your inbox.")),
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              "Verification email sent! Check your inbox.",
+                                            ),
+                                          ),
                                         );
                                       }
                                     } catch (e) {
                                       if (mounted) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
                                           SnackBar(content: Text(e.toString())),
                                         );
                                       }
@@ -171,7 +188,7 @@ class _SecurityHubPageState extends State<SecurityHubPage> with WidgetsBindingOb
                         );
                       }
                       return const SizedBox.shrink();
-                    }
+                    },
                   ),
 
                   // MPIN Button  changes label based on whether MPIN is already set
@@ -182,10 +199,15 @@ class _SecurityHubPageState extends State<SecurityHubPage> with WidgetsBindingOb
                       icon: const Icon(Icons.pin, color: Colors.white),
                       label: Text(
                         _hasMpin == true ? 'Change MPIN' : 'Setup MPIN',
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: _hasMpin == true ? Colors.green.shade700 : KhaataTheme.primaryBlue,
+                        backgroundColor: _hasMpin == true
+                            ? Colors.green.shade700
+                            : KhaataTheme.primaryBlue,
                         padding: EdgeInsets.symmetric(vertical: 16.h),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12.r),
@@ -193,13 +215,15 @@ class _SecurityHubPageState extends State<SecurityHubPage> with WidgetsBindingOb
                       ),
                       onPressed: () async {
                         if (_hasMpin == true) {
-                          // Currently change MPIN is not implemented. 
+                          // Currently change MPIN is not implemented.
                           // The user requested "Change MPIN works."
                           // But wait the prompt says "Do not confuse Setup and Change. Change flow must be explicit"
                           // If they dont have a change MPIN page, I should route them to a new one or handle it.
                           context.push('/change-mpin'); // We will add a route
                         } else {
-                          final result = await context.push(AppConstants.mpinSetup);
+                          final result = await context.push(
+                            AppConstants.mpinSetup,
+                          );
                           if (result == true) {
                             _loadMpinStatus();
                           }

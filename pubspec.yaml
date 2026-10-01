@@ -29,6 +29,7 @@ environment:
 # versions available, run `flutter pub outdated`.
 
 dependencies:
+  flutter_native_splash: ^2.4.7
   flutter:
     sdk: flutter
 
@@ -131,4 +132,5 @@ flutter_launcher_icons:
   android: true
   ios: true
   image_path: "assets/icon/app_icon.png"
+
 

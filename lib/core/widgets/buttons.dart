@@ -35,10 +35,7 @@ class PrimaryButton extends StatelessWidget {
                 valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
               ),
             )
-          : Text(
-              text,
-              style: TextStyle(color: textColor ?? Colors.white),
-            ),
+          : Text(text, style: TextStyle(color: textColor ?? Colors.white)),
     );
   }
 }

@@ -1,4 +1,4 @@
-﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:khatha/data/repositories/loan_repository.dart';
 import 'package:khatha/core/blocs/auth/auth_cubit.dart';
@@ -137,5 +137,3 @@ void main() {
     );
   });
 }
-
-

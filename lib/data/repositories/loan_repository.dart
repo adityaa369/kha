@@ -331,7 +331,8 @@ class LoanRepository extends BaseRepository {
     return await handleApiCall(() async {
       final response = await _api.get('/loans/$loanId/interest-schedule');
       if (response.statusCode == 200) {
-        print('[FORENSIC] Schedule JSON: ' + jsonEncode(response.data)); return InterestScheduleModel.fromJson(response.data);
+        print('[FORENSIC] Schedule JSON: ' + jsonEncode(response.data));
+        return InterestScheduleModel.fromJson(response.data);
       }
       throw const ServerFailure('Failed to fetch interest schedule');
     });
@@ -346,7 +347,9 @@ class LoanRepository extends BaseRepository {
       if (response.statusCode == 200) {
         return DocumentResponse(
           bytes: Uint8List.fromList(response.data as List<int>),
-          contentType: response.headers.value('content-type') ?? 'application/octet-stream',
+          contentType:
+              response.headers.value('content-type') ??
+              'application/octet-stream',
         );
       }
       throw const ServerFailure('Failed to get document bytes');
@@ -392,16 +395,65 @@ class LoanRepository extends BaseRepository {
       final idToken = await getValidIdToken();
       final response = await _api.post(
         '/intents',
+        data: {'loanId': loanId, 'action': 'ACCEPT_LOAN', 'idToken': idToken},
+      );
+      if (response.statusCode == 201) {
+        return response.data['intentId'] as String;
+      }
+      throw const ServerFailure('Failed to create accept intent');
+    });
+  }
+
+  Future<String> createPaymentIntent({
+    required String loanId,
+    required int amountPaise,
+  }) async {
+    return await handleApiCall(() async {
+      final idToken = await getValidIdToken();
+      final response = await _api.post(
+        '/loans/$loanId/payments/initiate',
         data: {
-          'loanId': loanId,
-          'action': 'ACCEPT_LOAN',
+          'amountPaise': amountPaise,
+          'note': 'Payment authorization',
           'idToken': idToken,
         },
       );
       if (response.statusCode == 201) {
         return response.data['intentId'] as String;
       }
-      throw const ServerFailure('Failed to create accept intent');
+      throw const ServerFailure('Failed to create payment intent');
+    });
+  }
+
+  Future<bool> commitPayment({
+    required String loanId,
+    required String intentId,
+    required String otp,
+  }) async {
+    return await handleApiCall(() async {
+      try {
+        final idToken = await getValidIdToken();
+        final response = await _api.post(
+          '/loans/$loanId/commit-payment',
+          data: {'intentId': intentId, 'otp': otp, 'idToken': idToken},
+        );
+        return response.statusCode == 200;
+      } on DioException catch (e) {
+        if (e.response?.statusCode == 401 &&
+            e.response?.data['code'] == 'INVALID_TOKEN') {
+          // Token refresh retry
+          final newToken = await getValidIdToken(forceRefresh: true);
+          final retryOpts = e.requestOptions;
+          retryOpts.data = {
+            'intentId': intentId,
+            'otp': otp,
+            'idToken': newToken,
+          };
+          final retryResponse = await _api.dio.fetch(retryOpts);
+          if (retryResponse.data['success'] == true) return true;
+        }
+        rethrow;
+      }
     });
   }
 

@@ -746,7 +746,7 @@ class _ChitGroupAdminPageState extends State<ChitGroupAdminPage> {
                                     Icons.workspace_premium,
                                     color: Colors.amber,
                                     size: 16,
-                                  ), // Crown 
+                                  ), // Crown
                                 ],
                               )
                             else if (isActive && isOwner && !isAuctionOpened)

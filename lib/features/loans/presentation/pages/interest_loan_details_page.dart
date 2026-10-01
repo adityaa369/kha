@@ -84,7 +84,9 @@ class InterestLoanDetailsPage extends StatelessWidget {
               icon: const Icon(Icons.arrow_back, color: Colors.black87),
               onPressed: () => context.pop(),
             ),
-            title: Text(theme.label, style: TextStyle(
+            title: Text(
+              theme.label,
+              style: TextStyle(
                 color: theme.primary,
                 fontSize: 15.sp,
                 fontWeight: FontWeight.w700,
@@ -117,13 +119,7 @@ class InterestLoanDetailsPage extends StatelessWidget {
                     ),
                     SizedBox(height: 14.h),
                     if (!isPending) ...[
-                      _repaymentChecklist(
-                        context,
-                        activeLoan,
-                        theme,
-                        duration,
-                        paidMonths,
-                      ),
+                      RepaymentTimelineWidget(loan: activeLoan),
                       SizedBox(height: 14.h),
                       _loanProgressCard(
                         activeLoan,
@@ -161,7 +157,9 @@ class InterestLoanDetailsPage extends StatelessWidget {
   //  â”€â”€â”€ Borrower Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Widget _borrowerCard(LoanModel loan, _TypeTheme theme) {
-    final name = loan.lenderName?.isNotEmpty == true ? loan.lenderName! : 'Lender';
+    final name = loan.lenderName?.isNotEmpty == true
+        ? loan.lenderName!
+        : 'Lender';
     final initial = name.isNotEmpty ? name[0].toUpperCase() : 'L';
     final phone = loan.lenderPhone ?? '';
 
@@ -364,23 +362,27 @@ class InterestLoanDetailsPage extends StatelessWidget {
                   ),
                 ),
                 Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 12.w,
-                      vertical: 6.h,
-                    ),
-                    decoration: BoxDecoration(
-                      color: loan.loanStatus.isFinished ? Colors.blue.shade50 : Colors.green.shade50,
-                      borderRadius: BorderRadius.circular(20.r),
-                    ),
-                    child: Text(
-                      loan.status.toUpperCase(),
-                      style: TextStyle(
-                        color: loan.loanStatus.isFinished ? Colors.blue.shade700 : Colors.green.shade700,
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.bold,
-                      ),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 12.w,
+                    vertical: 6.h,
+                  ),
+                  decoration: BoxDecoration(
+                    color: loan.loanStatus.isFinished
+                        ? Colors.blue.shade50
+                        : Colors.green.shade50,
+                    borderRadius: BorderRadius.circular(20.r),
+                  ),
+                  child: Text(
+                    loan.status.toUpperCase(),
+                    style: TextStyle(
+                      color: loan.loanStatus.isFinished
+                          ? Colors.blue.shade700
+                          : Colors.green.shade700,
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
+                ),
               ],
             ),
           ),
@@ -512,20 +514,26 @@ class InterestLoanDetailsPage extends StatelessWidget {
                   TextSpan(
                     children: [
                       TextSpan(
-                          text: loan.loanStatus.isFinished ? 'Loan Status: ' : 'Next Payment Due Date: ',
-                          style: TextStyle(
-                            fontSize: 11.sp,
-                            color: Colors.grey.shade600,
-                          ),
+                        text: loan.loanStatus.isFinished
+                            ? 'Loan Status: '
+                            : 'Next Payment Due Date: ',
+                        style: TextStyle(
+                          fontSize: 11.sp,
+                          color: Colors.grey.shade600,
                         ),
-                        TextSpan(
-                          text: loan.loanStatus.isFinished ? 'Fully Settled' : _dateStr(nextDue),
-                          style: TextStyle(
-                            fontSize: 11.sp,
-                            fontWeight: FontWeight.w700,
-                            color: loan.loanStatus.isFinished ? Colors.blue.shade700 : Colors.black87,
-                          ),
+                      ),
+                      TextSpan(
+                        text: loan.loanStatus.isFinished
+                            ? 'Fully Settled'
+                            : _dateStr(nextDue),
+                        style: TextStyle(
+                          fontSize: 11.sp,
+                          fontWeight: FontWeight.w700,
+                          color: loan.loanStatus.isFinished
+                              ? Colors.blue.shade700
+                              : Colors.black87,
                         ),
+                      ),
                     ],
                   ),
                 ),

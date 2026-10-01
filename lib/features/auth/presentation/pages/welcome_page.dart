@@ -19,10 +19,7 @@ class WelcomePage extends StatelessWidget {
           child: Column(
             children: [
               SizedBox(height: 100.h),
-              Image.asset(
-                'assets/images/splash_logo.png',
-                height: 100.h,
-              ),
+              Image.asset('assets/images/splash_logo.png', height: 100.h),
               SizedBox(height: 60.h),
               const Spacer(),
               PrimaryButton(

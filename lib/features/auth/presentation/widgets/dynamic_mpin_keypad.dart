@@ -35,13 +35,13 @@ class DynamicMpinKeypadState extends State<DynamicMpinKeypad> {
       _currentMpin = '';
     });
   }
-  
+
   void clear() {
     setState(() {
       _currentMpin = '';
     });
   }
-  
+
   void reshuffle() {
     _shuffleKeypad();
   }
@@ -96,9 +96,13 @@ class DynamicMpinKeypadState extends State<DynamicMpinKeypad> {
               height: 16.w,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: isFilled ? Theme.of(context).primaryColor : Colors.grey.shade300,
+                color: isFilled
+                    ? Theme.of(context).primaryColor
+                    : Colors.grey.shade300,
                 border: Border.all(
-                  color: isFilled ? Theme.of(context).primaryColor : Colors.grey.shade400,
+                  color: isFilled
+                      ? Theme.of(context).primaryColor
+                      : Colors.grey.shade400,
                   width: 1,
                 ),
               ),
@@ -124,7 +128,10 @@ class DynamicMpinKeypadState extends State<DynamicMpinKeypad> {
                 return _buildKey(
                   Text(
                     digit.toString(),
-                    style: TextStyle(fontSize: 24.sp, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 24.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   () => _onKeyPress(digit),
                 );
@@ -135,13 +142,20 @@ class DynamicMpinKeypadState extends State<DynamicMpinKeypad> {
                 return _buildKey(
                   Text(
                     digit.toString(),
-                    style: TextStyle(fontSize: 24.sp, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 24.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   () => _onKeyPress(digit),
                 );
               } else {
                 return _buildKey(
-                  Icon(Icons.backspace_outlined, size: 24.sp, color: Colors.grey.shade700),
+                  Icon(
+                    Icons.backspace_outlined,
+                    size: 24.sp,
+                    color: Colors.grey.shade700,
+                  ),
                   _onBackspace,
                 );
               }

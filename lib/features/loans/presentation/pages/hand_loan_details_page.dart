@@ -10,6 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../config/theme.dart';
 import '../../../../data/models/loan_model.dart';
+import '../widgets/repayment_timeline_widget.dart';
 import '../../../../core/blocs/loans/loan_cubit.dart';
 import '../../../../core/blocs/loans/loan_state.dart';
 import '../../../../core/blocs/auth/auth_cubit.dart';
@@ -90,7 +91,7 @@ class HandLoanDetailsPage extends StatelessWidget {
     );
   }
 
-  //  Bottom Bar 
+  //  Bottom Bar
 
   Widget _bottomBar(
     BuildContext context,
@@ -182,7 +183,7 @@ class HandLoanDetailsPage extends StatelessWidget {
     );
   }
 
-  //  
+  //
 
   void _toggleMonth(
     BuildContext context,

@@ -55,10 +55,7 @@ class _LoginPageState extends State<LoginPage> {
                 children: [
                   SizedBox(height: 52.h),
 
-                  Image.asset(
-                    'assets/images/splash_logo.png',
-                    height: 80.h,
-                  ),
+                  Image.asset('assets/images/splash_logo.png', height: 80.h),
                   Text(
                     'Digital Loan Agreements',
                     style: TextStyle(
@@ -246,10 +243,17 @@ class _LoginPageState extends State<LoginPage> {
                               onPressed: () {
                                 final phone = _phoneController.text.trim();
                                 if (phone.length == 10) {
-                                  context.push(AppConstants.mpinLogin, extra: phone);
+                                  context.push(
+                                    AppConstants.mpinLogin,
+                                    extra: phone,
+                                  );
                                 } else {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Please enter a valid 10-digit mobile number first')),
+                                    const SnackBar(
+                                      content: Text(
+                                        'Please enter a valid 10-digit mobile number first',
+                                      ),
+                                    ),
                                   );
                                 }
                               },

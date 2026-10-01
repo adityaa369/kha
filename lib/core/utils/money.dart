@@ -3,12 +3,12 @@ class MoneyUtils {
     if (input.isEmpty) {
       throw const FormatException('Amount cannot be empty');
     }
-    
+
     final regex = RegExp(r'^\d+(\.\d{1,2})?$');
     if (!regex.hasMatch(input)) {
       throw const FormatException('Invalid amount format');
     }
-    
+
     if (input.contains('.')) {
       final parts = input.split('.');
       final rupees = int.parse(parts[0]);

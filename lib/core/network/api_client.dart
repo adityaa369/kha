@@ -180,12 +180,12 @@ class ApiClient {
         retryEvaluator: (DioException error, int attempt) {
           final statusCode = error.response?.statusCode;
           final method = error.requestOptions.method.toUpperCase();
-          
+
           // Do NOT retry on 401, 403, or 429
           if (statusCode == 401 || statusCode == 403 || statusCode == 429) {
             return false;
           }
-          
+
           // Only safely retry GET requests
           if (method != 'GET') {
             return false;

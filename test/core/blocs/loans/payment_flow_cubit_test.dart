@@ -21,30 +21,48 @@ void main() {
     cubit.close();
   });
 
-  group('4F-4B Payment Flow Validation', () {
-    test('1. successful payment', () async {
+  group('Phase B - 2-Stage Payment Flow Validation', () {
+    test('1. createIntent emits PaymentAwaitingOTP', () async {
       when(
-        () => mockRepo.recordPayment(
-          'loan1',
-          amountPaise: 500000,
-          idempotencyKey: any(named: 'idempotencyKey'),
+        () =>
+            mockRepo.createPaymentIntent(loanId: 'loan1', amountPaise: 500000),
+      ).thenAnswer((_) async => 'intent-123');
+
+      await cubit.createIntent(500000);
+
+      expect(cubit.state, isA<PaymentAwaitingOTP>());
+      expect((cubit.state as PaymentAwaitingOTP).intentId, 'intent-123');
+    });
+
+    test('2. commitPayment emits PaymentSuccess', () async {
+      when(
+        () =>
+            mockRepo.createPaymentIntent(loanId: 'loan1', amountPaise: 500000),
+      ).thenAnswer((_) async => 'intent-123');
+
+      await cubit.createIntent(500000);
+
+      when(
+        () => mockRepo.commitPayment(
+          loanId: 'loan1',
+          intentId: 'intent-123',
+          otp: '123456',
         ),
       ).thenAnswer((_) async => true);
 
-      await cubit.submitPayment(500000);
+      await cubit.commitPayment('123456');
+
       expect(cubit.state, isA<PaymentSuccess>());
     });
 
-    test('2. failed payment leaves state unchanged (emits rejected)', () async {
+    test('3. failed createIntent emits PaymentRejected', () async {
       when(
-        () => mockRepo.recordPayment(
-          'loan1',
-          amountPaise: 500000,
-          idempotencyKey: any(named: 'idempotencyKey'),
-        ),
-      ).thenThrow(const BusinessLogicFailure('OVERPAYMENT_REJECTED'));
+        () =>
+            mockRepo.createPaymentIntent(loanId: 'loan1', amountPaise: 500000),
+      ).thenThrow(const BusinessLogicFailure('LOAN_FROZEN'));
 
-      await cubit.submitPayment(500000);
+      await cubit.createIntent(500000);
+
       expect(cubit.state, isA<PaymentRejected>());
       expect(
         (cubit.state as PaymentRejected).failure,
@@ -52,156 +70,72 @@ void main() {
       );
     });
 
-    test('3. duplicate tap', () async {
-      final completer = Completer<bool>();
-      when(
-        () => mockRepo.recordPayment(
-          'loan1',
-          amountPaise: 500000,
-          idempotencyKey: any(named: 'idempotencyKey'),
-        ),
-      ).thenAnswer((_) => completer.future);
-
-      cubit.submitPayment(500000); // first tap
-      cubit.submitPayment(500000); // duplicate tap
-
-      completer.complete(true);
-      await Future.delayed(Duration.zero);
-
-      // Should only call repo once
-      verify(
-        () => mockRepo.recordPayment(
-          'loan1',
-          amountPaise: 500000,
-          idempotencyKey: any(named: 'idempotencyKey'),
-        ),
-      ).called(1);
-    });
-
-    test('4. timeout -> UNKNOWN', () async {
-      when(
-        () => mockRepo.recordPayment(
-          'loan1',
-          amountPaise: 500000,
-          idempotencyKey: any(named: 'idempotencyKey'),
-        ),
-      ).thenThrow(TimeoutException('timeout'));
-
-      await cubit.submitPayment(500000);
-      expect(cubit.state, isA<PaymentUnknown>());
-    });
-
-    test('5. UNKNOWN -> backend says committed', () async {
-      when(
-        () => mockRepo.recordPayment(
-          'loan1',
-          amountPaise: 500000,
-          idempotencyKey: any(named: 'idempotencyKey'),
-        ),
-      ).thenThrow(TimeoutException('timeout'));
-
-      await cubit.submitPayment(500000);
-      final unknownState = cubit.state as PaymentUnknown;
-
-      when(
-        () => mockRepo.checkTransactionStatus(
-          unknownState.attempt.idempotencyKey,
-        ),
-      ).thenAnswer((_) async => 'COMMITTED');
-
-      await cubit.reconcile(unknownState.attempt);
-      expect(cubit.state, isA<PaymentSuccess>());
-    });
-
     test(
-      '6. UNKNOWN -> backend says not committed & 7. retry uses SAME idempotency key',
+      '4. commitPayment with invalid OTP handles error and reverts to AwaitingOTP',
       () async {
         when(
-          () => mockRepo.recordPayment(
-            'loan1',
+          () => mockRepo.createPaymentIntent(
+            loanId: 'loan1',
             amountPaise: 500000,
-            idempotencyKey: any(named: 'idempotencyKey'),
           ),
-        ).thenThrow(TimeoutException('timeout'));
+        ).thenAnswer((_) async => 'intent-123');
 
-        await cubit.submitPayment(500000);
-        final unknownState = cubit.state as PaymentUnknown;
-        final originalKey = unknownState.attempt.idempotencyKey;
+        await cubit.createIntent(500000);
 
-        // Backend says not committed
-        when(
-          () => mockRepo.checkTransactionStatus(originalKey),
-        ).thenAnswer((_) async => 'PENDING');
-
-        await cubit.reconcile(unknownState.attempt);
-
-        expect(cubit.state, isA<PaymentIdle>());
-
-        // Setup successful response for retry
-        when(
-          () => mockRepo.recordPayment(
-            'loan1',
-            amountPaise: 500000,
-            idempotencyKey: originalKey,
-          ),
-        ).thenAnswer((_) async => true);
-
-        // Retry
-        await cubit.submitPayment(500000);
-
-        // Verify the SAME key was used
-        verify(
-          () => mockRepo.recordPayment(
-            'loan1',
-            amountPaise: 500000,
-            idempotencyKey: originalKey,
-          ),
-        ).called(2);
-      },
-    );
-
-    test('8. Firebase token refresh preserves same request/key', () async {
-      // In 4F-3, we proved that Dio interceptor/fallback in LoanRepository preserves the key.
-      // This is tested in loan_repository_test.dart. We just verify the cubit initiates it correctly.
-      const key = 'custom-key';
-      when(
-        () => mockRepo.recordPayment(
-          'loan1',
-          amountPaise: 500000,
-          idempotencyKey: key,
-        ),
-      ).thenAnswer((_) async => true);
-
-      // Simulating the repository using the provided key successfully
-      final attempt = PaymentAttempt(amountPaise: 500000, key: key);
-      expect(attempt.idempotencyKey, key);
-    });
-
-    test(
-      '9, 10, 11, 12, 13, 14. structured errors handled correctly',
-      () async {
-        final dioRateLimit = DioException(
+        final dioOtpInvalid = DioException(
           requestOptions: RequestOptions(path: ''),
           response: Response(
             requestOptions: RequestOptions(path: ''),
-            data: {'code': 'RATE_LIMITED'},
+            statusCode: 401,
+            data: {'code': 'OTP_INVALID', 'message': 'Invalid OTP'},
           ),
         );
-        when(
-          () => mockRepo.recordPayment(
-            'loan1',
-            amountPaise: 500000,
-            idempotencyKey: any(named: 'idempotencyKey'),
-          ),
-        ).thenThrow(dioRateLimit);
 
-        await cubit.submitPayment(500000);
-        expect(cubit.state, isA<PaymentRejected>());
-        expect(
-          (cubit.state as PaymentRejected).failure,
-          isA<RateLimitedFailure>(),
-        );
+        when(
+          () => mockRepo.commitPayment(
+            loanId: 'loan1',
+            intentId: 'intent-123',
+            otp: '000000',
+          ),
+        ).thenThrow(dioOtpInvalid);
+
+        // We expect a state sequence here: Committing -> Rejected -> AwaitingOTP
+        // With await, cubit.state reflects the final state (AwaitingOTP)
+        await cubit.commitPayment('000000');
+
+        expect(cubit.state, isA<PaymentAwaitingOTP>());
       },
     );
+
+    test('5. Reconcile network unknown', () async {
+      when(
+        () =>
+            mockRepo.createPaymentIntent(loanId: 'loan1', amountPaise: 500000),
+      ).thenAnswer((_) async => 'intent-123');
+
+      await cubit.createIntent(500000);
+
+      final dioTimeout = DioException(
+        requestOptions: RequestOptions(path: ''),
+        type: DioExceptionType.connectionTimeout,
+      );
+
+      when(
+        () => mockRepo.commitPayment(
+          loanId: 'loan1',
+          intentId: 'intent-123',
+          otp: '123456',
+        ),
+      ).thenThrow(dioTimeout);
+
+      // Reconcile is called automatically on timeout inside commitPayment
+      when(
+        () => mockRepo.checkIntentStatus('intent-123'),
+      ).thenAnswer((_) async => 'COMMITTED');
+
+      await cubit.commitPayment('123456');
+
+      expect(cubit.state, isA<PaymentSuccess>());
+    });
   });
 }

@@ -4,7 +4,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../config/theme.dart';
 import '../cubit/notification_prefs_cubit.dart';
 
-
 class NotificationPrefsPage extends StatelessWidget {
   const NotificationPrefsPage({super.key});
 
@@ -38,7 +37,8 @@ class NotificationPrefsPage extends StatelessWidget {
           }
         },
         builder: (context, state) {
-          if (state is NotificationPrefsLoading || state is NotificationPrefsInitial) {
+          if (state is NotificationPrefsLoading ||
+              state is NotificationPrefsInitial) {
             return const Center(child: CircularProgressIndicator());
           }
           if (state is NotificationPrefsError) {
@@ -46,12 +46,20 @@ class NotificationPrefsPage extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error_outline, color: KhaataTheme.dangerRed, size: 48.sp),
+                  Icon(
+                    Icons.error_outline,
+                    color: KhaataTheme.dangerRed,
+                    size: 48.sp,
+                  ),
                   SizedBox(height: 16.h),
-                  Text(state.message, style: TextStyle(color: KhaataTheme.textDark)),
+                  Text(
+                    state.message,
+                    style: TextStyle(color: KhaataTheme.textDark),
+                  ),
                   SizedBox(height: 16.h),
                   ElevatedButton(
-                    onPressed: () => context.read<NotificationPrefsCubit>().load(),
+                    onPressed: () =>
+                        context.read<NotificationPrefsCubit>().load(),
                     child: const Text('Retry'),
                   ),
                 ],
@@ -72,39 +80,39 @@ class NotificationPrefsPage extends StatelessWidget {
                   onChanged: null, // Disabled / Read-only
                 ),
                 SizedBox(height: 24.h),
-                
+
                 _buildSectionHeader('TRANSACTIONAL'),
                 _buildPrefTile(
                   title: 'Loan Updates',
                   subtitle: 'New loans, agreement approvals, status changes.',
                   value: prefs.loanUpdates,
-                  onChanged: (val) => context.read<NotificationPrefsCubit>().update(
-                    prefs.copyWith(loanUpdates: val),
-                  ),
+                  onChanged: (val) => context
+                      .read<NotificationPrefsCubit>()
+                      .update(prefs.copyWith(loanUpdates: val)),
                 ),
                 _buildPrefTile(
                   title: 'Payment Updates',
                   subtitle: 'Payments recorded, credited, or failed.',
                   value: prefs.paymentUpdates,
-                  onChanged: (val) => context.read<NotificationPrefsCubit>().update(
-                    prefs.copyWith(paymentUpdates: val),
-                  ),
+                  onChanged: (val) => context
+                      .read<NotificationPrefsCubit>()
+                      .update(prefs.copyWith(paymentUpdates: val)),
                 ),
                 _buildPrefTile(
                   title: 'KYC Updates',
                   subtitle: 'Verification status and document requirements.',
                   value: prefs.kycUpdates,
-                  onChanged: (val) => context.read<NotificationPrefsCubit>().update(
-                    prefs.copyWith(kycUpdates: val),
-                  ),
+                  onChanged: (val) => context
+                      .read<NotificationPrefsCubit>()
+                      .update(prefs.copyWith(kycUpdates: val)),
                 ),
                 _buildPrefTile(
                   title: 'Chit Fund Updates',
                   subtitle: 'Invitations, auctions, and ledger updates.',
                   value: prefs.chitFundUpdates,
-                  onChanged: (val) => context.read<NotificationPrefsCubit>().update(
-                    prefs.copyWith(chitFundUpdates: val),
-                  ),
+                  onChanged: (val) => context
+                      .read<NotificationPrefsCubit>()
+                      .update(prefs.copyWith(chitFundUpdates: val)),
                 ),
                 SizedBox(height: 24.h),
 
@@ -113,9 +121,9 @@ class NotificationPrefsPage extends StatelessWidget {
                   title: 'Promotional',
                   subtitle: 'Offers, tips, and new feature announcements.',
                   value: prefs.promotional,
-                  onChanged: (val) => context.read<NotificationPrefsCubit>().update(
-                    prefs.copyWith(promotional: val),
-                  ),
+                  onChanged: (val) => context
+                      .read<NotificationPrefsCubit>()
+                      .update(prefs.copyWith(promotional: val)),
                 ),
               ],
             );
@@ -162,10 +170,7 @@ class NotificationPrefsPage extends StatelessWidget {
           padding: EdgeInsets.only(top: 4.h),
           child: Text(
             subtitle,
-            style: TextStyle(
-              fontSize: 13.sp,
-              color: KhaataTheme.textGrey,
-            ),
+            style: TextStyle(fontSize: 13.sp, color: KhaataTheme.textGrey),
           ),
         ),
         value: value,

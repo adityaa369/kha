@@ -49,6 +49,9 @@ import '../core/blocs/security/security_cubit.dart';
 import '../data/repositories/security_repository.dart';
 import '../core/network/api_client.dart';
 import 'package:flutter/material.dart';
+import '../features/auth/presentation/pages/email_verification_page.dart';
+import '../features/auth/presentation/pages/registration_success_page.dart';
+import '../core/blocs/auth/email_verification_cubit.dart';
 
 import 'constants.dart';
 
@@ -68,6 +71,8 @@ final router = GoRouter(
       AppConstants.welcome,
       AppConstants.splash,
       '/auth-choice',
+      AppConstants.emailVerification,
+      AppConstants.registrationSuccess,
     ].contains(state.uri.path);
 
     // Bootstrapping Phase Trap in Splash and preserve intent via query param
@@ -91,6 +96,16 @@ final router = GoRouter(
         return '/reset-password';
       }
       return null;
+    }
+
+    // New registration flow — allow email verification and success pages only
+    if (authState is RegistrationComplete) {
+      final allowedPaths = [
+        AppConstants.emailVerification,
+        AppConstants.registrationSuccess,
+      ];
+      if (allowedPaths.contains(state.uri.path)) return null;
+      return AppConstants.emailVerification;
     }
 
     // Full Authorized State
@@ -154,6 +169,21 @@ final router = GoRouter(
         final phone = state.extra as String? ?? '';
         return RegistrationOtpPage(phone: phone);
       },
+    ),
+    GoRoute(
+      path: AppConstants.emailVerification,
+      builder: (context, state) {
+        final authCubit = context.read<AuthCubit>();
+        return BlocProvider(
+          create: (_) =>
+              EmailVerificationCubit(authCubit: authCubit)..startAutoCheck(),
+          child: const EmailVerificationPage(),
+        );
+      },
+    ),
+    GoRoute(
+      path: AppConstants.registrationSuccess,
+      builder: (context, state) => const RegistrationSuccessPage(),
     ),
     GoRoute(
       path: '/create-loan',
@@ -317,4 +347,3 @@ final router = GoRouter(
     ),
   ],
 );
-

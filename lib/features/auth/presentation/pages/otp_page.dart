@@ -38,8 +38,13 @@ class _OtpPageState extends State<OtpPage> {
   @override
   void dispose() {
     _timer?.cancel();
-    _otpController.dispose();
     _errorController?.close();
+    
+    // Do NOT manually dispose _otpController.
+    // The pin_code_fields package automatically takes ownership of the provided controller
+    // and disposes it in its own dispose() method. Disposing it here or in a microtask 
+    // results in a double-dispose exception ("A TextEditingController was used after being disposed").
+    
     super.dispose();
   }
 
@@ -75,7 +80,8 @@ class _OtpPageState extends State<OtpPage> {
   void _verifyOtp() {
     if (!mounted) return;
     final state = context.read<AuthCubit>().state;
-    if (state is AuthLoading || state is OtpVerifying) return; // prevent single-flight mutation
+    if (state is AuthLoading || state is OtpVerifying)
+      return; // prevent single-flight mutation
     if (_currentOtp.length == 6) {
       context.read<AuthCubit>().verifyOtp(widget.phone, _currentOtp);
     }
@@ -353,6 +359,3 @@ class _OtpPageState extends State<OtpPage> {
     );
   }
 }
-
-
-

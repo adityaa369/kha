@@ -12,7 +12,10 @@ class ErrorHandler {
       message = error.message;
     } else if (error is DioException && error.error is Failure) {
       message = (error.error as Failure).message;
-    } else if (error is DioException && error.response != null && error.response!.data is Map && error.response!.data['message'] != null) {
+    } else if (error is DioException &&
+        error.response != null &&
+        error.response!.data is Map &&
+        error.response!.data['message'] != null) {
       message = error.response!.data['message'];
     } else if (error is DioException) {
       message = error.message ?? 'Network error';

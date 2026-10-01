@@ -15,6 +15,8 @@ class AppConstants {
   static const String panDetails = '/pan-details';
   static const String registrationOtp = '/registration-otp';
   static const String processing = '/processing';
+  static const String emailVerification = '/email-verification';
+  static const String registrationSuccess = '/registration-success';
   static const String home = '/home';
   static const String myLoans = '/my-loans';
   static const String loansGiven = '/loans-given';

@@ -11,6 +11,7 @@ abstract class NotificationPrefsState extends Equatable {
 }
 
 class NotificationPrefsInitial extends NotificationPrefsState {}
+
 class NotificationPrefsLoading extends NotificationPrefsState {}
 
 class NotificationPrefsLoaded extends NotificationPrefsState {
@@ -58,7 +59,8 @@ class NotificationPrefsCubit extends Cubit<NotificationPrefsState> {
     try {
       final res = await _api.get('/users/notification-preferences');
       final prefs = NotificationPreferences.fromJson(
-          Map<String, dynamic>.from(res.data?['preferences'] ?? {}));
+        Map<String, dynamic>.from(res.data?['preferences'] ?? {}),
+      );
       emit(NotificationPrefsLoaded(prefs: prefs));
     } catch (e) {
       emit(NotificationPrefsError('Failed to load preferences: $e'));
@@ -77,10 +79,12 @@ class NotificationPrefsCubit extends Cubit<NotificationPrefsState> {
       emit(NotificationPrefsLoaded(prefs: updated));
     } catch (e) {
       // Revert
-      emit(current.copyWith(
-        isSaving: false,
-        saveError: 'Failed to save. Please try again.',
-      ));
+      emit(
+        current.copyWith(
+          isSaving: false,
+          saveError: 'Failed to save. Please try again.',
+        ),
+      );
     }
   }
 }

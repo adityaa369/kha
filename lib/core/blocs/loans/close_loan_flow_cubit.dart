@@ -121,11 +121,13 @@ class CloseLoanFlowCubit extends Cubit<CloseLoanFlowState> {
         loanId: _loanId,
         intentId: intentId,
       );
-      
+
       if (success) {
         emit(CloseLoanSuccess());
       } else {
-        emit(CloseLoanRejectedState(const ServerFailure('Failed to close loan')));
+        emit(
+          CloseLoanRejectedState(const ServerFailure('Failed to close loan')),
+        );
       }
     } on DioException catch (e) {
       emit(CloseLoanRejectedState(_mapDioErrorToFailure(e)));

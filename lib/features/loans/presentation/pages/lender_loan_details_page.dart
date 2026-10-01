@@ -119,13 +119,7 @@ class LenderLoanDetailsPage extends StatelessWidget {
                     ),
                     SizedBox(height: 14.h),
                     if (!isPending) ...[
-                      _repaymentChecklist(
-                        context,
-                        activeLoan,
-                        theme,
-                        duration,
-                        paidMonths,
-                      ),
+                      RepaymentTimelineWidget(loan: activeLoan),
                       SizedBox(height: 14.h),
                       _loanProgressCard(
                         activeLoan,
@@ -366,23 +360,27 @@ class LenderLoanDetailsPage extends StatelessWidget {
                   ),
                 ),
                 Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 12.w,
-                      vertical: 6.h,
-                    ),
-                    decoration: BoxDecoration(
-                      color: loan.loanStatus.isFinished ? Colors.blue.shade50 : Colors.green.shade50,
-                      borderRadius: BorderRadius.circular(20.r),
-                    ),
-                    child: Text(
-                      loan.status.toUpperCase(),
-                      style: TextStyle(
-                        color: loan.loanStatus.isFinished ? Colors.blue.shade700 : Colors.green.shade700,
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.bold,
-                      ),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 12.w,
+                    vertical: 6.h,
+                  ),
+                  decoration: BoxDecoration(
+                    color: loan.loanStatus.isFinished
+                        ? Colors.blue.shade50
+                        : Colors.green.shade50,
+                    borderRadius: BorderRadius.circular(20.r),
+                  ),
+                  child: Text(
+                    loan.status.toUpperCase(),
+                    style: TextStyle(
+                      color: loan.loanStatus.isFinished
+                          ? Colors.blue.shade700
+                          : Colors.green.shade700,
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
+                ),
               ],
             ),
           ),
@@ -514,20 +512,26 @@ class LenderLoanDetailsPage extends StatelessWidget {
                   TextSpan(
                     children: [
                       TextSpan(
-                          text: loan.loanStatus.isFinished ? 'Loan Status: ' : 'Next Payment Due Date: ',
-                          style: TextStyle(
-                            fontSize: 11.sp,
-                            color: Colors.grey.shade600,
-                          ),
+                        text: loan.loanStatus.isFinished
+                            ? 'Loan Status: '
+                            : 'Next Payment Due Date: ',
+                        style: TextStyle(
+                          fontSize: 11.sp,
+                          color: Colors.grey.shade600,
                         ),
-                        TextSpan(
-                          text: loan.loanStatus.isFinished ? 'Fully Settled' : _dateStr(nextDue),
-                          style: TextStyle(
-                            fontSize: 11.sp,
-                            fontWeight: FontWeight.w700,
-                            color: loan.loanStatus.isFinished ? Colors.blue.shade700 : Colors.black87,
-                          ),
+                      ),
+                      TextSpan(
+                        text: loan.loanStatus.isFinished
+                            ? 'Fully Settled'
+                            : _dateStr(nextDue),
+                        style: TextStyle(
+                          fontSize: 11.sp,
+                          fontWeight: FontWeight.w700,
+                          color: loan.loanStatus.isFinished
+                              ? Colors.blue.shade700
+                              : Colors.black87,
                         ),
+                      ),
                     ],
                   ),
                 ),

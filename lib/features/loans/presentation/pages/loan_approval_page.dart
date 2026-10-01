@@ -22,7 +22,8 @@ class LoanApprovalPage extends StatefulWidget {
   State<LoanApprovalPage> createState() => _LoanApprovalPageState();
 }
 
-class _LoanApprovalPageState extends State<LoanApprovalPage> with WidgetsBindingObserver {
+class _LoanApprovalPageState extends State<LoanApprovalPage>
+    with WidgetsBindingObserver {
   bool _isApproving = false;
   bool _waitingForVerification = false;
   LoanModel? _loan;
@@ -58,7 +59,7 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> with WidgetsBinding
         _isApproving = false;
       });
       if (mounted) {
-         DialogUtils.showSuccessDialog(context, 'Email verified successfully!');
+        DialogUtils.showSuccessDialog(context, 'Email verified successfully!');
       }
     } else {
       setState(() => _isApproving = false);
@@ -84,26 +85,32 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> with WidgetsBinding
     if (!authenticated) {
       if (mounted) {
         setState(() => _isApproving = false);
-        DialogUtils.showErrorDialog(context, 'Biometric signature required to accept agreement.');
+        DialogUtils.showErrorDialog(
+          context,
+          'Biometric signature required to accept agreement.',
+        );
       }
       return;
     }
 
     final cubit = context.read<LoanCubit>();
-    
+
     // 1 Create ACCEPT_LOAN Intent
     final intentId = await cubit.createAcceptIntent(_loan!.id);
     if (intentId == null) {
       if (mounted) {
         setState(() => _isApproving = false);
         final state = context.read<LoanCubit>().state;
-        if (state is LoanError && state.message.contains('Email verification is required')) {
+        if (state is LoanError &&
+            state.message.contains('Email verification is required')) {
           showDialog(
             context: context,
             barrierDismissible: false,
             builder: (ctx) => AlertDialog(
               title: const Text('Account Verification Required'),
-              content: const Text('Please secure your account by verifying your email address before accepting financial agreements.'),
+              content: const Text(
+                'Please secure your account by verifying your email address before accepting financial agreements.',
+              ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(ctx),
@@ -127,7 +134,9 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> with WidgetsBinding
           );
           return;
         } else {
-          final errorMsg = state is LoanError ? state.message : 'Failed to initialize acceptance process.';
+          final errorMsg = state is LoanError
+              ? state.message
+              : 'Failed to initialize acceptance process.';
           DialogUtils.showErrorDialog(context, errorMsg);
         }
       }
@@ -140,9 +149,16 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> with WidgetsBinding
     if (mounted) {
       setState(() => _isApproving = false);
       if (success) {
-        DialogUtils.showSuccessDialog(context, 'Agreement accepted successfully!', onOk: () => context.pop(true));
+        DialogUtils.showSuccessDialog(
+          context,
+          'Agreement accepted successfully!',
+          onOk: () => context.pop(true),
+        );
       } else {
-        DialogUtils.showErrorDialog(context, 'Failed to accept agreement. Please try again.');
+        DialogUtils.showErrorDialog(
+          context,
+          'Failed to accept agreement. Please try again.',
+        );
       }
     }
   }
@@ -170,7 +186,10 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> with WidgetsBinding
     final loan = _loan!;
 
     final currentUserId = context.read<AuthCubit>().state.user?.id;
-    final isBorrower = loan.userId != null && currentUserId != null && loan.userId == currentUserId;
+    final isBorrower =
+        loan.userId != null &&
+        currentUserId != null &&
+        loan.userId == currentUserId;
 
     return BlocListener<LoanCubit, LoanState>(
       listener: (context, state) {
@@ -310,7 +329,10 @@ class _LoanApprovalPageState extends State<LoanApprovalPage> with WidgetsBinding
                         ? SizedBox(
                             height: 20,
                             width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
                           )
                         : const Text('Sign and Accept Agreement'),
                   ),

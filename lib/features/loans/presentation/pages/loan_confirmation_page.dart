@@ -48,7 +48,8 @@ class _LoanConfirmationPageState extends State<LoanConfirmationPage> {
           _sending = false;
         });
       },
-      codeAutoRetrievalTimeout: (verificationId) => _verificationId = verificationId,
+      codeAutoRetrievalTimeout: (verificationId) =>
+          _verificationId = verificationId,
     );
   }
 
@@ -76,7 +77,10 @@ class _LoanConfirmationPageState extends State<LoanConfirmationPage> {
   }
 
   void _show(String message) {
-    if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    if (mounted)
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -90,9 +94,17 @@ class _LoanConfirmationPageState extends State<LoanConfirmationPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Icon(Icons.description_outlined, size: 64, color: KhaataTheme.primaryBlue),
+              const Icon(
+                Icons.description_outlined,
+                size: 64,
+                color: KhaataTheme.primaryBlue,
+              ),
               const SizedBox(height: 20),
-              Text('Sign before sending', textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineSmall),
+              Text(
+                'Sign before sending',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
               const SizedBox(height: 12),
               Text(
                 '₹${amount.toStringAsFixed(0)} to ${widget.loanData['borrower_name'] ?? 'the borrower'}',
@@ -108,7 +120,9 @@ class _LoanConfirmationPageState extends State<LoanConfirmationPage> {
               if (_verificationId == null)
                 ElevatedButton(
                   onPressed: _sending ? null : _sendOtp,
-                  child: _sending ? const CircularProgressIndicator() : const Text('Send OTP to Sign'),
+                  child: _sending
+                      ? const CircularProgressIndicator()
+                      : const Text('Send OTP to Sign'),
                 )
               else ...[
                 PinCodeTextField(
@@ -121,9 +135,14 @@ class _LoanConfirmationPageState extends State<LoanConfirmationPage> {
                 const SizedBox(height: 12),
                 ElevatedButton(
                   onPressed: _verifying || _code.length != 6 ? null : _confirm,
-                  child: _verifying ? const CircularProgressIndicator() : const Text('Verify OTP & Send Agreement'),
+                  child: _verifying
+                      ? const CircularProgressIndicator()
+                      : const Text('Verify OTP & Send Agreement'),
                 ),
-                TextButton(onPressed: _sending ? null : _sendOtp, child: const Text('Resend OTP')),
+                TextButton(
+                  onPressed: _sending ? null : _sendOtp,
+                  child: const Text('Resend OTP'),
+                ),
               ],
             ],
           ),

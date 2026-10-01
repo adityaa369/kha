@@ -91,7 +91,9 @@ class SecurityCubit extends Cubit<SecurityState> {
         if (e.error != null && e.error.toString().contains('AuthFailure')) {
           return 'Session expired. Please login again.';
         }
-        if (e.response?.data != null && e.response?.data is Map && e.response!.data['message'] != null) {
+        if (e.response?.data != null &&
+            e.response?.data is Map &&
+            e.response!.data['message'] != null) {
           return e.response!.data['message'];
         }
         return e.message ?? 'Network error';

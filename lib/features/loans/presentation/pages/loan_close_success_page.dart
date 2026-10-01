@@ -17,17 +17,27 @@ class LoanCloseSuccessPage extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                padding: EdgeInsets.all(32.w),
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white,
-                ),
-                child: Icon(
-                  Icons.handshake_rounded,
-                  color: KhaataTheme.primaryBlue,
-                  size: 80.sp,
-                ),
+              TweenAnimationBuilder<double>(
+                tween: Tween<double>(begin: 0.0, end: 1.0),
+                duration: const Duration(milliseconds: 600),
+                curve: Curves.elasticOut,
+                builder: (context, value, child) {
+                  return Transform.scale(
+                    scale: value,
+                    child: Container(
+                      padding: EdgeInsets.all(32.w),
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white,
+                      ),
+                      child: Icon(
+                        Icons.handshake_rounded,
+                        color: KhaataTheme.primaryBlue,
+                        size: 80.sp,
+                      ),
+                    ),
+                  );
+                },
               ),
               SizedBox(height: 32.h),
               Text(

@@ -231,7 +231,8 @@ class LoanModel extends Equatable {
       if (field == null) return null;
       if (field is String) return field;
       // Users use a custom string 'id' (Firebase UID), so prefer 'id' over MongoDB '_id'
-      if (field is Map) return field['id']?.toString() ?? field['_id']?.toString();
+      if (field is Map)
+        return field['id']?.toString() ?? field['_id']?.toString();
       return field.toString();
     }
 
@@ -258,19 +259,26 @@ class LoanModel extends Equatable {
       id: json['_id'] ?? json['id']?.toString() ?? '',
       lenderId: extractId(json['lender']) ?? json['lender_id']?.toString(),
       userId: extractId(json['borrower']) ?? json['user_id']?.toString(),
-      borrowerName: populatedBorrowerName ?? json['borrowerName'] ?? json['borrower_name'] ?? '',
-      lenderName: populatedLenderName ?? json['lenderName'] ?? json['lender_name'],
+      borrowerName:
+          populatedBorrowerName ??
+          json['borrowerName'] ??
+          json['borrower_name'] ??
+          '',
+      lenderName:
+          populatedLenderName ?? json['lenderName'] ?? json['lender_name'],
       lenderPhone:
-          populatedLenderPhone ?? json['lenderPhone']?.toString() ?? json['lender_phone']?.toString(),
+          populatedLenderPhone ??
+          json['lenderPhone']?.toString() ??
+          json['lender_phone']?.toString(),
       initials:
           json['initials'] ??
           _generateInitials(
             populatedLenderName ??
-            json['lenderName'] ??
-            populatedBorrowerName ??
-            json['borrowerName'] ??
-            json['borrower_name'] ??
-            '',
+                json['lenderName'] ??
+                populatedBorrowerName ??
+                json['borrowerName'] ??
+                json['borrower_name'] ??
+                '',
           ),
       amountPaise: parsePaiseStrict('amountPaise'),
       interestRate:
@@ -301,7 +309,9 @@ class LoanModel extends Equatable {
       emiAmountPaise: parsePaiseOptional('emiAmountPaise'),
       totalPayablePaise: parsePaiseOptional('totalPayablePaise'),
       paidAmountPaise: parsePaiseOptional('paidAmountPaise'),
-      principalOutstandingPaise: json['principalOutstandingPaise'] != null ? parsePaiseStrict('principalOutstandingPaise') : null,
+      principalOutstandingPaise: json['principalOutstandingPaise'] != null
+          ? parsePaiseStrict('principalOutstandingPaise')
+          : null,
       interestOutstandingPaise: parsePaiseOptional('interestOutstandingPaise'),
       feesOutstandingPaise: parsePaiseOptional('feesOutstandingPaise'),
       financialStatus: json['financialStatus']?.toString(),
@@ -347,7 +357,7 @@ class LoanModel extends Equatable {
     };
   }
 
-  //  Presentation Helpers 
+  //  Presentation Helpers
 
   double get amount => amountPaise / 100;
   double get emiAmount => emiAmountPaise / 100;
@@ -355,12 +365,16 @@ class LoanModel extends Equatable {
 
   int get totalOutstandingPaise {
     if (principalOutstandingPaise != null) {
-      return principalOutstandingPaise! + interestOutstandingPaise + feesOutstandingPaise;
+      return principalOutstandingPaise! +
+          interestOutstandingPaise +
+          feesOutstandingPaise;
     }
     // Fallback for legacy V1 loans where only totalPayable and paidAmount exist
-    int outstanding = totalPayablePaise - paidAmountPaise;
+    int baseAmount = totalPayablePaise > 0 ? totalPayablePaise : amountPaise;
+    int outstanding = baseAmount - paidAmountPaise;
     return outstanding > 0 ? outstanding : 0;
   }
+
   double get totalOutstandingAmount => totalOutstandingPaise / 100;
   double get paidAmount => paidAmountPaise / 100;
 

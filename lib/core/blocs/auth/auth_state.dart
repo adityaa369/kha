@@ -1,4 +1,4 @@
-﻿part of 'auth_cubit.dart';
+part of 'auth_cubit.dart';
 
 abstract class AuthState extends Equatable {
   const AuthState();
@@ -64,4 +64,14 @@ class RegistrationOtpSent extends AuthState {
   const RegistrationOtpSent({required this.phone});
   @override
   List<Object?> get props => [phone];
+}
+
+/// Emitted when a new user completes registration (phone OTP verified, account created).
+/// Routes through email verification flow instead of directly to home.
+class RegistrationComplete extends AuthState {
+  @override
+  final UserModel user;
+  const RegistrationComplete({required this.user});
+  @override
+  List<Object?> get props => [user];
 }

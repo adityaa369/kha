@@ -91,7 +91,8 @@ class _VerifyEmailBottomSheetState extends State<VerifyEmailBottomSheet> {
         if (errStr.contains('too-many-requests')) {
           msg = 'Too many requests. Please wait a few minutes and try again.';
         } else if (errStr.contains('No email address is attached')) {
-          msg = 'No email address is attached to your account. Please re-login with OTP.';
+          msg =
+              'No email address is attached to your account. Please re-login with OTP.';
         }
         setState(() => _errorMessage = msg);
       }
@@ -207,7 +208,10 @@ class _VerifyEmailBottomSheetState extends State<VerifyEmailBottomSheet> {
                   SizedBox(height: 12.h),
                   Text(
                     'Sending verification email...',
-                    style: TextStyle(fontSize: 15.sp, color: KhaataTheme.textGrey),
+                    style: TextStyle(
+                      fontSize: 15.sp,
+                      color: KhaataTheme.textGrey,
+                    ),
                   ),
                 ],
               ),
@@ -297,4 +301,3 @@ class _VerifyEmailBottomSheetState extends State<VerifyEmailBottomSheet> {
     );
   }
 }
-

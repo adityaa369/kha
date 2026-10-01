@@ -21,7 +21,10 @@ void main() {
       final cubit = CloseLoanFlowCubit(repository: mockRepo, loanId: 'loan1');
 
       when(
-        () => mockRepo.commitClose(loanId: 'loan1', intentId: any(named: 'intentId')),
+        () => mockRepo.commitClose(
+          loanId: 'loan1',
+          intentId: any(named: 'intentId'),
+        ),
       ).thenAnswer((_) async => true);
 
       await cubit.createIntent();
@@ -32,7 +35,10 @@ void main() {
       final cubit = CloseLoanFlowCubit(repository: mockRepo, loanId: 'loan1');
 
       when(
-        () => mockRepo.commitClose(loanId: 'loan1', intentId: any(named: 'intentId')),
+        () => mockRepo.commitClose(
+          loanId: 'loan1',
+          intentId: any(named: 'intentId'),
+        ),
       ).thenAnswer((_) async => false);
 
       await cubit.createIntent();
@@ -51,7 +57,10 @@ void main() {
       );
 
       when(
-        () => mockRepo.commitClose(loanId: 'loan1', intentId: any(named: 'intentId')),
+        () => mockRepo.commitClose(
+          loanId: 'loan1',
+          intentId: any(named: 'intentId'),
+        ),
       ).thenThrow(dioException);
 
       await cubit.createIntent();

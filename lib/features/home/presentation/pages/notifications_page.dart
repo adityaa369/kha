@@ -46,7 +46,9 @@ class _NotificationsPageState extends State<NotificationsPage> {
       body: Column(
         children: [
           _CategoryTabBar(),
-          Expanded(child: _NotificationList(scrollController: _scrollController)),
+          Expanded(
+            child: _NotificationList(scrollController: _scrollController),
+          ),
         ],
       ),
     );
@@ -75,7 +77,8 @@ class _NotificationsPageState extends State<NotificationsPage> {
           builder: (context, state) {
             if (state is NotificationLoaded && state.unreadCount > 0) {
               return TextButton(
-                onPressed: () => context.read<NotificationCubit>().markAllAsRead(),
+                onPressed: () =>
+                    context.read<NotificationCubit>().markAllAsRead(),
                 child: Text(
                   'Mark all read',
                   style: TextStyle(
@@ -129,7 +132,9 @@ class _CategoryTabBar extends StatelessWidget {
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
                       padding: EdgeInsets.symmetric(
-                          horizontal: 16.w, vertical: 8.h),
+                        horizontal: 16.w,
+                        vertical: 8.h,
+                      ),
                       decoration: BoxDecoration(
                         color: isSelected
                             ? KhaataTheme.primaryBlue
@@ -207,7 +212,8 @@ class _NotificationList extends StatelessWidget {
   }
 
   Map<String, List<NotificationModel>> _groupByDate(
-      List<NotificationModel> notifications) {
+    List<NotificationModel> notifications,
+  ) {
     final Map<String, List<NotificationModel>> groups = {};
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
@@ -215,7 +221,10 @@ class _NotificationList extends StatelessWidget {
 
     for (final n in notifications) {
       final date = DateTime(
-          n.createdAt.year, n.createdAt.month, n.createdAt.day);
+        n.createdAt.year,
+        n.createdAt.month,
+        n.createdAt.day,
+      );
       String label;
       if (date == today) {
         label = 'Today';
@@ -234,10 +243,7 @@ class _DateSection extends StatelessWidget {
   final String dateLabel;
   final List<NotificationModel> notifications;
 
-  const _DateSection({
-    required this.dateLabel,
-    required this.notifications,
-  });
+  const _DateSection({required this.dateLabel, required this.notifications});
 
   @override
   Widget build(BuildContext context) {
@@ -271,10 +277,7 @@ class _NotificationTile extends StatelessWidget {
   final NotificationModel notification;
   final bool isLast;
 
-  const _NotificationTile({
-    required this.notification,
-    required this.isLast,
-  });
+  const _NotificationTile({required this.notification, required this.isLast});
 
   @override
   Widget build(BuildContext context) {
@@ -365,11 +368,7 @@ class _NotificationTile extends StatelessWidget {
               ),
             ),
             if (!isLast)
-              Divider(
-                height: 1,
-                indent: 70.w,
-                color: KhaataTheme.borderGrey,
-              ),
+              Divider(height: 1, indent: 70.w, color: KhaataTheme.borderGrey),
           ],
         ),
       ),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import 'package:intl/intl.dart';
+import 'package:pin_code_fields/pin_code_fields.dart';
 
 import '../../../../data/models/loan_model.dart';
 import '../../../../core/blocs/loans/loan_cubit.dart';
@@ -90,18 +90,28 @@ class _FlexiblePaymentSheetView extends StatefulWidget {
 
 class _FlexiblePaymentSheetViewState extends State<_FlexiblePaymentSheetView> {
   final _amountCtrl = TextEditingController();
+  final _otpCtrl = TextEditingController();
   final _currencyFmt = NumberFormat('#,##0', 'en_IN');
 
   @override
   void initState() {
     super.initState();
     _amountCtrl.addListener(() => setState(() {}));
+    _otpCtrl.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _amountCtrl.dispose();
+    _otpCtrl.dispose();
+    super.dispose();
   }
 
   int get _enteredAmountPaise => (int.tryParse(_amountCtrl.text) ?? 0) * 100;
 
   int get _newBalancePaise {
-    final currentBalancePaise = widget.loan.principalOutstandingPaise ?? 
+    final currentBalancePaise =
+        widget.loan.principalOutstandingPaise ??
         (widget.loan.totalPayablePaise - widget.loan.paidAmountPaise);
     if (widget.actionType == 'add_credit') {
       return currentBalancePaise + _enteredAmountPaise;
@@ -116,8 +126,13 @@ class _FlexiblePaymentSheetViewState extends State<_FlexiblePaymentSheetView> {
     if (widget.actionType == 'add_credit') {
       context.read<AddCreditFlowCubit>().createIntent(_enteredAmountPaise);
     } else {
-      context.read<PaymentFlowCubit>().submitPayment(_enteredAmountPaise);
+      context.read<PaymentFlowCubit>().createIntent(_enteredAmountPaise);
     }
+  }
+
+  void _submitOTP() {
+    if (_otpCtrl.text.length != 6) return;
+    context.read<PaymentFlowCubit>().commitPayment(_otpCtrl.text);
   }
 
   @override
@@ -143,7 +158,7 @@ class _FlexiblePaymentSheetViewState extends State<_FlexiblePaymentSheetView> {
               state is AddCreditCreatingIntent || state is AddCreditCommitting,
           isSuccess:
               state
-                  is AddCreditAwaitingConsent, // For lender intent creation success
+                  is AddCreditAwaitingConsent, // Lender created intent successfully
           isUnknown: false,
           successMessage: 'Add Credit intent sent to borrower for approval.',
           onAction: _processPayment,
@@ -164,22 +179,116 @@ class _FlexiblePaymentSheetViewState extends State<_FlexiblePaymentSheetView> {
         }
       },
       builder: (context, state) {
+        if (state is PaymentAwaitingOTP || state is PaymentCommitting) {
+          return _buildOTPSheet(
+            isCommitting: state is PaymentCommitting,
+            amountPaise: state is PaymentAwaitingOTP
+                ? state.amountPaise
+                : (state as PaymentCommitting).amountPaise,
+          );
+        }
+
         return _buildSheetLayout(
-          isProcessing:
-              state is PaymentSubmitting || state is PaymentReconciling,
+          isProcessing: state is PaymentCreatingIntent,
           isSuccess: state is PaymentSuccess,
-          isUnknown: state is PaymentUnknown,
+          isUnknown: false,
           successMessage: 'Payment Recorded Successfully',
           onAction: _processPayment,
           isActionDisabled:
-              state is PaymentSubmitting ||
-              state is PaymentReconciling ||
-              _enteredAmountPaise <= 0,
-          onReconcile: state is PaymentUnknown
-              ? () => context.read<PaymentFlowCubit>().reconcile(state.attempt)
-              : null,
+              state is PaymentCreatingIntent || _enteredAmountPaise <= 0,
         );
       },
+    );
+  }
+
+  Widget _buildOTPSheet({
+    required bool isCommitting,
+    required int amountPaise,
+  }) {
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Enter Payment OTP',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Please enter the 6-digit OTP sent to authorize the payment of ₹${_currencyFmt.format(amountPaise / 100)}.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey.shade700),
+            ),
+            const SizedBox(height: 32),
+            Center(
+              child: PinCodeTextField(
+                appContext: context,
+                length: 6,
+                controller: _otpCtrl,
+                keyboardType: TextInputType.number,
+                animationType: AnimationType.fade,
+                pinTheme: PinTheme(
+                  shape: PinCodeFieldShape.box,
+                  borderRadius: BorderRadius.circular(12),
+                  fieldHeight: 56,
+                  fieldWidth: 48,
+                  activeFillColor: Colors.white,
+                  inactiveFillColor: Colors.grey.shade50,
+                  selectedFillColor: Colors.white,
+                  activeColor: Theme.of(context).primaryColor,
+                  inactiveColor: Colors.grey.shade300,
+                  selectedColor: Theme.of(context).primaryColor,
+                ),
+                enableActiveFill: true,
+                onCompleted: (_) => _submitOTP(),
+                enabled: !isCommitting,
+                onChanged: (value) {},
+              ),
+            ),
+            const SizedBox(height: 32),
+            ElevatedButton(
+              onPressed: (isCommitting || _otpCtrl.text.length != 6)
+                  ? null
+                  : _submitOTP,
+              child: Text(
+                isCommitting ? 'Verifying OTP...' : 'Confirm Payment',
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: isCommitting
+                  ? null
+                  : () {
+                      context.read<PaymentFlowCubit>().rejectIntent();
+                      Navigator.pop(context);
+                    },
+              child: const Text(
+                'Cancel Payment',
+                style: TextStyle(color: Colors.red),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -284,7 +393,7 @@ class _FlexiblePaymentSheetViewState extends State<_FlexiblePaymentSheetView> {
                 onPressed: isActionDisabled ? null : onAction,
                 child: Text(
                   isProcessing
-                      ? 'Processing...'
+                      ? 'Requesting OTP...'
                       : 'Submit ₹${_currencyFmt.format(_enteredAmountPaise / 100)}',
                 ),
               ),

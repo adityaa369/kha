@@ -46,9 +46,9 @@ class _HomeViewState extends State<_HomeView> {
   @override
   void initState() {
     super.initState();
-    _msgSub = NotificationService.onMessageStream.stream.listen((payload) {
-      if (payload['type'] == 'LOAN_ACCEPTED' ||
-          payload['type'] == 'LOAN_CREATED') {
+    _msgSub = NotificationService.onForegroundMessage.stream.listen((payload) {
+      if (payload.data['type'] == 'LOAN_ACCEPTED' ||
+          payload.data['type'] == 'LOAN_CREATED') {
         if (mounted) context.read<LoanCubit>().fetchLoans();
       }
     });
@@ -866,7 +866,8 @@ class _PaymentsSection extends StatelessWidget {
 
           int installmentPaise = 0;
           if (type == 'interestcredit' || type == 'home') {
-            installmentPaise = loan.amountPaise * (loan.interestRate?.toInt() ?? 0) ~/ 100;
+            installmentPaise =
+                loan.amountPaise * (loan.interestRate?.toInt() ?? 0) ~/ 100;
           } else {
             installmentPaise = duration > 0 ? loan.amountPaise ~/ duration : 0;
           }
@@ -1267,4 +1268,3 @@ class _ExploreCard extends StatelessWidget {
     );
   }
 }
-

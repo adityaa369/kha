@@ -5,7 +5,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'config/routes.dart';
 import 'config/theme.dart';
-import 'config/constants.dart';
 import 'core/blocs/auth/auth_cubit.dart';
 import 'core/blocs/loans/loan_cubit.dart';
 import 'core/blocs/loans/portfolio_cubit.dart';
@@ -15,46 +14,96 @@ import 'data/repositories/chit_fund_repository.dart';
 import 'features/home/presentation/cubit/notification_cubit.dart';
 import 'core/network/api_client.dart';
 import 'core/utils/secure_storage.dart';
+import 'core/utils/notification_router.dart';
 import 'core/blocs/admin/admin_cubit.dart';
 import 'core/blocs/system/system_state_cubit.dart';
 
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'core/services/notification_service.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
-import 'firebase_options.dart';
+
+import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'core/blocs/system/app_bootstrap_cubit.dart';
 
 final systemStateCubit = SystemStateCubit();
 final scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
-void main() async {
-  try {
-    WidgetsFlutterBinding.ensureInitialized();
+void main() {
+  final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+    ),
+  );
+
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    return Material(
+      color: Colors.white,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.error_outline,
+                color: KhaataTheme.primaryBlue,
+                size: 60,
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Something went wrong',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                details.exceptionAsString(),
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
-      try {
-        await FirebaseAppCheck.instance.activate(
-          providerAndroid: kDebugMode
-              ? const AndroidDebugProvider()
-              : const AndroidPlayIntegrityProvider(),
-          providerApple: kDebugMode
-              ? const AppleDebugProvider()
-              : const AppleDeviceCheckProvider(),
-        );
-      } catch (e) {}
-      try {
-        NotificationService.initialize();
-      } catch (e) {}
+  };
 
-    await dotenv.load(fileName: ".env");
+  runApp(
+    BlocProvider(
+      create: (_) => AppBootstrapCubit()..initializeApp(),
+      child: const KhaataAppBootstrap(),
+    ),
+  );
+}
 
-    // Wire up global auth error handlers â€” clears session and redirects to login
+class KhaataAppBootstrap extends StatefulWidget {
+  const KhaataAppBootstrap({super.key});
+
+  @override
+  State<KhaataAppBootstrap> createState() => _KhaataAppBootstrapState();
+}
+
+class _KhaataAppBootstrapState extends State<KhaataAppBootstrap> {
+  bool _configured = false;
+
+  void _configureAsyncDependencies() {
+    if (_configured) return;
+    _configured = true;
+
     ApiClient.onMaintenanceMode = () {
       systemStateCubit.pauseFinancialOperations();
     };
@@ -67,78 +116,47 @@ void main() async {
       router.go('/login');
     };
 
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-    ]);
-
-    SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-      ),
-    );
-
-    ErrorWidget.builder = (FlutterErrorDetails details) {
-      return Material(
-        color: Colors.white,
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.error_outline,
-                  color: KhaataTheme.primaryBlue,
-                  size: 60,
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Something went wrong',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  details.exceptionAsString(),
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    };
-
-    await SentryFlutter.init((options) {
+    SentryFlutter.init((options) {
       options.dsn = dotenv.env['SENTRY_DSN'] ?? '';
       options.tracesSampleRate = 1.0;
-    }, appRunner: () => runApp(const KhaataApp()));
-  } catch (globalError, stackTrace) {
-    runApp(
-      MaterialApp(
-        home: Scaffold(
-          backgroundColor: Colors.white,
-          body: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                'CRITICAL APP LAUNCH FAILURE:\n\n$globalError\n\n$stackTrace',
-                style: const TextStyle(color: Colors.black87, fontSize: 14),
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocConsumer<AppBootstrapCubit, AppBootstrapState>(
+      listener: (context, state) {
+        if (state is AppBootstrapSuccess) {
+          _configureAsyncDependencies();
+          FlutterNativeSplash.remove();
+        } else if (state is AppBootstrapError) {
+          FlutterNativeSplash.remove();
+        }
+      },
+      builder: (context, state) {
+        if (state is AppBootstrapSuccess) {
+          return const KhaataApp();
+        } else if (state is AppBootstrapError) {
+          return MaterialApp(
+            home: Scaffold(
+              backgroundColor: Colors.white,
+              body: SafeArea(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    'CRITICAL APP LAUNCH FAILURE:\n\n${state.error}',
+                    style: const TextStyle(color: Colors.black87, fontSize: 14),
+                  ),
+                ),
               ),
             ),
-          ),
-        ),
-      ),
+          );
+        }
+        return const SizedBox.shrink();
+      },
     );
   }
 }
-
 class KhaataApp extends StatelessWidget {
   const KhaataApp({super.key});
 
@@ -318,59 +336,15 @@ class _NotificationListenerWidgetState
     if (msgId != null && msgId == _lastHandledMessageId) return;
     _lastHandledMessageId = msgId;
 
-    final data = message.data;
-    final eventType = data['eventType'] as String?;
-    // Backend now sends referenceId; fall back to legacy loanId for compatibility
-
-    final referenceId = (data['referenceId'] ?? data['loanId']) as String?;
-    final intentId = data['intentId'] as String?;
-
-    // Ensure router is available (splash may still be showing during cold start)
-    // The router redirect guard handles auth — we just push the destination.
-    switch (eventType) {
-      // --- Loan / Agreement events → Loan Details (auth check inside page) ---
-      case 'LOAN_CREATED':
-      case 'LOAN_RECEIVED':
-      case 'LOAN_ACTIVATED':
-      case 'AGREEMENT_ACCEPTED':
-      case 'PAYMENT_RECEIVED':
-      case 'PAYMENT_FAILED':
-      case 'LOAN_COMPLETED':
-      case 'LOAN_CLOSED':
-        if (referenceId != null && referenceId.isNotEmpty) {
-          router.go('${AppConstants.loanDetails}/$referenceId');
-        } else {
-          router.go(AppConstants.notifications);
-        }
-        break;
-
-      // --- Agreement Ready → Loan Approval page ---
-      case 'AGREEMENT_READY':
-        if (referenceId != null && referenceId.isNotEmpty) {
-          router.go('${AppConstants.loanApproval}/$referenceId');
-        } else {
-          router.go(AppConstants.notifications);
-        }
-        break;
-
-      // --- Legacy type-based routing (backwards compat) ---
-      // These fire from old-style data payloads that haven't yet migrated
-      default:
-        final legacyType = data['type'] as String?;
-        final loanId = data['loanId'] as String?;
-        if (legacyType == 'ADD_CREDIT_INTENT' && intentId != null) {
-          router.go('/add-credit-approval/$intentId?loanId=${loanId ?? ''}');
-        } else if (legacyType == 'CLOSE_INTENT' && intentId != null) {
-          router.go('/close-loan-approval/$intentId?loanId=${loanId ?? ''}');
-        } else if (legacyType == 'CHIT_AUCTION_START') {
-          final ledgerId = data['ledgerId'] ?? '';
-          router.push('/chit-live-auction?ledgerId=$ledgerId');
-        } else if (loanId != null && loanId.isNotEmpty) {
-          // Generic loan reference — open loan details (page handles auth)
-          router.go('${AppConstants.loanDetails}/$loanId');
-        } else {
-          router.go(AppConstants.notifications);
-        }
+    // Get exact route via pure function
+    final route = NotificationRouter.getRouteFromPayload(message.data);
+    
+    // We use go() for everything except deep chit links to ensure flat nav stack,
+    // but the extracted class could be updated to return an intent type if needed.
+    if (route.startsWith('/chit-live-auction')) {
+      router.push(route);
+    } else {
+      router.go(route);
     }
   }
 
@@ -429,3 +403,5 @@ class _NotificationListenerWidgetState
   @override
   Widget build(BuildContext context) => widget.child;
 }
+
+
