@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../../config/theme.dart';
 import '../../../../core/blocs/loans/repayment_timeline_cubit.dart';
 import '../../../../data/models/loan_model.dart';
+import '../../../../data/models/repayment_timeline_model.dart';
 import '../../../../core/utils/pdf_generator.dart';
 import '../../../../data/repositories/loan_repository.dart';
 
