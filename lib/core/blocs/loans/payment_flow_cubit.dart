@@ -37,7 +37,13 @@ class PaymentCommitting extends PaymentFlowState {
   List<Object?> get props => [intentId, amountPaise];
 }
 
-class PaymentSuccess extends PaymentFlowState {}
+class PaymentSuccess extends PaymentFlowState {
+  final bool isCompleted;
+  const PaymentSuccess(this.isCompleted);
+
+  @override
+  List<Object?> get props => [isCompleted];
+}
 
 class PaymentRejected extends PaymentFlowState {
   final Failure failure;
@@ -150,17 +156,13 @@ class PaymentFlowCubit extends Cubit<PaymentFlowState> {
       // Clean up temporary session
       await paymentAuth.signOut();
 
-      final success = await _repository.commitPayment(
+      final updatedLoan = await _repository.commitPayment(
         loanId: _loanId,
         intentId: intentId,
         firebaseIdToken: firebaseIdToken!,
       );
 
-      if (success) {
-        emit(PaymentSuccess());
-      } else {
-        emit(const PaymentRejected(ServerFailure('Commit failed')));
-      }
+      emit(PaymentSuccess(updatedLoan.status == 'completed' || updatedLoan.status == 'closed'));
     } on FirebaseAuthException catch (e) {
       emit(PaymentRejected(BusinessLogicFailure(e.message ?? 'Invalid OTP')));
       emit(PaymentAwaitingOTP(intentId, amountPaise, verificationId, currentState.resendToken));

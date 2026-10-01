@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../config/constants.dart';
 
 import '../../../../data/models/loan_model.dart';
 import '../../../../core/blocs/loans/loan_cubit.dart';
@@ -174,6 +176,9 @@ class _FlexiblePaymentSheetViewState extends State<_FlexiblePaymentSheetView> {
       listener: (context, state) {
         if (state is PaymentSuccess) {
           context.read<LoanCubit>().fetchLoans();
+          if (state.isCompleted) {
+            context.push(AppConstants.loanCloseSuccess);
+          }
         } else if (state is PaymentRejected) {
           ErrorHandler.showError(context, state.failure.message);
         }

@@ -426,7 +426,7 @@ class LoanRepository extends BaseRepository {
     });
   }
 
-  Future<bool> commitPayment({
+  Future<LoanModel> commitPayment({
     required String loanId,
     required String intentId,
     required String firebaseIdToken,
@@ -437,7 +437,7 @@ class LoanRepository extends BaseRepository {
           '/loans/$loanId/payments/intents/$intentId/authorize-firebase-phone',
           data: {'firebaseIdToken': firebaseIdToken},
         );
-        return response.statusCode == 200;
+        return LoanModel.fromJson(response.data['loan']);
       } on DioException catch (e) {
         rethrow;
       }
@@ -483,7 +483,7 @@ class LoanRepository extends BaseRepository {
             'idToken': idToken,
           },
         );
-        return response.statusCode == 200;
+        return LoanModel.fromJson(response.data['loan']);
       } on DioException catch (e) {
         if (e.response?.statusCode == 401 &&
             e.response?.data['code'] == 'INVALID_TOKEN') {
@@ -528,7 +528,7 @@ class LoanRepository extends BaseRepository {
           '/loans/$loanId/close',
           data: {'intentId': intentId, 'idToken': idToken},
         );
-        return response.statusCode == 200;
+        return LoanModel.fromJson(response.data['loan']);
       } on DioException catch (e) {
         if (e.response?.statusCode == 401 &&
             e.response?.data['code'] == 'INVALID_TOKEN') {
