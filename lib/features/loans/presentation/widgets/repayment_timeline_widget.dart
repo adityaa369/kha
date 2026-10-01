@@ -2,11 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
-import '../../../../config/theme.dart';
 import '../../../../core/blocs/loans/repayment_timeline_cubit.dart';
 import '../../../../data/models/loan_model.dart';
-import '../../../../data/models/repayment_timeline_model.dart';
-import '../../../../core/utils/pdf_generator.dart';
 import '../../../../data/repositories/loan_repository.dart';
 
 class RepaymentTimelineWidget extends StatelessWidget {
@@ -17,8 +14,7 @@ class RepaymentTimelineWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) =>
-          RepaymentTimelineCubit(LoanRepository())..fetchTimeline(loan.id),
+      create: (context) => RepaymentTimelineCubit(LoanRepository())..fetchTimeline(loan.id),
       child: BlocBuilder<RepaymentTimelineCubit, RepaymentTimelineState>(
         builder: (context, state) {
           if (state is RepaymentTimelineLoading) {
@@ -41,281 +37,108 @@ class RepaymentTimelineWidget extends StatelessWidget {
           } else if (state is RepaymentTimelineLoaded) {
             final model = state.timelineModel;
 
-            if (!model.trackingEnabled) {
-              return const SizedBox.shrink(); // Hide for chit loans or inactive
+            if (!model.trackingEnabled || model.timeline.isEmpty) {
+              return const SizedBox.shrink();
             }
 
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 16.w,
-                    vertical: 8.h,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Payment Activity',
-                        style: TextStyle(
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.w700,
-                          color: KhaataTheme.textDark,
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(
-                          Icons.picture_as_pdf,
-                          color: KhaataTheme.primaryBlue,
-                        ),
-                        onPressed: () {
-                          PdfGenerator.generateAndShareStatement(loan, model);
-                        },
-                        tooltip: 'Download Statement',
-                      ),
-                    ],
-                  ),
-                ),
-                _buildProgressCard(model),
-                ...model.timeline.map((period) => _buildPeriodCard(period)),
-                if (model.postTermTransactions.isNotEmpty) ...[
-                  Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 16.w,
-                      vertical: 8.h,
-                    ),
-                    child: Text(
-                      'Post-Term Activity',
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.orange.shade800,
-                      ),
+            return Container(
+              padding: EdgeInsets.all(16.w),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16.r),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    loan.type.toLowerCase().contains('interest') ||
+                            loan.type.toLowerCase().contains('home')
+                        ? 'Monthly Interest Overview'
+                        : 'Monthly Payment Overview',
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black87,
                     ),
                   ),
-                  ...model.postTermTransactions.map(
-                    (tx) => _buildTransactionRow(tx, isPostTerm: true),
+                  SizedBox(height: 16.h),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: model.timeline.map((period) {
+                        final statusStr = period.status.toUpperCase();
+                        final isPaid = statusStr == 'PAID';
+                        final isPartial = statusStr == 'PARTIALLY_PAID' || statusStr == 'PARTIAL';
+                        
+                        final start = DateFormat('MMM dd').format(period.periodStart);
+                        final end = DateFormat('MMM dd').format(period.periodEnd);
+                        
+                        Color boxColor = Colors.white;
+                        Color borderColor = Colors.red.shade200;
+                        IconData icon = Icons.close;
+                        Color iconColor = Colors.red.shade300;
+
+                        if (isPaid) {
+                           boxColor = Colors.green.shade50;
+                           borderColor = Colors.green;
+                           icon = Icons.check;
+                           iconColor = Colors.green;
+                        } else if (isPartial) {
+                           boxColor = Colors.orange.shade50;
+                           borderColor = Colors.orange;
+                           icon = Icons.warning_amber_rounded;
+                           iconColor = Colors.orange;
+                        }
+
+                        return Container(
+                          margin: EdgeInsets.only(right: 12.w),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'Month ${period.periodIndex}',
+                                style: TextStyle(
+                                  fontSize: 12.sp,
+                                  color: Colors.grey.shade800,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              SizedBox(height: 2.h),
+                              Text(
+                                '$start - $end',
+                                style: TextStyle(
+                                  fontSize: 10.sp,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                              SizedBox(height: 8.h),
+                              Container(
+                                width: 50.w,
+                                height: 55.h,
+                                decoration: BoxDecoration(
+                                  color: boxColor,
+                                  border: Border.all(color: borderColor, width: 1.5),
+                                  borderRadius: BorderRadius.circular(8.r),
+                                ),
+                                alignment: Alignment.center,
+                                child: Icon(icon, color: iconColor, size: 20.sp),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    ),
                   ),
                 ],
-              ],
+              ),
             );
           }
           return const SizedBox.shrink();
         },
-      ),
-    );
-  }
-
-  Widget _buildProgressCard(RepaymentTimelineModel model) {
-    if (model.timeline.isEmpty) return const SizedBox.shrink();
-    
-    final paidPeriods = model.timeline.where((p) => p.status == 'paid').length;
-    final totalPeriods = model.durationMonths ?? model.timeline.length;
-    final progress = totalPeriods > 0 ? (paidPeriods / totalPeriods).clamp(0.0, 1.0) : 0.0;
-    
-    final nextUnpaid = model.timeline.firstWhere((p) => p.status != 'paid', orElse: () => model.timeline.last);
-    final isFinished = paidPeriods >= totalPeriods && model.timeline.every((p) => p.status == 'paid');
-    
-    final dateFormat = DateFormat('MMM dd, yyyy');
-    
-    return Container(
-      padding: EdgeInsets.all(16.w),
-      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Loan Progress',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.black87,
-                ),
-              ),
-              Text(
-                '$paidPeriods of $totalPeriods months completed',
-                style: TextStyle(fontSize: 11.sp, color: Colors.grey.shade600),
-              ),
-            ],
-          ),
-          SizedBox(height: 12.h),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8.r),
-            child: LinearProgressIndicator(
-              value: progress,
-              backgroundColor: Colors.grey.shade100,
-              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF22C55E)),
-              minHeight: 8.h,
-            ),
-          ),
-          SizedBox(height: 16.h),
-          Divider(height: 1, color: Colors.grey.shade100),
-          SizedBox(height: 16.h),
-          Text.rich(
-            TextSpan(
-              children: [
-                TextSpan(
-                  text: isFinished ? 'Loan Status: ' : 'Next Payment Due Date: ',
-                  style: TextStyle(fontSize: 11.sp, color: Colors.grey.shade600),
-                ),
-                TextSpan(
-                  text: isFinished ? 'Fully Settled' : dateFormat.format(nextUnpaid.periodEnd),
-                  style: TextStyle(
-                    fontSize: 11.sp,
-                    fontWeight: FontWeight.w700,
-                    color: isFinished ? Colors.blue.shade700 : Colors.black87,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPeriodCard(dynamic period) {
-    final dateFormat = DateFormat('MMM dd');
-    final currencyFmt = NumberFormat('#,##0', 'en_IN');
-
-    final bool hasActivity = period.hasPayments;
-
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: ExpansionTile(
-        tilePadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
-        title: Row(
-          children: [
-            Container(
-              padding: EdgeInsets.all(8.w),
-              decoration: BoxDecoration(
-                color: hasActivity
-                    ? Colors.green.shade50
-                    : Colors.grey.shade100,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                hasActivity ? Icons.check_circle : Icons.radio_button_unchecked,
-                color: hasActivity ? Colors.green : Colors.grey,
-                size: 16.sp,
-              ),
-            ),
-            SizedBox(width: 12.w),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Month ${period.periodIndex}',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14.sp,
-                    color: KhaataTheme.textDark,
-                  ),
-                ),
-                Text(
-                  '${dateFormat.format(period.periodStart)} - ${dateFormat.format(period.periodEnd)}',
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    color: KhaataTheme.textGrey,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        trailing: Text(
-          hasActivity
-              ? '₹${currencyFmt.format(period.totalPaid)}'
-              : 'No Activity',
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 14.sp,
-            color: hasActivity ? Colors.green.shade700 : KhaataTheme.textGrey,
-          ),
-        ),
-        children: period.transactions.isEmpty
-            ? [
-                Padding(
-                  padding: EdgeInsets.only(
-                    bottom: 16.h,
-                    left: 16.w,
-                    right: 16.w,
-                  ),
-                  child: Text(
-                    'No payments recorded during this period.',
-                    style: TextStyle(
-                      fontSize: 13.sp,
-                      color: KhaataTheme.textGrey,
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                ),
-              ]
-            : period.transactions
-                  .map<Widget>((tx) => _buildTransactionRow(tx))
-                  .toList(),
-      ),
-    );
-  }
-
-  Widget _buildTransactionRow(dynamic tx, {bool isPostTerm = false}) {
-    final currencyFmt = NumberFormat('#,##0', 'en_IN');
-    final dateFmt = DateFormat('MMM dd, yyyy');
-
-    return Container(
-      margin: isPostTerm
-          ? EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h)
-          : EdgeInsets.only(left: 48.w, right: 16.w, bottom: 8.h),
-      padding: EdgeInsets.all(12.w),
-      decoration: BoxDecoration(
-        color: isPostTerm ? Colors.orange.shade50 : Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(8.r),
-        border: Border.all(
-          color: isPostTerm ? Colors.orange.shade200 : Colors.grey.shade200,
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                tx.type == 'interest_payment'
-                    ? 'Interest Payment'
-                    : 'Principal Payment',
-                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13.sp),
-              ),
-              SizedBox(height: 4.h),
-              Text(
-                dateFmt.format(tx.recordedAt),
-                style: TextStyle(color: KhaataTheme.textGrey, fontSize: 11.sp),
-              ),
-            ],
-          ),
-          Text(
-            '₹${currencyFmt.format(tx.amount)}',
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: 14.sp,
-              color: KhaataTheme.textDark,
-            ),
-          ),
-        ],
       ),
     );
   }

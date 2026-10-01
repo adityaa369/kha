@@ -12,6 +12,7 @@ import '../../../../config/theme.dart';
 import '../../../../data/models/loan_model.dart';
 import '../widgets/repayment_timeline_widget.dart';
 import '../../../../core/blocs/loans/loan_cubit.dart';
+import '../widgets/repayment_timeline_widget.dart';
 import '../../../../core/blocs/loans/loan_state.dart';
 import '../../../../core/blocs/auth/auth_cubit.dart';
 
@@ -74,7 +75,7 @@ class HandLoanDetailsPage extends StatelessWidget {
                   SizedBox(height: 16.h),
                   _statsCard(activeLoan),
                   SizedBox(height: 16.h),
-                  _repaymentChecklist(context, activeLoan),
+                  RepaymentTimelineWidget(key: ValueKey('timeline_${activeLoan.transactions.length}'), loan: activeLoan),
                   SizedBox(height: 16.h),
                   _recentTransactions(activeLoan),
                   SizedBox(height: 16.h),

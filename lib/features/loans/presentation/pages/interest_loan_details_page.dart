@@ -119,7 +119,7 @@ class InterestLoanDetailsPage extends StatelessWidget {
                     ),
                     SizedBox(height: 14.h),
                     if (!isPending) ...[
-                      RepaymentTimelineWidget(loan: activeLoan),
+                      RepaymentTimelineWidget(key: ValueKey(\'timeline_\\'), loan: activeLoan),
                       SizedBox(height: 14.h),
                       _recentTransactions(activeLoan, theme),
                       SizedBox(height: 14.h),
