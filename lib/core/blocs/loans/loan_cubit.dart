@@ -297,6 +297,14 @@ class LoanCubit extends Cubit<LoanState> {
   }
 
   // Upload document
+  Future<void> deleteDocument(String documentId) async {
+    try {
+      await _repository.deleteDocument(documentId);
+    } catch (e) {
+      print('Failed to delete orphaned document $documentId: $e');
+    }
+  }
+
   Future<String> uploadDocument(
     String fileName,
     String fileType,

@@ -305,8 +305,8 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
     }
 
     if (_selectedDocumentFiles.isNotEmpty) {
+      List<String> newlyUploadedDocumentIds = [];
       try {
-        List<String> documentIds = [];
         for (final file in _selectedDocumentFiles) {
           final bytes = await file.readAsBytes();
           final fileName = p.basename(file.path);
@@ -316,15 +316,20 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
             fileType,
             bytes,
           );
-          documentIds.add(documentId);
+          newlyUploadedDocumentIds.add(documentId);
         }
-        _finalizeLoanCreation(phone, documentIds);
       } catch (e) {
+        // Upload failed midway. Clean up any successful uploads so far.
+        for (final id in newlyUploadedDocumentIds) {
+          await context.read<LoanCubit>().deleteDocument(id);
+        }
         setState(() => _isLoading = false);
         if (mounted) {
           _showUploadFailedDialog(phone, 'Failed to upload document: $e');
         }
+        return;
       }
+      _finalizeLoanCreation(phone, newlyUploadedDocumentIds);
     } else {
       _finalizeLoanCreation(phone, null);
     }
@@ -415,10 +420,18 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
           'amountPaise': MoneyUtils.parseRupeesToPaise(_amountController.text),
         },
       );
-    } else if (mounted) {
-      final state = cubit.state;
-      if (state is LoanError) {
-        _showErrorDialog(state.message);
+    } else {
+      // Failure occurred, clean up newly uploaded documents
+      if (documentIds != null && documentIds.isNotEmpty) {
+        for (final id in documentIds) {
+          await cubit.deleteDocument(id);
+        }
+      }
+      if (mounted) {
+        final state = cubit.state;
+        if (state is LoanError) {
+          _showErrorDialog(state.message);
+        }
       }
     }
   }

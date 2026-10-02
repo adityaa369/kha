@@ -356,6 +356,18 @@ class LoanRepository extends BaseRepository {
     });
   }
 
+  Future<void> deleteDocument(String documentId) async {
+    return await handleApiCall(() async {
+      final response = await _api.post(
+        '/loans/delete-document',
+        data: {'documentId': documentId},
+      );
+      if (response.data['success'] != true) {
+        throw ServerFailure(response.data['message'] ?? 'Failed to delete document');
+      }
+    });
+  }
+
   Future<String> uploadDocument(
     String fileName,
     String fileType,
