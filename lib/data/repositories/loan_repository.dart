@@ -483,7 +483,7 @@ class LoanRepository extends BaseRepository {
             'idToken': idToken,
           },
         );
-        return LoanModel.fromJson(response.data['loan']);
+        return true;
       } on DioException catch (e) {
         if (e.response?.statusCode == 401 &&
             e.response?.data['code'] == 'INVALID_TOKEN') {
@@ -528,7 +528,7 @@ class LoanRepository extends BaseRepository {
           '/loans/$loanId/close',
           data: {'intentId': intentId, 'idToken': idToken},
         );
-        return LoanModel.fromJson(response.data['loan']);
+        return true;
       } on DioException catch (e) {
         if (e.response?.statusCode == 401 &&
             e.response?.data['code'] == 'INVALID_TOKEN') {

@@ -5,6 +5,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path/path.dart' as p;
+import '../widgets/multi_camera_screen.dart';
 import '../../../../config/theme.dart';
 import '../../../../core/widgets/inputs.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -39,8 +42,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
   DateTime _startDate = DateTime.now();
   DateTime? _dueDate;
   final String _durationType = 'Months';
-  String? _selectedDocumentName;
-  File? _selectedDocumentFile;
+  List<File> _selectedDocumentFiles = [];
   bool _isLoading = false;
 
   @override
@@ -57,16 +59,88 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
     super.dispose();
   }
 
+  void _showUploadOptions() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Padding(
+                padding: EdgeInsets.all(16),
+                child: Text('Add Document', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text('Take Photos'),
+                subtitle: const Text('Capture one or more photos'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _openMultiCamera();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Choose from Gallery'),
+                subtitle: const Text('Select multiple images'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickGalleryImages();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.insert_drive_file),
+                title: const Text('Choose Document'),
+                subtitle: const Text('PDF / existing document'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickDocument();
+                },
+              ),
+              ListTile(
+                title: const Center(child: Text('Cancel', style: TextStyle(color: Colors.red))),
+                onTap: () => Navigator.pop(context),
+              ),
+            ],
+          ),
+        );
+      }
+    );
+  }
+
+  Future<void> _openMultiCamera() async {
+    final List<File>? captured = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const MultiCameraScreen()),
+    );
+    if (captured != null && captured.isNotEmpty) {
+      setState(() => _selectedDocumentFiles.addAll(captured));
+    }
+  }
+
+  Future<void> _pickGalleryImages() async {
+    final picker = ImagePicker();
+    final List<XFile> images = await picker.pickMultiImage();
+    if (images.isNotEmpty) {
+      setState(() {
+        _selectedDocumentFiles.addAll(images.map((x) => File(x.path)));
+      });
+    }
+  }
+
   Future<void> _pickDocument() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['pdf', 'jpg', 'png', 'jpeg'],
+      allowMultiple: true,
     );
 
     if (result != null) {
       setState(() {
-        _selectedDocumentFile = File(result.files.single.path!);
-        _selectedDocumentName = result.files.single.name;
+        _selectedDocumentFiles.addAll(result.paths.map((p) => File(p!)));
       });
     }
   }
@@ -230,17 +304,21 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
       return;
     }
 
-    if (_selectedDocumentFile != null) {
+    if (_selectedDocumentFiles.isNotEmpty) {
       try {
-        final bytes = await _selectedDocumentFile!.readAsBytes();
-        final fileName = _selectedDocumentName ?? 'document.pdf';
-        final fileType = 'application/pdf'; // Or derive dynamically if needed
-        final documentId = await context.read<LoanCubit>().uploadDocument(
-          fileName,
-          fileType,
-          bytes,
-        );
-        _finalizeLoanCreation(phone, documentId);
+        List<String> documentIds = [];
+        for (final file in _selectedDocumentFiles) {
+          final bytes = await file.readAsBytes();
+          final fileName = p.basename(file.path);
+          final fileType = p.extension(file.path).replaceFirst('.', '');
+          final documentId = await context.read<LoanCubit>().uploadDocument(
+            fileName,
+            fileType,
+            bytes,
+          );
+          documentIds.add(documentId);
+        }
+        _finalizeLoanCreation(phone, documentIds);
       } catch (e) {
         setState(() => _isLoading = false);
         if (mounted) {
@@ -298,7 +376,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
     );
   }
 
-  void _finalizeLoanCreation(String phone, String? documentId) async {
+  void _finalizeLoanCreation(String phone, List<String>? documentIds) async {
     setState(() => _isLoading = true);
     final cubit = context.read<LoanCubit>();
     final idempotencyKey = const Uuid().v4();
@@ -320,7 +398,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
       'notes': _notesController.text,
       'shop_name': _shopNameController.text,
       'type': widget.loanType,
-      'documentId': documentId,
+      'documentIds': documentIds,
     };
 
     final result = await cubit.createLoan(loanData);
@@ -660,10 +738,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
                 ),
               ),
               SizedBox(height: 16.h),
-              _DashedUploadBox(
-                fileName: _selectedDocumentName,
-                onTap: _pickDocument,
-              ),
+              _DashedUploadBox(files: _selectedDocumentFiles, onTap: _showUploadOptions, onRemove: (idx) => setState(() => _selectedDocumentFiles.removeAt(idx))),
             ],
           ),
         ),
@@ -771,10 +846,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
                 style: Theme.of(context).textTheme.bodyLarge,
               ),
               SizedBox(height: 8.h),
-              _DashedUploadBox(
-                fileName: _selectedDocumentName,
-                onTap: _pickDocument,
-              ),
+              _DashedUploadBox(files: _selectedDocumentFiles, onTap: _showUploadOptions, onRemove: (idx) => setState(() => _selectedDocumentFiles.removeAt(idx))),
               SizedBox(height: 16.h),
               KhaataTextField(
                 label: 'Notes (Optional)',
@@ -984,7 +1056,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            _selectedDocumentName ?? 'Upload Bill / Photo',
+                            _selectedDocumentFiles.isEmpty ? 'Upload Bill / Photo' : '${_selectedDocumentFiles.length} file(s)',
                             style: TextStyle(
                               fontWeight: FontWeight.w600,
                               fontSize: 13.sp,
@@ -992,7 +1064,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          if (_selectedDocumentName == null)
+                          if (_selectedDocumentFiles.isEmpty)
                             Text(
                               'JPG, PNG up to 5MB',
                               style: TextStyle(
@@ -1016,12 +1088,12 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
                             vertical: 8.h,
                           ),
                         ),
-                        onPressed: _pickDocument,
+                        onPressed: _showUploadOptions,
                         child: FittedBox(
                           fit: BoxFit.scaleDown,
                           child: Text(
-                            _selectedDocumentName == null
-                                ? 'Choose from Gallery'
+                            _selectedDocumentFiles.isEmpty
+                                ? 'Upload Documents'
                                 : 'Change',
                             style: TextStyle(
                               color: Colors.green.shade700,
@@ -1208,87 +1280,79 @@ class _DateSelector extends StatelessWidget {
 }
 
 class _DashedUploadBox extends StatelessWidget {
-  final String? fileName;
+  final List<File> files;
   final VoidCallback onTap;
+  final Function(int) onRemove;
 
-  const _DashedUploadBox({required this.fileName, required this.onTap});
+  const _DashedUploadBox({super.key, required this.files, required this.onTap, required this.onRemove});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: double.infinity,
-        padding: EdgeInsets.all(16.w),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12.r),
-          // Custom dashed border can be complex without extra package We'll use a normal light grey border.
-          // Wait the design has a dashed border. We can use a package if available, or just use a soft border.
-          border: Border.all(
-            color: Colors.grey.shade300,
-            style: BorderStyle.solid,
-          ),
+          color: KhaataTheme.primaryBlue.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: KhaataTheme.primaryBlue.withValues(alpha: 0.3)),
         ),
-        child: Row(
-          children: [
-            Container(
-              padding: EdgeInsets.all(10.w),
-              decoration: BoxDecoration(
-                color: Colors.green.shade50,
-                shape: BoxShape.circle,
-              ),
-              child: Stack(
-                alignment: Alignment.bottomRight,
+        child: files.isEmpty
+            ? Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.image_outlined,
-                    color: Colors.green.shade700,
-                    size: 24.sp,
-                  ),
-                  Container(
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.add_circle,
-                      color: Colors.green.shade700,
-                      size: 12.sp,
-                    ),
-                  ),
+                  Icon(Icons.upload_file, color: KhaataTheme.primaryBlue, size: 24),
+                  const SizedBox(width: 8),
+                  Text('Upload Document', style: TextStyle(color: KhaataTheme.primaryBlue, fontWeight: FontWeight.w500)),
                 ],
-              ),
-            ),
-            SizedBox(width: 16.w),
-            Expanded(
-              child: Column(
+              )
+            : Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    fileName ?? 'Upload image',
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('${files.length} document${files.length > 1 ? "s" : ""} selected', style: const TextStyle(fontWeight: FontWeight.bold)),
+                      Icon(Icons.add_circle_outline, color: KhaataTheme.primaryBlue, size: 20),
+                    ],
                   ),
-                  if (fileName == null)
-                    Text(
-                      'Tap to choose from gallery',
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        color: Colors.grey.shade500,
-                      ),
-                    ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: List.generate(files.length, (index) {
+                      final isImage = ['jpg', 'jpeg', 'png'].contains(p.extension(files[index].path).toLowerCase().replaceFirst('.', ''));
+                      return Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Container(
+                            width: 60,
+                            height: 60,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(8),
+                              color: Colors.grey.shade200,
+                              image: isImage ? DecorationImage(image: FileImage(files[index]), fit: BoxFit.cover) : null,
+                            ),
+                            child: !isImage ? Center(child: Icon(Icons.picture_as_pdf, color: Colors.red.shade300)) : null,
+                          ),
+                          Positioned(
+                            top: -6,
+                            right: -6,
+                            child: GestureDetector(
+                              onTap: () => onRemove(index),
+                              child: Container(
+                                padding: const EdgeInsets.all(2),
+                                decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                                child: const Icon(Icons.close, size: 12, color: Colors.white),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    }),
+                  ),
                 ],
               ),
-            ),
-            Icon(Icons.chevron_right, color: Colors.grey.shade400),
-          ],
-        ),
       ),
     );
   }

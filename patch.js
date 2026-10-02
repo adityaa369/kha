@@ -1,1 +1,0 @@
-﻿const fs = require('fs'); let c = fs.readFileSync('lib/data/repositories/loan_repository.dart', 'utf8'); c = c.replace('return InterestScheduleModel.fromJson(response.data);', 'print(\'[FORENSIC] Schedule JSON: \' + jsonEncode(response.data)); return InterestScheduleModel.fromJson(response.data);'); fs.writeFileSync('lib/data/repositories/loan_repository.dart', c);
