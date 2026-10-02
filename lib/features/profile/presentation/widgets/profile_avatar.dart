@@ -7,7 +7,8 @@ import 'package:khatha/data/repositories/loan_repository.dart';
 class ProfileAvatar extends StatefulWidget {
   final String? profileImageId;
 
-  const ProfileAvatar({super.key, this.profileImageId});
+  final double? size;
+  const ProfileAvatar({super.key, this.profileImageId, this.size});
 
   @override
   State<ProfileAvatar> createState() => _ProfileAvatarState();
@@ -53,7 +54,7 @@ class _ProfileAvatarState extends State<ProfileAvatar> {
 
   @override
   Widget build(BuildContext context) {
-    final size = 88.w;
+    final size = widget.size ?? 88.w;
     return Stack(
       children: [
         // Circle background + image or icon

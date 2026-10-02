@@ -156,5 +156,6 @@ class UserModel extends Equatable {
     createdAt,
     updatedAt,
     backendKycComplete,
-  ];
+      profileImageId,
+    ];
 }

@@ -15,7 +15,7 @@ import '../cubit/notification_cubit.dart';
 import '../cubit/notification_state.dart';
 import '../../../loans/presentation/pages/my_loans_page.dart';
 import '../../../../core/services/notification_service.dart';
-import '../../../../core/widgets/looping_avatar.dart';
+import '../../profile/presentation/widgets/profile_avatar.dart';
 import 'dart:async';
 import '../../../../data/models/loan_model.dart';
 import '../../../../config/constants.dart';
@@ -495,9 +495,9 @@ class _TopBarState extends State<_TopBar> {
                 onTap: () => context.push('/profile'),
                 child: BlocBuilder<AuthCubit, AuthState>(
                   builder: (context, state) {
-                    String? gender;
+                    String? profileImageId;
                     if (state is Authenticated) {
-                      gender = state.user.gender;
+                      profileImageId = state.user.profileImageId;
                     }
                     return Container(
                       width: 38.w,
@@ -514,7 +514,7 @@ class _TopBarState extends State<_TopBar> {
                         ],
                       ),
                       child: ClipOval(
-                        child: LoopingAvatar(gender: gender, height: 38.w),
+                        child: ProfileAvatar(profileImageId: profileImageId, size: 38.w),
                       ),
                     );
                   },

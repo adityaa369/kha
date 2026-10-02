@@ -1,3 +1,4 @@
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/services/biometric_auth_service.dart';
@@ -180,35 +181,19 @@ class _SplashPageState extends State<SplashPage>
                         child: ScaleTransition(
                           scale: _scaleAnimation,
                           child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Image.asset(
-                                'assets/images/splash_logo.png',
-                                height: 120.h,
-                                fit: BoxFit.contain,
-                              ),
-                              SizedBox(height: 24.h),
-                              AnimatedOpacity(
-                                opacity: _controller.value > 0.4 ? 1.0 : 0.0,
-                                duration: const Duration(milliseconds: 500),
-                                child: Image.asset(
-                                  'assets/images/splash_title.png',
-                                  height: 28.h,
-                                  fit: BoxFit.contain,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                AnimatedOpacity(
+                                  opacity: _controller.value > 0.3 ? 1.0 : 0.0,
+                                  duration: const Duration(milliseconds: 700),
+                                  child: SvgPicture.asset(
+                                    'assets/images/hand_credit_logo_splash.svg',
+                                    height: 160.h,
+                                    fit: BoxFit.contain,
+                                  ),
                                 ),
-                              ),
-                              SizedBox(height: 11.h),
-                              AnimatedOpacity(
-                                opacity: _controller.value > 0.6 ? 1.0 : 0.0,
-                                duration: const Duration(milliseconds: 500),
-                                child: Image.asset(
-                                  'assets/images/splash_subtitle.png',
-                                  height: 10.h,
-                                  fit: BoxFit.contain,
-                                ),
-                              ),
-                            ],
-                          ),
+                              ],
+                            ),
                         ),
                       ),
                     );
