@@ -68,7 +68,7 @@ class ProfilePage extends StatelessWidget {
 
   Future<void> _pickAndUploadImage(BuildContext context, ImageSource source) async {
     final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: source);
+    final pickedFile = await picker.pickImage(source: source, imageQuality: 50);
     if (pickedFile == null) return;
 
     if (!context.mounted) return;

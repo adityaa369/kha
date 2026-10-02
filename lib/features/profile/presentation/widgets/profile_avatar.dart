@@ -83,25 +83,7 @@ class _ProfileAvatarState extends State<ProfileAvatar> {
                   : null,
         ),
 
-        // Edit badge
-        Positioned(
-          bottom: 0,
-          right: 0,
-          child: Container(
-            width: 26.w,
-            height: 26.w,
-            decoration: const BoxDecoration(
-              color: Color(0xFF1565C0), // primaryBlue
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.camera_alt,
-              size: 14.sp,
-              color: Colors.white,
-            ),
-          ),
-        ),
-      ],
+        ],
     );
   }
 }
