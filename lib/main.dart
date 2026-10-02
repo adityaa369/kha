@@ -253,7 +253,7 @@ class KhaataApp extends StatelessWidget {
                                             final response = await ApiClient()
                                                 .dio
                                                 .get(
-                                                  'https:// khataabackend.onrender.com/health/live',
+                                                  'https://khataa-backend.onrender.com/health/live',
                                                 );
                                             if (response.statusCode == 200) {
                                               if (context.mounted) {
