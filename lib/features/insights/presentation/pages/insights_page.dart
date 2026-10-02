@@ -30,20 +30,14 @@ class _InsightsPageState extends State<InsightsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F6FA),
+      backgroundColor: KhaataTheme.backgroundGrey,
       body: Column(
         children: [
-          // ── Header ──────────────────────────────────────────────────────────
+          // ── Header ─────────────────────────────────────────────────────
           Container(
             width: double.infinity,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [KhaataTheme.primaryBlue, const Color(0xFF1A5499)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            padding: EdgeInsets.fromLTRB(20.w, 48.h, 20.w, 24.h),
+            color: KhaataTheme.primaryBlue,
+            padding: EdgeInsets.fromLTRB(20.w, 48.h, 20.w, 22.h),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -51,23 +45,22 @@ class _InsightsPageState extends State<InsightsPage> {
                   'Insights',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 26.sp,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.5,
+                    fontSize: 22.sp,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
                 SizedBox(height: 4.h),
                 Text(
                   'Your complete financial picture',
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.75),
+                    color: Colors.white.withValues(alpha: 0.7),
                     fontSize: 13.sp,
                   ),
                 ),
               ],
             ),
           ),
-          // ── Body ────────────────────────────────────────────────────────────
+          // ── Body ───────────────────────────────────────────────────────
           Expanded(
             child: BlocBuilder<PortfolioCubit, PortfolioState>(
               builder: (context, state) {
@@ -84,14 +77,13 @@ class _InsightsPageState extends State<InsightsPage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.error_outline,
-                            color: Colors.red.shade400, size: 48.sp),
+                            color: KhaataTheme.dangerRed, size: 48.sp),
                         SizedBox(height: 12.h),
-                        Text(
-                          state.message,
-                          style: TextStyle(
-                              color: Colors.red.shade400, fontSize: 14.sp),
-                          textAlign: TextAlign.center,
-                        ),
+                        Text(state.message,
+                            style: TextStyle(
+                                color: KhaataTheme.dangerRed,
+                                fontSize: 14.sp),
+                            textAlign: TextAlign.center),
                         SizedBox(height: 16.h),
                         TextButton(
                           onPressed: () => context
@@ -107,40 +99,12 @@ class _InsightsPageState extends State<InsightsPage> {
                   final summary = state.summary;
                   final lender = summary.lenderStats;
                   final borrower = summary.borrowerStats;
-
-                  final hasLenderData = lender != null && lender.loanCount > 0;
-                  final hasBorrowerData =
+                  final hasLender = lender != null && lender.loanCount > 0;
+                  final hasBorrower =
                       borrower != null && borrower.loanCount > 0;
 
-                  if (!hasLenderData && !hasBorrowerData) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.bar_chart_rounded,
-                              size: 64.sp,
-                              color: Colors.grey.shade300),
-                          SizedBox(height: 16.h),
-                          Text(
-                            'No loan activity yet',
-                            style: TextStyle(
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.grey.shade500,
-                            ),
-                          ),
-                          SizedBox(height: 8.h),
-                          Text(
-                            'Your financial insights will appear here\nonce you give or take a loan.',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 13.sp,
-                              color: Colors.grey.shade400,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
+                  if (!hasLender && !hasBorrower) {
+                    return _EmptyState();
                   }
 
                   return RefreshIndicator(
@@ -154,36 +118,105 @@ class _InsightsPageState extends State<InsightsPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // ── LENDER SECTION ──────────────────────────────
-                          if (hasLenderData) ...[
-                            _SectionHeader(
+                          if (hasLender) ...[
+                            _SectionLabel(
                               icon: Icons.trending_up_rounded,
-                              label: 'Loans I\'ve Given',
-                              color: KhaataTheme.primaryBlue,
+                              text: 'Loans I\'ve Given',
                             ),
                             SizedBox(height: 12.h),
-                            _LenderBanner(
-                                lender: lender!, fmt: _fmt),
+                            _LenderCard(lender: lender!, fmt: _fmt),
                             SizedBox(height: 12.h),
-                            _LenderStatGrid(lender: lender, fmt: _fmt),
-                            SizedBox(height: 12.h),
-                            if (lender.monthlyCollections.isNotEmpty)
+                            _StatRow(children: [
+                              _MiniStat(
+                                icon: Icons.download_rounded,
+                                iconBg: const Color(0xFFD1FAE5),
+                                iconColor: const Color(0xFF059669),
+                                label: 'Collected',
+                                value: '₹${_fmt(lender.totalCollected)}',
+                                valueColor: const Color(0xFF059669),
+                              ),
+                              _MiniStat(
+                                icon: Icons.schedule_rounded,
+                                iconBg: const Color(0xFFFEF3C7),
+                                iconColor: KhaataTheme.warningYellow,
+                                label: 'Outstanding',
+                                value: '₹${_fmt(lender.outstanding)}',
+                                valueColor: KhaataTheme.warningYellow,
+                              ),
+                            ]),
+                            SizedBox(height: 10.h),
+                            _StatRow(children: [
+                              _MiniStat(
+                                icon: Icons.people_rounded,
+                                iconBg: const Color(0xFFD1FAE5),
+                                iconColor: const Color(0xFF059669),
+                                label: 'Active',
+                                value: '${lender.activeLoanCount}',
+                                valueColor: KhaataTheme.textDark,
+                              ),
+                              _MiniStat(
+                                icon: Icons.check_circle_rounded,
+                                iconBg: KhaataTheme.borderGrey,
+                                iconColor: KhaataTheme.textGrey,
+                                label: 'Closed',
+                                value: '${lender.closedLoanCount}',
+                                valueColor: KhaataTheme.textGrey,
+                              ),
+                            ]),
+                            if (lender.monthlyCollections.isNotEmpty) ...[
+                              SizedBox(height: 14.h),
                               _MonthlyChart(
-                                  collections: lender.monthlyCollections,
-                                  fmt: _fmt),
+                                collections: lender.monthlyCollections,
+                                fmt: _fmt,
+                              ),
+                            ],
                             SizedBox(height: 28.h),
                           ],
-                          // ── BORROWER SECTION ─────────────────────────────
-                          if (hasBorrowerData) ...[
-                            _SectionHeader(
+                          if (hasBorrower) ...[
+                            _SectionLabel(
                               icon: Icons.handshake_rounded,
-                              label: 'Loans I\'ve Taken',
-                              color: const Color(0xFF2E8B3C),
+                              text: 'Loans I\'ve Taken',
                             ),
                             SizedBox(height: 12.h),
-                            _BorrowerBanner(borrower: borrower!, fmt: _fmt),
+                            _BorrowerCard(borrower: borrower!, fmt: _fmt),
                             SizedBox(height: 12.h),
-                            _BorrowerStatGrid(borrower: borrower, fmt: _fmt),
+                            _StatRow(children: [
+                              _MiniStat(
+                                icon: Icons.upload_rounded,
+                                iconBg: const Color(0xFFD1FAE5),
+                                iconColor: const Color(0xFF059669),
+                                label: 'Repaid',
+                                value: '₹${_fmt(borrower.totalRepaid)}',
+                                valueColor: const Color(0xFF059669),
+                              ),
+                              _MiniStat(
+                                icon: Icons.warning_amber_rounded,
+                                iconBg: const Color(0xFFFEE2E2),
+                                iconColor: KhaataTheme.dangerRed,
+                                label: 'Remaining',
+                                value: '₹${_fmt(borrower.outstanding)}',
+                                valueColor: KhaataTheme.dangerRed,
+                              ),
+                            ]),
+                            SizedBox(height: 10.h),
+                            _StatRow(children: [
+                              _MiniStat(
+                                icon: Icons.receipt_long_rounded,
+                                iconBg: const Color(0xFFD1FAE5),
+                                iconColor: const Color(0xFF059669),
+                                label: 'Active',
+                                value: '${borrower.activeLoanCount}',
+                                valueColor: KhaataTheme.textDark,
+                              ),
+                              _MiniStat(
+                                icon: Icons.check_circle_rounded,
+                                iconBg: KhaataTheme.borderGrey,
+                                iconColor: KhaataTheme.textGrey,
+                                label: 'Closed',
+                                value: '${borrower.closedLoanCount}',
+                                valueColor: KhaataTheme.textGrey,
+                              ),
+                            ]),
                           ],
                         ],
                       ),
@@ -200,13 +233,39 @@ class _InsightsPageState extends State<InsightsPage> {
   }
 }
 
-// ── Section header ────────────────────────────────────────────────────────────
-class _SectionHeader extends StatelessWidget {
+// ── Empty state ──────────────────────────────────────────────────────────────
+class _EmptyState extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.bar_chart_rounded,
+              size: 64.sp, color: KhaataTheme.borderGrey),
+          SizedBox(height: 16.h),
+          Text('No loan activity yet',
+              style: TextStyle(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w600,
+                  color: KhaataTheme.textGrey)),
+          SizedBox(height: 8.h),
+          Text(
+            'Your financial insights will appear here\nonce you give or take a loan.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 13.sp, color: KhaataTheme.textGrey),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Section label ────────────────────────────────────────────────────────────
+class _SectionLabel extends StatelessWidget {
   final IconData icon;
-  final String label;
-  final Color color;
-  const _SectionHeader(
-      {required this.icon, required this.label, required this.color});
+  final String text;
+  const _SectionLabel({required this.icon, required this.text});
 
   @override
   Widget build(BuildContext context) {
@@ -215,19 +274,18 @@ class _SectionHeader extends StatelessWidget {
         Container(
           padding: EdgeInsets.all(6.w),
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
+            color: KhaataTheme.primaryBlue.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8.r),
           ),
-          child: Icon(icon, color: color, size: 18.sp),
+          child: Icon(icon, color: KhaataTheme.primaryBlue, size: 16.sp),
         ),
-        SizedBox(width: 10.w),
+        SizedBox(width: 8.w),
         Text(
-          label,
+          text,
           style: TextStyle(
-            fontSize: 16.sp,
+            fontSize: 15.sp,
             fontWeight: FontWeight.w700,
-            color: color,
-            letterSpacing: -0.3,
+            color: KhaataTheme.textDark,
           ),
         ),
       ],
@@ -235,72 +293,58 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-// ── Lender banner ─────────────────────────────────────────────────────────────
-class _LenderBanner extends StatelessWidget {
+// ── Lender hero card ─────────────────────────────────────────────────────────
+class _LenderCard extends StatelessWidget {
   final LenderStats lender;
   final String Function(double) fmt;
-  const _LenderBanner({required this.lender, required this.fmt});
+  const _LenderCard({required this.lender, required this.fmt});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(18.w),
+      padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF184277), Color(0xFF1E5799)],
+          colors: [Color(0xFF059669), Color(0xFF10B981)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(16.r),
+        borderRadius: BorderRadius.circular(14.r),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF184277).withValues(alpha: 0.3),
-            blurRadius: 12,
+            color: const Color(0xFF059669).withValues(alpha: 0.25),
+            blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Total Lent',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.75),
-                    fontSize: 12.sp,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                SizedBox(height: 4.h),
-                Text(
-                  '₹${fmt(lender.totalLent)}',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 26.sp,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.5,
-                  ),
-                ),
-                SizedBox(height: 8.h),
-                Row(
-                  children: [
-                    _miniChip(
-                        '${lender.activeLoanCount} Active', Colors.white24),
+                Text('Total Lent',
+                    style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.8),
+                        fontSize: 12.sp)),
+                SizedBox(height: 2.h),
+                Text('₹${fmt(lender.totalLent)}',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24.sp,
+                        fontWeight: FontWeight.w800)),
+                SizedBox(height: 6.h),
+                Row(children: [
+                  _chip('${lender.activeLoanCount} Active'),
+                  SizedBox(width: 6.w),
+                  _chip('${lender.closedLoanCount} Closed'),
+                  if (lender.defaultedLoanCount > 0) ...[
                     SizedBox(width: 6.w),
-                    _miniChip(
-                        '${lender.closedLoanCount} Closed', Colors.white24),
-                    if (lender.defaultedLoanCount > 0) ...[
-                      SizedBox(width: 6.w),
-                      _miniChip('${lender.defaultedLoanCount} Defaulted',
-                          Colors.red.withValues(alpha: 0.35)),
-                    ],
+                    _chip('${lender.defaultedLoanCount} Defaulted'),
                   ],
-                ),
+                ]),
               ],
             ),
           ),
@@ -309,40 +353,27 @@ class _LenderBanner extends StatelessWidget {
             children: [
               Container(
                 padding:
-                    EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                    EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
                 decoration: BoxDecoration(
-                  color: lender.collectionRatePct >= 75
-                      ? const Color(0xFF4CAF50)
-                      : lender.collectionRatePct >= 50
-                          ? Colors.orange
-                          : Colors.red.shade400,
-                  borderRadius: BorderRadius.circular(20.r),
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(16.r),
                 ),
-                child: Text(
-                  '${lender.collectionRatePct}% Collected',
+                child: Text('${lender.collectionRatePct}% Collected',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 11.sp,
+                        fontWeight: FontWeight.w700)),
+              ),
+              SizedBox(height: 10.h),
+              Text('₹${fmt(lender.outstanding)}',
                   style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 12.sp,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              SizedBox(height: 12.h),
-              Text(
-                '₹${fmt(lender.outstanding)}',
-                style: TextStyle(
-                  color: Colors.orange.shade200,
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              Text(
-                'Outstanding',
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.6),
-                  fontSize: 11.sp,
-                ),
-              ),
+                      color: const Color(0xFFFEF3C7),
+                      fontSize: 15.sp,
+                      fontWeight: FontWeight.w700)),
+              Text('Outstanding',
+                  style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.6),
+                      fontSize: 10.sp)),
             ],
           ),
         ],
@@ -350,76 +381,196 @@ class _LenderBanner extends StatelessWidget {
     );
   }
 
-  Widget _miniChip(String text, Color bg) => Container(
-        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+  Widget _chip(String text) => Container(
+        padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 2.h),
         decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(10.r),
+          color: Colors.white.withValues(alpha: 0.18),
+          borderRadius: BorderRadius.circular(8.r),
         ),
-        child: Text(
-          text,
-          style: TextStyle(
-              color: Colors.white,
-              fontSize: 10.sp,
-              fontWeight: FontWeight.w600),
-        ),
+        child: Text(text,
+            style: TextStyle(
+                color: Colors.white,
+                fontSize: 9.sp,
+                fontWeight: FontWeight.w600)),
       );
 }
 
-// ── Lender stat grid ──────────────────────────────────────────────────────────
-class _LenderStatGrid extends StatelessWidget {
-  final LenderStats lender;
+// ── Borrower hero card ───────────────────────────────────────────────────────
+class _BorrowerCard extends StatelessWidget {
+  final BorrowerStats borrower;
   final String Function(double) fmt;
-  const _LenderStatGrid({required this.lender, required this.fmt});
+  const _BorrowerCard({required this.borrower, required this.fmt});
 
   @override
   Widget build(BuildContext context) {
-    return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisSpacing: 10.w,
-      mainAxisSpacing: 10.h,
-      childAspectRatio: 1.6,
-      children: [
-        _StatCard(
-          icon: Icons.download_rounded,
-          iconColor: const Color(0xFF2E8B3C),
-          iconBg: const Color(0xFFE8F5E9),
-          label: 'Collected',
-          value: '₹${fmt(lender.totalCollected)}',
-          valueColor: const Color(0xFF2E8B3C),
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF0D9488), Color(0xFF14B8A6)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        _StatCard(
-          icon: Icons.schedule_rounded,
-          iconColor: Colors.orange.shade700,
-          iconBg: Colors.orange.shade50,
-          label: 'Outstanding',
-          value: '₹${fmt(lender.outstanding)}',
-          valueColor: Colors.orange.shade700,
+        borderRadius: BorderRadius.circular(14.r),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0D9488).withValues(alpha: 0.25),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Total Borrowed',
+                    style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.8),
+                        fontSize: 12.sp)),
+                SizedBox(height: 2.h),
+                Text('₹${fmt(borrower.totalBorrowed)}',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24.sp,
+                        fontWeight: FontWeight.w800)),
+                SizedBox(height: 6.h),
+                Row(children: [
+                  _chip('${borrower.activeLoanCount} Active'),
+                  SizedBox(width: 6.w),
+                  _chip('${borrower.closedLoanCount} Closed'),
+                ]),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Container(
+                padding:
+                    EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(16.r),
+                ),
+                child: Text('${borrower.repaymentRatePct}% Repaid',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 11.sp,
+                        fontWeight: FontWeight.w700)),
+              ),
+              SizedBox(height: 10.h),
+              Text('₹${fmt(borrower.outstanding)}',
+                  style: TextStyle(
+                      color: const Color(0xFFFEE2E2),
+                      fontSize: 15.sp,
+                      fontWeight: FontWeight.w700)),
+              Text('Remaining',
+                  style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.6),
+                      fontSize: 10.sp)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _chip(String text) => Container(
+        padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 2.h),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.18),
+          borderRadius: BorderRadius.circular(8.r),
         ),
-        _StatCard(
-          icon: Icons.people_rounded,
-          iconColor: KhaataTheme.primaryBlue,
-          iconBg: const Color(0xFFE3F0FF),
-          label: 'Active Loans',
-          value: '${lender.activeLoanCount}',
-          valueColor: KhaataTheme.primaryBlue,
-        ),
-        _StatCard(
-          icon: Icons.check_circle_rounded,
-          iconColor: Colors.grey.shade600,
-          iconBg: Colors.grey.shade100,
-          label: 'Closed Loans',
-          value: '${lender.closedLoanCount}',
-          valueColor: Colors.grey.shade700,
-        ),
-      ],
+        child: Text(text,
+            style: TextStyle(
+                color: Colors.white,
+                fontSize: 9.sp,
+                fontWeight: FontWeight.w600)),
+      );
+}
+
+// ── Stat row (two cards side by side) ────────────────────────────────────────
+class _StatRow extends StatelessWidget {
+  final List<Widget> children;
+  const _StatRow({required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: children.map((c) => Expanded(child: c)).toList()
+        ..insert(1, SizedBox(width: 10.w)),
     );
   }
 }
 
-// ── Monthly bar chart ─────────────────────────────────────────────────────────
+// ── Mini stat card ───────────────────────────────────────────────────────────
+class _MiniStat extends StatelessWidget {
+  final IconData icon;
+  final Color iconBg;
+  final Color iconColor;
+  final String label;
+  final String value;
+  final Color valueColor;
+
+  const _MiniStat({
+    required this.icon,
+    required this.iconBg,
+    required this.iconColor,
+    required this.label,
+    required this.value,
+    required this.valueColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(12.w),
+      decoration: BoxDecoration(
+        color: KhaataTheme.cardWhite,
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: KhaataTheme.borderGrey),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: EdgeInsets.all(7.w),
+            decoration: BoxDecoration(
+              color: iconBg,
+              borderRadius: BorderRadius.circular(8.r),
+            ),
+            child: Icon(icon, color: iconColor, size: 16.sp),
+          ),
+          SizedBox(width: 8.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label,
+                    style: TextStyle(
+                        fontSize: 10.sp,
+                        color: KhaataTheme.textGrey,
+                        fontWeight: FontWeight.w500)),
+                SizedBox(height: 1.h),
+                Text(value,
+                    style: TextStyle(
+                        fontSize: 13.sp,
+                        fontWeight: FontWeight.w700,
+                        color: valueColor),
+                    overflow: TextOverflow.ellipsis),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Monthly chart ────────────────────────────────────────────────────────────
 class _MonthlyChart extends StatelessWidget {
   final List<MonthlyCollection> collections;
   final String Function(double) fmt;
@@ -431,17 +582,11 @@ class _MonthlyChart extends StatelessWidget {
         1, (m, e) => e.amountPaise > m ? e.amountPaise : m);
 
     return Container(
-      padding: EdgeInsets.all(16.w),
+      padding: EdgeInsets.all(14.w),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        color: KhaataTheme.cardWhite,
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: KhaataTheme.borderGrey),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -449,43 +594,39 @@ class _MonthlyChart extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Monthly Collections',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF1A1A2E),
-                ),
-              ),
-              Text(
-                'Last 6 months',
-                style: TextStyle(
-                    fontSize: 11.sp, color: Colors.grey.shade500),
-              ),
+              Text('Monthly Collections',
+                  style: TextStyle(
+                      fontSize: 13.sp,
+                      fontWeight: FontWeight.w600,
+                      color: KhaataTheme.textDark)),
+              Text('Last 6 months',
+                  style: TextStyle(
+                      fontSize: 10.sp, color: KhaataTheme.textGrey)),
             ],
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 14.h),
           SizedBox(
-            height: 100.h,
+            height: 90.h,
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: collections.map((c) {
                 final ratio = maxVal > 0 ? c.amountPaise / maxVal : 0.0;
-                final barH = (ratio * 80.h).clamp(4.0, 80.h);
+                final barH = (ratio * 70.h).clamp(3.0, 70.h);
                 return Expanded(
                   child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 4.w),
+                    padding: EdgeInsets.symmetric(horizontal: 3.w),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         if (c.amountPaise > 0)
                           Text(
-                            '₹${fmt(c.amountRupees ~/ 1000 > 0 ? c.amountRupees / 1000 : c.amountRupees)}${c.amountRupees >= 1000 ? 'k' : ''}',
+                            c.amountRupees >= 1000
+                                ? '${_fmtK(c.amountRupees)}k'
+                                : '₹${fmt(c.amountRupees)}',
                             style: TextStyle(
-                              fontSize: 8.sp,
-                              color: KhaataTheme.primaryBlue,
-                              fontWeight: FontWeight.w600,
-                            ),
+                                fontSize: 8.sp,
+                                color: KhaataTheme.primaryBlue,
+                                fontWeight: FontWeight.w600),
                           ),
                         SizedBox(height: 2.h),
                         AnimatedContainer(
@@ -493,28 +634,21 @@ class _MonthlyChart extends StatelessWidget {
                           curve: Curves.easeOut,
                           height: barH,
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                const Color(0xFF1E5799),
-                                KhaataTheme.primaryBlue,
-                              ],
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF10B981), Color(0xFF059669)],
                               begin: Alignment.bottomCenter,
                               end: Alignment.topCenter,
                             ),
                             borderRadius: BorderRadius.vertical(
-                              top: Radius.circular(4.r),
-                            ),
+                                top: Radius.circular(4.r)),
                           ),
                         ),
-                        SizedBox(height: 6.h),
-                        Text(
-                          c.month,
-                          style: TextStyle(
-                            fontSize: 10.sp,
-                            color: Colors.grey.shade500,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
+                        SizedBox(height: 4.h),
+                        Text(c.month,
+                            style: TextStyle(
+                                fontSize: 9.sp,
+                                color: KhaataTheme.textGrey,
+                                fontWeight: FontWeight.w500)),
                       ],
                     ),
                   ),
@@ -526,255 +660,8 @@ class _MonthlyChart extends StatelessWidget {
       ),
     );
   }
-}
 
-// ── Borrower banner ───────────────────────────────────────────────────────────
-class _BorrowerBanner extends StatelessWidget {
-  final BorrowerStats borrower;
-  final String Function(double) fmt;
-  const _BorrowerBanner({required this.borrower, required this.fmt});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(18.w),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF2E8B3C), Color(0xFF3DA64A)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16.r),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF2E8B3C).withValues(alpha: 0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Total Borrowed',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.75),
-                    fontSize: 12.sp,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                SizedBox(height: 4.h),
-                Text(
-                  '₹${fmt(borrower.totalBorrowed)}',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 26.sp,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.5,
-                  ),
-                ),
-                SizedBox(height: 8.h),
-                Row(
-                  children: [
-                    _miniChip(
-                        '${borrower.activeLoanCount} Active', Colors.white24),
-                    SizedBox(width: 6.w),
-                    _miniChip(
-                        '${borrower.closedLoanCount} Closed', Colors.white24),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Container(
-                padding:
-                    EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-                decoration: BoxDecoration(
-                  color: KhaataTheme.primaryBlue,
-                  borderRadius: BorderRadius.circular(20.r),
-                ),
-                child: Text(
-                  '${borrower.repaymentRatePct}% Repaid',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 12.sp,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              SizedBox(height: 12.h),
-              Text(
-                '₹${fmt(borrower.outstanding)}',
-                style: TextStyle(
-                  color: Colors.yellow.shade200,
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              Text(
-                'Remaining',
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.6),
-                  fontSize: 11.sp,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _miniChip(String text, Color bg) => Container(
-        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(10.r),
-        ),
-        child: Text(
-          text,
-          style: TextStyle(
-              color: Colors.white,
-              fontSize: 10.sp,
-              fontWeight: FontWeight.w600),
-        ),
-      );
-}
-
-// ── Borrower stat grid ────────────────────────────────────────────────────────
-class _BorrowerStatGrid extends StatelessWidget {
-  final BorrowerStats borrower;
-  final String Function(double) fmt;
-  const _BorrowerStatGrid({required this.borrower, required this.fmt});
-
-  @override
-  Widget build(BuildContext context) {
-    return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisSpacing: 10.w,
-      mainAxisSpacing: 10.h,
-      childAspectRatio: 1.6,
-      children: [
-        _StatCard(
-          icon: Icons.upload_rounded,
-          iconColor: const Color(0xFF2E8B3C),
-          iconBg: const Color(0xFFE8F5E9),
-          label: 'Repaid',
-          value: '₹${fmt(borrower.totalRepaid)}',
-          valueColor: const Color(0xFF2E8B3C),
-        ),
-        _StatCard(
-          icon: Icons.warning_amber_rounded,
-          iconColor: Colors.red.shade600,
-          iconBg: Colors.red.shade50,
-          label: 'Remaining',
-          value: '₹${fmt(borrower.outstanding)}',
-          valueColor: Colors.red.shade600,
-        ),
-        _StatCard(
-          icon: Icons.receipt_long_rounded,
-          iconColor: const Color(0xFF2E8B3C),
-          iconBg: const Color(0xFFE8F5E9),
-          label: 'Active Loans',
-          value: '${borrower.activeLoanCount}',
-          valueColor: const Color(0xFF2E8B3C),
-        ),
-        _StatCard(
-          icon: Icons.check_circle_rounded,
-          iconColor: Colors.grey.shade600,
-          iconBg: Colors.grey.shade100,
-          label: 'Closed Loans',
-          value: '${borrower.closedLoanCount}',
-          valueColor: Colors.grey.shade700,
-        ),
-      ],
-    );
-  }
-}
-
-// ── Reusable stat card ────────────────────────────────────────────────────────
-class _StatCard extends StatelessWidget {
-  final IconData icon;
-  final Color iconColor;
-  final Color iconBg;
-  final String label;
-  final String value;
-  final Color valueColor;
-
-  const _StatCard({
-    required this.icon,
-    required this.iconColor,
-    required this.iconBg,
-    required this.label,
-    required this.value,
-    required this.valueColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(14.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: EdgeInsets.all(8.w),
-            decoration: BoxDecoration(
-              color: iconBg,
-              borderRadius: BorderRadius.circular(10.r),
-            ),
-            child: Icon(icon, color: iconColor, size: 18.sp),
-          ),
-          SizedBox(width: 10.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 10.sp,
-                    color: Colors.grey.shade500,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                SizedBox(height: 2.h),
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 13.sp,
-                    fontWeight: FontWeight.w800,
-                    color: valueColor,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+  String _fmtK(double v) {
+    return (v / 1000).toStringAsFixed(v % 1000 == 0 ? 0 : 1);
   }
 }
