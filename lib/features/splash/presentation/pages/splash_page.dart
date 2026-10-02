@@ -180,20 +180,13 @@ class _SplashPageState extends State<SplashPage>
                         position: _slideAnimation,
                         child: ScaleTransition(
                           scale: _scaleAnimation,
-                          child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                AnimatedOpacity(
-                                  opacity: _controller.value > 0.3 ? 1.0 : 0.0,
-                                  duration: const Duration(milliseconds: 700),
-                                  child: SvgPicture.asset(
-                                    'assets/images/hand_credit_logo_splash.svg',
-                                    height: 160.h,
-                                    fit: BoxFit.contain,
-                                  ),
-                                ),
-                              ],
+                          child: Center(
+                            child: SvgPicture.asset(
+                              'assets/images/hand_credit_logo_splash.svg',
+                              width: MediaQuery.of(context).size.width * 0.75,
+                              fit: BoxFit.contain,
                             ),
+                          ),
                         ),
                       ),
                     );
