@@ -179,7 +179,12 @@ class ProfilePage extends StatelessWidget {
                           String? email;
                           bool isEmailVerified = false;
 
-                          final user = context.read<AuthCubit>().currentUser;
+                          // Use state directly so widget rebuilds when profileImageId changes
+                          final user = (state is Authenticated)
+                              ? state.user
+                              : (state is AuthOffline)
+                                  ? state.user
+                                  : context.read<AuthCubit>().currentUser;
 
                           if (user != null) {
                             fullName = user.displayName;
