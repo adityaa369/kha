@@ -130,6 +130,16 @@ class SecureStorage {
     return value != null ? DateTime.parse(value) : null;
   }
 
+  // Home Tour
+  static Future<void> setHomeTourCompleted(String userId, bool completed) async {
+    await _storage.write(key: 'home_tour_completed_$userId', value: completed.toString());
+  }
+
+  static Future<bool> isHomeTourCompleted(String userId) async {
+    final value = await _storage.read(key: 'home_tour_completed_$userId');
+    return value == 'true';
+  }
+
   // Clear auth credentials and sensitive caches to prevent crossuser leakage
   static Future<void> clearAuthData() async {
     await _storage.delete(key: _tokenKey);

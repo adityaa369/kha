@@ -19,21 +19,24 @@ import '../../../../core/widgets/looping_avatar.dart';
 import 'dart:async';
 import '../../../../data/models/loan_model.dart';
 import '../../../../config/constants.dart';
+import '../widgets/home_tour_widget.dart';
 
 class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+  final bool showHomeTour;
+  const HomePage({super.key, this.showHomeTour = false});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => NavigationCubit(),
-      child: const _HomeView(),
+      child: _HomeView(showHomeTour: showHomeTour),
     );
   }
 }
 
 class _HomeView extends StatefulWidget {
-  const _HomeView();
+  final bool showHomeTour;
+  const _HomeView({this.showHomeTour = false});
 
   @override
   State<_HomeView> createState() => _HomeViewState();
@@ -82,55 +85,67 @@ class _HomeViewState extends State<_HomeView> {
       (cubit) => cubit.state,
     );
 
-    return Scaffold(
-      backgroundColor: KhaataTheme.backgroundGrey,
-      body: IndexedStack(
-        index: currentIndex,
-        children: const [
-          HomeContent(),
-          MyLoansPage(),
-          InsightsPage(),
-          LoansGivenPage(),
-        ],
-      ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, -5),
-            ),
-          ],
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: EdgeInsets.symmetric(vertical: 8.h),
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _NavItem(icon: Icons.home_rounded, label: 'Home', index: 0),
-                _NavItem(
-                  icon: Icons.account_balance_wallet_rounded,
-                  label: 'My Loans',
-                  index: 1,
-                ),
-                _NavItem(
-                  icon: Icons.insights_rounded,
-                  label: 'Insights',
-                  index: 2,
-                ),
-                _NavItem(
-                  icon: Icons.handshake_rounded,
-                  label: 'Given',
-                  index: 3,
+    return Stack(
+      children: [
+        Scaffold(
+          backgroundColor: KhaataTheme.backgroundGrey,
+          body: IndexedStack(
+            index: currentIndex,
+            children: const [
+              HomeContent(),
+              MyLoansPage(),
+              InsightsPage(),
+              LoansGivenPage(),
+            ],
+          ),
+          bottomNavigationBar: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, -5),
                 ),
               ],
             ),
+            child: SafeArea(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 8.h),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _NavItem(icon: Icons.home_rounded, label: 'Home', index: 0),
+                    _NavItem(
+                      icon: Icons.account_balance_wallet_rounded,
+                      label: 'My Loans',
+                      index: 1,
+                    ),
+                    _NavItem(
+                      icon: Icons.insights_rounded,
+                      label: 'Insights',
+                      index: 2,
+                    ),
+                    _NavItem(
+                      icon: Icons.handshake_rounded,
+                      label: 'Given',
+                      index: 3,
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
-      ),
+        if (widget.showHomeTour)
+          HomeTourWidget(
+            onComplete: () {
+              // Once complete, hide without triggering a parent rebuild loop
+              // if it was handled internally. Actually, we should rebuild to remove it.
+              setState(() {});
+            },
+          ),
+      ],
     );
   }
 }

@@ -209,7 +209,11 @@ final router = GoRouter(
     ),
     GoRoute(
       path: AppConstants.home,
-      builder: (context, state) => const HomePage(),
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>?;
+        final showTour = extra?['showHomeTour'] == true;
+        return HomePage(showHomeTour: showTour);
+      },
     ),
     GoRoute(
       path: AppConstants.myLoans,

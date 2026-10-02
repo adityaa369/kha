@@ -57,7 +57,7 @@ class _RegistrationSuccessPageState extends State<RegistrationSuccessPage>
         if (user != null) {
           authCubit.checkAuthStatus();
         }
-        context.go(AppConstants.home);
+        context.go(AppConstants.home, extra: {'showHomeTour': true});
       }
     });
   }
