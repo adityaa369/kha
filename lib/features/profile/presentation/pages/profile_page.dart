@@ -70,26 +70,28 @@ class ProfilePage extends StatelessWidget {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: source);
     if (pickedFile == null) return;
-    
+
     if (!context.mounted) return;
-    
+
+    // Capture cubits before async gap to avoid BuildContext-across-async-gap warning
+    final loanCubit = context.read<LoanCubit>();
+    final authCubit = context.read<AuthCubit>();
+
     try {
       final file = File(pickedFile.path);
       final bytes = await file.readAsBytes();
-      final fileName = p.basename(file.path);
       final rawExt = p.extension(file.path).toLowerCase().replaceFirst('.', '');
       final fileType = rawExt == 'pdf' ? 'application/pdf' : rawExt == 'png' ? 'image/png' : 'image/jpeg';
-      final safeFileName = rawExt.isEmpty ? p.basename(file.path) + '.jpg' : p.basename(file.path);
-      
-      final documentId = await context.read<LoanCubit>().uploadDocument(
+      final safeFileName = rawExt.isEmpty ? '${p.basename(file.path)}.jpg' : p.basename(file.path);
+
+      final documentId = await loanCubit.uploadDocument(
         safeFileName,
         fileType,
         bytes,
       );
-      
-      if (!context.mounted) return;
-      await context.read<AuthCubit>().updateProfileImage(documentId);
-      
+
+      await authCubit.updateProfileImage(documentId);
+
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -171,7 +173,6 @@ class ProfilePage extends StatelessWidget {
                       child: BlocBuilder<AuthCubit, AuthState>(
                         builder: (context, state) {
                           String fullName = 'Loading...';
-                          String? gender;
                           String? email;
                           bool isEmailVerified = false;
 
@@ -179,7 +180,6 @@ class ProfilePage extends StatelessWidget {
 
                           if (user != null) {
                             fullName = user.displayName;
-                            gender = user.gender;
                             email = user.email;
                             isEmailVerified = user.isEmailVerified;
                           }
