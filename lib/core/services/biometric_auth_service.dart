@@ -13,10 +13,7 @@ class BiometricAuthService {
     }
   }
 
-  static import 'dart:developer';
-
-  Future<bool> authenticate() async {
-    log('[AUTH] biometric_gate');
+  static Future<bool> authenticate() async {
     try {
       final isSupported = await isDeviceSupported();
       if (!isSupported) return true;
