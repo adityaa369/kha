@@ -1,5 +1,8 @@
 {
   "dependencies": {
     "glob": "^13.0.6"
+  },
+  "devDependencies": {
+    "sharp": "^0.35.5"
   }
 }

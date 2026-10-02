@@ -65,7 +65,7 @@ class _ProfileAvatarState extends State<ProfileAvatar> {
             color: Colors.grey.shade200,
             image: _bytes != null
                 ? DecorationImage(
-                    image: MemoryImage(_bytes!),
+                    image: ResizeImage(MemoryImage(_bytes!), width: 300),
                     fit: BoxFit.cover,
                   )
                 : null,

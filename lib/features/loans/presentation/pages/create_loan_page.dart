@@ -17,6 +17,7 @@ import 'package:uuid/uuid.dart';
 import '../../../../core/services/biometric_auth_service.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import '../../../../core/utils/money.dart';
+import '../../utils/document_upload_orchestrator.dart';
 
 class CreateLoanPage extends StatefulWidget {
   final String loanType;
@@ -305,31 +306,17 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
     }
 
     if (_selectedDocumentFiles.isNotEmpty) {
-      List<String> newlyUploadedDocumentIds = [];
+      final orchestrator = DocumentUploadOrchestrator(context.read<LoanCubit>());
       try {
-        for (final file in _selectedDocumentFiles) {
-          final bytes = await file.readAsBytes();
-          final fileName = p.basename(file.path);
-          final fileType = p.extension(file.path).replaceFirst('.', '');
-          final documentId = await context.read<LoanCubit>().uploadDocument(
-            fileName,
-            fileType,
-            bytes,
-          );
-          newlyUploadedDocumentIds.add(documentId);
-        }
+        final newlyUploadedDocumentIds = await orchestrator.uploadAndGetIds(_selectedDocumentFiles);
+        _finalizeLoanCreation(phone, newlyUploadedDocumentIds);
       } catch (e) {
-        // Upload failed midway. Clean up any successful uploads so far.
-        for (final id in newlyUploadedDocumentIds) {
-          await context.read<LoanCubit>().deleteDocument(id);
-        }
         setState(() => _isLoading = false);
         if (mounted) {
           _showUploadFailedDialog(phone, 'Failed to upload document: $e');
         }
         return;
       }
-      _finalizeLoanCreation(phone, newlyUploadedDocumentIds);
     } else {
       _finalizeLoanCreation(phone, null);
     }
