@@ -801,6 +801,18 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
+
+  Future<void> updateProfileImage(String profileImageId) async {
+    try {
+      final updatedUser = await _repository.updateProfile({'profileImageId': profileImageId});
+      await SecureStorage.saveUserData(jsonEncode(updatedUser.toFullJson()));
+      emit(state.copyWith(user: updatedUser));
+    } catch (e) {
+      print('Failed to update profile image: $e');
+      rethrow;
+    }
+  }
+
   Future<void> logout() async {
     emit(AuthLoading());
     try {

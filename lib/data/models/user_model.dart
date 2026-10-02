@@ -15,6 +15,7 @@ class UserModel extends Equatable {
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final bool? backendKycComplete;
+  final String? profileImageId;
 
   const UserModel({
     required this.id,
@@ -48,6 +49,7 @@ class UserModel extends Equatable {
       gender: json['gender'],
       dob: json['dob'],
       backendKycComplete: json['isKycComplete'],
+      profileImageId: json['profileImageId'],
       createdAt: json['created_at'] != null || json['createdAt'] != null
           ? DateTime.parse(json['created_at'] ?? json['createdAt'])
           : null,
@@ -71,6 +73,7 @@ class UserModel extends Equatable {
       'gender': gender,
       'dob': dob,
       'isKycComplete': backendKycComplete,
+      'profileImageId': profileImageId,
     };
   }
 

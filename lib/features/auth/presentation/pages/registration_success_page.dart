@@ -54,10 +54,12 @@ class _RegistrationSuccessPageState extends State<RegistrationSuccessPage>
         // so the router allows navigation to home
         final authCubit = context.read<AuthCubit>();
         final user = authCubit.currentUser;
-        if (user != null) {
-          authCubit.checkAuthStatus();
-        }
-        context.go(AppConstants.home, extra: {'showHomeTour': true});
+                  if (user != null) {
+            // Set pending flag for home tour so it survives email verification
+            SecureStorage.setHomeTourPending(user.id, true);
+            authCubit.checkAuthStatus();
+          }
+          context.go(AppConstants.home);
       }
     });
   }

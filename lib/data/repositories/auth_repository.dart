@@ -35,6 +35,17 @@ class AuthRepository extends BaseRepository {
     });
   }
 
+
+  Future<UserModel> updateProfile(Map<String, dynamic> data) async {
+    return await handleApiCall(() async {
+      final response = await _api.put('/auth/profile', data: data);
+      if (response.data['success'] == true) {
+        return UserModel.fromJson(response.data['data']);
+      }
+      throw ServerFailure(response.data['message'] ?? 'Profile update failed');
+    });
+  }
+
   Future<UserModel> registerDetails(Map<String, dynamic> data) async {
     return await handleApiCall(() async {
       final response = await _api.post('/auth/register', data: data);

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:open_mail_app/open_mail_app.dart';
 import '../../../../config/theme.dart';
 import '../../../../config/constants.dart';
 import '../../../../core/blocs/auth/auth_cubit.dart';
@@ -41,12 +42,21 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
     return '${name.substring(0, 2)}****@${parts[1]}';
   }
 
-  Future<void> _openEmailApp() async {
-    final uri = Uri(scheme: 'mailto');
-    try {
-      await launchUrl(uri);
-    } catch (_) {
-      // Silently fail if no email app available
+    Future<void> _openEmailApp() async {
+    final result = await OpenMailApp.openMailApp();
+    if (!result.didOpen && !result.canOpen) {
+      // Fallback
+      final uri = Uri.parse('https://mail.google.com/');
+      try {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } catch (_) {}
+    } else if (!result.didOpen && result.canOpen) {
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (_) => MailAppPickerDialog(mailApps: result.options),
+        );
+      }
     }
   }
 
@@ -268,22 +278,27 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
           child: ElevatedButton.icon(
             onPressed: _openEmailApp,
             icon: Icon(Icons.email_outlined, size: 20.sp),
-            label: Text(
-              'Open Email App',
-              style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: KhaataTheme.primaryBlue,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.r),
+                          label: Text(
+                'Open Gmail',
+                style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600),
               ),
-              elevation: 0,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: KhaataTheme.primaryBlue,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                elevation: 0,
+              ),
             ),
           ),
-        ),
-
-        SizedBox(height: 16.h),
+          SizedBox(height: 8.h),
+          Text(
+            "Didn't receive the email? Check your Spam or Junk folder.",
+            style: TextStyle(fontSize: 12.sp, color: Colors.grey.shade600),
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: 16.h),
 
         // Resend Email button
         SizedBox(

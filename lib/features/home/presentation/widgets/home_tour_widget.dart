@@ -77,10 +77,11 @@ class _HomeTourWidgetState extends State<HomeTourWidget> with TickerProviderStat
       return;
     }
     _userId = user.id;
+    final pending = await SecureStorage.isHomeTourPending(_userId!);
     final completed = await SecureStorage.isHomeTourCompleted(_userId!);
     
     if (mounted) {
-      if (completed) {
+      if (!pending || completed) {
         widget.onComplete();
       } else {
         setState(() {
@@ -95,6 +96,7 @@ class _HomeTourWidgetState extends State<HomeTourWidget> with TickerProviderStat
   Future<void> _finishTour() async {
     if (_userId != null) {
       await SecureStorage.setHomeTourCompleted(_userId!, true);
+      await SecureStorage.setHomeTourPending(_userId!, false);
     }
     if (mounted) {
       await _entranceController.reverse();

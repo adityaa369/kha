@@ -8,10 +8,96 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/blocs/auth/auth_cubit.dart';
 import '../../../../core/blocs/loans/loan_cubit.dart';
 import '../../../../core/widgets/looping_avatar.dart';
+import '../widgets/profile_avatar.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:khatha/core/blocs/loans/loan_cubit.dart';
+import 'dart:io';
+import 'package:path/path.dart' as p;
 import '../widgets/verify_email_bottom_sheet.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
+
+
+  Future<void> _showImagePicker(BuildContext context) async {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      builder: (bottomSheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: 16.h),
+              child: Text(
+                'Profile Photo',
+                style: TextStyle(
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            Divider(height: 1, color: Colors.grey.shade200),
+            ListTile(
+              leading: const Icon(Icons.camera_alt_outlined),
+              title: const Text('Take Photo'),
+              onTap: () {
+                Navigator.pop(bottomSheetContext);
+                _pickAndUploadImage(context, ImageSource.camera);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: const Text('Choose from Gallery'),
+              onTap: () {
+                Navigator.pop(bottomSheetContext);
+                _pickAndUploadImage(context, ImageSource.gallery);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.close, color: Colors.red),
+              title: const Text('Cancel', style: TextStyle(color: Colors.red)),
+              onTap: () => Navigator.pop(bottomSheetContext),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickAndUploadImage(BuildContext context, ImageSource source) async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: source);
+    if (pickedFile == null) return;
+    
+    if (!context.mounted) return;
+    
+    try {
+      final file = File(pickedFile.path);
+      final bytes = await file.readAsBytes();
+      final fileName = p.basename(file.path);
+      final fileType = p.extension(file.path).replaceFirst('.', '');
+      
+      final documentId = await context.read<LoanCubit>().uploadDocument(
+        fileName,
+        fileType,
+        bytes,
+      );
+      
+      if (!context.mounted) return;
+      await context.read<AuthCubit>().updateProfileImage(documentId);
+      
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update profile photo: $e')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -100,16 +186,31 @@ class ProfilePage extends StatelessWidget {
 
                           return Column(
                             children: [
-                              Container(
-                                width: 72.w,
-                                height: 72.w,
-                                decoration: const BoxDecoration(
-                                  color: Colors.transparent,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: LoopingAvatar(
-                                  gender: gender,
-                                  height: 72.w,
+                              GestureDetector(
+                                onTap: () => _showImagePicker(context),
+                                child: Stack(
+                                  children: [
+                                    ProfileAvatar(
+                                      profileImageId: user?.profileImageId,
+                                      gender: gender,
+                                    ),
+                                    Positioned(
+                                      bottom: 0,
+                                      right: 0,
+                                      child: Container(
+                                        padding: EdgeInsets.all(4.w),
+                                        decoration: const BoxDecoration(
+                                          color: KhaataTheme.primaryBlue,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Icon(
+                                          Icons.edit,
+                                          size: 14.sp,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                               SizedBox(height: 12.h),

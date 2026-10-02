@@ -29,7 +29,7 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => NavigationCubit(),
-      child: _HomeView(showHomeTour: showHomeTour),
+      child: const _HomeView(),
     );
   }
 }
