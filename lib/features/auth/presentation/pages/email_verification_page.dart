@@ -42,17 +42,19 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
   }
 
     Future<void> _openEmailApp() async {
-    // 1. Try mailto: — triggers Android's native app chooser (Gmail, Outlook, etc.)
-    //    This works on all devices regardless of custom scheme support.
-    final mailtoUri = Uri(scheme: 'mailto');
-    if (await canLaunchUrl(mailtoUri)) {
-      await launchUrl(mailtoUri, mode: LaunchMode.externalApplication);
-      return;
-    }
-    // 2. Try googlegmail:// deep link (works on some Gmail versions)
+    // 1. googlegmail:// opens Gmail inbox directly (works on most devices)
     final gmailUri = Uri.parse('googlegmail://');
     if (await canLaunchUrl(gmailUri)) {
       await launchUrl(gmailUri, mode: LaunchMode.externalApplication);
+      return;
+    }
+    // 2. Android Intent URI targeting Gmail package specifically
+    //    This opens Gmail inbox even when googlegmail:// scheme isn't registered
+    final gmailIntentUri = Uri.parse(
+      'intent://inbox#Intent;scheme=googlegmail;package=com.google.android.gm;end',
+    );
+    if (await canLaunchUrl(gmailIntentUri)) {
+      await launchUrl(gmailIntentUri, mode: LaunchMode.externalApplication);
       return;
     }
     // 3. Last resort: open Gmail web in browser
