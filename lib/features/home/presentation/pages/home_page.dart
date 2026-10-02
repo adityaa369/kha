@@ -15,7 +15,7 @@ import '../cubit/notification_cubit.dart';
 import '../cubit/notification_state.dart';
 import '../../../loans/presentation/pages/my_loans_page.dart';
 import '../../../../core/services/notification_service.dart';
-import '../../profile/presentation/widgets/profile_avatar.dart';
+import '../../../profile/presentation/widgets/profile_avatar.dart';
 import 'dart:async';
 import '../../../../data/models/loan_model.dart';
 import '../../../../config/constants.dart';
