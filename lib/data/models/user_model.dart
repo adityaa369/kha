@@ -32,6 +32,7 @@ class UserModel extends Equatable {
     this.createdAt,
     this.updatedAt,
     this.backendKycComplete,
+    this.profileImageId,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {

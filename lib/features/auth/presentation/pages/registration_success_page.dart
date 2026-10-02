@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../config/theme.dart';
 import '../../../../config/constants.dart';
 import '../../../../core/blocs/auth/auth_cubit.dart';
+import '../../../../core/utils/secure_storage.dart';
 
 class RegistrationSuccessPage extends StatefulWidget {
   const RegistrationSuccessPage({super.key});

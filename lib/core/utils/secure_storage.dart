@@ -130,6 +130,15 @@ class SecureStorage {
     return value != null ? DateTime.parse(value) : null;
   }
 
+  static Future<void> setHomeTourPending(String userId, bool pending) async {
+    await _storage.write(key: 'home_tour_pending_', value: pending.toString());
+  }
+
+  static Future<bool> isHomeTourPending(String userId) async {
+    final value = await _storage.read(key: 'home_tour_pending_');
+    return value == 'true';
+  }
+
   // Home Tour
   static Future<void> setHomeTourCompleted(String userId, bool completed) async {
     await _storage.write(key: 'home_tour_completed_$userId', value: completed.toString());
