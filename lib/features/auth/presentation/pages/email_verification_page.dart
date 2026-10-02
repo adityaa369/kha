@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:open_mail_app/open_mail_app.dart';
 import '../../../../config/theme.dart';
 import '../../../../config/constants.dart';
 import '../../../../core/blocs/auth/auth_cubit.dart';
@@ -43,21 +42,17 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
   }
 
     Future<void> _openEmailApp() async {
-    final result = await OpenMailApp.openMailApp();
-    if (!result.didOpen && !result.canOpen) {
-      // Fallback
-      final uri = Uri.parse('https://mail.google.com/');
-      try {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } catch (_) {}
-    } else if (!result.didOpen && result.canOpen) {
-      if (mounted) {
-        showDialog(
-          context: context,
-          builder: (_) => MailAppPickerDialog(mailApps: result.options),
-        );
-      }
+    // Try to open Gmail app directly to inbox
+    final gmailUri = Uri.parse('googlegmail://');
+    if (await canLaunchUrl(gmailUri)) {
+      await launchUrl(gmailUri, mode: LaunchMode.externalApplication);
+      return;
     }
+    // Fallback: open Gmail web in browser
+    final webUri = Uri.parse('https://mail.google.com/');
+    try {
+      await launchUrl(webUri, mode: LaunchMode.externalApplication);
+    } catch (_) {}
   }
 
   @override
