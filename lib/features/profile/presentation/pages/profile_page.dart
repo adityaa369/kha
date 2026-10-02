@@ -7,10 +7,8 @@ import '../../../../config/theme.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/blocs/auth/auth_cubit.dart';
 import '../../../../core/blocs/loans/loan_cubit.dart';
-import '../../../../core/widgets/looping_avatar.dart';
 import '../widgets/profile_avatar.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:khatha/core/blocs/loans/loan_cubit.dart';
 import 'dart:io';
 import 'package:path/path.dart' as p;
 import '../widgets/verify_email_bottom_sheet.dart';
@@ -79,10 +77,12 @@ class ProfilePage extends StatelessWidget {
       final file = File(pickedFile.path);
       final bytes = await file.readAsBytes();
       final fileName = p.basename(file.path);
-      final fileType = p.extension(file.path).replaceFirst('.', '');
+      final rawExt = p.extension(file.path).toLowerCase().replaceFirst('.', '');
+      final fileType = rawExt == 'pdf' ? 'application/pdf' : rawExt == 'png' ? 'image/png' : 'image/jpeg';
+      final safeFileName = rawExt.isEmpty ? p.basename(file.path) + '.jpg' : p.basename(file.path);
       
       final documentId = await context.read<LoanCubit>().uploadDocument(
-        fileName,
+        safeFileName,
         fileType,
         bytes,
       );
@@ -188,29 +188,8 @@ class ProfilePage extends StatelessWidget {
                             children: [
                               GestureDetector(
                                 onTap: () => _showImagePicker(context),
-                                child: Stack(
-                                  children: [
-                                    ProfileAvatar(
-                                      profileImageId: user?.profileImageId,
-                                      gender: gender,
-                                    ),
-                                    Positioned(
-                                      bottom: 0,
-                                      right: 0,
-                                      child: Container(
-                                        padding: EdgeInsets.all(4.w),
-                                        decoration: const BoxDecoration(
-                                          color: KhaataTheme.primaryBlue,
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: Icon(
-                                          Icons.edit,
-                                          size: 14.sp,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                                child: ProfileAvatar(
+                                  profileImageId: user?.profileImageId,
                                 ),
                               ),
                               SizedBox(height: 12.h),

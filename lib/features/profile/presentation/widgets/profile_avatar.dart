@@ -2,15 +2,12 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:khatha/core/blocs/auth/auth_cubit.dart';
 import 'package:khatha/data/repositories/loan_repository.dart';
-import 'package:khatha/core/widgets/looping_avatar.dart';
 
 class ProfileAvatar extends StatefulWidget {
   final String? profileImageId;
-  final String? gender;
 
-  const ProfileAvatar({super.key, this.profileImageId, this.gender});
+  const ProfileAvatar({super.key, this.profileImageId});
 
   @override
   State<ProfileAvatar> createState() => _ProfileAvatarState();
@@ -18,6 +15,7 @@ class ProfileAvatar extends StatefulWidget {
 
 class _ProfileAvatarState extends State<ProfileAvatar> {
   Uint8List? _bytes;
+  bool _loading = false;
 
   @override
   void initState() {
@@ -38,32 +36,72 @@ class _ProfileAvatarState extends State<ProfileAvatar> {
       if (mounted) setState(() => _bytes = null);
       return;
     }
+    if (mounted) setState(() => _loading = true);
     try {
       final repo = context.read<LoanRepository>();
       final docResp = await repo.getSignedDocumentUrl(widget.profileImageId!);
       if (mounted) {
-        setState(() => _bytes = docResp.bytes);
+        setState(() {
+          _bytes = docResp.bytes;
+          _loading = false;
+        });
       }
-    } catch (e) {
-      // Fallback
+    } catch (_) {
+      if (mounted) setState(() => _loading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_bytes != null) {
-      return Container(
-        width: 72.w,
-        height: 72.w,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          image: DecorationImage(
-            image: MemoryImage(_bytes!),
-            fit: BoxFit.cover,
+    final size = 88.w;
+    return Stack(
+      children: [
+        // Circle background + image or icon
+        Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.grey.shade200,
+            image: _bytes != null
+                ? DecorationImage(
+                    image: MemoryImage(_bytes!),
+                    fit: BoxFit.cover,
+                  )
+                : null,
+          ),
+          child: _loading
+              ? const Center(
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : _bytes == null
+                  ? Icon(
+                      Icons.person,
+                      size: size * 0.55,
+                      color: Colors.grey.shade500,
+                    )
+                  : null,
+        ),
+
+        // Edit badge
+        Positioned(
+          bottom: 0,
+          right: 0,
+          child: Container(
+            width: 26.w,
+            height: 26.w,
+            decoration: const BoxDecoration(
+              color: Color(0xFF1565C0), // primaryBlue
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.camera_alt,
+              size: 14.sp,
+              color: Colors.white,
+            ),
           ),
         ),
-      );
-    }
-    return LoopingAvatar(gender: widget.gender, height: 72.w);
+      ],
+    );
   }
 }
