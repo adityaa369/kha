@@ -67,6 +67,7 @@ class ProfilePage extends StatelessWidget {
   }
 
   Future<void> _pickAndUploadImage(BuildContext context, ImageSource source) async {
+    log('[PROFILE] update start');
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: source, imageQuality: 50);
     if (pickedFile == null) return;
@@ -102,7 +103,10 @@ class ProfilePage extends StatelessWidget {
   }
 
   @override
+  import 'dart:developer';
+
   Widget build(BuildContext context) {
+    log('[PROFILE] open / build');
     final authState = context.watch<AuthCubit>().state;
     bool isAdmin = false;
     if (authState is Authenticated) {
@@ -537,7 +541,10 @@ class _MenuTile extends StatelessWidget {
   });
 
   @override
+  import 'dart:developer';
+
   Widget build(BuildContext context) {
+    log('[PROFILE] open / build');
     return ListTile(
       onTap: onTap,
       contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),

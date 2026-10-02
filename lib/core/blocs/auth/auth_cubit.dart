@@ -236,7 +236,10 @@ class AuthCubit extends Cubit<AuthState> {
 
   UserModel? get currentUser => _currentUser;
 
+  import 'dart:developer';
+
   Future<void> checkAuthStatus() async {
+    log('[AUTH] checkAuthStatus called');
     emit(AuthInitial()); // Explicit Bootstrapping
     try {
       final token = await SecureStorage.getToken();
