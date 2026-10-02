@@ -501,8 +501,11 @@ class _StatRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      children: children.map((c) => Expanded(child: c)).toList()
-        ..insert(1, SizedBox(width: 10.w)),
+      children: [
+        Expanded(child: children[0]),
+        SizedBox(width: 10.w),
+        Expanded(child: children[1]),
+      ],
     );
   }
 }
