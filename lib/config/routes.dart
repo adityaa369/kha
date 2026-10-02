@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -78,7 +79,8 @@ final router = GoRouter(
     // Bootstrapping Phase Trap in Splash and preserve intent via query param
     if (authState is AuthInitial) {
       if (state.uri.path != AppConstants.splash) {
-        return '${AppConstants.splash}?redirect_to=${Uri.encodeComponent(state.uri.toString())}';
+        log('[ROUTER] redirecting to splash because AuthInitial');
+          return '${AppConstants.splash}?redirect_to=${Uri.encodeComponent(state.uri.toString())}';
       }
       return null;
     }

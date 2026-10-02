@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:local_auth/error_codes.dart' as auth_error;
@@ -14,6 +15,7 @@ class BiometricAuthService {
   }
 
   static Future<bool> authenticate() async {
+    log('[AUTH] biometric_gate');
     try {
       final isSupported = await isDeviceSupported();
       if (!isSupported) return true;

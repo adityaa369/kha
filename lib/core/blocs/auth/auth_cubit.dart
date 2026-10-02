@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:convert';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/painting.dart';
@@ -237,6 +238,7 @@ class AuthCubit extends Cubit<AuthState> {
   UserModel? get currentUser => _currentUser;
 
   Future<void> checkAuthStatus() async {
+    log('[AUTH] checkAuthStatus called');
     emit(AuthInitial()); // Explicit Bootstrapping
     try {
       final token = await SecureStorage.getToken();
