@@ -1287,6 +1287,7 @@ class HandLoanDetailsPage extends StatelessWidget {
     final canEdit = isLender && isActive;
 
     return Container(
+      width: double.infinity,
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -1315,12 +1316,8 @@ class HandLoanDetailsPage extends StatelessWidget {
               child: Row(
                 children: List.generate(duration, (index) {
                   final isPaid = index < paidMonths;
-                  final dueDate =
-                      (loan.startDate ??
-                              loan.activatedAt ??
-                              loan.createdAt ??
-                              DateTime.now())
-                          .add(Duration(days: (index + 1) * 30));
+                  final startDate = (loan.startDate ?? loan.activatedAt ?? loan.createdAt ?? DateTime.now()).add(Duration(days: index * 30));
+                  final dueDate = startDate.add(const Duration(days: 30));
 
                   return GestureDetector(
                     onTap: canEdit
@@ -1337,16 +1334,25 @@ class HandLoanDetailsPage extends StatelessWidget {
                       child: Column(
                         children: [
                           Text(
-                            '${_monthName(dueDate.month)} ${dueDate.year}',
+                            'Month ${index + 1}',
                             style: TextStyle(
-                              fontSize: 10.sp,
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          SizedBox(height: 2.h),
+                          Text(
+                            '${_monthName(startDate.month)} ${startDate.day.toString().padLeft(2, '0')} - ${_monthName(dueDate.month)} ${dueDate.day.toString().padLeft(2, '0')}',
+                            style: TextStyle(
+                              fontSize: 9.sp,
                               color: Colors.grey.shade600,
                             ),
                           ),
-                          SizedBox(height: 6.h),
+                          SizedBox(height: 8.h),
                           Container(
-                            width: 50.w,
-                            height: 55.h,
+                            width: 60.w,
+                            height: 70.h,
                             decoration: BoxDecoration(
                               color: isPaid
                                   ? Colors.green.shade50
