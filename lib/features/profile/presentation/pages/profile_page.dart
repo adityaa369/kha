@@ -17,7 +17,6 @@ import '../widgets/verify_email_bottom_sheet.dart';
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
 
-
   Future<void> _showImagePicker(BuildContext context) async {
     showModalBottomSheet(
       context: context,
@@ -33,10 +32,7 @@ class ProfilePage extends StatelessWidget {
               padding: EdgeInsets.symmetric(vertical: 16.h),
               child: Text(
                 'Profile Photo',
-                style: TextStyle(
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.w600),
               ),
             ),
             Divider(height: 1, color: Colors.grey.shade200),
@@ -67,7 +63,10 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  Future<void> _pickAndUploadImage(BuildContext context, ImageSource source) async {
+  Future<void> _pickAndUploadImage(
+    BuildContext context,
+    ImageSource source,
+  ) async {
     log('[PROFILE] update start');
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: source, imageQuality: 50);
@@ -83,8 +82,14 @@ class ProfilePage extends StatelessWidget {
       final file = File(pickedFile.path);
       final bytes = await file.readAsBytes();
       final rawExt = p.extension(file.path).toLowerCase().replaceFirst('.', '');
-      final fileType = rawExt == 'pdf' ? 'application/pdf' : rawExt == 'png' ? 'image/png' : 'image/jpeg';
-      final safeFileName = rawExt.isEmpty ? '${p.basename(file.path)}.jpg' : p.basename(file.path);
+      final fileType = rawExt == 'pdf'
+          ? 'application/pdf'
+          : rawExt == 'png'
+          ? 'image/png'
+          : 'image/jpeg';
+      final safeFileName = rawExt.isEmpty
+          ? '${p.basename(file.path)}.jpg'
+          : p.basename(file.path);
 
       final documentId = await loanCubit.uploadDocument(
         safeFileName,
@@ -93,7 +98,6 @@ class ProfilePage extends StatelessWidget {
       );
 
       await authCubit.updateProfileImage(documentId);
-
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -183,8 +187,8 @@ class ProfilePage extends StatelessWidget {
                           final user = (state is Authenticated)
                               ? state.user
                               : (state is AuthOffline)
-                                  ? state.user
-                                  : context.read<AuthCubit>().currentUser;
+                              ? state.user
+                              : context.read<AuthCubit>().currentUser;
 
                           if (user != null) {
                             fullName = user.displayName;
@@ -355,20 +359,6 @@ class ProfilePage extends StatelessWidget {
                             color: Colors.grey[200],
                           ),
                           _MenuTile(
-                            icon: Icons.account_balance_outlined,
-                            title: 'Bank Account',
-                            subtitle: 'Manage your linked bank accounts',
-                            onTap: () => _showComingSoon(
-                              context,
-                              'Bank Account Manager',
-                            ),
-                          ),
-                          Divider(
-                            height: 1,
-                            indent: 56.w,
-                            color: Colors.grey[200],
-                          ),
-                          _MenuTile(
                             icon: Icons.description_outlined,
                             title: 'Legal Information',
                             subtitle: 'Terms and Conditions',
@@ -384,10 +374,8 @@ class ProfilePage extends StatelessWidget {
                             icon: Icons.notifications_none,
                             title: 'Notifications',
                             subtitle: 'Manage your notification preferences',
-                            onTap: () => _showComingSoon(
-                              context,
-                              'Notification Settings',
-                            ),
+                            onTap: () =>
+                                context.push('/notification-preferences'),
                           ),
                           Divider(
                             height: 1,
@@ -402,18 +390,6 @@ class ProfilePage extends StatelessWidget {
                               // Implement Share functionality or show dialog
                               _showComingSoon(context, 'Share App');
                             },
-                          ),
-                          Divider(
-                            height: 1,
-                            indent: 56.w,
-                            color: Colors.grey[200],
-                          ),
-                          _MenuTile(
-                            icon: Icons.chat_bubble_outline,
-                            title: 'Alerts on WhatsApp',
-                            subtitle: 'Keep up with all important updates',
-                            onTap: () =>
-                                _showComingSoon(context, 'WhatsApp Alerts'),
                           ),
                           Divider(
                             height: 1,

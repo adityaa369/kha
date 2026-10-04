@@ -12,7 +12,6 @@ import 'hand_loan_details_page.dart';
 import 'interest_loan_details_page.dart';
 import 'lender_loan_details_page.dart';
 
-
 class LoanDetailsPage extends StatefulWidget {
   final String loanId;
 
@@ -79,28 +78,30 @@ class _LoanDetailsPageState extends State<LoanDetailsPage> {
                 body: Column(
                   children: [
                     Expanded(child: detailPage),
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.1),
-                            blurRadius: 4,
-                            offset: const Offset(0, -2),
+                    SafeArea(
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.1),
+                              blurRadius: 4,
+                              offset: const Offset(0, -2),
+                            ),
+                          ],
+                        ),
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: 50,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              context.push(
+                                '${AppConstants.loanApproval}/${loan.id}',
+                              );
+                            },
+                            child: const Text('Review & Approve Agreement'),
                           ),
-                        ],
-                      ),
-                      child: SizedBox(
-                        width: double.infinity,
-                        height: 50,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            context.push(
-                              '${AppConstants.loanApproval}/${loan.id}',
-                            );
-                          },
-                          child: const Text('Review & Approve Agreement'),
                         ),
                       ),
                     ),
