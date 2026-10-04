@@ -33,7 +33,7 @@ class LoansGivenPage extends StatelessWidget {
           },
         ),
         title: Text(
-          'Given Loans',
+          'Given Credits',
           style: TextStyle(
             color: Colors.black87,
             fontSize: 18.sp,
@@ -110,7 +110,7 @@ class LoansGivenPage extends StatelessWidget {
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
                 child: Text(
-                  'All Loans',
+                  'All Credits',
                   style: TextStyle(
                     fontSize: 16.sp,
                     fontWeight: FontWeight.w700,

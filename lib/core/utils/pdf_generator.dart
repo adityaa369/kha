@@ -35,7 +35,7 @@ class PdfGenerator {
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
                   pw.Text(
-                    'Khataa Loan Statement',
+                    'Khataa Credit Statement',
                     style: pw.TextStyle(
                       fontSize: 24,
                       fontWeight: pw.FontWeight.bold,
@@ -101,7 +101,7 @@ class PdfGenerator {
         build: (context) => [
           // Section 1 Loan Summary
           pw.Text(
-            '1. Loan Summary',
+            '1. Credit Summary',
             style: pw.TextStyle(
               fontSize: 14,
               fontWeight: pw.FontWeight.bold,

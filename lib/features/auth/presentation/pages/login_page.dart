@@ -103,7 +103,7 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                             SizedBox(height: 4.h),
                             Text(
-                              'Sign in with OTP to manage your loans & credits',
+                              'Sign in with OTP to manage your credits & credits',
                               style: TextStyle(
                                 fontSize: 12.sp,
                                 color: KhaataTheme.textGrey,

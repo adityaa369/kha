@@ -425,7 +425,7 @@ class _LoanCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Loan Amount',
+                            'Credit Amount',
                             style: TextStyle(
                               color: Colors.grey,
                               fontSize: 11.sp,

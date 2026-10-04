@@ -244,14 +244,14 @@ class _EmptyState extends StatelessWidget {
           Icon(Icons.bar_chart_rounded,
               size: 64.sp, color: KhaataTheme.borderGrey),
           SizedBox(height: 16.h),
-          Text('No loan activity yet',
+          Text('No credit activity yet',
               style: TextStyle(
                   fontSize: 16.sp,
                   fontWeight: FontWeight.w600,
                   color: KhaataTheme.textGrey)),
           SizedBox(height: 8.h),
           Text(
-            'Your financial insights will appear here\nonce you give or take a loan.',
+            'Your financial insights will appear here\nonce you give or take a credit.',
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 13.sp, color: KhaataTheme.textGrey),
           ),

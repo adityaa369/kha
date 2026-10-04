@@ -118,7 +118,7 @@ class _HomeViewState extends State<_HomeView> {
                     _NavItem(icon: Icons.home_rounded, label: 'Home', index: 0),
                     _NavItem(
                       icon: Icons.account_balance_wallet_rounded,
-                      label: 'My Loans',
+                      label: 'My Credits',
                       index: 1,
                     ),
                     _NavItem(
@@ -828,7 +828,7 @@ class _PaymentsSection extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Failed to load loans',
+                    'Failed to load credits',
                     style: TextStyle(color: Colors.red, fontSize: 14.sp),
                   ),
                   SizedBox(height: 8.h),

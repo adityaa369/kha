@@ -117,13 +117,13 @@ class _LoanDetailsPageState extends State<LoanDetailsPage> {
   }
 
   Widget _buildErrorState(Object? error) {
-    String message = 'Failed to load loan.';
+    String message = 'Failed to load credit.';
     if (error is AuthFailure) {
       message = "You don't have permission to view this loan.";
     } else if (error is ValidationFailure) {
-      message = 'Loan not found.';
+      message = 'Credit not found.';
     } else if (error is BusinessLogicFailure) {
-      message = 'Cannot display this loan.';
+      message = 'Cannot display this credit.';
     } else if (error is Failure) {
       message = error.message;
     }

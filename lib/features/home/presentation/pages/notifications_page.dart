@@ -520,7 +520,7 @@ class _EmptyState extends StatelessWidget {
           ),
           SizedBox(height: 6.h),
           Text(
-            'Loan and payment updates\nwill appear here.',
+            'Credit and payment updates\nwill appear here.',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 13.sp,

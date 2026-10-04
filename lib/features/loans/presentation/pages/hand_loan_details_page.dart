@@ -161,7 +161,7 @@ class HandLoanDetailsPage extends StatelessWidget {
                 onPressed: () => CloseLoanSheet.show(context, loan),
                 icon: Icon(Icons.check_circle_outline, size: 16.sp),
                 label: Text(
-                  'Close Loan',
+                  'Close Credit',
                   style: TextStyle(
                     fontSize: 12.sp,
                     fontWeight: FontWeight.bold,

@@ -140,7 +140,7 @@ class _SecurityHubPageState extends State<SecurityHubPage>
                               ),
                               SizedBox(height: 8.h),
                               Text(
-                                "Verify your email to accept loans and unlock all features.",
+                                "Verify your email to accept credits and unlock all features.",
                                 style: TextStyle(
                                   color: Colors.orange.shade900,
                                   fontSize: 13.sp,

@@ -220,7 +220,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text(
-          'Loan Summary',
+          'Credit Summary',
           style: TextStyle(
             color: KhaataTheme.primaryBlue,
             fontWeight: FontWeight.bold,
@@ -451,7 +451,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
       builder: (context) => AlertDialog(
         title: const Text('User Not Found'),
         content: const Text(
-          'This phone number is not registered on Khaata. Please ask the borrower to register first.',
+          'This phone number is not registered on App. Please ask the borrower to register first.',
         ),
         actions: [
           TextButton(onPressed: () => context.pop(), child: const Text('OK')),
@@ -792,10 +792,10 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const _NumberedHeader(number: 2, title: 'Loan Details'),
+              const _NumberedHeader(number: 2, title: 'Credit Details'),
               SizedBox(height: 16.h),
               KhaataTextField(
-                label: 'Loan Amount',
+                label: 'Credit Amount',
                 hint: 'Enter loan amount',
                 controller: _amountController,
                 prefixIcon: const Icon(Icons.currency_rupee),

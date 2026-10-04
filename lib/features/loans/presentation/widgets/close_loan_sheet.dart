@@ -75,7 +75,7 @@ class _CloseLoanSheetView extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
-                        'Close Loan',
+                        'Close Credit',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -97,7 +97,7 @@ class _CloseLoanSheetView extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'The request to close this loan has been sent to the borrower for final approval.',
+                    'The request to close this credit has been sent to the borrower for final approval.',
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 24),
@@ -118,7 +118,7 @@ class _CloseLoanSheetView extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
-                        'Close Loan',
+                        'Close Credit',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -134,7 +134,7 @@ class _CloseLoanSheetView extends StatelessWidget {
                   const Icon(Icons.check_circle, color: Colors.green, size: 64),
                   const SizedBox(height: 16),
                   const Text(
-                    'Loan Closed',
+                    'Credit Closed',
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
@@ -157,7 +157,7 @@ class _CloseLoanSheetView extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      'Close Loan',
+                      'Close Credit',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -188,18 +188,18 @@ class _CloseLoanSheetView extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   const Text(
-                    'Closing this loan will write off the remaining balance. The borrower must explicitly consent to this closure.',
+                    'Closing this credit will write off the remaining balance. The borrower must explicitly consent to this closure.',
                     textAlign: TextAlign.center,
                   ),
                 ] else ...[
                   const Text(
-                    'This loan is fully repaid.',
+                    'This credit is fully repaid.',
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
                   const Text(
-                    'Proceeding will officially mark this loan as completed.',
+                    'Proceeding will officially mark this credit as completed.',
                     textAlign: TextAlign.center,
                   ),
                 ],

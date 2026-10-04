@@ -151,7 +151,7 @@ class _AddCreditApprovalView extends StatelessWidget {
                   ),
                   const Spacer(),
                   const Text(
-                    'By approving, this amount will be added to your outstanding loan balance.',
+                    'By approving, this amount will be added to your outstanding credit balance.',
                     textAlign: TextAlign.center,
                     style: TextStyle(color: Colors.black54),
                   ),

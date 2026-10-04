@@ -37,7 +37,7 @@ class _CloseLoanApprovalView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Close Loan Request'),
+        title: const Text('Close Credit Request'),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () {
@@ -54,7 +54,7 @@ class _CloseLoanApprovalView extends StatelessWidget {
           if (state is CloseLoanSuccess) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('Loan closed successfully.'),
+                content: Text('Credit closed successfully.'),
                 backgroundColor: Colors.green,
               ),
             );
@@ -94,7 +94,7 @@ class _CloseLoanApprovalView extends StatelessWidget {
                   Icon(Icons.check_circle, color: Colors.green, size: 64),
                   SizedBox(height: 16),
                   Text(
-                    'Loan Closed',
+                    'Credit Closed',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ],
@@ -115,7 +115,7 @@ class _CloseLoanApprovalView extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
                   const Text(
-                    'Close Loan',
+                    'Close Credit',
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                   ),

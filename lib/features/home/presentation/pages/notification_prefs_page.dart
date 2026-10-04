@@ -83,8 +83,8 @@ class NotificationPrefsPage extends StatelessWidget {
 
                 _buildSectionHeader('TRANSACTIONAL'),
                 _buildPrefTile(
-                  title: 'Loan Updates',
-                  subtitle: 'New loans, agreement approvals, status changes.',
+                  title: 'Credit Updates',
+                  subtitle: 'New credits, agreement approvals, status changes.',
                   value: prefs.loanUpdates,
                   onChanged: (val) => context
                       .read<NotificationPrefsCubit>()

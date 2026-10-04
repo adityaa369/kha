@@ -468,7 +468,7 @@ class LenderLoanDetailsPage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Loan Progress',
+                'Credit Progress',
                 style: TextStyle(
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w700,
@@ -1309,7 +1309,7 @@ class LenderLoanDetailsPage extends StatelessWidget {
       builder: (ctx) => AlertDialog(
         title: const Text('Cancel Request'),
         content: const Text(
-          'Are you sure you want to cancel this pending loan request? This cannot be undone.',
+          'Are you sure you want to cancel this pending credit request? This cannot be undone.',
         ),
         actions: [
           TextButton(
@@ -1487,7 +1487,7 @@ class LenderLoanDetailsPage extends StatelessWidget {
                 onPressed: () => CloseLoanSheet.show(context, loan),
                 icon: Icon(Icons.delete, size: 14.sp),
                 label: Text(
-                  'Close Loan',
+                  'Close Credit',
                   style: TextStyle(
                     fontSize: 12.sp,
                     fontWeight: FontWeight.bold,

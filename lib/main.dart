@@ -193,7 +193,7 @@ class KhaataApp extends StatelessWidget {
               return MaterialApp.router(
                 scaffoldMessengerKey: scaffoldMessengerKey,
                 debugShowCheckedModeBanner: false,
-                title: 'Khaata',
+                title: 'App',
                 theme: KhaataTheme.lightTheme,
                 routerConfig: router,
                 builder: (context, routerWidget) {

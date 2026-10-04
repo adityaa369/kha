@@ -160,7 +160,7 @@ class _RegistrationSuccessPageState extends State<RegistrationSuccessPage>
                 FadeTransition(
                   opacity: _fadeAnimation,
                   child: Text(
-                    'Your Khaata account is ready.\nStart managing your loans securely.',
+                    'Your App account is ready.\nStart managing your credits securely.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 14.sp,

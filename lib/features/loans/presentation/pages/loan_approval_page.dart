@@ -179,7 +179,7 @@ class _LoanApprovalPageState extends State<LoanApprovalPage>
           backgroundColor: Colors.white,
           foregroundColor: KhaataTheme.textDark,
         ),
-        body: const Center(child: Text('Loan not found.')),
+        body: const Center(child: Text('Credit not found.')),
       );
     }
 

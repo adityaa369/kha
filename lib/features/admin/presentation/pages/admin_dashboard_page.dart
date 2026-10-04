@@ -641,7 +641,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage>
     if (loans.isEmpty) {
       return Center(
         child: Text(
-          'No loans found',
+          'No credits found',
           style: TextStyle(color: Colors.grey, fontSize: 14.sp),
         ),
       );

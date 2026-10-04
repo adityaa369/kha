@@ -52,7 +52,7 @@ class AuthChoicePage extends StatelessWidget {
                 ),
                 SizedBox(height: 40.h),
                 Text(
-                  'Welcome to Khaata',
+                  'Welcome to App',
                   style: TextStyle(
                     fontSize: 28.sp,
                     fontWeight: FontWeight.bold,
@@ -61,7 +61,7 @@ class AuthChoicePage extends StatelessWidget {
                 ),
                 SizedBox(height: 12.h),
                 Text(
-                  'Digital Loan Agreements Made Simple',
+                  'Digital Credit Agreements Made Simple',
                   style: TextStyle(fontSize: 14.sp, color: Colors.white70),
                 ),
                 const Spacer(),

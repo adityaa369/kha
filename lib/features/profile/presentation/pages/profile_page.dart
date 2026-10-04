@@ -399,7 +399,7 @@ class ProfilePage extends StatelessWidget {
                           _MenuTile(
                             icon: Icons.settings_outlined,
                             title: 'Account Management',
-                            subtitle: 'Modify Khaata App Settings',
+                            subtitle: 'Modify App App Settings',
                             onTap: () {},
                           ),
                           Divider(
