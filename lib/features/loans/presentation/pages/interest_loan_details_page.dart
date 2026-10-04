@@ -390,7 +390,7 @@ class InterestLoanDetailsPage extends StatelessWidget {
                     Expanded(
                       child: _stat(
                         'Total Payable',
-                        '₹${_fmt(loan.totalPayablePaise / 100.0)}',
+                        '₹${_fmt((loan.totalOutstandingPaise + loan.paidAmountPaise) / 100.0)}',
                       ),
                     ),
                     SizedBox(width: 12.w),

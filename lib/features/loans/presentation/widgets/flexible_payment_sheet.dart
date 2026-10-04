@@ -112,9 +112,13 @@ class _FlexiblePaymentSheetViewState extends State<_FlexiblePaymentSheetView> {
   int get _enteredAmountPaise => (int.tryParse(_amountCtrl.text) ?? 0) * 100;
 
   int get _newBalancePaise {
-    final currentBalancePaise =
-        widget.loan.principalOutstandingPaise ??
-        (widget.loan.totalPayablePaise - widget.loan.paidAmountPaise);
+    int currentBalancePaise;
+    if (widget.actionType == 'record_interest') {
+      currentBalancePaise = widget.loan.interestOutstandingPaise;
+    } else {
+      currentBalancePaise = widget.loan.principalOutstandingPaise ?? widget.loan.totalOutstandingPaise;
+    }
+    
     if (widget.actionType == 'add_credit') {
       return currentBalancePaise + _enteredAmountPaise;
     }
@@ -128,7 +132,10 @@ class _FlexiblePaymentSheetViewState extends State<_FlexiblePaymentSheetView> {
     if (widget.actionType == 'add_credit') {
       context.read<AddCreditFlowCubit>().createIntent(_enteredAmountPaise);
     } else {
-      context.read<PaymentFlowCubit>().createIntent(_enteredAmountPaise);
+      String? pType;
+      if (widget.actionType == 'record_interest') pType = 'interest';
+      if (widget.actionType == 'record_payment') pType = 'principal';
+      context.read<PaymentFlowCubit>().createIntent(_enteredAmountPaise, paymentType: pType);
     }
   }
 

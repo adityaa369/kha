@@ -567,15 +567,10 @@ class HandLoanDetailsPage extends StatelessWidget {
   Widget _creditOverviewCard(LoanModel loan) {
     final duration = loan.durationMonths ?? 0;
     final emi = loan.emiAmount ?? 0.0;
-    final totalPayable =
-        (loan.totalPayableAmount != null && loan.totalPayableAmount! > 0)
-        ? loan.totalPayableAmount!
-        : loan.amount;
+    final totalPayable = loan.totalOutstandingAmount + loan.paidAmount;
     final progress = loan.progress.clamp(0.0, 1.0);
     final amountPaid = loan.paidAmount;
-    final amountPending = loan.remainingAmount > 0
-        ? loan.remainingAmount
-        : (loan.amount - loan.paidAmount);
+    final amountPending = loan.totalOutstandingAmount;
 
     return Container(
       padding: EdgeInsets.all(16.w),

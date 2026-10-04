@@ -404,10 +404,10 @@ class BusinessLoanDetailsPage extends StatelessWidget {
   Widget _creditOverviewCard(LoanModel loan) {
     final duration = loan.durationMonths ?? 0;
     final emi = loan.emiAmount ?? 0.0;
-    final totalPayable = loan.totalPayableAmount ?? (emi * duration);
+    final totalPayable = loan.totalOutstandingAmount + loan.paidAmount;
     final progress = loan.progress.clamp(0.0, 1.0);
     final amountPaid = loan.paidAmount;
-    final amountPending = loan.remainingAmount;
+    final amountPending = loan.totalOutstandingAmount;
 
     return Container(
       padding: EdgeInsets.all(16.w),

@@ -419,6 +419,7 @@ class LoanRepository extends BaseRepository {
   Future<Map<String, String>> createPaymentIntent({
     required String loanId,
     required int amountPaise,
+    String? paymentType,
   }) async {
     return await handleApiCall(() async {
       final response = await _api.post(
@@ -426,6 +427,7 @@ class LoanRepository extends BaseRepository {
         data: {
           'amountPaise': amountPaise,
           'note': 'Payment authorization',
+          if (paymentType != null) 'paymentType': paymentType,
         },
       );
       if (response.statusCode == 201) {

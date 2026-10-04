@@ -66,7 +66,7 @@ class PaymentFlowCubit extends Cubit<PaymentFlowState> {
 
   void reset() => emit(PaymentIdle());
 
-  Future<void> createIntent(int amountPaise) async {
+  Future<void> createIntent(int amountPaise, {String? paymentType}) async {
     if (state is! PaymentIdle) return;
 
     emit(PaymentCreatingIntent());
@@ -75,6 +75,7 @@ class PaymentFlowCubit extends Cubit<PaymentFlowState> {
       final res = await _repository.createPaymentIntent(
         loanId: _loanId,
         amountPaise: amountPaise,
+        paymentType: paymentType,
       );
       final intentId = res['intentId']!;
       String borrowerPhone = res['borrowerPhone']!;
