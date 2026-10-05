@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:khatha/core/utils/user_message.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -70,7 +71,7 @@ class _LoanConfirmationPageState extends State<LoanConfirmationPage> {
         _show('Could not confirm the agreement. Please request a new OTP.');
       }
     } on FirebaseAuthException catch (error) {
-      _show(error.message ?? 'Invalid OTP. Please try again.');
+      _show(UserMessage.friendly(error.code));
     } finally {
       if (mounted) setState(() => _verifying = false);
     }
@@ -80,7 +81,7 @@ class _LoanConfirmationPageState extends State<LoanConfirmationPage> {
     if (mounted)
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(message)));
+      ).showSnackBar(SnackBar(content: Text(UserMessage.friendly(message))));
   }
 
   @override

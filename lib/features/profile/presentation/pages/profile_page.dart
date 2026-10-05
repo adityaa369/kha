@@ -101,7 +101,7 @@ class ProfilePage extends StatelessWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update profile photo: $e')),
+          SnackBar(content: Text('Could not update your profile photo. Please try again.')),
         );
       }
     }

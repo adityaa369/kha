@@ -38,7 +38,7 @@ class _MultiCameraScreenState extends State<MultiCameraScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to initialize camera: $e')),
+          SnackBar(content: Text('Unable to open the camera. Please allow camera access and try again.')),
         );
       }
     }
@@ -59,7 +59,7 @@ class _MultiCameraScreenState extends State<MultiCameraScreen> {
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to take picture: $e')),
+        SnackBar(content: Text('Could not capture the photo. Please try again.')),
       );
     }
   }

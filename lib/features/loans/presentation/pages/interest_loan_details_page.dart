@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:khatha/core/utils/user_message.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -1343,7 +1344,7 @@ class InterestLoanDetailsPage extends StatelessWidget {
               } catch (e) {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Failed to cancel: $e')),
+                    SnackBar(content: Text(UserMessage.friendly(e))),
                   );
                 }
               }

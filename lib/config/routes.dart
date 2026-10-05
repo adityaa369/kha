@@ -276,7 +276,11 @@ final router = GoRouter(
     ),
     GoRoute(
       path: AppConstants.loanSuccess,
-      builder: (context, state) => const LoanSuccessPage(),
+      builder: (context, state) => LoanSuccessPage(
+        extra: state.extra is Map<String, dynamic>
+            ? state.extra as Map<String, dynamic>
+            : null,
+      ),
     ),
     GoRoute(
       path: AppConstants.loanCloseSuccess,

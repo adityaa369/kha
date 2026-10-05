@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:khatha/core/utils/user_message.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
@@ -174,7 +175,7 @@ class _MyLoansPageState extends State<MyLoansPage>
                 }
 
                 if (state is LoanError) {
-                  return Center(child: Text(state.message));
+                  return Center(child: Text(UserMessage.friendly(state.message), textAlign: TextAlign.center));
                 }
 
                 if (state is LoansLoaded) {
