@@ -4,7 +4,7 @@ class MoneyUtils {
       throw const FormatException('Amount cannot be empty');
     }
 
-    final regex = RegExp(r'^\d+(\.\d{1,2})₹$');
+    final regex = RegExp(r'^\d+(\.\d{1,2})?$');
     if (!regex.hasMatch(input)) {
       throw const FormatException('Invalid amount format');
     }
@@ -23,3 +23,4 @@ class MoneyUtils {
     }
   }
 }
+

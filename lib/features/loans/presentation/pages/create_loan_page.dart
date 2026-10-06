@@ -1,3 +1,4 @@
+import '../../../../core/utils/dialog_utils.dart';
 import 'dart:io';
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -237,13 +238,13 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
               SizedBox(height: 8.h),
               Text('Interest Rate: $rate% (Annual)'),
               SizedBox(height: 8.h),
-              Text('Total Interest: ₹${totalInterest.toStringAsFixed(2)}'),
+              Text('Total Interest: \u20B9${totalInterest.toStringAsFixed(2)}'),
             ],
             SizedBox(height: 8.h),
             Text('Duration: $months Months'),
             Divider(height: 24.h),
             Text(
-              'Total Repayment: ₹${totalAmount.toStringAsFixed(2)}',
+              'Total Repayment: \u20B9${totalAmount.toStringAsFixed(2)}',
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ],
@@ -278,14 +279,9 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
     if (!authenticated) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Biometric signature required to create agreement.',
-              style: TextStyle(color: Colors.white),
-            ),
-            backgroundColor: Colors.red,
-          ),
+        DialogUtils.showErrorDialog(
+          context,
+          'Biometric signature required to create agreement.',
         );
       }
       return;
