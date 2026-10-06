@@ -723,7 +723,7 @@ class HandLoanDetailsPage extends StatelessWidget {
                 icon: const Icon(Icons.download, color: Colors.blue),
                 onPressed: () async {
                   final token = await SecureStorage.getToken();
-                  final url = '\/loans/\/noc?token=\';
+                  final url = '${AppConstants.baseUrl}/loans/${loan.id}/noc?token=${token}';
                   launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
                 },
               ),
