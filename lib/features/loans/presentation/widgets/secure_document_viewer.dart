@@ -25,6 +25,13 @@ class _SecureDocumentViewerState extends State<SecureDocumentViewer> {
   }
 
   Future<void> _fetchSignedUrl() async {
+    if (widget.documentId.startsWith('http')) {
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _error = null;
@@ -64,6 +71,16 @@ class _SecureDocumentViewerState extends State<SecureDocumentViewer> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.documentId.startsWith('http')) {
+      return Center(
+        child: Image.network(
+          widget.documentId,
+          fit: BoxFit.contain,
+          errorBuilder: (_, __, ___) => _errorWidget(),
+        ),
+      );
+    }
+
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -132,21 +149,25 @@ class _SecureDocumentViewerState extends State<SecureDocumentViewer> {
     return Image.memory(
       _response!.bytes,
       fit: BoxFit.contain,
-      errorBuilder: (_, __, ___) => Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.broken_image, color: Colors.grey, size: 48),
-            const SizedBox(height: 16),
-            const Text('The secure document could not be loaded.'),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: _fetchSignedUrl,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Refresh'),
-            ),
-          ],
-        ),
+      errorBuilder: (_, __, ___) => _errorWidget(),
+    );
+  }
+
+  Widget _errorWidget() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.broken_image, color: Colors.grey, size: 48),
+          const SizedBox(height: 16),
+          const Text('The secure document could not be loaded.'),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: widget.documentId.startsWith('http') ? () => setState(() {}) : _fetchSignedUrl,
+            icon: const Icon(Icons.refresh),
+            label: const Text('Refresh'),
+          ),
+        ],
       ),
     );
   }
