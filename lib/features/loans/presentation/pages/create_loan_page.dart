@@ -390,7 +390,7 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
       'notes': _notesController.text,
       'shop_name': _shopNameController.text,
       'type': widget.loanType,
-      'documentIds': documentIds,
+      'documentId': documentIds != null && documentIds.isNotEmpty ? documentIds.first : null,
     };
 
     final result = await cubit.createLoan(loanData);

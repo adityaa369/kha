@@ -1,3 +1,6 @@
+import '../../../../config/constants.dart';
+import '../widgets/secure_document_viewer.dart';
+import '../../../../core/utils/secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
@@ -75,7 +78,7 @@ class HandLoanDetailsPage extends StatelessWidget {
                   SizedBox(height: 16.h),
                   _statsCard(activeLoan),
                   SizedBox(height: 16.h),
-                  RepaymentTimelineWidget(key: ValueKey('timeline_${activeLoan.transactions.length}'), loan: activeLoan),
+                  RepaymentTimelineWidget(key: ValueKey('timeline_${activeLoan.paidAmountPaise}_${activeLoan.status}'), loan: activeLoan),
                   SizedBox(height: 16.h),
                   _recentTransactions(activeLoan),
                   SizedBox(height: 16.h),
@@ -302,14 +305,6 @@ class HandLoanDetailsPage extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 SizedBox(height: 2.h),
-                Text(
-                  role,
-                  style: TextStyle(
-                    fontSize: 11.sp,
-                    color: _accent,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
                 if (phone.isNotEmpty) ...[
                   SizedBox(height: 2.h),
                   Row(
@@ -412,7 +407,7 @@ class HandLoanDetailsPage extends StatelessWidget {
             actualStart.add(Duration(days: (loan.durationMonths ?? 0) * 30)),
           );
     final duration = loan.durationMonths ?? 0;
-    final progress = loan.progress.clamp(0.0, 1.0);
+    final progress = loan.computedProgress;
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -424,37 +419,8 @@ class HandLoanDetailsPage extends StatelessWidget {
           Padding(
             padding: EdgeInsets.all(14.w),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 12.w,
-                    vertical: 5.h,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _bg,
-                    borderRadius: BorderRadius.circular(20.r),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.handshake_outlined,
-                        size: 14.sp,
-                        color: _primary,
-                      ),
-                      SizedBox(width: 6.w),
-                      Text(
-                        'Hand Credit',
-                        style: TextStyle(
-                          color: _primary,
-                          fontSize: 12.sp,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
                 Flexible(child: _statusChip(loan.status)),
               ],
             ),
@@ -568,7 +534,7 @@ class HandLoanDetailsPage extends StatelessWidget {
     final duration = loan.durationMonths ?? 0;
     final emi = loan.emiAmount ?? 0.0;
     final totalPayable = loan.totalOutstandingAmount + loan.paidAmount;
-    final progress = loan.progress.clamp(0.0, 1.0);
+    final progress = loan.computedProgress;
     final amountPaid = loan.paidAmount;
     final amountPending = loan.totalOutstandingAmount;
 
@@ -676,12 +642,12 @@ class HandLoanDetailsPage extends StatelessWidget {
   //  â”€â”€â”€ Payment Checklist â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   Widget _proofDocumentSection(BuildContext context, LoanModel loan) {
-    if (loan.documentId == null || loan.documentId!.trim().isEmpty) {
+    final hasProof = loan.documentId != null && loan.documentId!.trim().isNotEmpty;
+    final isFinished = loan.loanStatus.isFinished;
+
+    if (!hasProof && !isFinished) {
       return const SizedBox.shrink();
     }
-
-    final url = loan.documentId!;
-    final isPdf = url.toLowerCase().contains('.pdf');
 
     return Container(
       width: double.infinity,
@@ -695,91 +661,73 @@ class HandLoanDetailsPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Agreement & Proof Document',
+            'Documents',
             style: TextStyle(
-              fontSize: 14.sp,
-              fontWeight: FontWeight.w700,
+              fontSize: 18.sp,
+              fontWeight: FontWeight.bold,
               color: Colors.black87,
             ),
           ),
           SizedBox(height: 12.h),
-          InkWell(
-            onTap: () => _showDocumentDialog(context, url, isPdf),
-            borderRadius: BorderRadius.circular(12.r),
-            child: Container(
-              padding: EdgeInsets.all(12.w),
-              decoration: BoxDecoration(
-                color: _bg,
-                border: Border.all(color: _primary.withValues(alpha: 0.2)),
-                borderRadius: BorderRadius.circular(12.r),
+          if (hasProof)
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: Container(
+                padding: EdgeInsets.all(8.w),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: const Icon(Icons.description, color: Colors.blue),
               ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 40.w,
-                    height: 40.w,
-                    decoration: BoxDecoration(
-                      color: _bg,
-                      borderRadius: BorderRadius.circular(8.r),
-                    ),
-                    clipBehavior: Clip.antiAlias,
-                    child: isPdf
-                        ? const Icon(
-                            Icons.picture_as_pdf,
-                            color: Color(0xFFDC2626),
-                            size: 22,
-                          )
-                        : Image.network(
-                            url,
-                            fit: BoxFit.cover,
-                            cacheWidth: 200,
-                            loadingBuilder: (_, child, p) => p == null
-                                ? child
-                                : const Center(
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  ),
-                            errorBuilder: (_, __, ___) => const Icon(
-                              Icons.image,
-                              color: _primary,
-                              size: 22,
-                            ),
-                          ),
-                  ),
-                  SizedBox(width: 12.w),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          isPdf
-                              ? 'Signed_Agreement_Hand_Credit.pdf'
-                              : 'Proof_Document_Hand_Credit.jpg',
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        SizedBox(height: 2.h),
-                        Text(
-                          'Tap to view proof document',
-                          style: TextStyle(
-                            fontSize: 10.sp,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Icon(Icons.visibility_outlined, color: _primary, size: 18.sp),
-                ],
+              title: Text(
+                'Agreement & Proof Document',
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              trailing: IconButton(
+                icon: const Icon(Icons.remove_red_eye, color: Colors.blue),
+                onPressed: () {
+                  final url = loan.documentId!;
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (ctx) => SecureDocumentViewer(documentId: url),
+                  );
+                },
               ),
             ),
-          ),
+          if (hasProof && isFinished) Divider(color: Colors.grey.shade200),
+          if (isFinished)
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: Container(
+                padding: EdgeInsets.all(8.w),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: const Icon(Icons.verified, color: Colors.blue),
+              ),
+              title: Text(
+                'No Dues Certificate (NOC)',
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              trailing: IconButton(
+                icon: const Icon(Icons.download, color: Colors.blue),
+                onPressed: () async {
+                  final token = await SecureStorage.getToken();
+                  final url = '\/loans/\/noc?token=\';
+                  launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                },
+              ),
+            ),
         ],
       ),
     );
@@ -1275,7 +1223,7 @@ class HandLoanDetailsPage extends StatelessWidget {
 
   Widget _repaymentChecklist(BuildContext context, LoanModel loan) {
     final duration = loan.durationMonths ?? 0;
-    final progress = loan.progress.clamp(0.0, 1.0);
+    final progress = loan.computedProgress;
     final paidMonths = (duration * progress).round();
 
     String? currentUserId;
@@ -1356,23 +1304,33 @@ class HandLoanDetailsPage extends StatelessWidget {
                             decoration: BoxDecoration(
                               color: isPaid
                                   ? Colors.green.shade50
-                                  : Colors.white,
+                                  : DateTime.now().isAfter(dueDate)
+                                      ? Colors.red.shade50
+                                      : Colors.white,
                               border: Border.all(
                                 color: isPaid
                                     ? Colors.green
-                                    : Colors.red.shade200,
+                                    : DateTime.now().isAfter(dueDate)
+                                        ? Colors.red.shade300
+                                        : Colors.grey.shade300,
                                 width: 1.5,
                               ),
                               borderRadius: BorderRadius.circular(8.r),
                             ),
                             alignment: Alignment.center,
-                            child: Icon(
-                              isPaid ? Icons.check : Icons.close,
-                              color: isPaid
-                                  ? Colors.green
-                                  : Colors.red.shade300,
-                              size: 20.sp,
-                            ),
+                            child: isPaid
+                                ? Icon(
+                                    Icons.check,
+                                    color: Colors.green,
+                                    size: 20.sp,
+                                  )
+                                : DateTime.now().isAfter(dueDate)
+                                    ? Icon(
+                                        Icons.close,
+                                        color: Colors.red.shade400,
+                                        size: 20.sp,
+                                      )
+                                    : const SizedBox.shrink(),
                           ),
                         ],
                       ),

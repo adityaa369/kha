@@ -51,7 +51,10 @@ class _HomeViewState extends State<_HomeView> {
     super.initState();
     _msgSub = NotificationService.onForegroundMessage.stream.listen((payload) {
       if (payload.data['type'] == 'LOAN_ACCEPTED' ||
-          payload.data['type'] == 'LOAN_CREATED') {
+          payload.data['type'] == 'LOAN_CREATED' ||
+          payload.data['type'] == 'PAYMENT_RECEIVED' ||
+          payload.data['type'] == 'LOAN_CLOSED' ||
+          payload.data['type'] == 'LOAN_REMINDER') {
         if (mounted) context.read<LoanCubit>().fetchLoans();
       }
     });
@@ -872,7 +875,7 @@ class _PaymentsSection extends StatelessWidget {
               (loan.durationMonths == null || loan.durationMonths == 0)
               ? 6
               : loan.durationMonths!;
-          final progressVal = loan.progress.clamp(0.0, 1.0);
+          final progressVal = loan.computedProgress;
           final completedMonths = (duration * progressVal).round();
 
           final nextDueDate = (loan.startDate ?? DateTime.now()).add(
@@ -954,7 +957,7 @@ class _PaymentsSection extends StatelessWidget {
                   amount: '₹${_formatCurrency(amount)}',
                   subtitle: subtitle,
                   showProgress: isOverdue,
-                  progressValue: loan.progress.clamp(0.0, 1.0),
+                  progressValue: loan.computedProgress,
                   onTap: () {
                     context.push('${AppConstants.loanDetails}/${loan.id}');
                   },

@@ -1,3 +1,5 @@
+import '../widgets/secure_document_viewer.dart';
+import '../../../../core/utils/secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:khatha/core/utils/user_message.dart';
 import 'package:intl/intl.dart';
@@ -67,7 +69,7 @@ class InterestLoanDetailsPage extends StatelessWidget {
 
         final theme = _theme(activeLoan.type);
         final duration = activeLoan.durationMonths ?? 1;
-        final progress = activeLoan.progress.clamp(0.0, 1.0);
+        final progress = activeLoan.computedProgress;
         final paidMonths = (duration * progress).round();
         final isClosed = activeLoan.loanStatus.isFinished;
         final isPending =
@@ -120,7 +122,7 @@ class InterestLoanDetailsPage extends StatelessWidget {
                     ),
                     SizedBox(height: 14.h),
                     if (!isPending) ...[
-                      RepaymentTimelineWidget(key: ValueKey('timeline_${activeLoan.transactions.length}'), loan: activeLoan),
+                      RepaymentTimelineWidget(key: ValueKey('timeline_${activeLoan.paidAmountPaise}_${activeLoan.status}'), loan: activeLoan),
                       SizedBox(height: 14.h),
                       _recentTransactions(activeLoan, theme),
                       SizedBox(height: 14.h),
@@ -318,42 +320,8 @@ class InterestLoanDetailsPage extends StatelessWidget {
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 12.w,
-                    vertical: 6.h,
-                  ),
-                  decoration: BoxDecoration(
-                    color: theme.bg,
-                    borderRadius: BorderRadius.circular(20.r),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (isInterest) ...[
-                        Text(
-                          '% Interest Credit',
-                          style: TextStyle(
-                            color: theme.primary,
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ] else ...[
-                        Text(
-                          '💰 Hand Credit',
-                          style: TextStyle(
-                            color: theme.primary,
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
                 Container(
                   padding: EdgeInsets.symmetric(
                     horizontal: 12.w,
@@ -901,23 +869,33 @@ class InterestLoanDetailsPage extends StatelessWidget {
                             decoration: BoxDecoration(
                               color: isPaid
                                   ? Colors.green.shade50
-                                  : Colors.white,
+                                  : DateTime.now().isAfter(dueDate)
+                                      ? Colors.red.shade50
+                                      : Colors.white,
                               border: Border.all(
                                 color: isPaid
                                     ? Colors.green
-                                    : Colors.red.shade200,
+                                    : DateTime.now().isAfter(dueDate)
+                                        ? Colors.red.shade300
+                                        : Colors.grey.shade300,
                                 width: 1.5,
                               ),
                               borderRadius: BorderRadius.circular(8.r),
                             ),
                             alignment: Alignment.center,
-                            child: Icon(
-                              isPaid ? Icons.check : Icons.close,
-                              color: isPaid
-                                  ? Colors.green
-                                  : Colors.red.shade300,
-                              size: 20.sp,
-                            ),
+                            child: isPaid
+                                ? Icon(
+                                    Icons.check,
+                                    color: Colors.green,
+                                    size: 20.sp,
+                                  )
+                                : DateTime.now().isAfter(dueDate)
+                                    ? Icon(
+                                        Icons.close,
+                                        color: Colors.red.shade400,
+                                        size: 20.sp,
+                                      )
+                                    : const SizedBox.shrink(),
                           ),
                         ],
                       ),

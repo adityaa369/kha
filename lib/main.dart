@@ -7,6 +7,7 @@ import 'config/routes.dart';
 import 'config/theme.dart';
 import 'core/blocs/auth/auth_cubit.dart';
 import 'core/blocs/loans/loan_cubit.dart';
+import 'core/blocs/loans/loan_state.dart';
 import 'core/blocs/loans/portfolio_cubit.dart';
 import 'data/repositories/loan_repository.dart';
 import 'core/blocs/chit_funds/chit_fund_cubit.dart';
@@ -197,11 +198,21 @@ class KhaataApp extends StatelessWidget {
                 theme: KhaataTheme.lightTheme,
                 routerConfig: router,
                 builder: (context, routerWidget) {
-                  return BlocBuilder<SystemStateCubit, SystemState>(
-                    builder: (context, systemState) {
-                      return Stack(
-                        children: [
-                          if (routerWidget != null) routerWidget,
+                  final mediaQuery = MediaQuery.of(context);
+                  // Clamp text scaling to ensure UI consistency across different devices
+                  // while still respecting moderate accessibility settings.
+                  final clampedTextScaler = mediaQuery.textScaler.clamp(
+                    minScaleFactor: 1.0,
+                    maxScaleFactor: 1.2,
+                  );
+
+                  return MediaQuery(
+                    data: mediaQuery.copyWith(textScaler: clampedTextScaler),
+                    child: BlocBuilder<SystemStateCubit, SystemState>(
+                      builder: (context, systemState) {
+                        return Stack(
+                          children: [
+                            if (routerWidget != null) routerWidget,
                           if (systemState ==
                               SystemState.financialOperationsPaused)
                             Positioned(
@@ -293,6 +304,7 @@ class KhaataApp extends StatelessWidget {
                         ],
                       );
                     },
+                  ),
                   );
                 },
               );
@@ -314,13 +326,51 @@ class NotificationListenerWidget extends StatefulWidget {
 }
 
 class _NotificationListenerWidgetState
-    extends State<NotificationListenerWidget> {
+    extends State<NotificationListenerWidget> with WidgetsBindingObserver {
   StreamSubscription? _foregroundSub;
   StreamSubscription? _tapSub;
   StreamSubscription? _tokenRefreshSub;
+  StreamSubscription? _loanStateSub;
+  Timer? _autoRefreshTimer;
+  Timer? _portfolioDebounce;
 
   /// Dedup guard: track the last navigated notification ID to prevent double-push
   String? _lastHandledMessageId;
+
+  /// True only when a user is logged in and credits have been loaded once.
+  bool get _canAutoRefresh {
+    if (!mounted) return false;
+    try {
+      return context.read<AuthCubit>().state is Authenticated &&
+          context.read<LoanCubit>().state is LoansLoaded;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Quietly re-sync credits (and Insights via the loan listener).
+  void _silentRefresh() {
+    if (!_canAutoRefresh) return;
+    context.read<LoanCubit>().fetchLoans();
+  }
+
+  void _startAutoRefresh() {
+    _autoRefreshTimer?.cancel();
+    _autoRefreshTimer = Timer.periodic(
+      const Duration(seconds: 30),
+      (_) => _silentRefresh(),
+    );
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _silentRefresh();
+      _startAutoRefresh();
+    } else if (state == AppLifecycleState.paused) {
+      _autoRefreshTimer?.cancel();
+    }
+  }
 
   // ============================================================
   // DEEP LINK ROUTER — Phase 8
@@ -390,10 +440,27 @@ class _NotificationListenerWidgetState
     _tokenRefreshSub = NotificationService.onTokenRefresh.listen((newToken) {
       _registerFcmToken(newToken);
     });
+
+    // 5. REAL-TIME SYNC — refresh on app resume + every 30s while in foreground
+    WidgetsBinding.instance.addObserver(this);
+    _startAutoRefresh();
+
+    // 6. Keep Insights in sync whenever credits reload (payments, month marks)
+    _loanStateSub = context.read<LoanCubit>().stream.listen((loanState) {
+      if (loanState is! LoansLoaded) return;
+      _portfolioDebounce?.cancel();
+      _portfolioDebounce = Timer(const Duration(milliseconds: 800), () {
+        if (mounted) context.read<PortfolioCubit>().refreshSilently();
+      });
+    });
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _autoRefreshTimer?.cancel();
+    _portfolioDebounce?.cancel();
+    _loanStateSub?.cancel();
     _foregroundSub?.cancel();
     _tapSub?.cancel();
     _tokenRefreshSub?.cancel();

@@ -122,7 +122,7 @@ class _InsightsPageState extends State<InsightsPage> {
                           if (hasLender) ...[
                             _SectionLabel(
                               icon: Icons.trending_up_rounded,
-                              text: 'Loans I\'ve Given',
+                              text: 'Credits I\'ve Given',
                             ),
                             SizedBox(height: 12.h),
                             _LenderCard(lender: lender!, fmt: _fmt),
@@ -176,7 +176,7 @@ class _InsightsPageState extends State<InsightsPage> {
                           if (hasBorrower) ...[
                             _SectionLabel(
                               icon: Icons.handshake_rounded,
-                              text: 'Loans I\'ve Taken',
+                              text: 'Credits I\'ve Taken',
                             ),
                             SizedBox(height: 12.h),
                             _BorrowerCard(borrower: borrower!, fmt: _fmt),

@@ -398,14 +398,7 @@ class _LoanCard extends StatelessWidget {
                               fontSize: 14.sp,
                             ),
                           ),
-                          Text(
-                            loan.type.toUpperCase(),
-                            style: TextStyle(
-                              color: Colors.grey,
-                              fontSize: 12.sp,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
+                          
                         ],
                       ),
                     ],

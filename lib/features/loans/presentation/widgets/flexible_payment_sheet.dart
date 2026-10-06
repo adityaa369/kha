@@ -1,3 +1,4 @@
+import '../../../../core/blocs/loans/portfolio_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -157,6 +158,7 @@ class _FlexiblePaymentSheetViewState extends State<_FlexiblePaymentSheetView> {
       listener: (context, state) {
         if (state is AddCreditSuccess) {
           context.read<LoanCubit>().fetchLoans();
+          context.read<PortfolioCubit>().refreshSilently();
         } else if (state is AddCreditRejectedState) {
           ErrorHandler.showError(context, state.failure.message);
         }
@@ -183,6 +185,7 @@ class _FlexiblePaymentSheetViewState extends State<_FlexiblePaymentSheetView> {
       listener: (context, state) {
         if (state is PaymentSuccess) {
           context.read<LoanCubit>().fetchLoans();
+          context.read<PortfolioCubit>().refreshSilently();
           if (state.isCompleted) {
             context.push(AppConstants.loanCloseSuccess);
           }

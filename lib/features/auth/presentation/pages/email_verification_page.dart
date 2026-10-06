@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../../../config/theme.dart';
 import '../../../../config/constants.dart';
 import '../../../../core/blocs/auth/auth_cubit.dart';
@@ -41,28 +40,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
     return '${name.substring(0, 2)}****@${parts[1]}';
   }
 
-    Future<void> _openEmailApp() async {
-    // 1. googlegmail:// opens Gmail inbox directly (works on most devices)
-    final gmailUri = Uri.parse('googlegmail://');
-    if (await canLaunchUrl(gmailUri)) {
-      await launchUrl(gmailUri, mode: LaunchMode.externalApplication);
-      return;
-    }
-    // 2. Android Intent URI targeting Gmail package specifically
-    //    This opens Gmail inbox even when googlegmail:// scheme isn't registered
-    final gmailIntentUri = Uri.parse(
-      'intent://inbox#Intent;scheme=googlegmail;package=com.google.android.gm;end',
-    );
-    if (await canLaunchUrl(gmailIntentUri)) {
-      await launchUrl(gmailIntentUri, mode: LaunchMode.externalApplication);
-      return;
-    }
-    // 3. Last resort: open Gmail web in browser
-    final webUri = Uri.parse('https://mail.google.com/');
-    try {
-      await launchUrl(webUri, mode: LaunchMode.externalApplication);
-    } catch (_) {}
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -275,28 +253,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
 
     return Column(
       children: [
-        // Open Email App button
-        SizedBox(
-          width: double.infinity,
-          height: 52.h,
-          child: ElevatedButton.icon(
-            onPressed: _openEmailApp,
-            icon: Icon(Icons.email_outlined, size: 20.sp),
-                          label: Text(
-                'Open Gmail',
-                style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: KhaataTheme.primaryBlue,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                elevation: 0,
-              ),
-            ),
-          ),
-          SizedBox(height: 8.h),
+
           Text(
             "Didn't receive the email? Check your Spam or Junk folder.",
             style: TextStyle(fontSize: 12.sp, color: Colors.grey.shade600),

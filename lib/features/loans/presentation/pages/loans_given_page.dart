@@ -223,7 +223,7 @@ class LoansGivenPage extends StatelessWidget {
                 amount: '₹${_formatCurrency(loan.amount)}',
                 date: dateStr,
                 status: loan.statusDisplay,
-                progress: loan.progress,
+                progress: loan.computedProgress,
                 initials:
                     loan.initials ??
                     (loan.borrowerName.isNotEmpty

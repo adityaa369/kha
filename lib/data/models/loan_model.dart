@@ -378,6 +378,16 @@ class LoanModel extends Equatable {
   double get totalOutstandingAmount => totalOutstandingPaise / 100;
   double get paidAmount => paidAmountPaise / 100;
 
+  double get computedProgress {
+    if (totalPayablePaise > 0) {
+      return (paidAmountPaise / totalPayablePaise).clamp(0.0, 1.0);
+    }
+    if (amountPaise > 0 && paidAmountPaise > 0) {
+      return (paidAmountPaise / amountPaise).clamp(0.0, 1.0);
+    }
+    return progress.clamp(0.0, 1.0);
+  }
+
   String? get otp => id.length >= 6 ? id.substring(0, 6) : null;
   LoanStatus get loanStatus => LoanStatus.fromString(status);
   double? get totalPayable => totalPayablePaise > 0 ? totalPayableAmount : null;

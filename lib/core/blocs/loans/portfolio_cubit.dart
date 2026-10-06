@@ -1,4 +1,4 @@
-﻿import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../../data/models/portfolio_summary_model.dart';
 import '../../../data/repositories/loan_repository.dart';
@@ -43,5 +43,15 @@ class PortfolioCubit extends Cubit<PortfolioState> {
     } catch (e) {
       emit(PortfolioError('Failed to load portfolio: $e'));
     }
+  }
+
+  /// Background refresh: keeps existing data visible, never shows a spinner
+  /// or replaces good data with an error.
+  Future<void> refreshSilently() async {
+    if (state is! PortfolioLoaded) return; // only refresh once Insights was opened
+    try {
+      final summary = await _repository.getPortfolioSummary();
+      if (!isClosed) emit(PortfolioLoaded(summary));
+    } catch (_) {}
   }
 }
