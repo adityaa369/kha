@@ -295,15 +295,17 @@ class _LoanApprovalPageState extends State<LoanApprovalPage>
 
                     const Divider(),
                     SizedBox(height: 16.h),
-                    _DetailRow(
-                      label: 'Interest',
-                      value: (loan.interestRate ?? 0) > 0
-                          ? '${loan.interestRate}% PM'
-                          : loan.type.toLowerCase() == 'hand_loan'
-                              ? '0% (Hand Loan)'
-                              : '0%',
-                    ),
-                    SizedBox(height: 12.h),
+                    if (!loan.type.toLowerCase().contains('business')) ...[
+                      _DetailRow(
+                        label: 'Interest',
+                        value: (loan.interestRate ?? 0) > 0
+                            ? '${loan.interestRate}% PM'
+                            : loan.type.toLowerCase().contains('hand')
+                                ? '0% (Hand Credit)'
+                                : '0%',
+                      ),
+                      SizedBox(height: 12.h),
+                    ],
                     _DetailRow(
                       label: 'Duration',
                       value: '${loan.durationMonths} Months',

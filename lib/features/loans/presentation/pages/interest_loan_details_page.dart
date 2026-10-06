@@ -1011,7 +1011,14 @@ class InterestLoanDetailsPage extends StatelessWidget {
           ),
           SizedBox(height: 12.h),
           InkWell(
-            onTap: () => _showDocumentDialog(context, url, isPdf, theme),
+            onTap: () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (ctx) => SecureDocumentViewer(documentId: url),
+                );
+              },
             borderRadius: BorderRadius.circular(12.r),
             child: Container(
               padding: EdgeInsets.all(12.w),

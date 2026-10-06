@@ -42,6 +42,7 @@ class RepaymentTimelineWidget extends StatelessWidget {
             }
 
             return Container(
+              width: double.infinity,
               padding: EdgeInsets.all(16.w),
               decoration: BoxDecoration(
                 color: Colors.white,
