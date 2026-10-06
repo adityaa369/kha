@@ -914,3 +914,32 @@ exports.getPortfolioSummary = async (req, res) => {
     }
 };
 
+
+exports.downloadNoc = async (req, res) => {
+    try {
+        const Loan = require('../models/Loan');
+        const loan = await Loan.findById(req.params.id);
+        if (!loan) {
+            return res.status(404).json({ success: false, message: 'Loan not found' });
+        }
+        
+        // Ensure user is authorized
+        if (loan.lender !== req.user.id && loan.borrower !== req.user.id) {
+            return res.status(403).json({ success: false, message: 'Not authorized to view NOC' });
+        }
+
+        // Must be closed or completed
+        if (loan.status !== 'closed' && loan.status !== 'completed') {
+            return res.status(400).json({ success: false, message: 'Loan is not fully settled yet' });
+        }
+
+        const { generateNocStream } = require('../utils/pdfGenerator');
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', 'attachment; filename=closure_'+loan._id+'.pdf');
+        generateNocStream(loan, res);
+    } catch (error) {
+        console.error('[NOC] Error:', error);
+        res.status(500).json({ success: false, message: 'Failed to generate NOC' });
+    }
+};
+

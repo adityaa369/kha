@@ -79,4 +79,48 @@ async function generateAndUploadClosureCertificate(loan) {
     });
 }
 
-module.exports = { generateAndUploadClosureCertificate };
+function generateNocStream(loan, res) {
+    try {
+        const doc = new PDFDocument({ margin: 50, size: 'A4' });
+        doc.pipe(res);
+
+        // Document Content Formatting
+        doc.fontSize(24).font('Helvetica-Bold').text('NO DUES CERTIFICATE', { align: 'center' });
+        doc.moveDown();
+        doc.fontSize(12).font('Helvetica').text(`Date: ${new Date().toLocaleDateString()}`);
+        doc.moveDown(2);
+        
+        doc.fontSize(14).font('Helvetica-Bold').text('To Whom It May Concern,');
+        doc.moveDown();
+        
+        doc.fontSize(12).font('Helvetica').text(
+            `This is to certify that the loan agreement (Reference ID: ${loan._id}) between ` +
+            `the Lender and the Borrower (${loan.borrowerName}) has been fully settled.`
+        );
+        doc.moveDown();
+        
+        doc.rect(50, doc.y, 500, 150).stroke();
+        doc.moveDown(0.5);
+        doc.text(`   Principal Amount: Rs. ${loan.amount}`, { indent: 10 });
+        doc.moveDown(0.5);
+        doc.text(`   Interest Rate: ${loan.interestRate}%`, { indent: 10 });
+        doc.moveDown(0.5);
+        doc.text(`   Start Date: ${loan.startDate ? new Date(loan.startDate).toLocaleDateString() : 'N/A'}`, { indent: 10 });
+        doc.moveDown(0.5);
+        doc.text(`   Closing Date: ${new Date().toLocaleDateString()}`, { indent: 10 });
+        doc.moveDown(0.5);
+        doc.text(`   Final Status: CLOSED & SETTLED`, { indent: 10 });
+        
+        doc.moveDown(5);
+        doc.text('This is a digitally generated document stored immutably on Khatha servers and does not require a physical signature.', { align: 'center', color: 'grey' });
+        
+        doc.end();
+    } catch (error) {
+        console.error('[PDFGenerator] Error generating PDF stream:', error);
+        if (!res.headersSent) {
+            res.status(500).json({ success: false, message: 'Failed to generate NOC' });
+        }
+    }
+}
+
+module.exports = { generateAndUploadClosureCertificate, generateNocStream };
