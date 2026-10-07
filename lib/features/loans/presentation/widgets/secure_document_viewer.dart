@@ -215,8 +215,25 @@ class _SecureDocumentViewerState extends State<SecureDocumentViewer> {
 
     // 4F4F: We use standard Image.memory to avoid flutter_cache_manager storing the secure KYC doc
     // permanently in SQLitedisk cache. Memory cache will be cleared on logout.
+    // 4F4F: Repair potentially truncated JPEGs uploaded with missing EOI markers
+    Uint8List finalBytes = _response!.bytes;
+    if (_response!.contentType == 'image/jpeg' || isPdf == false) {
+      if (finalBytes.length > 2) {
+        final last1 = finalBytes[finalBytes.length - 2];
+        final last2 = finalBytes[finalBytes.length - 1];
+        if (last1 != 0xFF || last2 != 0xD9) {
+          // Missing End Of Image marker, append it
+          final repairBuffer = BytesBuilder();
+          repairBuffer.add(finalBytes);
+          repairBuffer.addByte(0xFF);
+          repairBuffer.addByte(0xD9);
+          finalBytes = repairBuffer.toBytes();
+        }
+      }
+    }
+
     return Image.memory(
-      _response!.bytes,
+      finalBytes,
       fit: BoxFit.contain,
       errorBuilder: (_, err, ___) => _errorWidget(err),
     );
