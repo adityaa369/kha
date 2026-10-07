@@ -610,7 +610,7 @@ class _MonthlyChart extends StatelessWidget {
           ),
           SizedBox(height: 14.h),
           SizedBox(
-            height: 90.h,
+            height: 110.h,
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: collections.map((c) {

@@ -340,8 +340,9 @@ class LoanRepository extends BaseRepository {
 
   Future<DocumentResponse> getSignedDocumentUrl(String documentId) async {
     return await handleApiCall(() async {
+      final encodedId = Uri.encodeComponent(documentId);
       final response = await _api.get(
-        '/documents/$documentId/download',
+        '/documents/$encodedId/download',
         options: Options(responseType: ResponseType.bytes),
       );
       if (response.statusCode == 200) {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../data/repositories/loan_repository.dart';
@@ -97,9 +98,40 @@ class _SecureDocumentViewerState extends State<SecureDocumentViewer> {
 
   Widget _buildContent(BuildContext context) {
     if (widget.documentId.startsWith('http')) {
+      final isPdf = widget.documentId.toLowerCase().contains('.pdf') || widget.documentId.toLowerCase().contains('format=pdf');
+      
+      if (isPdf) {
+        return Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.picture_as_pdf, size: 64, color: Colors.redAccent),
+              const SizedBox(height: 16),
+              const Text(
+                'PDF Document',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              ElevatedButton.icon(
+                onPressed: () async {
+                  await Clipboard.setData(ClipboardData(text: widget.documentId));
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Link copied to clipboard!')),
+                  );
+                },
+                icon: const Icon(Icons.copy),
+                label: const Text('Copy PDF Link'),
+              ),
+            ],
+          ),
+        );
+      }
+
+      final secureUrl = widget.documentId.replaceFirst('http://', 'https://');
       return Center(
         child: Image.network(
-          widget.documentId,
+          secureUrl,
           fit: BoxFit.contain,
           errorBuilder: (_, __, ___) => _errorWidget(),
         ),
@@ -151,18 +183,20 @@ class _SecureDocumentViewerState extends State<SecureDocumentViewer> {
             ),
             const SizedBox(height: 8),
             ElevatedButton.icon(
-              onPressed: () {
-                // In a real app open flutter_pdfview or similar here.
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      'Opening PDF is not supported in this test env.',
+              onPressed: () async {
+                // Since this is a GridFS secure PDF, the user needs the signed URL
+                if (_response != null) {
+                  // Wait, _response has bytes, not url string! 
+                  // If we need to copy it, we can't because it's securely fetched bytes.
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Cannot copy link for secure document. Please take a screenshot or view on desktop.'),
                     ),
-                  ),
-                );
+                  );
+                }
               },
-              icon: const Icon(Icons.open_in_new),
-              label: const Text('View PDF'),
+              icon: const Icon(Icons.info_outline),
+              label: const Text('PDF Details'),
             ),
           ],
         ),
