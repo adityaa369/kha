@@ -631,11 +631,13 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
             children: [
               const _NumberedHeader(number: 2, title: 'Interest Details'),
               SizedBox(height: 16.h),
-              Row(
+              Column(
+
                 crossAxisAlignment: CrossAxisAlignment.start,
+
                 children: [
-                  Expanded(
-                    child: KhaataTextField(
+
+                  KhaataTextField(
                       label: 'Interest Amount',
                       hint: 'Enter amount',
                       controller: _amountController,
@@ -660,10 +662,10 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
                           ? 'Enter a valid amount'
                           : null,
                     ),
-                  ),
-                  SizedBox(width: 16.w),
-                  Expanded(
-                    child: KhaataTextField(
+
+                  SizedBox(height: 16.h),
+
+                  KhaataTextField(
                       label: 'Rate of Interest',
                       hint: 'Enter rate',
                       controller: _interestController,
@@ -690,29 +692,34 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
                         return null;
                       },
                     ),
-                  ),
+
                 ],
+
               ),
               SizedBox(height: 16.h),
-              Row(
+              Column(
+
+                crossAxisAlignment: CrossAxisAlignment.start,
+
                 children: [
-                  Expanded(
-                    child: _DateSelector(
+
+                  _DateSelector(
                       label: 'Start Date',
                       date: _startDate,
                       onTap: () => _selectDate(context, isDue: false),
                     ),
-                  ),
-                  SizedBox(width: 16.w),
-                  Expanded(
-                    child: _DateSelector(
+
+                  SizedBox(height: 16.h),
+
+                  _DateSelector(
                       label: 'End Date',
                       date: _dueDate,
                       hint: 'Select end date',
                       onTap: () => _selectDate(context, isDue: true),
                     ),
-                  ),
+
                 ],
+
               ),
             ],
           ),
@@ -805,25 +812,29 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
                     : null,
               ),
               SizedBox(height: 16.h),
-              Row(
+              Column(
+
+                crossAxisAlignment: CrossAxisAlignment.start,
+
                 children: [
-                  Expanded(
-                    child: _DateSelector(
+
+                  _DateSelector(
                       label: 'Start Date',
                       date: _startDate,
                       onTap: () => _selectDate(context, isDue: false),
                     ),
-                  ),
-                  SizedBox(width: 16.w),
-                  Expanded(
-                    child: _DateSelector(
+
+                  SizedBox(height: 16.h),
+
+                  _DateSelector(
                       label: 'Due Date',
                       date: _dueDate,
                       hint: 'Select due date',
                       onTap: () => _selectDate(context, isDue: true),
                     ),
-                  ),
+
                 ],
+
               ),
             ],
           ),
@@ -919,36 +930,32 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
                 style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w700),
               ),
               SizedBox(height: 16.h),
-              Row(
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: KhaataTextField(
-                      label: 'Customer Name *',
-                      hint: 'Enter customer name',
-                      controller: _borrowerNameController,
-                      prefixIcon: const Icon(Icons.person_outline),
-                      validator: (val) => val == null || val.trim().length < 3
-                          ? 'Name is required (min 3 chars)'
-                          : null,
-                    ),
+                  KhaataTextField(
+                    label: 'Customer Name *',
+                    hint: 'Enter customer name',
+                    controller: _borrowerNameController,
+                    prefixIcon: const Icon(Icons.person_outline),
+                    validator: (val) => val == null || val.trim().length < 3
+                        ? 'Name is required (min 3 chars)'
+                        : null,
                   ),
-                  SizedBox(width: 16.w),
-                  Expanded(
-                    child: KhaataTextField(
-                      label: 'Mobile Number',
-                      hint: 'Enter mobile number',
-                      controller: _mobileController,
-                      prefixIcon: const Icon(Icons.phone_outlined),
-                      keyboardType: TextInputType.phone,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        LengthLimitingTextInputFormatter(10),
-                      ],
-                      validator: (val) => val == null || val.length != 10
-                          ? 'Enter valid 10-digit number'
-                          : null,
-                    ),
+                  SizedBox(height: 16.h),
+                  KhaataTextField(
+                    label: 'Mobile Number',
+                    hint: 'Enter mobile number',
+                    controller: _mobileController,
+                    prefixIcon: const Icon(Icons.phone_outlined),
+                    keyboardType: TextInputType.phone,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(10),
+                    ],
+                    validator: (val) => val == null || val.length != 10
+                        ? 'Enter valid 10-digit number'
+                        : null,
                   ),
                 ],
               ),
@@ -974,32 +981,28 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
                 style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w700),
               ),
               SizedBox(height: 16.h),
-              Row(
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: KhaataTextField(
-                      label: 'Bill Amount *',
-                      hint: 'Enter bill amount',
-                      controller: _amountController,
-                      prefixIcon: const Icon(Icons.currency_rupee),
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      validator: (val) =>
-                          val == null ||
-                              val.isEmpty ||
-                              (double.tryParse(val) ?? 0) <= 0
-                          ? 'Enter a valid amount'
-                          : null,
-                    ),
+                  KhaataTextField(
+                    label: 'Bill Amount *',
+                    hint: 'Enter bill amount',
+                    controller: _amountController,
+                    prefixIcon: const Icon(Icons.currency_rupee),
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    validator: (val) =>
+                        val == null ||
+                            val.isEmpty ||
+                            (double.tryParse(val) ?? 0) <= 0
+                        ? 'Enter a valid amount'
+                        : null,
                   ),
-                  SizedBox(width: 16.w),
-                  Expanded(
-                    child: _DateSelector(
-                      label: 'Date *',
-                      date: _startDate,
-                      onTap: () => _selectDate(context, isDue: false),
-                    ),
+                  SizedBox(height: 16.h),
+                  _DateSelector(
+                    label: 'Date *',
+                    date: _startDate,
+                    onTap: () => _selectDate(context, isDue: false),
                   ),
                 ],
               ),
