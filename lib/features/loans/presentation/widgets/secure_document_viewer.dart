@@ -133,7 +133,7 @@ class _SecureDocumentViewerState extends State<SecureDocumentViewer> {
         child: Image.network(
           secureUrl,
           fit: BoxFit.contain,
-          errorBuilder: (_, __, ___) => _errorWidget(),
+          errorBuilder: (_, err, ___) => _errorWidget(err),
         ),
       );
     }
@@ -169,7 +169,17 @@ class _SecureDocumentViewerState extends State<SecureDocumentViewer> {
       return const Center(child: Text('Document URL could not be resolved.'));
     }
 
-    if (_response!.contentType == 'application/pdf') {
+    bool isPdf = _response!.contentType == 'application/pdf';
+    
+    // Fallback magic byte check for PDF
+    if (!isPdf && _response!.bytes.length > 4) {
+      final b = _response!.bytes;
+      if (b[0] == 37 && b[1] == 80 && b[2] == 68 && b[3] == 70) {
+        isPdf = true;
+      }
+    }
+
+    if (isPdf) {
       // PDF viewer logic
       return Center(
         child: Column(
@@ -208,18 +218,25 @@ class _SecureDocumentViewerState extends State<SecureDocumentViewer> {
     return Image.memory(
       _response!.bytes,
       fit: BoxFit.contain,
-      errorBuilder: (_, __, ___) => _errorWidget(),
+      errorBuilder: (_, err, ___) => _errorWidget(err),
     );
   }
 
-  Widget _errorWidget() {
+  Widget _errorWidget([Object? err]) {
+    String preview = '';
+    if (!widget.documentId.startsWith('http') && _response != null) {
+      preview = '\nSize: ${_response!.bytes.length} bytes\nContent-Type: ${_response!.contentType}';
+      if (_response!.bytes.length > 5) {
+        preview += '\nMagic: ${_response!.bytes.take(5).toList()}';
+      }
+    }
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           const Icon(Icons.broken_image, color: Colors.grey, size: 48),
           const SizedBox(height: 16),
-          const Text('The secure document could not be loaded.'),
+          Text(err != null ? 'Error: $err$preview' : 'The secure document could not be loaded.$preview'),
           const SizedBox(height: 16),
           ElevatedButton.icon(
             onPressed: widget.documentId.startsWith('http') ? () => setState(() {}) : _fetchSignedUrl,
