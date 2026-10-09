@@ -79,10 +79,12 @@ class RepaymentTimelineWidget extends StatelessWidget {
                         final start = DateFormat('MMM dd').format(period.periodStart);
                         final end = DateFormat('MMM dd').format(period.periodEnd);
                         
+                        final isPast = DateTime.now().isAfter(period.periodEnd);
+
                         Color boxColor = Colors.white;
-                        Color borderColor = Colors.red.shade200;
-                        IconData icon = Icons.close;
-                        Color iconColor = Colors.red.shade300;
+                        Color borderColor = Colors.grey.shade300;
+                        IconData? icon; // null for blank
+                        Color? iconColor;
 
                         if (isPaid) {
                            boxColor = Colors.green.shade50;
@@ -94,6 +96,10 @@ class RepaymentTimelineWidget extends StatelessWidget {
                            borderColor = Colors.orange;
                            icon = Icons.warning_amber_rounded;
                            iconColor = Colors.orange;
+                        } else if (isPast) {
+                           borderColor = Colors.red.shade200;
+                           icon = Icons.close;
+                           iconColor = Colors.red.shade300;
                         }
 
                         return Container(
@@ -127,7 +133,7 @@ class RepaymentTimelineWidget extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(8.r),
                                 ),
                                 alignment: Alignment.center,
-                                child: Icon(icon, color: iconColor, size: 20.sp),
+                                child: icon != null ? Icon(icon, color: iconColor, size: 20.sp) : null,
                               ),
                             ],
                           ),
