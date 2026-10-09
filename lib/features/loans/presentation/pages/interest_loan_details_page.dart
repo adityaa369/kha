@@ -97,13 +97,7 @@ class InterestLoanDetailsPage extends StatelessWidget {
             ),
             centerTitle: true,
           ),
-          bottomNavigationBar: _bottomBar(
-            context,
-            activeLoan,
-            theme,
-            isClosed,
-            isPending,
-          ),
+          bottomNavigationBar: const SizedBox.shrink(),
           body: Stack(
             children: [
               SingleChildScrollView(

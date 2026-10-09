@@ -399,7 +399,7 @@ class ProfilePage extends StatelessWidget {
                           _MenuTile(
                             icon: Icons.settings_outlined,
                             title: 'Account Management',
-                            subtitle: 'Modify App App Settings',
+                            subtitle: 'Modify App Settings',
                             onTap: () {},
                           ),
                           Divider(

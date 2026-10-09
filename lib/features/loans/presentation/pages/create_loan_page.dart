@@ -210,10 +210,13 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
     final rate = widget.loanType == 'interest_credit'
         ? (double.tryParse(_interestController.text) ?? 0.0)
         : 0.0;
-    final months = _calculateMonths();
+    
+    final durationValue = _getDurationValue();
+    final durationType = _getDurationType();
+    final double durationInMonths = durationType == 'Days' ? durationValue / 30.0 : durationValue.toDouble();
 
     final totalInterest = widget.loanType == 'interest_credit'
-        ? (amount * rate * months) / 100
+        ? (amount * rate * durationInMonths) / 100
         : 0.0;
     final totalAmount = amount + totalInterest;
 
@@ -236,12 +239,12 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
             Text('Principal: \u20B9${amount.toStringAsFixed(2)}'),
             if (widget.loanType == 'interest_credit') ...[
               SizedBox(height: 8.h),
-              Text('Interest Rate: $rate% (Annual)'),
+              Text('Interest Rate: $rate% (Monthly)'),
               SizedBox(height: 8.h),
               Text('Total Interest: \u20B9${totalInterest.toStringAsFixed(2)}'),
             ],
             SizedBox(height: 8.h),
-            Text('Duration: $months Months'),
+            Text('Duration: $durationValue $durationType'),
             Divider(height: 24.h),
             Text(
               'Total Repayment: \u20B9${totalAmount.toStringAsFixed(2)}',
@@ -379,8 +382,8 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
       'interest_rate': widget.loanType == 'interest_credit'
           ? (double.tryParse(_interestController.text) ?? 0.0)
           : 0.0,
-      'duration_months': _calculateMonths(),
-      'duration_type': _durationType,
+      'duration_months': _getDurationValue(),
+      'duration_type': _getDurationType(),
       'start_date': _startDate.toIso8601String(),
       'due_date': _dueDate?.toIso8601String(),
       'notes': _notesController.text,
@@ -456,15 +459,25 @@ class _CreateLoanPageState extends State<CreateLoanPage> {
     );
   }
 
-  int _calculateMonths() {
+  int _getDurationValue() {
     if (_dueDate != null) {
-      return (_dueDate!.difference(_startDate).inDays / 30).round();
+      return _dueDate!.difference(_startDate).inDays;
     }
     int val = int.tryParse(_durationController.text) ?? 1;
     if (_durationType == 'Years') {
       return val * 12;
     }
     return val;
+  }
+
+  String _getDurationType() {
+    if (_dueDate != null) {
+      return 'Days';
+    }
+    if (_durationType == 'Years') {
+      return 'Months';
+    }
+    return _durationType;
   }
 
   @override
@@ -1356,3 +1369,4 @@ class _DashedUploadBox extends StatelessWidget {
     );
   }
 }
+
