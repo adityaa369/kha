@@ -13,6 +13,7 @@ class RepaymentTimelineWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (loan.durationType?.toLowerCase() == 'days') return const SizedBox.shrink();
     return BlocProvider(
       create: (context) => RepaymentTimelineCubit(LoanRepository())..fetchTimeline(loan.id),
       child: BlocBuilder<RepaymentTimelineCubit, RepaymentTimelineState>(
