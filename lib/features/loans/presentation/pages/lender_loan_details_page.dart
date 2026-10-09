@@ -402,7 +402,7 @@ class LenderLoanDetailsPage extends StatelessWidget {
               children: [
                 Expanded(child: _stat('Start Date', start)),
                 SizedBox(width: 12.w),
-                Expanded(child: _stat('Duration', '$duration Months')),
+                Expanded(child: _stat('Duration', loan.displayDuration)),
                 SizedBox(width: 12.w),
                 Expanded(child: _stat('End Date', end)),
               ],
@@ -799,6 +799,7 @@ class LenderLoanDetailsPage extends StatelessWidget {
     int duration,
     int paidMonths,
   ) {
+    if (loan.durationType == 'Days') return const SizedBox.shrink();
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(16.w),
@@ -1565,3 +1566,5 @@ class _TypeTheme {
   final String label;
   const _TypeTheme(this.primary, this.bg, this.label);
 }
+
+

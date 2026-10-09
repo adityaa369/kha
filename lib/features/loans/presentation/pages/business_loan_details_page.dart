@@ -274,7 +274,7 @@ class BusinessLoanDetailsPage extends StatelessWidget {
                       child: _stat('Principal Amount', '₹${_fmt(loan.amount)}'),
                     ),
                     SizedBox(width: 12.w),
-                    Expanded(child: _stat('Duration', '$duration Months')),
+                    Expanded(child: _stat('Duration', loan.displayDuration)),
                   ],
                 ),
                 SizedBox(height: 12.h),
@@ -1059,6 +1059,7 @@ class BusinessLoanDetailsPage extends StatelessWidget {
   }
 
   Widget _repaymentChecklist(LoanModel loan) {
+    if (loan.durationType == 'Days') return const SizedBox.shrink();
     final duration = loan.durationMonths ?? 0;
     final progress = loan.computedProgress;
     final paidMonths = (duration * progress).round();
@@ -1180,3 +1181,5 @@ class BusinessLoanDetailsPage extends StatelessWidget {
     return months[m - 1];
   }
 }
+
+

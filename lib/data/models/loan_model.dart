@@ -129,6 +129,7 @@ class LoanModel extends Equatable {
   final int amountPaise; // Authoritative Backend Value
   final double? interestRate;
   final int? durationMonths;
+  final String? durationType;
   final String status;
   final double progress;
   final DateTime? startDate;
@@ -164,6 +165,7 @@ class LoanModel extends Equatable {
     required this.amountPaise,
     this.interestRate,
     this.durationMonths,
+    this.durationType,
     required this.status,
     required this.progress,
     this.startDate,
@@ -287,6 +289,7 @@ class LoanModel extends Equatable {
       durationMonths: json['durationMonths'] is int
           ? json['durationMonths']
           : int.tryParse(json['durationMonths']?.toString() ?? ''),
+      durationType: json['durationType'] ?? json['duration_type'] ?? 'Months',
       status: json['status'] ?? 'pending_approval',
       progress: _parseDouble(json['progress']) ?? 0.0,
       startDate: TransactionModel._parseDate(
@@ -438,7 +441,7 @@ class LoanModel extends Equatable {
 
   String get displayDuration {
     if (durationMonths == null) return '-';
-    return '$durationMonths months';
+    return '$durationMonths ${durationType ?? "Months"}';
   }
 
   static String _formatNumber(double number) {

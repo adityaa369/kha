@@ -437,7 +437,7 @@ class HandLoanDetailsPage extends StatelessWidget {
                       child: _stat('Principal Amount', '₹${_fmt(loan.amount)}'),
                     ),
                     SizedBox(width: 12.w),
-                    Expanded(child: _stat('Duration', '$duration Months')),
+                    Expanded(child: _stat('Duration', loan.displayDuration)),
                   ],
                 ),
                 SizedBox(height: 12.h),
@@ -1222,6 +1222,7 @@ class HandLoanDetailsPage extends StatelessWidget {
   }
 
   Widget _repaymentChecklist(BuildContext context, LoanModel loan) {
+    if (loan.durationType == 'Days') return const SizedBox.shrink();
     final duration = loan.durationMonths ?? 0;
     final progress = loan.computedProgress;
     final paidMonths = (duration * progress).round();
@@ -1362,3 +1363,5 @@ class HandLoanDetailsPage extends StatelessWidget {
     return months[m - 1];
   }
 }
+
+
