@@ -260,25 +260,29 @@ class _SignupPageState extends State<SignupPage> {
                     ),
                   ),
                 ),
-                SizedBox(height: 24.h),
+                SizedBox(height: 16.h),
 
                 // Wizard Card
                 Expanded(
                   child: Container(
                     width: double.infinity,
-                    margin: EdgeInsets.symmetric(horizontal: 20.w),
-                    padding: EdgeInsets.all(24.w),
+                    margin: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 20.w,
+                      vertical: 20.h,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(24.r),
-                        topRight: Radius.circular(24.r),
+                      borderRadius: BorderRadius.circular(24.r),
+                      border: Border.all(
+                        color: const Color(0xFFE5E7EB),
+                        width: 1,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.06),
+                          color: Colors.black.withValues(alpha: 0.08),
                           blurRadius: 20,
-                          offset: const Offset(0, -8),
+                          offset: const Offset(0, 4),
                         ),
                       ],
                     ),
@@ -333,6 +337,58 @@ class _SignupPageState extends State<SignupPage> {
     );
   }
 
+  InputDecoration _buildInputDecoration({
+    String? hintText,
+    Widget? prefixIcon,
+    Widget? suffixIcon,
+  }) {
+    return InputDecoration(
+      hintText: hintText,
+      hintStyle: TextStyle(
+        fontSize: 13.sp,
+        color: KhaataTheme.textGrey.withValues(alpha: 0.6),
+        fontWeight: FontWeight.w500,
+      ),
+      prefixIcon: prefixIcon,
+      suffixIcon: suffixIcon,
+      filled: true,
+      fillColor: const Color(0xFFF9FAFB),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12.r),
+        borderSide: const BorderSide(color: Color(0xFFD1D5DB), width: 1),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12.r),
+        borderSide: const BorderSide(color: Color(0xFFD1D5DB), width: 1),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12.r),
+        borderSide: const BorderSide(
+          color: KhaataTheme.primaryBlue,
+          width: 1.5,
+        ),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12.r),
+        borderSide: const BorderSide(
+          color: KhaataTheme.dangerRed,
+          width: 1,
+        ),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12.r),
+        borderSide: const BorderSide(
+          color: KhaataTheme.dangerRed,
+          width: 1.5,
+        ),
+      ),
+      contentPadding: EdgeInsets.symmetric(
+        horizontal: 14.w,
+        vertical: 12.h,
+      ),
+    );
+  }
+
   // Step 1 Layout
   Widget _buildStep1() {
     return SingleChildScrollView(
@@ -359,7 +415,7 @@ class _SignupPageState extends State<SignupPage> {
             ),
             SizedBox(height: 20.h),
 
-            // First  Last Name side-by-side
+            // First & Last Name side-by-side
             Row(
               children: [
                 Expanded(
@@ -384,29 +440,7 @@ class _SignupPageState extends State<SignupPage> {
                         ),
                         validator: (val) =>
                             val == null || val.isEmpty ? 'Required' : null,
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: const Color(0xFFF3F4F6),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12.r),
-                            borderSide: BorderSide.none,
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12.r),
-                            borderSide: BorderSide.none,
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12.r),
-                            borderSide: const BorderSide(
-                              color: KhaataTheme.primaryBlue,
-                              width: 1.5,
-                            ),
-                          ),
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 14.w,
-                            vertical: 12.h,
-                          ),
-                        ),
+                        decoration: _buildInputDecoration(hintText: 'First name'),
                       ),
                     ],
                   ),
@@ -434,29 +468,7 @@ class _SignupPageState extends State<SignupPage> {
                         ),
                         validator: (val) =>
                             val == null || val.isEmpty ? 'Required' : null,
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: const Color(0xFFF3F4F6),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12.r),
-                            borderSide: BorderSide.none,
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12.r),
-                            borderSide: BorderSide.none,
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12.r),
-                            borderSide: const BorderSide(
-                              color: KhaataTheme.primaryBlue,
-                              width: 1.5,
-                            ),
-                          ),
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 14.w,
-                            vertical: 12.h,
-                          ),
-                        ),
+                        decoration: _buildInputDecoration(hintText: 'Last name'),
                       ),
                     ],
                   ),
@@ -482,8 +494,12 @@ class _SignupPageState extends State<SignupPage> {
                   height: 48.h,
                   padding: EdgeInsets.symmetric(horizontal: 12.w),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF3F4F6),
+                    color: const Color(0xFFF9FAFB),
                     borderRadius: BorderRadius.circular(12.r),
+                    border: Border.all(
+                      color: const Color(0xFFD1D5DB),
+                      width: 1,
+                    ),
                   ),
                   alignment: Alignment.center,
                   child: Row(
@@ -525,30 +541,9 @@ class _SignupPageState extends State<SignupPage> {
                       fontWeight: FontWeight.w600,
                       color: KhaataTheme.textDark,
                     ),
-                    decoration: InputDecoration(
-                      counterText: '',
-                      filled: true,
-                      fillColor: const Color(0xFFF3F4F6),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                        borderSide: BorderSide.none,
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                        borderSide: BorderSide.none,
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                        borderSide: const BorderSide(
-                          color: KhaataTheme.primaryBlue,
-                          width: 1.5,
-                        ),
-                      ),
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 14.w,
-                        vertical: 12.h,
-                      ),
-                    ),
+                    decoration: _buildInputDecoration(
+                      hintText: '98765 43210',
+                    ).copyWith(counterText: ''),
                   ),
                 ),
               ],
@@ -578,32 +573,12 @@ class _SignupPageState extends State<SignupPage> {
                 fontWeight: FontWeight.w600,
                 color: KhaataTheme.textDark,
               ),
-              decoration: InputDecoration(
+              decoration: _buildInputDecoration(
+                hintText: 'name@example.com',
                 prefixIcon: Icon(
                   Icons.mail_outline,
                   size: 20.sp,
                   color: KhaataTheme.textGrey,
-                ),
-                filled: true,
-                fillColor: const Color(0xFFF3F4F6),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: BorderSide.none,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: BorderSide.none,
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: const BorderSide(
-                    color: KhaataTheme.primaryBlue,
-                    width: 1.5,
-                  ),
-                ),
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 14.w,
-                  vertical: 12.h,
                 ),
               ),
             ),
@@ -628,32 +603,12 @@ class _SignupPageState extends State<SignupPage> {
                 fontWeight: FontWeight.w600,
                 color: KhaataTheme.textDark,
               ),
-              decoration: InputDecoration(
+              decoration: _buildInputDecoration(
+                hintText: 'Street address / House no',
                 prefixIcon: Icon(
                   Icons.home_outlined,
                   size: 20.sp,
                   color: KhaataTheme.textGrey,
-                ),
-                filled: true,
-                fillColor: const Color(0xFFF3F4F6),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: BorderSide.none,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: BorderSide.none,
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: const BorderSide(
-                    color: KhaataTheme.primaryBlue,
-                    width: 1.5,
-                  ),
-                ),
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 14.w,
-                  vertical: 12.h,
                 ),
               ),
             ),
@@ -678,7 +633,8 @@ class _SignupPageState extends State<SignupPage> {
                 fontWeight: FontWeight.w600,
                 color: KhaataTheme.textDark,
               ),
-              decoration: InputDecoration(
+              decoration: _buildInputDecoration(
+                hintText: 'City name',
                 prefixIcon: Icon(
                   Icons.location_city_outlined,
                   size: 20.sp,
@@ -688,27 +644,6 @@ class _SignupPageState extends State<SignupPage> {
                   Icons.keyboard_arrow_down,
                   size: 20.sp,
                   color: KhaataTheme.textGrey,
-                ),
-                filled: true,
-                fillColor: const Color(0xFFF3F4F6),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: BorderSide.none,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: BorderSide.none,
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: const BorderSide(
-                    color: KhaataTheme.primaryBlue,
-                    width: 1.5,
-                  ),
-                ),
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 14.w,
-                  vertical: 12.h,
                 ),
               ),
             ),
@@ -764,6 +699,7 @@ class _SignupPageState extends State<SignupPage> {
                 ),
               ),
             ),
+            SizedBox(height: 16.h),
           ],
         ),
       ),
@@ -822,37 +758,12 @@ class _SignupPageState extends State<SignupPage> {
                 fontWeight: FontWeight.w600,
                 color: KhaataTheme.textDark,
               ),
-              decoration: InputDecoration(
+              decoration: _buildInputDecoration(
                 hintText: 'DD/MM/YYYY',
-                hintStyle: TextStyle(
-                  fontSize: 13.sp,
-                  color: KhaataTheme.textGrey.withValues(alpha: 0.6),
-                ),
                 prefixIcon: Icon(
                   Icons.calendar_today_outlined,
                   size: 20.sp,
                   color: KhaataTheme.textGrey,
-                ),
-                filled: true,
-                fillColor: const Color(0xFFF3F4F6),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: BorderSide.none,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: BorderSide.none,
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: const BorderSide(
-                    color: KhaataTheme.primaryBlue,
-                    width: 1.5,
-                  ),
-                ),
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 14.w,
-                  vertical: 12.h,
                 ),
               ),
             ),
@@ -907,9 +818,8 @@ class _SignupPageState extends State<SignupPage> {
                 fontWeight: FontWeight.w600,
                 color: KhaataTheme.textDark,
               ),
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: const Color(0xFFF3F4F6),
+              decoration: _buildInputDecoration(
+                hintText: 'Min. 8 chars with a number',
                 prefixIcon: Icon(
                   Icons.lock_outline,
                   size: 20.sp,
@@ -925,25 +835,6 @@ class _SignupPageState extends State<SignupPage> {
                   ),
                   onPressed: () =>
                       setState(() => _obscurePassword = !_obscurePassword),
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: BorderSide.none,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: BorderSide.none,
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: const BorderSide(
-                    color: KhaataTheme.primaryBlue,
-                    width: 1.5,
-                  ),
-                ),
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 14.w,
-                  vertical: 12.h,
                 ),
               ),
             ),
@@ -973,9 +864,8 @@ class _SignupPageState extends State<SignupPage> {
                 fontWeight: FontWeight.w600,
                 color: KhaataTheme.textDark,
               ),
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: const Color(0xFFF3F4F6),
+              decoration: _buildInputDecoration(
+                hintText: 'Re-enter password',
                 prefixIcon: Icon(
                   Icons.lock_outline,
                   size: 20.sp,
@@ -991,25 +881,6 @@ class _SignupPageState extends State<SignupPage> {
                   ),
                   onPressed: () =>
                       setState(() => _obscureConfirm = !_obscureConfirm),
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: BorderSide.none,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: BorderSide.none,
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: const BorderSide(
-                    color: KhaataTheme.primaryBlue,
-                    width: 1.5,
-                  ),
-                ),
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 14.w,
-                  vertical: 12.h,
                 ),
               ),
             ),
@@ -1143,6 +1014,7 @@ class _SignupPageState extends State<SignupPage> {
                 ),
               ),
             ),
+            SizedBox(height: 16.h),
           ],
         ),
       ),
@@ -1159,10 +1031,12 @@ class _SignupPageState extends State<SignupPage> {
           decoration: BoxDecoration(
             color: isSelected
                 ? const Color(0xFFE6F4EA)
-                : const Color(0xFFF3F4F6),
+                : const Color(0xFFF9FAFB),
             border: Border.all(
-              color: isSelected ? KhaataTheme.primaryBlue : Colors.transparent,
-              width: 1.5,
+              color: isSelected
+                  ? KhaataTheme.primaryBlue
+                  : const Color(0xFFD1D5DB),
+              width: isSelected ? 1.5 : 1,
             ),
             borderRadius: BorderRadius.circular(12.r),
           ),
@@ -1382,6 +1256,7 @@ class _SignupPageState extends State<SignupPage> {
                     ),
             ),
           ),
+          SizedBox(height: 16.h),
         ],
       ),
     );
