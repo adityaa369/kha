@@ -1453,7 +1453,7 @@ class LenderLoanDetailsPage extends StatelessWidget {
                 child: _bottomActionButton(
                   context,
                   loan,
-                  '% Record Interest Payment',
+                  'Record Interest Payment',
                   theme.primary,
                   theme.bg,
                   'record_interest',
@@ -1464,7 +1464,7 @@ class LenderLoanDetailsPage extends StatelessWidget {
                 child: _bottomActionButton(
                   context,
                   loan,
-                  'ðŸ’³ Record Principal Payment',
+                  'Record Principal Payment',
                   Colors.blue.shade700,
                   Colors.blue.shade50,
                   'record_payment',

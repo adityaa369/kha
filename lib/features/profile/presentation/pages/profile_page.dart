@@ -242,7 +242,7 @@ class ProfilePage extends StatelessWidget {
                                           ),
                                         ),
                                         child: Text(
-                                          'âœ“ Verified',
+                                          'Verified',
                                           style: TextStyle(
                                             fontSize: 11.sp,
                                             fontWeight: FontWeight.w600,
@@ -279,7 +279,7 @@ class ProfilePage extends StatelessWidget {
                                             ),
                                           ),
                                           child: Text(
-                                            'âš  Unverified',
+                                            'Unverified',
                                             style: TextStyle(
                                               fontSize: 11.sp,
                                               fontWeight: FontWeight.w600,
