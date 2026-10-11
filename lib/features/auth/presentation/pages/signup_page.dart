@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
@@ -169,170 +170,185 @@ class _SignupPageState extends State<SignupPage> {
   Widget build(BuildContext context) {
     final strength = _getPasswordStrength();
 
-    return Scaffold(
-      backgroundColor: KhaataTheme.primaryBlue,
-      body: BlocConsumer<AuthCubit, AuthState>(
-        listener: (context, state) {
-          if (!mounted) return;
-          if (state is AuthError) {
-            DialogUtils.showErrorDialog(context, state.message);
-          } else if (state is RegistrationComplete) {
-            context.go(AppConstants.emailVerification);
-          } else if (state is Authenticated) {
-            context.go(AppConstants.home);
-          }
-        },
-        builder: (context, state) {
-          return SafeArea(
-            child: Column(
-              children: [
-                // Custom Header
-                Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 16.w,
-                    vertical: 16.h,
-                  ),
-                  child: Row(
-                    children: [
-                      GestureDetector(
-                        onTap: _prevPage,
-                        child: Container(
-                          padding: EdgeInsets.all(8.w),
-                          decoration: const BoxDecoration(
-                            color: Colors.white24,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Icons.arrow_back,
-                            color: Colors.white,
-                            size: 18.sp,
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 12.w),
-                      Text(
-                        _currentStep == 0 ? 'back to login' : 'Back',
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Screen Title
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 24.w),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _currentStep == 0
-                               ? 'Create account'
-                              : _currentStep == 1
-                              ? 'Profile & Security'
-                              : 'Verify your number',
-                          style: TextStyle(
-                            fontSize: 26.sp,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                        SizedBox(height: 4.h),
-                        Text(
-                          _currentStep == 0
-                              ? "Let's get your details set up"
-                              : _currentStep == 1
-                              ? 'Set your date of birth, gender and password'
-                              : 'One last step to go!',
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            color: Colors.white.withValues(alpha: 0.8),
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                SizedBox(height: 16.h),
-
-                // Wizard Card
-                Expanded(
-                  child: Container(
-                    width: double.infinity,
-                    margin: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+        systemNavigationBarColor: KhaataTheme.primaryBlue,
+        systemNavigationBarIconBrightness: Brightness.light,
+        systemNavigationBarDividerColor: Colors.transparent,
+      ),
+      child: Scaffold(
+        backgroundColor: KhaataTheme.primaryBlue,
+        body: BlocConsumer<AuthCubit, AuthState>(
+          listener: (context, state) {
+            if (!mounted) return;
+            if (state is AuthError) {
+              DialogUtils.showErrorDialog(context, state.message);
+            } else if (state is RegistrationComplete) {
+              context.go(AppConstants.emailVerification);
+            } else if (state is Authenticated) {
+              context.go(AppConstants.home);
+            }
+          },
+          builder: (context, state) {
+            return SafeArea(
+              top: true,
+              bottom: true,
+              left: true,
+              right: true,
+              child: Column(
+                children: [
+                  // Custom Header
+                  Padding(
                     padding: EdgeInsets.symmetric(
-                      horizontal: 20.w,
-                      vertical: 20.h,
+                      horizontal: 16.w,
+                      vertical: 16.h,
                     ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(24.r),
-                      border: Border.all(
-                        color: const Color(0xFFE5E7EB),
-                        width: 1,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.08),
-                          blurRadius: 20,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Column(
+                    child: Row(
                       children: [
-                        // Dots Indicator
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: List.generate(3, (index) {
-                            return AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              width: index == _currentStep ? 16.w : 6.w,
-                              height: 6.h,
-                              margin: EdgeInsets.symmetric(horizontal: 3.w),
-                              decoration: BoxDecoration(
-                                color: index == _currentStep
-                                    ? KhaataTheme.primaryBlue
-                                    : Colors.grey.shade300,
-                                borderRadius: BorderRadius.circular(3.r),
-                              ),
-                            );
-                          }),
+                        GestureDetector(
+                          onTap: _prevPage,
+                          child: Container(
+                            padding: EdgeInsets.all(8.w),
+                            decoration: const BoxDecoration(
+                              color: Colors.white24,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.arrow_back,
+                              color: Colors.white,
+                              size: 18.sp,
+                            ),
+                          ),
                         ),
-                        SizedBox(height: 24.h),
-
-                        // Form Content
-                        Expanded(
-                          child: PageView(
-                            controller: _pageController,
-                            physics: const NeverScrollableScrollPhysics(),
-                            children: [
-                              // Step 1: Personal Details & Contact
-                              _buildStep1(),
-
-                              // Step 2: Profile & Security (DOB, Gender, Password)
-                              _buildStep2ProfileAndSecurity(strength),
-
-                              // Step 3: Verify Number (OTP)
-                              _buildStep3OTP(state),
-                            ],
+                        SizedBox(width: 12.w),
+                        Text(
+                          _currentStep == 0 ? 'back to login' : 'Back',
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ],
                     ),
                   ),
-                ),
-              ],
-            ),
-          );
-        },
+
+                  // Screen Title
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 24.w),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _currentStep == 0
+                                ? 'Create account'
+                                : _currentStep == 1
+                                ? 'Profile & Security'
+                                : 'Verify your number',
+                            style: TextStyle(
+                              fontSize: 26.sp,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          SizedBox(height: 4.h),
+                          Text(
+                            _currentStep == 0
+                                ? "Let's get your details set up"
+                                : _currentStep == 1
+                                ? 'Set your date of birth, gender and password'
+                                : 'One last step to go!',
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              color: Colors.white.withValues(alpha: 0.8),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+
+                  // Wizard Card
+                  Expanded(
+                    child: Container(
+                      width: double.infinity,
+                      margin: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 20.w,
+                        vertical: 20.h,
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(24.r),
+                        border: Border.all(
+                          color: const Color(0xFFE5E7EB),
+                          width: 1,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.08),
+                            blurRadius: 20,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          // Dots Indicator
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: List.generate(3, (index) {
+                              return AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                width: index == _currentStep ? 16.w : 6.w,
+                                height: 6.h,
+                                margin: EdgeInsets.symmetric(horizontal: 3.w),
+                                decoration: BoxDecoration(
+                                  color: index == _currentStep
+                                      ? KhaataTheme.primaryBlue
+                                      : Colors.grey.shade300,
+                                  borderRadius: BorderRadius.circular(3.r),
+                                ),
+                              );
+                            }),
+                          ),
+                          SizedBox(height: 24.h),
+
+                          // Form Content
+                          Expanded(
+                            child: PageView(
+                              controller: _pageController,
+                              physics: const NeverScrollableScrollPhysics(),
+                              children: [
+                                // Step 1: Personal Details & Contact
+                                _buildStep1(),
+
+                                // Step 2: Profile & Security (DOB, Gender, Password)
+                                _buildStep2ProfileAndSecurity(strength),
+
+                                // Step 3: Verify Number (OTP)
+                                _buildStep3OTP(state),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -392,6 +408,8 @@ class _SignupPageState extends State<SignupPage> {
   // Step 1 Layout
   Widget _buildStep1() {
     return SingleChildScrollView(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      physics: const BouncingScrollPhysics(),
       child: Form(
         key: _step1Key,
         child: Column(
@@ -709,6 +727,8 @@ class _SignupPageState extends State<SignupPage> {
   // Step 2 Layout (Profile & Password)
   Widget _buildStep2ProfileAndSecurity(String strength) {
     return SingleChildScrollView(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      physics: const BouncingScrollPhysics(),
       child: Form(
         key: _step2Key,
         child: Column(
@@ -1061,6 +1081,8 @@ class _SignupPageState extends State<SignupPage> {
     final phone = _phoneController.text.trim();
 
     return SingleChildScrollView(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      physics: const BouncingScrollPhysics(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
