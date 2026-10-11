@@ -203,6 +203,10 @@ class _FlexiblePaymentSheetViewState extends State<_FlexiblePaymentSheetView> {
           );
         }
 
+        final int maxAllowedPaise = widget.actionType == 'record_interest'
+            ? widget.loan.interestOutstandingPaise
+            : (widget.loan.principalOutstandingPaise ?? widget.loan.totalOutstandingPaise);
+
         return _buildSheetLayout(
           isProcessing: state is PaymentCreatingIntent,
           isSuccess: state is PaymentSuccess,
@@ -210,7 +214,9 @@ class _FlexiblePaymentSheetViewState extends State<_FlexiblePaymentSheetView> {
           successMessage: 'Payment Recorded Successfully',
           onAction: _processPayment,
           isActionDisabled:
-              state is PaymentCreatingIntent || _enteredAmountPaise <= 0,
+              state is PaymentCreatingIntent ||
+              _enteredAmountPaise <= 0 ||
+              (widget.actionType != 'add_credit' && _enteredAmountPaise > maxAllowedPaise),
         );
       },
     );
@@ -396,7 +402,15 @@ class _FlexiblePaymentSheetViewState extends State<_FlexiblePaymentSheetView> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Remaining Balance:'),
+                  Text(
+                    widget.actionType == 'record_interest'
+                        ? 'Remaining Interest:'
+                        : (widget.actionType == 'record_payment' &&
+                                (widget.loan.type.toLowerCase().contains('interest') ||
+                                    widget.loan.type.toLowerCase().contains('home'))
+                            ? 'Remaining Principal:'
+                            : 'Remaining Balance:'),
+                  ),
                   Text(
                     '₹ ${_currencyFmt.format(_newBalancePaise / 100)}',
                     style: const TextStyle(fontWeight: FontWeight.bold),

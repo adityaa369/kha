@@ -125,12 +125,8 @@ class LenderLoanDetailsPage extends StatelessWidget {
                       RepaymentTimelineWidget(key: ValueKey('timeline_${activeLoan.paidAmountPaise}_${activeLoan.status}'), loan: activeLoan),
                       SizedBox(height: 14.h),
                       _recentTransactions(activeLoan, theme),
-                      SizedBox(height: 14.h),
-                      if (activeLoan.documentId != null &&
-                          activeLoan.documentId!.isNotEmpty) ...[
-                        _documentSection(context, activeLoan, theme),
-                        SizedBox(height: 16.h),
-                      ],
+                      _documentSection(context, activeLoan, theme),
+                      SizedBox(height: 16.h),
                     ],
                     if (isPending) _pendingCard(context, activeLoan),
                     SizedBox(height: 80.h), // space for bottom bar
@@ -962,35 +958,15 @@ class LenderLoanDetailsPage extends StatelessWidget {
     LoanModel loan,
     _TypeTheme theme,
   ) {
-    if (loan.documentId == null || loan.documentId!.trim().isEmpty) {
-      return Container(
-        padding: EdgeInsets.all(16.w),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(color: Colors.grey.shade200),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              Icons.description_outlined,
-              color: Colors.grey.shade300,
-              size: 28.sp,
-            ),
-            SizedBox(width: 12.w),
-            Text(
-              'No document was uploaded',
-              style: TextStyle(color: Colors.grey, fontSize: 13.sp),
-            ),
-          ],
-        ),
-      );
+    final hasProof = loan.documentId != null && loan.documentId!.trim().isNotEmpty;
+    final isFinished = loan.loanStatus.isFinished;
+
+    if (!hasProof && !isFinished) {
+      return const SizedBox.shrink();
     }
 
-    final url = loan.documentId!;
-    final isPdf = url.toLowerCase().contains('.pdf');
-
     return Container(
+      width: double.infinity,
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -1001,7 +977,7 @@ class LenderLoanDetailsPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Agreement & Proof Document',
+            'Documents',
             style: TextStyle(
               fontSize: 14.sp,
               fontWeight: FontWeight.w700,
@@ -1009,8 +985,10 @@ class LenderLoanDetailsPage extends StatelessWidget {
             ),
           ),
           SizedBox(height: 12.h),
-          InkWell(
-            onTap: () {
+          if (hasProof) ...[
+            InkWell(
+              onTap: () {
+                final url = loan.documentId!;
                 showModalBottomSheet(
                   context: context,
                   isScrollControlled: true,
@@ -1018,71 +996,109 @@ class LenderLoanDetailsPage extends StatelessWidget {
                   builder: (ctx) => SecureDocumentViewer(documentId: url),
                 );
               },
-            borderRadius: BorderRadius.circular(12.r),
-            child: Container(
-              padding: EdgeInsets.all(12.w),
-              decoration: BoxDecoration(
-                color: theme.bg,
-                border: Border.all(color: theme.primary.withValues(alpha: 0.2)),
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 40.w,
-                    height: 40.w,
-                    decoration: BoxDecoration(
-                      color: theme.bg,
-                      borderRadius: BorderRadius.circular(8.r),
+              borderRadius: BorderRadius.circular(12.r),
+              child: Container(
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  color: theme.bg,
+                  border: Border.all(color: theme.primary.withValues(alpha: 0.2)),
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40.w,
+                      height: 40.w,
+                      decoration: BoxDecoration(
+                        color: theme.bg,
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: loan.documentId!.toLowerCase().contains('.pdf')
+                          ? const Icon(
+                              Icons.picture_as_pdf,
+                              color: Color(0xFFDC2626),
+                              size: 22,
+                            )
+                          : Icon(
+                              Icons.image,
+                              color: theme.primary,
+                              size: 22,
+                            ),
                     ),
-                    clipBehavior: Clip.antiAlias,
-                    child: isPdf
-                        ? const Icon(
-                            Icons.picture_as_pdf,
-                            color: Color(0xFFDC2626),
-                            size: 22,
-                          )
-                        : Icon(
-                            Icons.image,
-                            color: theme.primary,
-                            size: 22,
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            loan.documentId!.toLowerCase().contains('.pdf')
+                                ? 'Signed_Agreement.pdf'
+                                : 'Proof_Document.jpg',
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                  ),
-                  SizedBox(width: 12.w),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          isPdf ? 'Signed_Agreement.pdf' : 'Proof_Document.jpg',
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
+                          SizedBox(height: 2.h),
+                          Text(
+                            'Tap to view uploaded document',
+                            style: TextStyle(
+                              fontSize: 10.sp,
+                              color: Colors.grey.shade600,
+                            ),
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        SizedBox(height: 2.h),
-                        Text(
-                          'Tap to view uploaded document',
-                          style: TextStyle(
-                            fontSize: 10.sp,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  Icon(
-                    Icons.visibility_outlined,
-                    color: theme.primary,
-                    size: 18.sp,
-                  ),
-                ],
+                    Icon(
+                      Icons.visibility_outlined,
+                      color: theme.primary,
+                      size: 18.sp,
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
+          ],
+          if (hasProof && isFinished) Divider(color: Colors.grey.shade200, height: 24.h),
+          if (isFinished)
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: Container(
+                padding: EdgeInsets.all(8.w),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: const Icon(Icons.verified, color: Colors.blue),
+              ),
+              title: Text(
+                'No Dues Certificate (NOC)',
+                style: TextStyle(
+                  fontSize: 13.sp,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              subtitle: Text(
+                'Official Debt Clearance Certificate',
+                style: TextStyle(
+                  fontSize: 11.sp,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+              trailing: IconButton(
+                icon: const Icon(Icons.download, color: Colors.blue),
+                onPressed: () async {
+                  final token = await SecureStorage.getToken();
+                  final url = '${AppConstants.baseUrl}/loans/${loan.id}/noc?token=$token';
+                  launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                },
+              ),
+            ),
         ],
       ),
     );
