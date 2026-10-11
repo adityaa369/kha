@@ -24,9 +24,8 @@ class _SignupPageState extends State<SignupPage> {
   // Form Keys
   final _step1Key = GlobalKey<FormState>();
   final _step2Key = GlobalKey<FormState>();
-  final _step3Key = GlobalKey<FormState>();
 
-  // Step 1 Controllers
+  // Step 1 Controllers (Personal details)
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _phoneController = TextEditingController();
@@ -34,20 +33,16 @@ class _SignupPageState extends State<SignupPage> {
   final _addressController = TextEditingController();
   final _cityController = TextEditingController();
 
-  // Step 2 Controllers (KYC)
-  final _panController = TextEditingController();
-  final _aadharController = TextEditingController();
+  // Step 2 Controllers (Profile & Password)
   final _dobController = TextEditingController();
   String _selectedGender = 'Male';
-
-  // Step 3 Controllers (Password)
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
   bool _termsAccepted = false;
 
-  // Step 4 Controllers (OTP)
+  // Step 3 Controllers (OTP)
   final _otpController = TextEditingController();
   int _timerSeconds = 30;
   Timer? _resendTimer;
@@ -62,8 +57,6 @@ class _SignupPageState extends State<SignupPage> {
     _emailController.dispose();
     _addressController.dispose();
     _cityController.dispose();
-    _panController.dispose();
-    _aadharController.dispose();
     _dobController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -118,12 +111,6 @@ class _SignupPageState extends State<SignupPage> {
 
   void _submitStep2() {
     if (_step2Key.currentState?.validate() ?? false) {
-      _nextPage();
-    }
-  }
-
-  void _submitStep3() {
-    if (_step3Key.currentState?.validate() ?? false) {
       if (!_termsAccepted) {
         DialogUtils.showErrorDialog(
           context,
@@ -150,8 +137,6 @@ class _SignupPageState extends State<SignupPage> {
         'email': _emailController.text.trim(),
         'city': _cityController.text.trim(),
         'address': _addressController.text.trim(),
-        'pan': _panController.text.trim().toUpperCase(),
-        'aadhar': _aadharController.text.trim(),
         'dob': _dobController.text.trim(),
         'gender': _selectedGender,
         'password': _passwordController.text,
@@ -247,11 +232,9 @@ class _SignupPageState extends State<SignupPage> {
                       children: [
                         Text(
                           _currentStep == 0
-                              ? 'Create account'
+                               ? 'Create account'
                               : _currentStep == 1
-                              ? 'KYC Verification'
-                              : _currentStep == 2
-                              ? 'Secure your account'
+                              ? 'Profile & Security'
                               : 'Verify your number',
                           style: TextStyle(
                             fontSize: 26.sp,
@@ -265,9 +248,7 @@ class _SignupPageState extends State<SignupPage> {
                           _currentStep == 0
                               ? "Let's get your details set up"
                               : _currentStep == 1
-                              ? 'Enter your government IDs'
-                              : _currentStep == 2
-                              ? 'Create a strong password'
+                              ? 'Set your date of birth, gender and password'
                               : 'One last step to go!',
                           style: TextStyle(
                             fontSize: 12.sp,
@@ -306,7 +287,7 @@ class _SignupPageState extends State<SignupPage> {
                         // Dots Indicator
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
-                          children: List.generate(4, (index) {
+                          children: List.generate(3, (index) {
                             return AnimatedContainer(
                               duration: const Duration(milliseconds: 200),
                               width: index == _currentStep ? 16.w : 6.w,
@@ -329,16 +310,13 @@ class _SignupPageState extends State<SignupPage> {
                             controller: _pageController,
                             physics: const NeverScrollableScrollPhysics(),
                             children: [
-                              // Step 1 Personal Details & Address
+                              // Step 1: Personal Details & Contact
                               _buildStep1(),
 
-                              // Step 2 KYC Details (PAN, Aadhar, DOB)
-                              _buildStep2KYC(),
+                              // Step 2: Profile & Security (DOB, Gender, Password)
+                              _buildStep2ProfileAndSecurity(strength),
 
-                              // Step 3 Set Password
-                              _buildStep2Password(strength),
-
-                              // Step 4 Verify Number (OTP)
+                              // Step 3: Verify Number (OTP)
                               _buildStep3OTP(state),
                             ],
                           ),
@@ -792,8 +770,8 @@ class _SignupPageState extends State<SignupPage> {
     );
   }
 
-  // Step 2 Layout (KYC details)
-  Widget _buildStep2KYC() {
+  // Step 2 Layout (Profile & Password)
+  Widget _buildStep2ProfileAndSecurity(String strength) {
     return SingleChildScrollView(
       child: Form(
         key: _step2Key,
@@ -801,7 +779,7 @@ class _SignupPageState extends State<SignupPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'KYC Verification',
+              'Profile & Security',
               style: TextStyle(
                 fontSize: 18.sp,
                 fontWeight: FontWeight.w800,
@@ -809,7 +787,7 @@ class _SignupPageState extends State<SignupPage> {
               ),
             ),
             Text(
-              'Enter your government identity cards',
+              'Enter your basic details and set a password',
               style: TextStyle(
                 fontSize: 12.sp,
                 color: KhaataTheme.textGrey,
@@ -817,122 +795,6 @@ class _SignupPageState extends State<SignupPage> {
               ),
             ),
             SizedBox(height: 20.h),
-
-            // PAN Card number
-            Text(
-              'PAN card number',
-              style: TextStyle(
-                fontSize: 11.sp,
-                fontWeight: FontWeight.bold,
-                color: KhaataTheme.textDark,
-              ),
-            ),
-            SizedBox(height: 6.h),
-            TextFormField(
-              controller: _panController,
-              textCapitalization: TextCapitalization.characters,
-              validator: (val) {
-                if (val == null || val.isEmpty) return 'PAN is required';
-                if (!RegExp(
-                  r'^[A-Z]{5}[0-9]{4}[A-Z]$',
-                ).hasMatch(val.toUpperCase())) {
-                  return 'Invalid PAN format';
-                }
-                return null;
-              },
-              style: TextStyle(
-                fontSize: 13.sp,
-                fontWeight: FontWeight.w600,
-                color: KhaataTheme.textDark,
-              ),
-              decoration: InputDecoration(
-                prefixIcon: Icon(
-                  Icons.credit_card_rounded,
-                  size: 20.sp,
-                  color: KhaataTheme.textGrey,
-                ),
-                filled: true,
-                fillColor: const Color(0xFFF3F4F6),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: BorderSide.none,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: BorderSide.none,
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: const BorderSide(
-                    color: KhaataTheme.primaryBlue,
-                    width: 1.5,
-                  ),
-                ),
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 14.w,
-                  vertical: 12.h,
-                ),
-              ),
-            ),
-            SizedBox(height: 14.h),
-
-            // Aadhar Number
-            Text(
-              'Aadhar number',
-              style: TextStyle(
-                fontSize: 11.sp,
-                fontWeight: FontWeight.bold,
-                color: KhaataTheme.textDark,
-              ),
-            ),
-            SizedBox(height: 6.h),
-            TextFormField(
-              controller: _aadharController,
-              keyboardType: TextInputType.number,
-              maxLength: 12,
-              validator: (val) {
-                if (val == null || val.isEmpty) return 'Aadhar is required';
-                if (val.length != 12 || !RegExp(r'^[0-9]+$').hasMatch(val)) {
-                  return 'Aadhar must be 12 digits';
-                }
-                return null;
-              },
-              style: TextStyle(
-                fontSize: 13.sp,
-                fontWeight: FontWeight.w600,
-                color: KhaataTheme.textDark,
-              ),
-              decoration: InputDecoration(
-                prefixIcon: Icon(
-                  Icons.fingerprint_outlined,
-                  size: 20.sp,
-                  color: KhaataTheme.textGrey,
-                ),
-                counterText: '',
-                filled: true,
-                fillColor: const Color(0xFFF3F4F6),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: BorderSide.none,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: BorderSide.none,
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                  borderSide: const BorderSide(
-                    color: KhaataTheme.primaryBlue,
-                    width: 1.5,
-                  ),
-                ),
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 14.w,
-                  vertical: 12.h,
-                ),
-              ),
-            ),
-            SizedBox(height: 14.h),
 
             // Date of birth
             Text(
@@ -949,8 +811,9 @@ class _SignupPageState extends State<SignupPage> {
               keyboardType: TextInputType.number,
               inputFormatters: [DateInputFormatter()],
               validator: (val) {
-                if (val == null || val.isEmpty)
+                if (val == null || val.isEmpty) {
                   return 'Date of birth is required';
+                }
                 if (val.length != 10) return 'Enter a valid date (DD/MM/YYYY)';
                 return null;
               },
@@ -960,6 +823,11 @@ class _SignupPageState extends State<SignupPage> {
                 color: KhaataTheme.textDark,
               ),
               decoration: InputDecoration(
+                hintText: 'DD/MM/YYYY',
+                hintStyle: TextStyle(
+                  fontSize: 13.sp,
+                  color: KhaataTheme.textGrey.withValues(alpha: 0.6),
+                ),
                 prefixIcon: Icon(
                   Icons.calendar_today_outlined,
                   size: 20.sp,
@@ -1009,95 +877,7 @@ class _SignupPageState extends State<SignupPage> {
                 _buildGenderButton('Others'),
               ],
             ),
-            SizedBox(height: 24.h),
-
-            // Next button
-            SizedBox(
-              width: double.infinity,
-              height: 50.h,
-              child: ElevatedButton(
-                onPressed: _submitStep2,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: KhaataTheme.primaryBlue,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  elevation: 0,
-                ),
-                child: Text(
-                  'Next',
-                  style: TextStyle(
-                    fontSize: 15.sp,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGenderButton(String label) {
-    bool isSelected = _selectedGender == label;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => setState(() => _selectedGender = label),
-        child: Container(
-          padding: EdgeInsets.symmetric(vertical: 12.h),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? const Color(0xFFE6F4EA)
-                : const Color(0xFFF3F4F6),
-            border: Border.all(
-              color: isSelected ? KhaataTheme.primaryBlue : Colors.transparent,
-              width: 1.5,
-            ),
-            borderRadius: BorderRadius.circular(12.r),
-          ),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 13.sp,
-              fontWeight: FontWeight.bold,
-              color: isSelected
-                  ? KhaataTheme.primaryBlue
-                  : KhaataTheme.textGrey,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // Step 3 Layout
-  Widget _buildStep2Password(String strength) {
-    return SingleChildScrollView(
-      child: Form(
-        key: _step3Key,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Set password',
-              style: TextStyle(
-                fontSize: 18.sp,
-                fontWeight: FontWeight.w800,
-                color: KhaataTheme.textDark,
-              ),
-            ),
-            Text(
-              'Minimum 8 characters with a number',
-              style: TextStyle(
-                fontSize: 12.sp,
-                color: KhaataTheme.textGrey,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            SizedBox(height: 20.h),
+            SizedBox(height: 14.h),
 
             // New password
             Text(
@@ -1345,7 +1125,7 @@ class _SignupPageState extends State<SignupPage> {
               width: double.infinity,
               height: 50.h,
               child: ElevatedButton(
-                onPressed: _submitStep3,
+                onPressed: _submitStep2,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: KhaataTheme.primaryBlue,
                   shape: RoundedRectangleBorder(
@@ -1369,7 +1149,40 @@ class _SignupPageState extends State<SignupPage> {
     );
   }
 
-  // Step 4 Layout (OTP Verification)
+  Widget _buildGenderButton(String label) {
+    bool isSelected = _selectedGender == label;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => _selectedGender = label),
+        child: Container(
+          padding: EdgeInsets.symmetric(vertical: 12.h),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? const Color(0xFFE6F4EA)
+                : const Color(0xFFF3F4F6),
+            border: Border.all(
+              color: isSelected ? KhaataTheme.primaryBlue : Colors.transparent,
+              width: 1.5,
+            ),
+            borderRadius: BorderRadius.circular(12.r),
+          ),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 13.sp,
+              fontWeight: FontWeight.bold,
+              color: isSelected
+                  ? KhaataTheme.primaryBlue
+                  : KhaataTheme.textGrey,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Step 3 Layout (OTP Verification)
   Widget _buildStep3OTP(AuthState state) {
     final phone = _phoneController.text.trim();
 
@@ -1417,7 +1230,14 @@ class _SignupPageState extends State<SignupPage> {
                   ),
                 ),
                 TextButton(
-                  onPressed: _prevPage,
+                  onPressed: () {
+                    setState(() => _currentStep = 0);
+                    _pageController.animateToPage(
+                      0,
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                    );
+                  },
                   style: TextButton.styleFrom(
                     padding: EdgeInsets.symmetric(horizontal: 8.w),
                     minimumSize: Size.zero,
