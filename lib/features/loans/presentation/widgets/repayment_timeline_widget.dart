@@ -54,10 +54,7 @@ class RepaymentTimelineWidget extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    loan.type.toLowerCase().contains('interest') ||
-                            loan.type.toLowerCase().contains('home')
-                        ? 'Monthly Interest Overview'
-                        : 'Monthly Payment Overview',
+                    'Monthly Overview',
                     style: TextStyle(
                       fontSize: 14.sp,
                       fontWeight: FontWeight.w700,

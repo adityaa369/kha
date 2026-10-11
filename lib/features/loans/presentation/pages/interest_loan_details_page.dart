@@ -70,7 +70,7 @@ class InterestLoanDetailsPage extends StatelessWidget {
         final theme = _theme(activeLoan.type);
         final duration = activeLoan.durationMonths ?? 1;
         final progress = activeLoan.computedProgress;
-        final paidMonths = (duration * progress).round();
+        final paidMonths = (duration * progress).floor();
         final isClosed = activeLoan.loanStatus.isFinished;
         final isPending =
             activeLoan.status == 'pending_otp' ||
@@ -116,6 +116,14 @@ class InterestLoanDetailsPage extends StatelessWidget {
                     ),
                     SizedBox(height: 14.h),
                     if (!isPending) ...[
+                      _loanProgressCard(
+                        activeLoan,
+                        theme,
+                        duration,
+                        paidMonths,
+                        progress,
+                      ),
+                      SizedBox(height: 14.h),
                       RepaymentTimelineWidget(key: ValueKey('timeline_${activeLoan.paidAmountPaise}_${activeLoan.status}'), loan: activeLoan),
                       SizedBox(height: 14.h),
                       _recentTransactions(activeLoan, theme),
@@ -437,7 +445,7 @@ class InterestLoanDetailsPage extends StatelessWidget {
                 ),
               ),
               Text(
-                '$paidMonths of $duration months completed',
+                '$paidMonths of $duration months completed (${(progress * 100).toStringAsFixed(0)}%)',
                 style: TextStyle(fontSize: 11.sp, color: Colors.grey.shade600),
               ),
             ],

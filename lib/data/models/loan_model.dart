@@ -382,8 +382,9 @@ class LoanModel extends Equatable {
   double get paidAmount => paidAmountPaise / 100;
 
   double get computedProgress {
-    if (totalPayablePaise > 0) {
-      return (paidAmountPaise / totalPayablePaise).clamp(0.0, 1.0);
+    final total = totalOutstandingPaise + paidAmountPaise;
+    if (total > 0) {
+      return (paidAmountPaise / total).clamp(0.0, 1.0);
     }
     if (amountPaise > 0 && paidAmountPaise > 0) {
       return (paidAmountPaise / amountPaise).clamp(0.0, 1.0);
