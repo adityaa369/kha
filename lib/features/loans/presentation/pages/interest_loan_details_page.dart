@@ -68,7 +68,7 @@ class InterestLoanDetailsPage extends StatelessWidget {
             : loan;
 
         final theme = _theme(activeLoan.type);
-        final duration = activeLoan.durationMonths ?? 1;
+        final duration = activeLoan.actualDurationMonths;
         final progress = activeLoan.computedProgress;
         final paidMonths = (duration * progress).floor();
         final isClosed = activeLoan.loanStatus.isFinished;
@@ -420,9 +420,15 @@ class InterestLoanDetailsPage extends StatelessWidget {
     int paidMonths,
     double progress,
   ) {
-    final nextDue = (loan.startDate ?? DateTime.now()).add(
-      Duration(days: (paidMonths + 1) * 30),
+    final start = loan.startDate ?? loan.activatedAt ?? DateTime.now();
+    DateTime nextDue = DateTime(
+      start.year,
+      start.month + paidMonths + 1,
+      start.day,
     );
+    if (loan.endDate != null && nextDue.isAfter(loan.endDate!)) {
+      nextDue = loan.endDate!;
+    }
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(

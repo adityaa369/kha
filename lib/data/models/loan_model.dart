@@ -445,6 +445,14 @@ class LoanModel extends Equatable {
     return '$durationMonths ${durationType ?? "Months"}';
   }
 
+  int get actualDurationMonths {
+    if (durationMonths == null || durationMonths! <= 0) return 1;
+    if (durationType?.toLowerCase() == 'days') {
+      return (durationMonths! / 30.0).ceil().clamp(1, 1200);
+    }
+    return durationMonths!.clamp(1, 1200);
+  }
+
   static String _formatNumber(double number) {
     return NumberFormat('#,##,##0', 'en_IN').format(number);
   }
